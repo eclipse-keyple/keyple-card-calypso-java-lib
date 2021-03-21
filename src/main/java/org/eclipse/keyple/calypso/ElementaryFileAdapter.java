@@ -23,7 +23,7 @@ class ElementaryFileAdapter implements Serializable, ElementaryFile {
 
   private final byte sfi;
   private FileHeader header;
-  private final FileData data;
+  private final FileDataAdapter data;
 
   /**
    * (package-private)<br>
@@ -34,7 +34,7 @@ class ElementaryFileAdapter implements Serializable, ElementaryFile {
    */
   ElementaryFileAdapter(byte sfi) {
     this.sfi = sfi;
-    this.data = new FileData();
+    this.data = new FileDataAdapter();
   }
 
   /**
@@ -49,7 +49,7 @@ class ElementaryFileAdapter implements Serializable, ElementaryFile {
     if (source.getHeader() != null) {
       this.header = new FileHeader(source.getHeader());
     }
-    this.data = new FileData(source.getData());
+    this.data = new FileDataAdapter(source.getData());
   }
 
   /**

@@ -592,7 +592,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    */
   final void setContent(byte sfi, int numRecord, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ef.getData().setContent(numRecord, content);
+    ((FileDataAdapter) ef.getData()).setContent(numRecord, content);
   }
 
   /**
@@ -606,7 +606,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    */
   final void setCounter(byte sfi, int numCounter, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ef.getData().setCounter(numCounter, content);
+    ((FileDataAdapter) ef.getData()).setCounter(numCounter, content);
   }
 
   /**
@@ -624,7 +624,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    */
   final void setContent(byte sfi, int numRecord, byte[] content, int offset) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ef.getData().setContent(numRecord, content, offset);
+    ((FileDataAdapter) ef.getData()).setContent(numRecord, content, offset);
   }
 
   /**
@@ -641,7 +641,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    */
   final void fillContent(byte sfi, int numRecord, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ef.getData().fillContent(numRecord, content);
+    ((FileDataAdapter) ef.getData()).fillContent(numRecord, content);
   }
 
   /**
@@ -657,7 +657,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    */
   final void addCyclicContent(byte sfi, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ef.getData().addCyclicContent(content);
+    ((FileDataAdapter) ef.getData()).addCyclicContent(content);
   }
 
   /**
