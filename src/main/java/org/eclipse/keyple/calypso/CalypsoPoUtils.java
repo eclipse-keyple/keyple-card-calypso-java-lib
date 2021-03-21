@@ -613,7 +613,7 @@ final class CalypsoPoUtils {
             (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
                 | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
 
-    return FileHeader.builder()
+    return FileHeaderAdapter.builder()
         .lid(lid)
         .recordsNumber(recordsNumber)
         .recordSize(recordSize)

@@ -47,7 +47,7 @@ class ElementaryFileAdapter implements Serializable, ElementaryFile {
   ElementaryFileAdapter(ElementaryFile source) {
     this.sfi = source.getSfi();
     if (source.getHeader() != null) {
-      this.header = new FileHeader(source.getHeader());
+      this.header = new FileHeaderAdapter(source.getHeader());
     }
     this.data = new FileDataAdapter(source.getData());
   }

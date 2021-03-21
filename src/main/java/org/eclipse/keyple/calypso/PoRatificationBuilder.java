@@ -14,6 +14,7 @@ package org.eclipse.keyple.calypso;
 import org.eclipse.keyple.core.card.ApduRequest;
 
 /**
+ * (package-private)<br>
  * Provides the ApduRequest dedicated to the ratification command.
  *
  * <p>i.e. the command sent after closing the secure session to handle the ratification mechanism.
@@ -23,7 +24,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
  *
  * @since 2.0
  */
-public final class PoRatificationBuilder {
+final class PoRatificationBuilder {
   private PoRatificationBuilder() {}
 
   /**

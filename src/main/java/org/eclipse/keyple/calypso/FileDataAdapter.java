@@ -17,11 +17,12 @@ import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
+ * (package-private)<br>
  * Implementation of {@link FileData}.
  *
  * @since 2.0
  */
-public class FileDataAdapter implements Serializable, FileData {
+class FileDataAdapter implements Serializable, FileData {
 
   private final TreeMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 
