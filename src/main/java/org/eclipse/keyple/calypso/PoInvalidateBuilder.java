@@ -1,0 +1,64 @@
+/* **************************************************************************************
+ * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ *
+ * See the NOTICE file(s) distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ************************************************************************************** */
+package org.eclipse.keyple.calypso;
+
+import org.eclipse.keyple.core.card.ApduRequest;
+import org.eclipse.keyple.core.card.ApduResponse;
+
+/**
+ * Builds the Invalidate command.
+ *
+ * @since 2.0
+ */
+final class PoInvalidateBuilder extends AbstractPoCommandBuilder<PoInvalidateParser> {
+
+  private static final CalypsoPoCommand command = CalypsoPoCommand.INVALIDATE;
+
+  /**
+   * Instantiates a new PoInvalidateBuilder.
+   *
+   * @param poClass indicates which CLA byte should be used for the Apdu.
+   * @since 2.0
+   */
+  public PoInvalidateBuilder(PoClass poClass) {
+    super(command, null);
+
+    byte p1 = (byte) 0x00;
+    byte p2 = (byte) 0x00;
+
+    this.request =
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, null);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public PoInvalidateParser createResponseParser(ApduResponse apduResponse) {
+    return new PoInvalidateParser(apduResponse, this);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>This command modified the contents of the PO and therefore uses the session buffer.
+   *
+   * @return true
+   * @since 2.0
+   */
+  @Override
+  public boolean isSessionBufferUsed() {
+    return true;
+  }
+}
