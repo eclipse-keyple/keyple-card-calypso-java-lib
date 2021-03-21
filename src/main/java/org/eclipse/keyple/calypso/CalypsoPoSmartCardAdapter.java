@@ -455,7 +455,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
         getFileBySfi(CalypsoPoUtils.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
     List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
     for (Map.Entry<Integer, byte[]> entry : logRecords.entrySet()) {
-      svDebitLogRecords.add(new SvDebitLogRecord(entry.getValue(), 0));
+      svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));
     }
     return svDebitLogRecords;
   }

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,37 +11,19 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.core.util.ByteArrayUtil;
-
 /**
  * This POJO contains the data of a Stored Value debit log.
  *
  * @since 2.0
  */
-public class SvDebitLogRecord {
-  final int offset;
-  final byte[] poResponse;
-
-  /**
-   * Constructor
-   *
-   * @param poResponse the Sv Get or Read Record (SV Load log file) response data.
-   * @param offset the debit log offset in the response (may change from a PO to another).
-   */
-  public SvDebitLogRecord(byte[] poResponse, int offset) {
-    this.poResponse = poResponse;
-    this.offset = offset;
-  }
-
+public interface SvDebitLogRecord {
   /**
    * Gets the debit amount value
    *
    * @return An int
    * @since 2.0
    */
-  public int getAmount() {
-    return ByteArrayUtil.twoBytesSignedToInt(poResponse, offset);
-  }
+  int getAmount();
 
   /**
    * Gets the SV balance value
@@ -49,9 +31,7 @@ public class SvDebitLogRecord {
    * @return An int
    * @since 2.0
    */
-  public int getBalance() {
-    return ByteArrayUtil.threeBytesSignedToInt(poResponse, offset + 14);
-  }
+  int getBalance();
 
   /**
    * Gets the debit time as an int
@@ -59,9 +39,7 @@ public class SvDebitLogRecord {
    * @return An int
    * @since 2.0
    */
-  public int getDebitTime() {
-    return ByteArrayUtil.twoBytesToInt(getDebitTimeBytes(), 0);
-  }
+  int getDebitTime();
 
   /**
    * Gets the debit time as an array of bytes
@@ -69,12 +47,7 @@ public class SvDebitLogRecord {
    * @return A 2-byte byte array
    * @since 2.0
    */
-  public byte[] getDebitTimeBytes() {
-    final byte[] time = new byte[2];
-    time[0] = poResponse[offset + 4];
-    time[1] = poResponse[offset + 5];
-    return time;
-  }
+  byte[] getDebitTimeBytes();
 
   /**
    * Gets the debit date as an int
@@ -82,9 +55,7 @@ public class SvDebitLogRecord {
    * @return An int
    * @since 2.0
    */
-  public int getDebitDate() {
-    return ByteArrayUtil.twoBytesToInt(getDebitDateBytes(), 0);
-  }
+  int getDebitDate();
 
   /**
    * Gets the debit date as an array of bytes
@@ -92,12 +63,7 @@ public class SvDebitLogRecord {
    * @return A 2-byte byte array
    * @since 2.0
    */
-  public byte[] getDebitDateBytes() {
-    final byte[] date = new byte[2];
-    date[0] = poResponse[offset + 2];
-    date[1] = poResponse[offset + 3];
-    return date;
-  }
+  byte[] getDebitDateBytes();
 
   /**
    * Gets the KVC of the load key (as given in the last SV Reload)
@@ -105,9 +71,7 @@ public class SvDebitLogRecord {
    * @return A byte
    * @since 2.0
    */
-  public byte getKvc() {
-    return poResponse[offset + 6];
-  }
+  byte getKvc();
 
   /**
    * Gets the SAM ID as a long
@@ -115,9 +79,7 @@ public class SvDebitLogRecord {
    * @return A long
    * @since 2.0
    */
-  public long getSamId() {
-    return ByteArrayUtil.fourBytesToInt(getSamIdBytes(), 0);
-  }
+  long getSamId();
 
   /**
    * Gets the SAM ID as an array of bytes
@@ -125,11 +87,7 @@ public class SvDebitLogRecord {
    * @return A 4-byte byte array
    * @since 2.0
    */
-  public byte[] getSamIdBytes() {
-    byte[] samId = new byte[4];
-    System.arraycopy(poResponse, offset + 7, samId, 0, 4);
-    return samId;
-  }
+  byte[] getSamIdBytes();
 
   /**
    * Gets the SV transaction number value as an int
@@ -137,9 +95,7 @@ public class SvDebitLogRecord {
    * @return An int
    * @since 2.0
    */
-  public int getSvTNum() {
-    return ByteArrayUtil.twoBytesToInt(getSvTNumBytes(), 0);
-  }
+  int getSvTNum();
 
   /**
    * Gets the SV transaction number as an array of bytes
@@ -147,12 +103,7 @@ public class SvDebitLogRecord {
    * @return A 2-byte byte array
    * @since 2.0
    */
-  public byte[] getSvTNumBytes() {
-    final byte[] tnNum = new byte[2];
-    tnNum[0] = poResponse[offset + 17];
-    tnNum[1] = poResponse[offset + 18];
-    return tnNum;
-  }
+  byte[] getSvTNumBytes();
 
   /**
    * Gets the SAM transaction number value as an int
@@ -160,9 +111,7 @@ public class SvDebitLogRecord {
    * @return An int
    * @since 2.0
    */
-  public int getSamTNum() {
-    return ByteArrayUtil.threeBytesToInt(getSamTNumBytes(), 0);
-  }
+  int getSamTNum();
 
   /**
    * Gets the SAM transaction number as an array of bytes
@@ -170,37 +119,5 @@ public class SvDebitLogRecord {
    * @return A 3-byte byte array
    * @since 2.0
    */
-  public byte[] getSamTNumBytes() {
-    byte[] samTNum = new byte[3];
-    System.arraycopy(poResponse, offset + 11, samTNum, 0, 3);
-    return samTNum;
-  }
-
-  /**
-   * Gets the SV debit log record a JSON formatted string
-   *
-   * @return A not empty String
-   * @since 2.0
-   */
-  @Override
-  public String toString() {
-    return "{\"SvDebitLogRecord\":{"
-        + "\"amount\":"
-        + getAmount()
-        + ", \"balance\":"
-        + getBalance()
-        + ", \"debitDate\":"
-        + getDebitDate()
-        + ", \"debitTime\":"
-        + getDebitDate()
-        + ", \"kvc\":"
-        + getKvc()
-        + ", \"samId\":"
-        + ByteArrayUtil.toHex(getSamIdBytes())
-        + ", \"svTransactionNumber\":"
-        + getSvTNum()
-        + ", \"svSamTransactionNumber\":"
-        + getSamTNum()
-        + "}}";
-  }
+  byte[] getSamTNumBytes();
 }

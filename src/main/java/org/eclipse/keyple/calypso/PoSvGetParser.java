@@ -100,7 +100,7 @@ final class PoSvGetParser extends AbstractPoResponseParser {
         } else {
           /* Debit */
           loadLog = null;
-          debitLog = new SvDebitLogRecord(poResponse, 11);
+          debitLog = new SvDebitLogRecordAdapter(poResponse, 11);
         }
         break;
       case 0x3D: /* Revision 3.2 mode */
@@ -112,7 +112,7 @@ final class PoSvGetParser extends AbstractPoResponseParser {
         System.arraycopy(poResponse, 11, previousSignatureLo, 0, 6);
         balance = ByteArrayUtil.threeBytesSignedToInt(poResponse, 17);
         loadLog = new SvLoadLogRecord(poResponse, 20);
-        debitLog = new SvDebitLogRecord(poResponse, 42);
+        debitLog = new SvDebitLogRecordAdapter(poResponse, 42);
         break;
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");
