@@ -27,26 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This service provides the high-level API to manage transactions with a Calypso PO.
- *
- * <p>Depending on the type of operations required, the presence of a SAM may be necessary.
- *
- * <p>The {@link CalypsoPoSmartCard} object provided to the build is kept and updated at each step
- * of using the service. It is the main container of the data handled during the transaction and
- * acts as a card image.
- *
- * <p>There are two main steps in using the methods of this service:
- *
- * <ul>
- *   <li>A command preparation step during which the application invokes prefixed "prepare" methods
- *       that will add to an internal list of commands to be executed by the PO. The incoming data
- *       to the PO are placed in {@link CalypsoPoSmartCard}.
- *   <li>A processing step corresponding to the prefixed "process" methods, which will carry out the
- *       communications with the PO and if necessary the SAM. The outgoing data from the PO are
- *       placed in {@link CalypsoPoSmartCard}.
- * </ul>
- *
- * <p>Technical or data errors, security conditions, etc. are reported as exceptions.
+ * (package-private)<br>
+ * Implementation of {@link PoTransaction}.
  *
  * @since 2.0
  */
