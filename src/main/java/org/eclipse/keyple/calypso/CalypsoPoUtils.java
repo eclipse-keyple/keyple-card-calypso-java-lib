@@ -516,7 +516,7 @@ final class CalypsoPoUtils {
             (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
                 | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
 
-    return DirectoryHeader.builder()
+    return DirectoryHeaderAdapter.builder()
         .lid(lid)
         .accessConditions(accessConditions)
         .keyIndexes(keyIndexes)
