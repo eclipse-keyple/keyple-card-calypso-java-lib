@@ -532,10 +532,10 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    * @param sfi the SFI.
    * @return a not null reference.
    */
-  private ElementaryFile getOrCreateFile(byte sfi) {
-    ElementaryFile ef = efBySfi.get(sfi);
+  private ElementaryFileAdapter getOrCreateFile(byte sfi) {
+    ElementaryFileAdapter ef = (ElementaryFileAdapter) efBySfi.get(sfi);
     if (ef == null) {
-      ef = new ElementaryFile(sfi);
+      ef = new ElementaryFileAdapter(sfi);
       efBySfi.put(sfi, ef);
     }
     return ef;
@@ -575,7 +575,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
    * @param header the file header (should be not null).
    */
   final void setFileHeader(byte sfi, FileHeader header) {
-    ElementaryFile ef = getOrCreateFile(sfi);
+    ElementaryFileAdapter ef = getOrCreateFile(sfi);
     ef.setHeader(header);
     sfiByLid.put(header.getLid(), sfi);
   }
@@ -691,7 +691,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
   private static void copyMapFiles(Map<Byte, ElementaryFile> src, Map<Byte, ElementaryFile> dest) {
     dest.clear();
     for (Map.Entry<Byte, ElementaryFile> entry : src.entrySet()) {
-      dest.put(entry.getKey(), new ElementaryFile(entry.getValue()));
+      dest.put(entry.getKey(), new ElementaryFileAdapter(entry.getValue()));
     }
   }
 
