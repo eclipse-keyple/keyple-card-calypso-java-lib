@@ -433,7 +433,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
       byte[] logRecord = getFileBySfi(CalypsoPoUtils.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
-      svLoadLogRecord = new SvLoadLogRecord(logRecord, 0);
+      svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
     }
     return svLoadLogRecord;
   }

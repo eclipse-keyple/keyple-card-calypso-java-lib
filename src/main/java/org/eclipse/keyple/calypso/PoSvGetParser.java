@@ -95,7 +95,7 @@ final class PoSvGetParser extends AbstractPoResponseParser {
         balance = ByteArrayUtil.threeBytesSignedToInt(poResponse, 8);
         if (poResponse.length == 0x21) {
           /* Reload */
-          loadLog = new SvLoadLogRecord(poResponse, 11);
+          loadLog = new SvLoadLogRecordAdapter(poResponse, 11);
           debitLog = null;
         } else {
           /* Debit */
@@ -111,7 +111,7 @@ final class PoSvGetParser extends AbstractPoResponseParser {
         transactionNumber = ByteArrayUtil.twoBytesToInt(poResponse, 9);
         System.arraycopy(poResponse, 11, previousSignatureLo, 0, 6);
         balance = ByteArrayUtil.threeBytesSignedToInt(poResponse, 17);
-        loadLog = new SvLoadLogRecord(poResponse, 20);
+        loadLog = new SvLoadLogRecordAdapter(poResponse, 20);
         debitLog = new SvDebitLogRecordAdapter(poResponse, 42);
         break;
       default:
