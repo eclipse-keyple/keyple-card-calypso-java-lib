@@ -12,20 +12,23 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the input PIN provided is not valid. <br>
  * This can occur during the PIN verification.
  *
  * @since 2.0
  */
-public final class CalypsoPoPinException extends CalypsoPoCommandException {
+final class CalypsoPoPinException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoPinException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoPinException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

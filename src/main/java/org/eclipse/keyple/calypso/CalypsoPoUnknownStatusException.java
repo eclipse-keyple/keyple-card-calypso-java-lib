@@ -12,20 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the status code is not referenced.
  *
  * @since 2.0
  */
-public final class CalypsoPoUnknownStatusException extends CalypsoPoCommandException {
+final class CalypsoPoUnknownStatusException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoUnknownStatusException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoUnknownStatusException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

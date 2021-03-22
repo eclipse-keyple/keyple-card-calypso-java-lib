@@ -12,19 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the input user data do not allow to build a syntactically correct command (e.g.
  * SFI too large, record number out of bounds,...).
  *
  * @since 2.0
  */
-public final class CalypsoPoIllegalArgumentException extends CalypsoPoCommandException {
+final class CalypsoPoIllegalArgumentException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @since 2.0
    */
-  public CalypsoPoIllegalArgumentException(String message, CalypsoPoCommand command) {
+  CalypsoPoIllegalArgumentException(String message, CalypsoPoCommand command) {
     super(message, command, null);
   }
 }

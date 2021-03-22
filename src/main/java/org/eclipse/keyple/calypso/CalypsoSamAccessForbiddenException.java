@@ -12,19 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that preconditions are not satisfied (e.g. session not active,...).
  *
  * @since 2.0
  */
-public final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandException {
+final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoSamAccessForbiddenException(
+  CalypsoSamAccessForbiddenException(
       String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }

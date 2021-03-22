@@ -12,20 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the security conditions are not fulfilled (e.g. no session, wrong key).
  *
  * @since 2.0
  */
-public final class CalypsoPoSecurityContextException extends CalypsoPoCommandException {
+final class CalypsoPoSecurityContextException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoSecurityContextException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoSecurityContextException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

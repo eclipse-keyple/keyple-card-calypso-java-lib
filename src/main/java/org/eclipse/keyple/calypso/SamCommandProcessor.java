@@ -97,7 +97,8 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @since 2.0
    */
-  byte[] getSessionTerminalChallenge() throws CalypsoSamCommandException {
+  byte[] getSessionTerminalChallenge()
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
 
     // diversify only if this has not already been done.
@@ -127,15 +128,9 @@ class SamCommandProcessor {
 
     // Transmit the CardRequest to the SAM and get back the CardResponse (list of ApduResponse)
     CardResponse samCardResponse;
-    try {
-      samCardResponse =
-          samReader.transmitCardRequest(
-              new CardRequest(apduRequests, false), ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException("Reader IO Exception while getting terminal challenge.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException("SAM IO Exception while getting terminal challenge.", e);
-    }
+    samCardResponse =
+        samReader.transmitCardRequest(
+            new CardRequest(apduRequests, false), ChannelControl.KEEP_OPEN);
 
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
     byte[] sessionTerminalChallenge;
@@ -387,7 +382,8 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @since 2.0
    */
-  byte[] getTerminalSignature() throws CalypsoSamCommandException {
+  byte[] getTerminalSignature()
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
 
     // All remaining SAM digest operations will now run at once.
     // Get the SAM Digest request including Digest Close from the cache manager
@@ -399,13 +395,7 @@ class SamCommandProcessor {
     // Transmit CardRequest and get CardResponse
     CardResponse samCardResponse;
 
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException("Reader IO Exception while transmitting digest data.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException("SAM IO Exception while transmitting digest data.", e);
-    }
+    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
 
@@ -449,7 +439,8 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @since 2.0
    */
-  void authenticatePoSignature(byte[] poSignatureLo) throws CalypsoSamCommandException {
+  void authenticatePoSignature(byte[] poSignatureLo)
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     // Check the PO signature part with the SAM
     // Build and send SAM Digest Authenticate command
     SamDigestAuthenticateBuilder samDigestAuthenticateBuilder =
@@ -462,15 +453,7 @@ class SamCommandProcessor {
     CardRequest samCardRequest = new CardRequest(samApduRequests, false);
 
     CardResponse samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "Reader IO Exception while transmitting digest authentication data.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "SAM IO Exception while transmitting digest authentication data.", e);
-    }
+    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     // Get transaction result parsing the response
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
@@ -518,7 +501,7 @@ class SamCommandProcessor {
    * @since 2.0
    */
   byte[] getCipheredPinData(byte[] poChallenge, byte[] currentPin, byte[] newPin)
-      throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
     KeyReference pinCipheringKey;
@@ -561,15 +544,7 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse = null;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "Reader IO Exception while transmitting digest authentication data.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "SAM IO Exception while transmitting digest authentication data.", e);
-    }
+    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     ApduResponse cardCipherPinResponse =
         samCardResponse.getApduResponses().get(cardCipherPinCmdIndex);
@@ -605,7 +580,7 @@ class SamCommandProcessor {
    */
   private byte[] getSvComplementaryData(
       AbstractSamCommandBuilder<? extends AbstractSamResponseParser> samSvPrepareBuilder)
-      throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
@@ -632,15 +607,7 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse = null;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "Reader IO Exception while transmitting digest authentication data.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "SAM IO Exception while transmitting digest authentication data.", e);
-    }
+    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     ApduResponse svPrepareResponse =
         samCardResponse.getApduResponses().get(svPrepareOperationCmdIndex);
@@ -685,7 +652,7 @@ class SamCommandProcessor {
    */
   byte[] getSvReloadComplementaryData(
       PoSvReloadBuilder poSvReloadBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareLoadBuilder samSvPrepareLoadBuilder =
         new SamSvPrepareLoadBuilder(
@@ -714,7 +681,7 @@ class SamCommandProcessor {
    */
   byte[] getSvDebitComplementaryData(
       PoSvDebitBuilder poSvDebitBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareDebitBuilder samSvPrepareDebitBuilder =
         new SamSvPrepareDebitBuilder(
@@ -743,7 +710,7 @@ class SamCommandProcessor {
    */
   public byte[] getSvUndebitComplementaryData(
       PoSvUndebitBuilder poSvUndebitBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareUndebitBuilder samSvPrepareUndebitBuilder =
         new SamSvPrepareUndebitBuilder(
@@ -765,7 +732,8 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @since 2.0
    */
-  void checkSvStatus(byte[] svOperationResponseData) throws CalypsoSamCommandException {
+  void checkSvStatus(byte[] svOperationResponseData)
+      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
@@ -778,15 +746,7 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "Reader IO Exception while transmitting digest authentication data.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          "SAM IO Exception while transmitting digest authentication data.", e);
-    }
+    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     ApduResponse svCheckResponse = samCardResponse.getApduResponses().get(0);
 

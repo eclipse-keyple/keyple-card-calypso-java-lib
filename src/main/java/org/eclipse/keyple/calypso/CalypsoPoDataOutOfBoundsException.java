@@ -12,21 +12,23 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the data provided by the user induces a capacity overflow in the PO.<br>
  * This can occur, for example, for commands that update a counter or the "Stored Value".
  *
  * @since 2.0
  */
-public final class CalypsoPoDataOutOfBoundsException extends CalypsoPoCommandException {
+final class CalypsoPoDataOutOfBoundsException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoDataOutOfBoundsException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoDataOutOfBoundsException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

@@ -12,21 +12,23 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the content of the command is incompatible with the PO's file system (e.g. reading
  * a non-existent record,...).
  *
  * @since 2.0
  */
-public final class CalypsoPoDataAccessException extends CalypsoPoCommandException {
+final class CalypsoPoDataAccessException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoDataAccessException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoDataAccessException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

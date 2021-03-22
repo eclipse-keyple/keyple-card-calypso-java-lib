@@ -12,20 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the access is forbidden (e.g. Never access mode, DF is invalidated,...).
  *
  * @since 2.0
  */
-public final class CalypsoPoAccessForbiddenException extends CalypsoPoCommandException {
+final class CalypsoPoAccessForbiddenException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoAccessForbiddenException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoAccessForbiddenException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

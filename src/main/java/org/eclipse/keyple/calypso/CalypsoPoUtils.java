@@ -398,7 +398,7 @@ final class CalypsoPoUtils {
       CalypsoPoSmartCardAdapter calypsoPoSmartCard,
       PoVerifyPinBuilder poVerifyPinBuilder,
       ApduResponse apduResponse)
-      throws CalypsoPoPinException {
+      throws CalypsoPoCommandException {
     PoVerifyPinParser poVerifyPinParser = poVerifyPinBuilder.createResponseParser(apduResponse);
 
     calypsoPoSmartCard.setPinAttemptRemaining(poVerifyPinParser.getRemainingAttemptCounter());
@@ -412,8 +412,6 @@ final class CalypsoPoUtils {
       if (!poVerifyPinBuilder.isReadCounterOnly()) {
         throw ex;
       }
-    } catch (CalypsoPoCommandException e) {
-      e.printStackTrace();
     }
 
     return poVerifyPinParser;
@@ -667,7 +665,9 @@ final class CalypsoPoUtils {
       case OPEN_SESSION_31:
       case OPEN_SESSION_32:
         return updateCalypsoPoOpenSession(
-            calypsoPoSmartCard, (AbstractPoOpenSessionBuilder) commandBuilder, apduResponse);
+            calypsoPoSmartCard,
+            (AbstractPoOpenSessionBuilder<AbstractPoOpenSessionParser>) commandBuilder,
+            apduResponse);
       case CLOSE_SESSION:
         return updateCalypsoPoCloseSession((PoCloseSessionBuilder) commandBuilder, apduResponse);
       case GET_CHALLENGE:

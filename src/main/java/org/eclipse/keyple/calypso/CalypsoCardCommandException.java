@@ -16,7 +16,7 @@ package org.eclipse.keyple.calypso;
  *
  * @since 2.0
  */
-abstract class CalypsoCardCommandException extends RuntimeException {
+abstract class CalypsoCardCommandException extends Exception {
 
   private final CardCommand command;
 

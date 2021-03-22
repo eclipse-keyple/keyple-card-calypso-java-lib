@@ -57,10 +57,10 @@ final class PoCloseSessionParser extends AbstractPoResponseParser {
   }
 
   /** The signatureLo. */
-  private byte[] signatureLo;
+  private final byte[] signatureLo;
 
   /** The postponed data. */
-  private byte[] postponedData;
+  private final byte[] postponedData;
 
   /**
    * Instantiates a new PoCloseSessionParser from the response.
@@ -71,20 +71,16 @@ final class PoCloseSessionParser extends AbstractPoResponseParser {
    */
   public PoCloseSessionParser(ApduResponse response, PoCloseSessionBuilder builder) {
     super(response, builder);
-    parse(response.getDataOut());
-  }
-
-  private void parse(byte[] response) {
-    if (response.length == 8) {
-      signatureLo = Arrays.copyOfRange(response, 4, 8);
-      postponedData = Arrays.copyOfRange(response, 1, 4);
-    } else if (response.length == 4) {
-      signatureLo = Arrays.copyOfRange(response, 0, 4);
+    byte[] responseData = response.getDataOut();
+    if (responseData.length == 8) {
+      signatureLo = Arrays.copyOfRange(responseData, 4, 8);
+      postponedData = Arrays.copyOfRange(responseData, 1, 4);
+    } else if (responseData.length == 4) {
+      signatureLo = Arrays.copyOfRange(responseData, 0, 4);
+      postponedData = new byte[0];
     } else {
-      if (response.length != 0) {
-        throw new IllegalArgumentException(
-            "Unexpected length in response to CloseSecureSession command: " + response.length);
-      }
+      throw new IllegalArgumentException(
+          "Unexpected length in response to CloseSecureSession command: " + responseData.length);
     }
   }
 

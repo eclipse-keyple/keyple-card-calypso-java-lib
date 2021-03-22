@@ -12,21 +12,23 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that the number of transactions authorized by the PO has reached its limit.<br>
  * This may occur, for example, when requesting an open secure session.
  *
  * @since 2.0
  */
-public final class CalypsoPoTerminatedException extends CalypsoPoCommandException {
+final class CalypsoPoTerminatedException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoTerminatedException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoTerminatedException(String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

@@ -12,19 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates during a secure session that the PO session buffer will overflow.
  *
  * @since 2.0
  */
-public final class CalypsoPoSessionBufferOverflowException extends CalypsoPoCommandException {
+final class CalypsoPoSessionBufferOverflowException extends CalypsoPoCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso PO command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoPoSessionBufferOverflowException(
+  CalypsoPoSessionBufferOverflowException(
       String message, CalypsoPoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }

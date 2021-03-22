@@ -12,19 +12,22 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Indicates that input data content is incorrect.
  *
  * @since 2.0
  */
-public final class CalypsoSamIncorrectInputDataException extends CalypsoSamCommandException {
+final class CalypsoSamIncorrectInputDataException extends CalypsoSamCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusCode the status code.
    * @since 2.0
    */
-  public CalypsoSamIncorrectInputDataException(
+  CalypsoSamIncorrectInputDataException(
       String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }

@@ -34,10 +34,22 @@ import org.slf4j.LoggerFactory;
  */
 class PoTransactionAdapter implements PoTransaction {
 
-  /**
-   * commands that modify the content of the PO in session have a cost on the session buffer equal
-   * to the length of the outgoing data plus 6 bytes
-   */
+  // prefix/suffix used to compose exception messages
+  private static final String PO_READER_COMMUNICATION_ERROR =
+      "A communication error with the PO reader occurred while ";
+  private static final String PO_COMMUNICATION_ERROR =
+      "A communication error with the PO occurred while ";
+  private static final String PO_COMMAND_ERROR = "A PO command error occurred while";
+  private static final String SAM_READER_COMMUNICATION_ERROR =
+      "A communication error with the SAM reader occurred while ";
+  private static final String SAM_COMMUNICATION_ERROR =
+      "A communication error with the SAM occurred while ";
+  private static final String SAM_COMMAND_ERROR = "A SAM command error occurred while";
+  public static final String TRANSMITTING_COMMANDS = "transmitting commands.";
+  public static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
+
+  // commands that modify the content of the PO in session have a cost on the session buffer equal
+  // to the length of the outgoing data plus 6 bytes
   private static final int SESSION_BUFFER_CMD_ADDITIONAL_COST = 6;
 
   private static final int APDU_HEADER_LENGTH = 5;
@@ -115,8 +127,6 @@ class PoTransactionAdapter implements PoTransaction {
    * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySettings} is available
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    */
   private void processAtomicOpening(
       SessionSetting.AccessLevel accessLevel,
@@ -130,11 +140,17 @@ class PoTransactionAdapter implements PoTransaction {
     }
 
     // gets the terminal challenge
-    byte[] sessionTerminalChallenge = new byte[0];
+    byte[] sessionTerminalChallenge;
     try {
       sessionTerminalChallenge = samCommandProcessor.getSessionTerminalChallenge();
     } catch (CalypsoSamCommandException e) {
-      throw new CalypsoSamAnomalyException("No SAM resource is available", e);
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "getting the terminal challenge: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "getting the terminal challenge.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + "getting terminal challenge.", e);
     }
 
     // PO ApduRequest List to hold Open Secure Session and other optional commands
@@ -194,7 +210,7 @@ class PoTransactionAdapter implements PoTransaction {
     // The updateCalypsoPo method fills the CalypsoPoSmartCard object with the command data and
     // return
     // the parser used for an internal usage here.
-    AbstractPoOpenSessionParser poOpenSessionPars = null;
+    AbstractPoOpenSessionParser poOpenSessionPars;
     try {
       poOpenSessionPars =
           (AbstractPoOpenSessionParser)
@@ -202,7 +218,7 @@ class PoTransactionAdapter implements PoTransaction {
                   calypsoPoSmartCard, openSessionCmdBuild, poApduResponses.get(0));
     } catch (CalypsoPoCommandException e) {
       throw new CalypsoPoAnomalyException(
-          "An error occurred while processing the response to open session.", e);
+          PO_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
     }
     // Build the Digest Init command from PO Open Session
     // the session challenge is needed for the SAM digest computation
@@ -212,7 +228,7 @@ class PoTransactionAdapter implements PoTransaction {
     byte poKif = poOpenSessionPars.getSelectedKif();
 
     // The PO KVC, may be null for PO Rev 1.0
-    Byte poKvc = poOpenSessionPars.getSelectedKvc();
+    byte poKvc = poOpenSessionPars.getSelectedKvc();
 
     if (logger.isDebugEnabled()) {
       logger.debug(
@@ -223,7 +239,8 @@ class PoTransactionAdapter implements PoTransaction {
     }
 
     if (!poSecuritySettings.isSessionKvcAuthorized(poKvc)) {
-      throw new CalypsoUnauthorizedKvcException(String.format("PO KVC = %02X", poKvc));
+      throw new CalypsoUnauthorizedKvcException(
+          String.format("Unauthorized KVC error: PO KVC = %02X", poKvc));
     }
 
     // Initialize the digest processor. It will store all digest operations (Digest Init, Digest
@@ -249,7 +266,7 @@ class PoTransactionAdapter implements PoTransaction {
       CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, poCommands, poApduResponses);
     } catch (CalypsoPoCommandException e) {
       throw new CalypsoPoAnomalyException(
-          "An error occurred while processing the response to open session.", e);
+          PO_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
     }
 
     sessionState = SessionState.SESSION_OPEN;
@@ -291,7 +308,6 @@ class PoTransactionAdapter implements PoTransaction {
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private void processAtomicPoCommands(
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands,
@@ -324,7 +340,7 @@ class PoTransactionAdapter implements PoTransaction {
           calypsoPoSmartCard, poCommands, poCardResponse.getApduResponses());
     } catch (CalypsoPoCommandException e) {
       throw new CalypsoPoAnomalyException(
-          "An error occurred while processing responses to PO commands.", e);
+          PO_COMMAND_ERROR + "processing responses to PO commands: " + e.getCommand(), e);
     }
   }
 
@@ -376,8 +392,6 @@ class PoTransactionAdapter implements PoTransaction {
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    */
   private void processAtomicClosing(
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poModificationCommands,
@@ -405,7 +419,13 @@ class PoTransactionAdapter implements PoTransaction {
       sessionTerminalSignature = samCommandProcessor.getTerminalSignature();
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
-          "An error occurred while getting the terminal signature.", e);
+          SAM_COMMAND_ERROR + "getting the terminal signature: " + e.getCommand().getName(), e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "getting the terminal signature.", e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "getting the terminal signature.", e);
     }
     boolean ratificationCommandResponseReceived;
 
@@ -452,45 +472,57 @@ class PoTransactionAdapter implements PoTransaction {
       if (!ratificationCommandAdded
           || poCardResponse == null
           || poCardResponse.getApduResponses().size() != poApduRequests.size() - 1) {
-        throw new CalypsoPoIOException("PO IO Exception while transmitting commands.", e);
+        throw new CalypsoPoIOException(PO_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
       }
       // we received all responses except the response to the ratification command
       ratificationCommandResponseReceived = false;
     } catch (ReaderCommunicationException e) {
-      throw new CalypsoPoIOException("Reader IO Exception while transmitting commands.", e);
+      throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     }
 
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
 
     // Check the commands executed before closing the secure session (only responses to these
-    // commands
-    // will be taken into account)
+    // commands will be taken into account)
     try {
       CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, poModificationCommands, poApduResponses);
     } catch (CalypsoPoCommandException e) {
-      e.printStackTrace();
+      throw new CalypsoPoAnomalyException(
+          PO_COMMAND_ERROR
+              + "processing of responses preceding the close of the session: "
+              + e.getCommand(),
+          e);
     }
 
     // Check the PO's response to Close Secure Session
-    PoCloseSessionParser poCloseSessionPars = null;
+    PoCloseSessionParser poCloseSessionPars;
     try {
       poCloseSessionPars =
           (PoCloseSessionParser)
               CalypsoPoUtils.updateCalypsoPo(
                   calypsoPoSmartCard, closeSessionCmdBuild, poApduResponses.get(closeCommandIndex));
-    } catch (CalypsoPoSecurityDataException ex) {
-      throw new CalypsoPoCloseSecureSessionException("Invalid PO session", ex);
+    } catch (CalypsoPoSecurityDataException e) {
+      throw new CalypsoPoCloseSecureSessionException("Invalid PO session", e);
     } catch (CalypsoPoCommandException e) {
-      e.printStackTrace();
+      throw new CalypsoPoAnomalyException(
+          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
     }
 
     // Check the PO signature
     try {
       samCommandProcessor.authenticatePoSignature(poCloseSessionPars.getSignatureLo());
-    } catch (CalypsoSamIOException ex) {
-      throw new CalypsoAuthenticationNotVerifiedException(ex.getMessage());
-    } catch (CalypsoSamCommandException ex) {
-      throw new CalypsoSessionAuthenticationException("PO authentication failed on SAM side.", ex);
+    } catch (CalypsoSamSecurityDataException e) {
+      throw new CalypsoSessionAuthenticationException(
+          "The authentication of the PO by the SAM has failed.", e);
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "authenticating the PO signature: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
     }
 
     // If necessary, we check the status of the SV after the session has been successfully
@@ -498,8 +530,17 @@ class PoTransactionAdapter implements PoTransaction {
     if (poCommandManager.isSvOperationCompleteOneTime()) {
       try {
         samCommandProcessor.checkSvStatus(poCloseSessionPars.getPostponedData());
+      } catch (CalypsoSamSecurityDataException e) {
+        throw new CalypsoSvAuthenticationException(
+            "The checking of the SV operation by the SAM has failed.", e);
       } catch (CalypsoSamCommandException e) {
-        e.printStackTrace();
+        throw new CalypsoSamAnomalyException(
+            SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
+      } catch (ReaderCommunicationException e) {
+        throw new CalypsoSamIOException(
+            SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
+      } catch (CardCommunicationException e) {
+        throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
       }
     }
 
@@ -526,8 +567,6 @@ class PoTransactionAdapter implements PoTransaction {
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    */
   private void processAtomicClosing(
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands,
@@ -680,7 +719,6 @@ class PoTransactionAdapter implements PoTransaction {
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private void processPoCommandsOutOfSession(ChannelControl channelControl) {
 
@@ -694,8 +732,18 @@ class PoTransactionAdapter implements PoTransaction {
     if (poCommandManager.isSvOperationCompleteOneTime()) {
       try {
         samCommandProcessor.checkSvStatus(CalypsoPoUtils.getSvOperationSignature());
+      } catch (CalypsoSamSecurityDataException e) {
+        throw new CalypsoSvAuthenticationException(
+            "The checking of the SV operation by the SAM has failed.", e);
       } catch (CalypsoSamCommandException e) {
-        e.printStackTrace();
+        throw new CalypsoSamAnomalyException(
+            SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
+      } catch (ReaderCommunicationException e) {
+        throw new CalypsoSvAuthenticationException(
+            SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
+      } catch (CardCommunicationException e) {
+        throw new CalypsoSvAuthenticationException(
+            SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
       }
     }
   }
@@ -707,8 +755,6 @@ class PoTransactionAdapter implements PoTransaction {
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    */
   private void processPoCommandsInSession() {
 
@@ -887,7 +933,8 @@ class PoTransactionAdapter implements PoTransaction {
           .createResponseParser(poCardResponse.getApduResponses().get(0))
           .checkStatus();
     } catch (CalypsoPoCommandException e) {
-      e.printStackTrace();
+      throw new CalypsoPoAnomalyException(
+          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
     }
 
     // sets the flag indicating that the commands have been executed
@@ -930,12 +977,20 @@ class PoTransactionAdapter implements PoTransaction {
       poCommandManager.notifyCommandsProcessed();
 
       // Get the encrypted PIN with the help of the SAM
-      byte[] cipheredPin = new byte[0];
+      byte[] cipheredPin;
       try {
         cipheredPin =
             samCommandProcessor.getCipheredPinData(CalypsoPoUtils.getPoChallenge(), pin, null);
       } catch (CalypsoSamCommandException e) {
-        e.printStackTrace();
+        throw new CalypsoSamAnomalyException(
+            SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
+            e);
+      } catch (ReaderCommunicationException e) {
+        throw new CalypsoSamIOException(
+            SAM_READER_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
+      } catch (CardCommunicationException e) {
+        throw new CalypsoSamIOException(
+            SAM_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
       }
       poCommandManager.addRegularCommand(
           new PoVerifyPinBuilder(
@@ -966,9 +1021,9 @@ class PoTransactionAdapter implements PoTransaction {
     try {
       return poReader.transmitCardRequest(poCardRequest, channelControl);
     } catch (ReaderCommunicationException e) {
-      throw new CalypsoPoIOException("Reader IO Exception while transmitting commands.", e);
+      throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (CardCommunicationException e) {
-      throw new CalypsoPoIOException("PO IO Exception while transmitting commands.", e);
+      throw new CalypsoPoIOException(PO_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     }
   }
 
@@ -1326,7 +1381,7 @@ class PoTransactionAdapter implements PoTransaction {
    */
   @Override
   public final void prepareSetCounter(byte sfi, int counterNumber, int newValue) {
-    int delta = 0;
+    int delta;
     try {
       delta =
           newValue
@@ -1431,13 +1486,20 @@ class PoTransactionAdapter implements PoTransaction {
             free);
 
     // get the security data from the SAM
-    byte[] svReloadComplementaryData = new byte[0];
+    byte[] svReloadComplementaryData;
     try {
       svReloadComplementaryData =
           samCommandProcessor.getSvReloadComplementaryData(
               svReloadCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
     } catch (CalypsoSamCommandException e) {
-      e.printStackTrace();
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "preparing the SV reload command: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
     }
 
     // finalize the SvReload command builder with the data provided by the SAM
@@ -1469,7 +1531,8 @@ class PoTransactionAdapter implements PoTransaction {
    * @param date 2-byte free value.
    * @param time 2-byte free value.
    */
-  private void prepareSvDebitPriv(int amount, byte[] date, byte[] time) {
+  private void prepareSvDebitPriv(int amount, byte[] date, byte[] time)
+      throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
     if (SvSettings.NegativeBalance.FORBIDDEN.equals(poSecuritySettings.getSvNegativeBalance())
         && (calypsoPoSmartCard.getSvBalance() - amount) < 0) {
@@ -1487,14 +1550,10 @@ class PoTransactionAdapter implements PoTransaction {
             time);
 
     // get the security data from the SAM
-    byte[] svDebitComplementaryData = new byte[0];
-    try {
-      svDebitComplementaryData =
-          samCommandProcessor.getSvDebitComplementaryData(
-              svDebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
-    } catch (CalypsoSamCommandException e) {
-      e.printStackTrace();
-    }
+    byte[] svDebitComplementaryData;
+    svDebitComplementaryData =
+        samCommandProcessor.getSvDebitComplementaryData(
+            svDebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
 
     // finalize the SvDebit command builder with the data provided by the SAM
     svDebitCmdBuild.finalizeBuilder(svDebitComplementaryData);
@@ -1513,7 +1572,8 @@ class PoTransactionAdapter implements PoTransaction {
    * @param date 2-byte free value.
    * @param time 2-byte free value.
    */
-  private void prepareSvUndebitPriv(int amount, byte[] date, byte[] time) {
+  private void prepareSvUndebitPriv(int amount, byte[] date, byte[] time)
+      throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
     // create the initial builder with the application data
     PoSvUndebitBuilder svUndebitCmdBuild =
@@ -1526,14 +1586,10 @@ class PoTransactionAdapter implements PoTransaction {
             time);
 
     // get the security data from the SAM
-    byte[] svDebitComplementaryData = new byte[0];
-    try {
-      svDebitComplementaryData =
-          samCommandProcessor.getSvUndebitComplementaryData(
-              svUndebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
-    } catch (CalypsoSamCommandException e) {
-      e.printStackTrace();
-    }
+    byte[] svDebitComplementaryData;
+    svDebitComplementaryData =
+        samCommandProcessor.getSvUndebitComplementaryData(
+            svUndebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
 
     // finalize the SvUndebit command builder with the data provided by the SAM
     svUndebitCmdBuild.finalizeBuilder(svDebitComplementaryData);
@@ -1549,10 +1605,22 @@ class PoTransactionAdapter implements PoTransaction {
    */
   @Override
   public final void prepareSvDebit(int amount, byte[] date, byte[] time) {
-    if (SvSettings.Action.DO.equals(svAction)) {
-      prepareSvDebitPriv(amount, date, time);
-    } else {
-      prepareSvUndebitPriv(amount, date, time);
+    try {
+      if (SvSettings.Action.DO.equals(svAction)) {
+        prepareSvDebitPriv(amount, date, time);
+      } else {
+        prepareSvUndebitPriv(amount, date, time);
+      }
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "preparing the SV debit/undebit command: " + e.getCommand().getName(),
+          e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
     }
   }
 

@@ -124,8 +124,6 @@ public interface PoTransaction {
    * @throws CalypsoUnauthorizedKvcException if the card KVC is not authorized
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    * @since 2.0
    */
   void processOpening(SessionSetting.AccessLevel accessLevel);
@@ -153,8 +151,6 @@ public interface PoTransaction {
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    * @since 2.0
    */
   void processPoCommands();
@@ -209,8 +205,6 @@ public interface PoTransaction {
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoSamCommandException if a response from the SAM was unexpected
    * @since 2.0
    */
   void processClosing();
@@ -224,7 +218,6 @@ public interface PoTransaction {
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
    * @since 2.0
    */
   void processCancel();
@@ -248,10 +241,6 @@ public interface PoTransaction {
    * @param pin the PIN code value (4-byte long byte array).
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
-   * @throws CalypsoPoCommandException if a response from the PO was unexpected
-   * @throws CalypsoPoPinException if the PIN presentation failed (the remaining attempt counter is
-   *     update in Calypso). See {@link CalypsoPoSmartCard#isPinBlocked} and {@link
-   *     CalypsoPoSmartCard#getPinAttemptRemaining} methods
    * @throws CalypsoPoTransactionIllegalStateException if the PIN feature is not available for this
    *     PO or if commands have been prepared before calling this process method.
    * @since 2.0
@@ -538,9 +527,12 @@ public interface PoTransaction {
    * @param free 2-byte free value.
    * @throws CalypsoPoTransactionIllegalStateException if the SV feature is not available for this
    *     PO.
+   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   *     errors)
    * @since 2.0
    */
-  void prepareSvReload(int amount, byte[] date, byte[] time, byte[] free);
+  void prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
+      throws CalypsoPoTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Reload</b> command to increase the current SV balance.
@@ -555,9 +547,11 @@ public interface PoTransaction {
    *     action, in the range 0..8388608 for an UNDO action.
    * @throws CalypsoPoTransactionIllegalStateException if the SV feature is not available for this
    *     PO.
+   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   *     errors)
    * @since 2.0
    */
-  void prepareSvReload(int amount);
+  void prepareSvReload(int amount) throws CalypsoPoTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
