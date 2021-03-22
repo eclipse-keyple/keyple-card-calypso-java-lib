@@ -14,6 +14,7 @@ package org.eclipse.keyple.calypso;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.keyple.core.card.CardSelectionResponse;
+import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -38,7 +39,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard {
+final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSpi {
   private final boolean isConfidentialSessionModeSupported;
   private final boolean isDeselectRatificationSupported;
   private final boolean isSvFeatureAvailable;
