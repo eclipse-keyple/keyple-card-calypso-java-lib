@@ -228,7 +228,7 @@ public interface CalypsoPoSmartCard extends SmartCard {
    * Tells if the last session with this PO has been ratified or not.
    *
    * @return true if the PO has been ratified.
-   * @throws IllegalStateException if these methods is call when no session has been opened
+   * @throws IllegalStateException if these methods is invoked when no session has been opened
    * @since 2.0
    */
   boolean isDfRatified();

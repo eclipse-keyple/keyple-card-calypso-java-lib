@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * <p>A flag (preparedCommandsProcessed) is used to manage the reset of the command list. It allows
  * the builders to be kept until the application creates a new list of commands.
  *
- * <p>This flag is set by calling the method notifyCommandsProcessed and reset when a new
+ * <p>This flag is set when invoking the method notifyCommandsProcessed and reset when a new
  * AbstractPoCommandBuilder is added or when a attempt
  */
 class PoCommandManager {

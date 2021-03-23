@@ -60,10 +60,10 @@ public interface PoTransactionService {
    * more commands and ends with an update of the {@link CalypsoPoSmartCard} object provided when
    * PoTransactionService was created.
    *
-   * <p>As a prerequisite for calling this method, since the Calypso Secure Session involves the use
-   * of a SAM, the PoTransactionService must have been built in secure mode, i.e. the constructor
-   * used must be the one expecting a reference to a valid {@link PoSecuritySettings} object,
-   * otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
+   * <p>As a prerequisite for invoking this method, since the Calypso Secure Session involves the
+   * use of a SAM, the PoTransactionService must have been built in secure mode, i.e. the
+   * constructor used must be the one expecting a reference to a valid {@link PoSecuritySettings}
+   * object, otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
    *
    * <p>The secure session is opened with the {@link SessionSetting.AccessLevel} passed as an
    * argument depending on whether it is a personalization, reload or debit transaction profile..
@@ -144,7 +144,7 @@ public interface PoTransactionService {
    *   <li>If a secure session is opened, except in the case where reloading or debit SV operations
    *       have been prepared, the invocation of this method does not generate communication with
    *       the SAM. The data necessary for the calculation of the terminal signature are kept to be
-   *       sent to the SAM at the time of the call to {@link #processClosing()}.<br>
+   *       sent to the SAM at the time of the invocation of {@link #processClosing()}.<br>
    *       The PO channel is kept open.
    *   <li>If no secure session is opened, the PO channel is closed depending on whether or not
    *       prepareReleasePoChannel has been called.
@@ -247,7 +247,7 @@ public interface PoTransactionService {
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
    * @throws CalypsoPoTransactionIllegalStateException if the PIN feature is not available for this
-   *     PO or if commands have been prepared before calling this process method.
+   *     PO or if commands have been prepared before invoking this process method.
    * @since 2.0
    */
   void processVerifyPin(byte[] pin);
@@ -277,8 +277,8 @@ public interface PoTransactionService {
    * <p>Note: this command must imperatively be called at the end of any transaction, whether it
    * ended normally or not.
    *
-   * <p>In case the transaction was interrupted (exception), an additional call to processPoCommands
-   * must be made to effectively close the channel.
+   * <p>In case the transaction was interrupted (exception), an additional invocation of
+   * processPoCommands must be made to effectively close the channel.
    *
    * @since 2.0
    */

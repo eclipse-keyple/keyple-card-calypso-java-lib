@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelector;
  *
  * @since 2.0
  */
-public class CalypsoSamSelector extends CardSelector {
+public final class CalypsoSamSelector extends CardSelector {
   private final SamRevision targetSamRevision;
   private final byte[] unlockData;
 

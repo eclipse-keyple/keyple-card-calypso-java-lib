@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelector;
  *
  * @since 2.0
  */
-public class CalypsoPoSelector extends CardSelector {
+public final class CalypsoPoSelector extends CardSelector {
 
   private static final int SW_PO_INVALIDATED = 0x6283;
 
