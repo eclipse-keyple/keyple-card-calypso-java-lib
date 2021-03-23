@@ -14,7 +14,7 @@ package org.eclipse.keyple.calypso;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.keyple.calypso.smartcard.po.*;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.AnswerToReset;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.card.CardSelectionResponse;
@@ -38,7 +38,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *   <li>The management information of the modification buffer
  *   <li>The invalidation status
  *   <li>The files, counters, SV data read or modified during the execution of the processes defined
- *       by {@link PoTransaction}
+ *       by {@link PoTransactionService}
  * </ul>
  *
  * @since 2.0

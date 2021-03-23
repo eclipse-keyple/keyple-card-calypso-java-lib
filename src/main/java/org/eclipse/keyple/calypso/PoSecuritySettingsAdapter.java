@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +33,17 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
 
   private CardResource<CalypsoSamSmartCard> samResource;
   private final List<Byte> authorizedKvcList;
-  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKIFs;
-  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKVCs;
-  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers;
+  private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKIFs;
+  private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKVCs;
+  private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>
+      defaultKeyRecordNumbers;
 
-  private PoTransaction.SessionSetting.ModificationMode sessionModificationMode;
-  private PoTransaction.SessionSetting.RatificationMode ratificationMode;
-  private PoTransaction.PinTransmissionMode pinTransmissionMode;
+  private PoTransactionService.SessionSetting.ModificationMode sessionModificationMode;
+  private PoTransactionService.SessionSetting.RatificationMode ratificationMode;
+  private PoTransactionService.PinTransmissionMode pinTransmissionMode;
   private KeyReference defaultPinCipheringKey;
-  private PoTransaction.SvSettings.LogRead svGetLogReadMode;
-  private PoTransaction.SvSettings.NegativeBalance svNegativeBalance;
+  private PoTransactionService.SvSettings.LogRead svGetLogReadMode;
+  private PoTransactionService.SvSettings.NegativeBalance svNegativeBalance;
 
   /**
    * (package-private)<br>
@@ -54,14 +55,14 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
     // TODO check if we need thread safe collections here
     authorizedKvcList = new ArrayList<Byte>();
     defaultKIFs =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
+        new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+            PoTransactionService.SessionSetting.AccessLevel.class);
     defaultKVCs =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
+        new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+            PoTransactionService.SessionSetting.AccessLevel.class);
     defaultKeyRecordNumbers =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
+        new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+            PoTransactionService.SessionSetting.AccessLevel.class);
   }
 
   /**
@@ -99,7 +100,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter putDefaultKIFs(
-      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKIFs) {
+      Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKIFs) {
     this.defaultKIFs.putAll(defaultKIFs);
     return this;
   }
@@ -112,7 +113,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter putDefaultKvc(
-      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKVCs) {
+      Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKVCs) {
     this.defaultKVCs.putAll(defaultKVCs);
     return this;
   }
@@ -125,7 +126,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter putDefaultKeyRecordNumbers(
-      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers) {
+      Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers) {
     this.defaultKeyRecordNumbers.putAll(defaultKeyRecordNumbers);
     return this;
   }
@@ -138,7 +139,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter setSessionModificationMode(
-      PoTransaction.SessionSetting.ModificationMode sessionModificationMode) {
+      PoTransactionService.SessionSetting.ModificationMode sessionModificationMode) {
     this.sessionModificationMode = sessionModificationMode;
     return this;
   }
@@ -151,7 +152,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter setRatificationMode(
-      PoTransaction.SessionSetting.RatificationMode ratificationMode) {
+      PoTransactionService.SessionSetting.RatificationMode ratificationMode) {
     this.ratificationMode = ratificationMode;
     return this;
   }
@@ -164,7 +165,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter setPinTransmissionMode(
-      PoTransaction.PinTransmissionMode pinTransmissionMode) {
+      PoTransactionService.PinTransmissionMode pinTransmissionMode) {
     this.pinTransmissionMode = pinTransmissionMode;
     return this;
   }
@@ -189,7 +190,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter setSvGetLogReadMode(
-      PoTransaction.SvSettings.LogRead svGetLogReadMode) {
+      PoTransactionService.SvSettings.LogRead svGetLogReadMode) {
     this.svGetLogReadMode = svGetLogReadMode;
     return this;
   }
@@ -202,7 +203,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   public PoSecuritySettingsAdapter setSvNegativeBalance(
-      PoTransaction.SvSettings.NegativeBalance svNegativeBalance) {
+      PoTransactionService.SvSettings.NegativeBalance svNegativeBalance) {
     this.svNegativeBalance = svNegativeBalance;
     return this;
   }
@@ -223,7 +224,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return the Session Modification Mode
    * @since 2.0
    */
-  PoTransaction.SessionSetting.ModificationMode getSessionModificationMode() {
+  PoTransactionService.SessionSetting.ModificationMode getSessionModificationMode() {
     return sessionModificationMode;
   }
 
@@ -233,7 +234,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return the Ratification Mode
    * @since 2.0
    */
-  PoTransaction.SessionSetting.RatificationMode getRatificationMode() {
+  PoTransactionService.SessionSetting.RatificationMode getRatificationMode() {
     return ratificationMode;
   }
 
@@ -243,7 +244,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return the PIN Transmission Mode
    * @since 2.0
    */
-  public PoTransaction.PinTransmissionMode getPinTransmissionMode() {
+  public PoTransactionService.PinTransmissionMode getPinTransmissionMode() {
     return pinTransmissionMode;
   }
 
@@ -253,7 +254,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return the default session KIF
    * @since 2.0
    */
-  Byte getSessionDefaultKif(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
+  Byte getSessionDefaultKif(PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel) {
     return defaultKIFs.get(sessionAccessLevel);
   }
 
@@ -263,7 +264,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return the default session KVC
    * @since 2.0
    */
-  Byte getSessionDefaultKvc(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
+  Byte getSessionDefaultKvc(PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel) {
     return defaultKVCs.get(sessionAccessLevel);
   }
 
@@ -274,7 +275,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @since 2.0
    */
   Byte getSessionDefaultKeyRecordNumber(
-      PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
+      PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel) {
     return defaultKeyRecordNumbers.get(sessionAccessLevel);
   }
 
@@ -308,7 +309,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return how SV logs are read, indicating whether or not all SV logs are needed
    * @since 2.0
    */
-  PoTransaction.SvSettings.LogRead getSvGetLogReadMode() {
+  PoTransactionService.SvSettings.LogRead getSvGetLogReadMode() {
     return svGetLogReadMode;
   }
 
@@ -318,7 +319,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return an indication of whether negative balances are allowed or not
    * @since 2.0
    */
-  PoTransaction.SvSettings.NegativeBalance getSvNegativeBalance() {
+  PoTransactionService.SvSettings.NegativeBalance getSvNegativeBalance() {
     return svNegativeBalance;
   }
 }

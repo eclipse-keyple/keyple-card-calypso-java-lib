@@ -14,24 +14,24 @@ package org.eclipse.keyple.calypso;
 import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardResource;
 
 /**
- * Factory of {@link PoTransaction}
+ * Factory of {@link PoTransactionService}
  *
  * @since 2.0
  */
-public class PoTransactionFactory {
+public class PoTransactionServiceFactory {
   /**
    * (private)<br>
    * Constructor
    */
-  private PoTransactionFactory() {}
+  private PoTransactionServiceFactory() {}
 
   /**
-   * Gets an instance of a {@link PoTransaction} to operate a Calypso Secure session.
+   * Gets an instance of a {@link PoTransactionService} to operate a Calypso Secure session.
    *
    * <p>The required PO resource (combination of {@link Reader} and {@link CalypsoPoSmartCard}).
    * <br>
@@ -43,13 +43,13 @@ public class PoTransactionFactory {
    * @return A not null reference.
    * @since 2.0
    */
-  public static PoTransaction getService(
+  public static PoTransactionService getService(
       CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
-    return new PoTransactionAdapter(poResource, poSecuritySettings);
+    return new PoTransactionServiceAdapter(poResource, poSecuritySettings);
   }
 
   /**
-   * Gets an instance of a {@link PoTransaction} to operate non-secured Calypso commands.
+   * Gets an instance of a {@link PoTransactionService} to operate non-secured Calypso commands.
    *
    * <p>The required PO resource (combination of {@link Reader} and {@link CalypsoPoSmartCard}).
    *
@@ -57,7 +57,7 @@ public class PoTransactionFactory {
    * @return A not null reference.
    * @since 2.0
    */
-  public static PoTransaction getService(CardResource<CalypsoPoSmartCard> poResource) {
-    return new PoTransactionAdapter(poResource);
+  public static PoTransactionService getService(CardResource<CalypsoPoSmartCard> poResource) {
+    return new PoTransactionServiceAdapter(poResource);
   }
 }

@@ -19,7 +19,7 @@ import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -178,7 +178,8 @@ class SamCommandProcessor {
    * @param accessLevel the session access level.
    * @return the work KIF value byte
    */
-  private byte determineWorkKif(byte poKif, PoTransaction.SessionSetting.AccessLevel accessLevel) {
+  private byte determineWorkKif(
+      byte poKif, PoTransactionService.SessionSetting.AccessLevel accessLevel) {
     byte kif;
     if (poKif == KIF_UNDEFINED) {
       kif = poSecuritySettings.getSessionDefaultKif(accessLevel);
@@ -206,7 +207,7 @@ class SamCommandProcessor {
    * @since 2.0
    */
   void initializeDigester(
-      PoTransaction.SessionSetting.AccessLevel accessLevel,
+      PoTransactionService.SessionSetting.AccessLevel accessLevel,
       boolean sessionEncryption,
       boolean verificationMode,
       byte poKif,

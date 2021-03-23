@@ -18,7 +18,7 @@ import java.util.Map;
 import org.eclipse.keyple.calypso.selection.po.SelectFileControl;
 import org.eclipse.keyple.calypso.smartcard.po.DirectoryHeader;
 import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.Assert;
 
@@ -524,22 +524,22 @@ final class CalypsoPoUtils {
         .keyIndexes(keyIndexes)
         .dfStatus(dfStatus)
         .kvc(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
             proprietaryInformation[SEL_KVCS_OFFSET])
         .kvc(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
             proprietaryInformation[SEL_KVCS_OFFSET + 1])
         .kvc(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
             proprietaryInformation[SEL_KVCS_OFFSET + 2])
         .kif(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
             proprietaryInformation[SEL_KIFS_OFFSET])
         .kif(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
             proprietaryInformation[SEL_KIFS_OFFSET + 1])
         .kif(
-            PoTransaction.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
+            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
             proprietaryInformation[SEL_KIFS_OFFSET + 2])
         .build();
   }

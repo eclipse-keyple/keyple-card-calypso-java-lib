@@ -34,11 +34,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link PoTransaction}.
+ * Implementation of {@link PoTransactionService}.
  *
  * @since 2.0
  */
-class PoTransactionAdapter implements PoTransaction {
+class PoTransactionServiceAdapter implements PoTransactionService {
 
   // prefix/suffix used to compose exception messages
   private static final String PO_READER_COMMUNICATION_ERROR =
@@ -60,7 +60,7 @@ class PoTransactionAdapter implements PoTransaction {
 
   private static final int APDU_HEADER_LENGTH = 5;
 
-  private static final Logger logger = LoggerFactory.getLogger(PoTransactionAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(PoTransactionServiceAdapter.class);
 
   /** The reader for PO. */
   private final ProxyReader poReader;
@@ -94,7 +94,7 @@ class PoTransactionAdapter implements PoTransaction {
    *     {@link CardResource} based on a {@link CalypsoSamSmartCard}.
    * @since 2.0
    */
-  public PoTransactionAdapter(
+  public PoTransactionServiceAdapter(
       CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
 
     this(poResource);
@@ -111,7 +111,7 @@ class PoTransactionAdapter implements PoTransaction {
    *     CalypsoPoSmartCard}).
    * @since 2.0
    */
-  public PoTransactionAdapter(CardResource<CalypsoPoSmartCard> poResource) {
+  public PoTransactionServiceAdapter(CardResource<CalypsoPoSmartCard> poResource) {
     this.poReader = (ProxyReader) poResource.getReader();
 
     this.calypsoPoSmartCard = (CalypsoPoSmartCardAdapter) poResource.getSmartCard();

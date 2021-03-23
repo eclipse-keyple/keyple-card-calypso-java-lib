@@ -42,7 +42,7 @@ import org.eclipse.keyple.core.card.CardRequest;
  *
  * @since 2.0
  */
-public interface PoTransaction {
+public interface PoTransactionService {
   /**
    * Opens a Calypso Secure Session and then executes all previously prepared commands.
    *
@@ -58,12 +58,12 @@ public interface PoTransaction {
    *
    * <p>Each of the steps in this sequence may or may not be preceded by the preparation of one or
    * more commands and ends with an update of the {@link CalypsoPoSmartCard} object provided when
-   * PoTransaction was created.
+   * PoTransactionService was created.
    *
    * <p>As a prerequisite for calling this method, since the Calypso Secure Session involves the use
-   * of a SAM, the PoTransaction must have been built in secure mode, i.e. the constructor used must
-   * be the one expecting a reference to a valid {@link PoSecuritySettings} object, otherwise a
-   * {@link CalypsoPoTransactionIllegalStateException} is raised.
+   * of a SAM, the PoTransactionService must have been built in secure mode, i.e. the constructor
+   * used must be the one expecting a reference to a valid {@link PoSecuritySettings} object,
+   * otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
    *
    * <p>The secure session is opened with the {@link SessionSetting.AccessLevel} passed as an
    * argument depending on whether it is a personalization, reload or debit transaction profile..
@@ -236,10 +236,10 @@ public interface PoTransaction {
    * default the transmission is encrypted).
    *
    * <p>If the execution is done out of session but an encrypted transmission is requested, then
-   * PoTransaction must be constructed with {@link PoSecuritySettings}
+   * PoTransactionService must be constructed with {@link PoSecuritySettings}
    *
-   * <p>If PoTransaction is constructed without {@link PoSecuritySettings} the transmission in done
-   * in plain.
+   * <p>If PoTransactionService is constructed without {@link PoSecuritySettings} the transmission
+   * in done in plain.
    *
    * <p>The PO channel is closed if prepareReleasePoChannel is called before this command.
    *

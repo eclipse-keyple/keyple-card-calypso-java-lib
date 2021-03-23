@@ -12,7 +12,7 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
   /** The command. */
   private static final CalypsoPoCommand command = CalypsoPoCommand.SV_GET;
 
-  private final PoTransaction.SvSettings.Operation svOperation;
+  private final PoTransactionService.SvSettings.Operation svOperation;
   private final byte[] header;
 
   /**
@@ -42,11 +42,14 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
    * @since 2.0
    */
   public PoSvGetBuilder(
-      PoClass poClass, PoRevision poRevision, PoTransaction.SvSettings.Operation svOperation) {
+      PoClass poClass,
+      PoRevision poRevision,
+      PoTransactionService.SvSettings.Operation svOperation) {
     super(command, null);
     byte cla = poClass.getValue();
     byte p1 = poRevision == PoRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
-    byte p2 = svOperation == PoTransaction.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
+    byte p2 =
+        svOperation == PoTransactionService.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
     this.request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00);
     if (logger.isDebugEnabled()) {
@@ -67,7 +70,7 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
    * @return the current SvSettings.Operation enum value
    * @since 2.0
    */
-  public PoTransaction.SvSettings.Operation getSvOperation() {
+  public PoTransactionService.SvSettings.Operation getSvOperation() {
     return svOperation;
   }
 

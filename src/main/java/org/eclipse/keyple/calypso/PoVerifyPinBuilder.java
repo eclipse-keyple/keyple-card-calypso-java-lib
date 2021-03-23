@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.slf4j.Logger;
@@ -41,12 +41,13 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
    * @since 2.0
    */
   public PoVerifyPinBuilder(
-      PoClass poClass, PoTransaction.PinTransmissionMode pinTransmissionMode, byte[] pin) {
+      PoClass poClass, PoTransactionService.PinTransmissionMode pinTransmissionMode, byte[] pin) {
     super(command, null);
 
     if (pin == null
-        || (pinTransmissionMode == PoTransaction.PinTransmissionMode.PLAIN && pin.length != 4)
-        || (pinTransmissionMode == PoTransaction.PinTransmissionMode.ENCRYPTED
+        || (pinTransmissionMode == PoTransactionService.PinTransmissionMode.PLAIN
+            && pin.length != 4)
+        || (pinTransmissionMode == PoTransactionService.PinTransmissionMode.ENCRYPTED
             && pin.length != 8)) {
       throw new IllegalArgumentException("The PIN must be 4 bytes long");
     }

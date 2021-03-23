@@ -13,4 +13,9 @@ package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 
+/**
+ * Card extension dedicated to the management of Calypso cards.
+ *
+ * @since 2.0
+ */
 public interface CalypsoCardExtension extends KeypleCardExtension {}

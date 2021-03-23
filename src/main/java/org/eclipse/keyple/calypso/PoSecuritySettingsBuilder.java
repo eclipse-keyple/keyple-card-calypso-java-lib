@@ -15,7 +15,7 @@ import java.util.EnumMap;
 import java.util.List;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
-import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.Assert;
 
@@ -29,17 +29,17 @@ import org.eclipse.keyple.core.util.Assert;
  */
 public class PoSecuritySettingsBuilder {
 
-  public static final PoTransaction.SessionSetting.ModificationMode defaultSessionModificationMode =
-      PoTransaction.SessionSetting.ModificationMode.ATOMIC;
-  public static final PoTransaction.SessionSetting.RatificationMode defaultRatificationMode =
-      PoTransaction.SessionSetting.RatificationMode.CLOSE_RATIFIED;
-  public static final PoTransaction.PinTransmissionMode defaultPinTransmissionMode =
-      PoTransaction.PinTransmissionMode.ENCRYPTED;
+  public static final PoTransactionService.SessionSetting.ModificationMode
+      defaultSessionModificationMode = PoTransactionService.SessionSetting.ModificationMode.ATOMIC;
+  public static final PoTransactionService.SessionSetting.RatificationMode defaultRatificationMode =
+      PoTransactionService.SessionSetting.RatificationMode.CLOSE_RATIFIED;
+  public static final PoTransactionService.PinTransmissionMode defaultPinTransmissionMode =
+      PoTransactionService.PinTransmissionMode.ENCRYPTED;
   private static final KeyReference nullPinCipheringKey = new KeyReference((byte) 0, (byte) 0);
-  private static final PoTransaction.SvSettings.LogRead defaultSvGetLogReadMode =
-      PoTransaction.SvSettings.LogRead.SINGLE;
-  private static final PoTransaction.SvSettings.NegativeBalance defaultSvNegativeBalance =
-      PoTransaction.SvSettings.NegativeBalance.FORBIDDEN;
+  private static final PoTransactionService.SvSettings.LogRead defaultSvGetLogReadMode =
+      PoTransactionService.SvSettings.LogRead.SINGLE;
+  private static final PoTransactionService.SvSettings.NegativeBalance defaultSvNegativeBalance =
+      PoTransactionService.SvSettings.NegativeBalance.FORBIDDEN;
 
   /** Private constructor */
   private PoSecuritySettingsBuilder() {}
@@ -68,24 +68,26 @@ public class PoSecuritySettingsBuilder {
     private List<Byte> authorizedKvcList;
 
     /** EnumMap associating session levels and corresponding KIFs */
-    private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKif =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
+    private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKif =
+        new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+            PoTransactionService.SessionSetting.AccessLevel.class);
 
-    private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKvc =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
-    private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumber =
-        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
-            PoTransaction.SessionSetting.AccessLevel.class);
+    private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKvc =
+        new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+            PoTransactionService.SessionSetting.AccessLevel.class);
+    private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>
+        defaultKeyRecordNumber =
+            new EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte>(
+                PoTransactionService.SessionSetting.AccessLevel.class);
 
-    PoTransaction.SessionSetting.ModificationMode sessionModificationMode =
+    PoTransactionService.SessionSetting.ModificationMode sessionModificationMode =
         defaultSessionModificationMode;
-    PoTransaction.SessionSetting.RatificationMode ratificationMode = defaultRatificationMode;
-    PoTransaction.PinTransmissionMode pinTransmissionMode = defaultPinTransmissionMode;
+    PoTransactionService.SessionSetting.RatificationMode ratificationMode = defaultRatificationMode;
+    PoTransactionService.PinTransmissionMode pinTransmissionMode = defaultPinTransmissionMode;
     KeyReference defaultPinCipheringKey = nullPinCipheringKey;
-    PoTransaction.SvSettings.LogRead svGetLogReadMode = defaultSvGetLogReadMode;
-    PoTransaction.SvSettings.NegativeBalance svNegativeBalanceMode = defaultSvNegativeBalance;
+    PoTransactionService.SvSettings.LogRead svGetLogReadMode = defaultSvGetLogReadMode;
+    PoTransactionService.SvSettings.NegativeBalance svNegativeBalanceMode =
+        defaultSvNegativeBalance;
 
     /**
      * Constructor The SAM resource we'll be working with is needed in any cases.
@@ -102,7 +104,7 @@ public class PoSecuritySettingsBuilder {
     /**
      * Set the Session Modification Mode
      *
-     * <p>The default value is {@link PoTransaction.SessionSetting.ModificationMode#ATOMIC}.
+     * <p>The default value is {@link PoTransactionService.SessionSetting.ModificationMode#ATOMIC}.
      *
      * @param sessionModificationMode The desired Session Modification Mode.
      * @return the builder instance
@@ -110,7 +112,7 @@ public class PoSecuritySettingsBuilder {
      * @since 2.0
      */
     public Builder sessionModificationMode(
-        PoTransaction.SessionSetting.ModificationMode sessionModificationMode) {
+        PoTransactionService.SessionSetting.ModificationMode sessionModificationMode) {
       Assert.getInstance().notNull(sessionModificationMode, "sessionModificationMode");
       this.sessionModificationMode = sessionModificationMode;
       return this;
@@ -119,7 +121,8 @@ public class PoSecuritySettingsBuilder {
     /**
      * Set the Ratification Mode
      *
-     * <p>The default value is {@link PoTransaction.SessionSetting.RatificationMode#CLOSE_RATIFIED}.
+     * <p>The default value is {@link
+     * PoTransactionService.SessionSetting.RatificationMode#CLOSE_RATIFIED}.
      *
      * @param ratificationMode The desired Ratification Mode.
      * @return the builder instance
@@ -127,7 +130,7 @@ public class PoSecuritySettingsBuilder {
      * @since 2.0
      */
     public Builder ratificationMode(
-        PoTransaction.SessionSetting.RatificationMode ratificationMode) {
+        PoTransactionService.SessionSetting.RatificationMode ratificationMode) {
       Assert.getInstance().notNull(ratificationMode, "ratificationMode");
       this.ratificationMode = ratificationMode;
       return this;
@@ -136,14 +139,15 @@ public class PoSecuritySettingsBuilder {
     /**
      * Set the PIN Transmission Mode
      *
-     * <p>The default value is {@link PoTransaction.PinTransmissionMode#ENCRYPTED}.
+     * <p>The default value is {@link PoTransactionService.PinTransmissionMode#ENCRYPTED}.
      *
      * @param pinTransmissionMode The desired PIN Transmission Mode.
      * @return the builder instance
      * @throws IllegalArgumentException If the argument is null.
      * @since 2.0
      */
-    public Builder pinTransmissionMode(PoTransaction.PinTransmissionMode pinTransmissionMode) {
+    public Builder pinTransmissionMode(
+        PoTransactionService.PinTransmissionMode pinTransmissionMode) {
       Assert.getInstance().notNull(pinTransmissionMode, "pinTransmissionMode");
       this.pinTransmissionMode = pinTransmissionMode;
       return this;
@@ -161,7 +165,8 @@ public class PoSecuritySettingsBuilder {
      * @since 2.0
      */
     public Builder assignSessionDefaultKif(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte sessionDefaultKif) {
+        PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel,
+        byte sessionDefaultKif) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       defaultKif.put(sessionAccessLevel, sessionDefaultKif);
       return this;
@@ -179,7 +184,8 @@ public class PoSecuritySettingsBuilder {
      * @since 2.0
      */
     public Builder assignSessionDefaultKvc(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte sessionDefaultKvc) {
+        PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel,
+        byte sessionDefaultKvc) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.defaultKvc.put(sessionAccessLevel, sessionDefaultKvc);
       return this;
@@ -197,7 +203,7 @@ public class PoSecuritySettingsBuilder {
      * @since 2.0
      */
     public Builder assignSessionDefaultKeyRecordNumber(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel,
+        PoTransactionService.SessionSetting.AccessLevel sessionAccessLevel,
         byte sessionDefaultKeyRecordNumber) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       defaultKeyRecordNumber.put(sessionAccessLevel, sessionDefaultKeyRecordNumber);
@@ -236,12 +242,12 @@ public class PoSecuritySettingsBuilder {
     /**
      * Sets the SV Get log read mode to indicate whether only one or both log files are to be read
      *
-     * @param svGetLogReadMode the {@link PoTransaction.SvSettings.LogRead} mode.
+     * @param svGetLogReadMode the {@link PoTransactionService.SvSettings.LogRead} mode.
      * @return the builder instance
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public Builder svGetLogReadMode(PoTransaction.SvSettings.LogRead svGetLogReadMode) {
+    public Builder svGetLogReadMode(PoTransactionService.SvSettings.LogRead svGetLogReadMode) {
       Assert.getInstance().notNull(svGetLogReadMode, "svGetLogReadMode");
       this.svGetLogReadMode = svGetLogReadMode;
       return this;
@@ -250,13 +256,14 @@ public class PoSecuritySettingsBuilder {
     /**
      * Sets the SV negative balance mode to indicate whether negative balances are allowed or not
      *
-     * @param svNegativeBalanceMode the {@link PoTransaction.SvSettings.NegativeBalance} mode.
+     * @param svNegativeBalanceMode the {@link PoTransactionService.SvSettings.NegativeBalance}
+     *     mode.
      * @return the builder instance
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
     public Builder svNegativeBalanceMode(
-        PoTransaction.SvSettings.NegativeBalance svNegativeBalanceMode) {
+        PoTransactionService.SvSettings.NegativeBalance svNegativeBalanceMode) {
       Assert.getInstance().notNull(svNegativeBalanceMode, "svNegativeBalanceMode");
       this.svNegativeBalanceMode = svNegativeBalanceMode;
       return this;
