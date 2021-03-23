@@ -65,7 +65,7 @@ class PoTransactionAdapter implements PoTransaction {
   /** The reader for PO. */
   private final ProxyReader poReader;
   /** The PO security settings used to manage the secure session */
-  private PoSecuritySettings poSecuritySettings;
+  private PoSecuritySettingsAdapter poSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current CalypsoPoSmartCard */
@@ -95,11 +95,11 @@ class PoTransactionAdapter implements PoTransaction {
    * @since 2.0
    */
   public PoTransactionAdapter(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettingsInterface poSecuritySettings) {
 
     this(poResource);
 
-    this.poSecuritySettings = poSecuritySettings;
+    this.poSecuritySettings = (PoSecuritySettingsAdapter) poSecuritySettings;
 
     samCommandProcessor = new SamCommandProcessor(poResource, poSecuritySettings);
   }

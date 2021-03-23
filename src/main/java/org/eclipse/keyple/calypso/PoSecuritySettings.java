@@ -56,7 +56,7 @@ public class PoSecuritySettings {
       PoTransaction.SvSettings.NegativeBalance.FORBIDDEN;
 
   /** Private constructor */
-  private PoSecuritySettings(PoSecuritySettingsBuilder builder) {
+  private PoSecuritySettings(Builder builder) {
     this.samResource = builder.samResource;
     this.authorizedKvcList = builder.authorizedKvcList;
     this.defaultKif = builder.defaultKif;
@@ -75,7 +75,7 @@ public class PoSecuritySettings {
    *
    * @since 2.0
    */
-  public static final class PoSecuritySettingsBuilder {
+  public static final class Builder {
     private final CardResource<CalypsoSamSmartCard> samResource;
     /** List of authorized KVCs */
     private List<Byte> authorizedKvcList;
@@ -107,7 +107,7 @@ public class PoSecuritySettings {
      *     Needed in any cases.
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder(CardResource<CalypsoSamSmartCard> samResource) {
+    public Builder(CardResource<CalypsoSamSmartCard> samResource) {
       if (samResource == null) {
         throw new IllegalStateException("SAM resource cannot be null.");
       }
@@ -122,7 +122,7 @@ public class PoSecuritySettings {
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder sessionModificationMode(
+    public Builder sessionModificationMode(
         PoTransaction.SessionSetting.ModificationMode sessionModificationMode) {
       this.sessionModificationMode = sessionModificationMode;
       return this;
@@ -136,7 +136,7 @@ public class PoSecuritySettings {
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder ratificationMode(
+    public Builder ratificationMode(
         PoTransaction.SessionSetting.RatificationMode ratificationMode) {
       this.ratificationMode = ratificationMode;
       return this;
@@ -150,37 +150,36 @@ public class PoSecuritySettings {
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder pinTransmissionMode(
-        PoTransaction.PinTransmissionMode pinTransmissionMode) {
+    public Builder pinTransmissionMode(PoTransaction.PinTransmissionMode pinTransmissionMode) {
       this.pinTransmissionMode = pinTransmissionMode;
       return this;
     }
 
     /**
-     * Set the default KIF<br>
+     * Set the default KIF for the provide session level.<br>
      *
      * @param sessionAccessLevel the session level.
-     * @param kif the desired default KIF.
+     * @param sessionDefaultKif the desired default KIF.
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder sessionDefaultKif(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte kif) {
-      defaultKif.put(sessionAccessLevel, kif);
+    public Builder assignSessionDefaultKif(
+        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte sessionDefaultKif) {
+      defaultKif.put(sessionAccessLevel, sessionDefaultKif);
       return this;
     }
 
     /**
-     * Set the default KVC<br>
+     * Set the default KVC for the provide session level.<br>
      *
      * @param sessionAccessLevel the session level.
-     * @param kvc the desired default KVC.
+     * @param sessionDefaultKvc the desired default KVC.
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder sessionDefaultKvc(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte kvc) {
-      defaultKvc.put(sessionAccessLevel, kvc);
+    public Builder assignSessionDefaultKvc(
+        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte sessionDefaultKvc) {
+      this.defaultKvc.put(sessionAccessLevel, sessionDefaultKvc);
       return this;
     }
 
@@ -188,13 +187,14 @@ public class PoSecuritySettings {
      * Set the default key record number<br>
      *
      * @param sessionAccessLevel the session level.
-     * @param keyRecordNumber the desired default key record number.
+     * @param sessionDefaultKeyRecordNumber the desired default key record number.
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder sessionDefaultKeyRecordNumber(
-        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel, byte keyRecordNumber) {
-      defaultKeyRecordNumber.put(sessionAccessLevel, keyRecordNumber);
+    public Builder assignSessionDefaultKeyRecordNumber(
+        PoTransaction.SessionSetting.AccessLevel sessionAccessLevel,
+        byte sessionDefaultKeyRecordNumber) {
+      defaultKeyRecordNumber.put(sessionAccessLevel, sessionDefaultKeyRecordNumber);
       return this;
     }
 
@@ -203,12 +203,12 @@ public class PoSecuritySettings {
      *
      * <p>If this method is not called, the list will remain empty and all KVCs will be accepted.
      *
-     * @param authorizedKvcList the list of authorized KVCs.
+     * @param sessionAuthorizedKvcList the list of authorized KVCs.
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder sessionAuthorizedKvcList(List<Byte> authorizedKvcList) {
-      this.authorizedKvcList = authorizedKvcList;
+    public Builder sessionAuthorizedKvcList(List<Byte> sessionAuthorizedKvcList) {
+      this.authorizedKvcList = sessionAuthorizedKvcList;
       return this;
     }
 
@@ -220,7 +220,7 @@ public class PoSecuritySettings {
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder pinCipheringKey(byte kif, byte kvc) {
+    public Builder pinCipheringKey(byte kif, byte kvc) {
       this.defaultPinCipheringKey = new KeyReference(kif, kvc);
       return this;
     }
@@ -232,8 +232,7 @@ public class PoSecuritySettings {
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder svGetLogReadMode(
-        PoTransaction.SvSettings.LogRead svGetLogReadMode) {
+    public Builder svGetLogReadMode(PoTransaction.SvSettings.LogRead svGetLogReadMode) {
       this.svGetLogReadMode = svGetLogReadMode;
       return this;
     }
@@ -241,13 +240,13 @@ public class PoSecuritySettings {
     /**
      * Sets the SV negative balance mode to indicate whether negative balances are allowed or not
      *
-     * @param svNegativeBalance the {@link PoTransaction.SvSettings.NegativeBalance} mode.
+     * @param svNegativeBalanceMode the {@link PoTransaction.SvSettings.NegativeBalance} mode.
      * @return the builder instance
      * @since 2.0
      */
-    public PoSecuritySettingsBuilder svNegativeBalance(
-        PoTransaction.SvSettings.NegativeBalance svNegativeBalance) {
-      this.svNegativeBalance = svNegativeBalance;
+    public Builder svNegativeBalanceMode(
+        PoTransaction.SvSettings.NegativeBalance svNegativeBalanceMode) {
+      this.svNegativeBalance = svNegativeBalanceMode;
       return this;
     }
 
@@ -260,120 +259,5 @@ public class PoSecuritySettings {
     public PoSecuritySettings build() {
       return new PoSecuritySettings(this);
     }
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the Sam resource
-   * @since 2.0
-   */
-  CardResource<CalypsoSamSmartCard> getSamResource() {
-    return samResource;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the Session Modification Mode
-   * @since 2.0
-   */
-  PoTransaction.SessionSetting.ModificationMode getSessionModificationMode() {
-    return sessionModificationMode;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the Ratification Mode
-   * @since 2.0
-   */
-  PoTransaction.SessionSetting.RatificationMode getRatificationMode() {
-    return ratificationMode;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the PIN Transmission Mode
-   * @since 2.0
-   */
-  public PoTransaction.PinTransmissionMode getPinTransmissionMode() {
-    return pinTransmissionMode;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the default session KIF
-   * @since 2.0
-   */
-  Byte getSessionDefaultKif(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKif.get(sessionAccessLevel);
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the default session KVC
-   * @since 2.0
-   */
-  Byte getSessionDefaultKvc(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKvc.get(sessionAccessLevel);
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the default session key record number
-   * @since 2.0
-   */
-  Byte getSessionDefaultKeyRecordNumber(
-      PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKeyRecordNumber.get(sessionAccessLevel);
-  }
-
-  /**
-   * (package-private)<br>
-   * Check if the provided kvc value is authorized or not.
-   *
-   * <p>If no list of authorized kvc is defined (authorizedKvcList null), all kvc are authorized.
-   *
-   * @param kvc to be tested.
-   * @return true if the kvc is authorized
-   * @since 2.0
-   */
-  boolean isSessionKvcAuthorized(byte kvc) {
-    return authorizedKvcList == null || authorizedKvcList.contains(kvc);
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the default key reference to be used for PIN encryption
-   * @since 2.0
-   */
-  KeyReference getDefaultPinCipheringKey() {
-    return defaultPinCipheringKey;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return how SV logs are read, indicating whether or not all SV logs are needed
-   * @since 2.0
-   */
-  PoTransaction.SvSettings.LogRead getSvGetLogReadMode() {
-    return svGetLogReadMode;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return an indication of whether negative balances are allowed or not
-   * @since 2.0
-   */
-  PoTransaction.SvSettings.NegativeBalance getSvNegativeBalance() {
-    return svNegativeBalance;
   }
 }

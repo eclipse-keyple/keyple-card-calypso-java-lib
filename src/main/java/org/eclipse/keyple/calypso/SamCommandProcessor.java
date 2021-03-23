@@ -18,6 +18,7 @@ import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
 import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySettingsInterface;
 import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -53,7 +54,7 @@ class SamCommandProcessor {
   /** The PO resource */
   private final CardResource<CalypsoPoSmartCard> poResource;
   /** The security settings. */
-  private final PoSecuritySettings poSecuritySettings;
+  private final PoSecuritySettingsAdapter poSecuritySettings;
   /*
    * The digest data cache stores all PO data to be send to SAM during a Secure Session. The 1st
    * buffer is the data buffer to be provided with Digest Init. The following buffers are PO
@@ -77,10 +78,10 @@ class SamCommandProcessor {
    * @since 2.0
    */
   SamCommandProcessor(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettingsInterface poSecuritySettings) {
     this.poResource = poResource;
-    this.poSecuritySettings = poSecuritySettings;
-    this.samResource = poSecuritySettings.getSamResource();
+    this.poSecuritySettings = (PoSecuritySettingsAdapter) poSecuritySettings;
+    this.samResource = this.poSecuritySettings.getSamResource();
     samReader = (ProxyReader) this.samResource.getReader();
   }
 
