@@ -12,11 +12,12 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Defines all supported Calypso SAM APDU commands.
  *
  * @since 2.0
  */
-public enum CalypsoSamCommand implements CardCommand {
+enum CalypsoSamCommand implements CardCommand {
 
   /** select diversifier. */
   SELECT_DIVERSIFIER("Select Diversifier", (byte) 0x14),

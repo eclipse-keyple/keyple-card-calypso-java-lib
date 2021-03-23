@@ -18,6 +18,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.eclipse.keyple.calypso.selection.po.SelectFileControl;
+import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.smartcard.po.ElementaryFile;
+import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
+import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -414,7 +420,7 @@ class PoTransactionAdapter implements PoTransaction {
 
     // All SAM digest operations will now run at once.
     // Get Terminal Signature from the latest response
-    byte[] sessionTerminalSignature = new byte[0];
+    byte[] sessionTerminalSignature;
     try {
       sessionTerminalSignature = samCommandProcessor.getTerminalSignature();
     } catch (CalypsoSamCommandException e) {

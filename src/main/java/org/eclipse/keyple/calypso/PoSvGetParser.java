@@ -13,6 +13,8 @@ package org.eclipse.keyple.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.keyple.calypso.smartcard.po.SvDebitLogRecord;
+import org.eclipse.keyple.calypso.smartcard.po.SvLoadLogRecord;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 

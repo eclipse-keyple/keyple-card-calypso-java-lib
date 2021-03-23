@@ -16,7 +16,7 @@ package org.eclipse.keyple.calypso;
  *
  * @since 2.0
  */
-public class CardCommandUnknownStatusException extends CalypsoCardCommandException {
+class CardCommandUnknownStatusException extends CalypsoCardCommandException {
 
   /**
    * Constructor allowing to set a message, the command and the status code.

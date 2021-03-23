@@ -12,11 +12,12 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Groups all information about a Calypso key
  *
  * @since 2.0
  */
-public class KeyReference {
+class KeyReference {
   /** key identifier */
   private final byte kif;
   /* key version */

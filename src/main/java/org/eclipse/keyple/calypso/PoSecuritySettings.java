@@ -13,6 +13,8 @@ package org.eclipse.keyple.calypso;
 
 import java.util.EnumMap;
 import java.util.List;
+import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.service.selection.CardResource;
 
 /**

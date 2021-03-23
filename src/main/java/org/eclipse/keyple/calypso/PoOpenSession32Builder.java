@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.slf4j.Logger;

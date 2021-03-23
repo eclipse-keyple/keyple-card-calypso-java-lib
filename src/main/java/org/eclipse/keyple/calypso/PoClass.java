@@ -12,12 +12,13 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Defines the two existing ISO7816 class bytes for a Calypso PO command.: LEGACY for REV1 / BPRIME
  * type PO, ISO for REV2/3 / B type
  *
  * @since 2.0
  */
-public enum PoClass {
+enum PoClass {
 
   /** Calypso revision 1 / B Prime protocol */
   LEGACY((byte) 0x94),

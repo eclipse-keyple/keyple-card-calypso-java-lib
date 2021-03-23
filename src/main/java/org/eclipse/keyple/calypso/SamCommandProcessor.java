@@ -14,6 +14,11 @@ package org.eclipse.keyple.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
+import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -92,9 +97,10 @@ class SamCommandProcessor {
    * found in the CardResource class field.
    *
    * @return the terminal challenge as an array of bytes
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
-   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   byte[] getSessionTerminalChallenge()
@@ -170,7 +176,6 @@ class SamCommandProcessor {
    * @param poKif the KIF value from the PO.
    * @param accessLevel the session access level.
    * @return the work KIF value byte
-   * @since 2.0
    */
   private byte determineWorkKif(byte poKif, PoTransaction.SessionSetting.AccessLevel accessLevel) {
     byte kif;
@@ -377,9 +382,10 @@ class SamCommandProcessor {
    * executed.
    *
    * @return the terminal signature
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
-   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   byte[] getTerminalSignature()
@@ -434,9 +440,10 @@ class SamCommandProcessor {
    * <p>Executes the Digest Authenticate command with the PO part of the signature.
    *
    * @param poSignatureLo the PO part of the signature.
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
-   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   void authenticatePoSignature(byte[] poSignatureLo)
@@ -495,9 +502,9 @@ class SamCommandProcessor {
    * @param currentPin the current PIN value.
    * @param newPin the new PIN value (set to null if the operation is a PIN presentation).
    * @return the PIN ciphered data
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
-   * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getCipheredPinData(byte[] poChallenge, byte[] currentPin, byte[] newPin)
@@ -575,7 +582,9 @@ class SamCommandProcessor {
    *
    * @param samSvPrepareBuilder the prepare command builder (can be prepareSvReload/Debit/Undebit).
    * @return a byte array containing the complementary data
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
+   * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   private byte[] getSvComplementaryData(
@@ -647,7 +656,9 @@ class SamCommandProcessor {
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvReload PO command (sam ID + SV
    *     prepare load output)
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
+   * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getSvReloadComplementaryData(
@@ -676,7 +687,9 @@ class SamCommandProcessor {
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvDebit PO command (sam ID + SV prepare
    *     load output)
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
+   * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getSvDebitComplementaryData(
@@ -705,7 +718,9 @@ class SamCommandProcessor {
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvUndebit PO command (sam ID + SV
    *     prepare load output)
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
+   * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   public byte[] getSvUndebitComplementaryData(
@@ -728,8 +743,9 @@ class SamCommandProcessor {
    * <p>The PO signature is compared by the SAM with the one it has computed on its side.
    *
    * @param svOperationResponseData the data of the SV operation performed.
-   * @throws CalypsoSamIOException if the communication with the SAM has failed.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   void checkSvStatus(byte[] svOperationResponseData)

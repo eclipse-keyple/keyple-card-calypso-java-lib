@@ -15,6 +15,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.eclipse.keyple.calypso.selection.po.SelectFileControl;
+import org.eclipse.keyple.calypso.smartcard.po.DirectoryHeader;
+import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.Assert;
 

@@ -14,6 +14,8 @@ package org.eclipse.keyple.calypso;
 import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.NoSuchElementException;
+import org.eclipse.keyple.calypso.smartcard.po.DirectoryHeader;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 

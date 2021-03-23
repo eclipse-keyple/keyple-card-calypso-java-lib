@@ -11,12 +11,15 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
+
 /**
+ * (package-private)<br>
  * Defines all supported Calypso PO APDU commands.
  *
  * @since 2.0
  */
-public enum CalypsoPoCommand implements CardCommand {
+enum CalypsoPoCommand implements CardCommand {
 
   /** get data. */
   GET_DATA_FCI("Get Data'FCI'", (byte) 0xCA),

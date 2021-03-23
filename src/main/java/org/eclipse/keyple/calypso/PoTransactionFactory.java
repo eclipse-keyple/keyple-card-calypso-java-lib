@@ -11,6 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardResource;
 

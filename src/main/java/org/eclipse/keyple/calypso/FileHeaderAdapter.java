@@ -13,6 +13,7 @@ package org.eclipse.keyple.calypso;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**

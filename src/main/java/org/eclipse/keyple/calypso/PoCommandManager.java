@@ -13,6 +13,8 @@ package org.eclipse.keyple.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.keyple.calypso.transaction.CalypsoPoTransactionIllegalStateException;
+import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

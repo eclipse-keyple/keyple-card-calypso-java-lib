@@ -12,6 +12,9 @@
 package org.eclipse.keyple.calypso;
 
 import java.io.Serializable;
+import org.eclipse.keyple.calypso.smartcard.po.ElementaryFile;
+import org.eclipse.keyple.calypso.smartcard.po.FileData;
+import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
 
 /**
  * (package-private)<br>
