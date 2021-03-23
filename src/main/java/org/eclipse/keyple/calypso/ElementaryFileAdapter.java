@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.io.Serializable;
 import org.eclipse.keyple.calypso.smartcard.po.ElementaryFile;
 import org.eclipse.keyple.calypso.smartcard.po.FileData;
 import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
@@ -22,7 +21,7 @@ import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
  *
  * @since 2.0
  */
-class ElementaryFileAdapter implements Serializable, ElementaryFile {
+class ElementaryFileAdapter implements ElementaryFile {
 
   private final byte sfi;
   private FileHeader header;

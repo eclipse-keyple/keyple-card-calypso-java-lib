@@ -11,15 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.io.Serializable;
-
 /**
  * (package-private)<br>
  * Provides the API to get CardCommand's name and instruction byte (INS).
  *
  * @since 2.0
  */
-interface CardCommand extends Serializable {
+interface CardCommand {
 
   /**
    * Gets command's name.

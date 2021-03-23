@@ -11,8 +11,23 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+/**
+ * Factory of {@link CalypsoCardExtension}.
+ *
+ * @since 2.0
+ */
 public final class CalypsoCardExtensionFactory {
+
+  /** (private) */
+  private CalypsoCardExtensionFactory() {}
+
+  /**
+   * Create a {@link CalypsoCardExtension}.
+   *
+   * @return A not null reference.
+   * @since 2.0
+   */
   public static CalypsoCardExtension getCardExtension() {
-    return null;
+    return new CalypsoCardExtensionAdapter();
   }
 }

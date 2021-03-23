@@ -18,7 +18,7 @@ import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
 import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettingsInterface;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
 import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -78,7 +78,7 @@ class SamCommandProcessor {
    * @since 2.0
    */
   SamCommandProcessor(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettingsInterface poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
     this.poResource = poResource;
     this.poSecuritySettings = (PoSecuritySettingsAdapter) poSecuritySettings;
     this.samResource = this.poSecuritySettings.getSamResource();

@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.keyple.calypso.smartcard.po.*;
 import org.eclipse.keyple.calypso.transaction.PoTransaction;
+import org.eclipse.keyple.core.card.AnswerToReset;
+import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.card.CardSelectionResponse;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -42,6 +44,8 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * @since 2.0
  */
 final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSpi {
+  private final byte[] fciBytes;
+  private final byte[] atrBytes;
   private final boolean isConfidentialSessionModeSupported;
   private final boolean isDeselectRatificationSupported;
   private final boolean isSvFeatureAvailable;
@@ -105,10 +109,24 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
    */
   CalypsoPoSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
 
+    ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
+    if (fci != null) {
+      this.fciBytes = fci.getBytes();
+    } else {
+      this.fciBytes = null;
+    }
+
+    AnswerToReset answerToReset = cardSelectionResponse.getSelectionStatus().getAtr();
+    if (answerToReset != null) {
+      this.atrBytes = answerToReset.getBytes();
+    } else {
+      this.atrBytes = null;
+    }
+
     int bufferSizeIndicator;
     int bufferSizeValue;
 
-    if (hasFci() && getFciBytes().length > 2) {
+    if (hasFci()) {
 
       /* Parse PO FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo */
       PoGetDataFciParser poGetDataFciParser =
@@ -146,11 +164,6 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
        * FCI is not provided: we consider it is Calypso PO rev 1, it's serial number is
        * provided in the ATR
        */
-      if (!hasAtr()) {
-        throw new IllegalStateException(
-            "Unable to identify this PO: Neither the CFI nor the ATR are available.");
-      }
-
       byte[] atr = getAtrBytes();
       /* basic check: we expect to be here following a selection based on the ATR */
       if (atr.length != PO_REV1_ATR_LENGTH) {
@@ -188,6 +201,50 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
       poClass = PoClass.LEGACY;
     } else {
       poClass = PoClass.ISO;
+    }
+  }
+
+  /**
+   * @return
+   * @since 2.0
+   */
+  @Override
+  public boolean hasFci() {
+    return this.fciBytes != null && this.fciBytes.length > 0;
+  }
+
+  /**
+   * @return
+   * @since 2.0
+   */
+  @Override
+  public boolean hasAtr() {
+    return this.atrBytes != null && this.atrBytes.length > 0;
+  }
+
+  /**
+   * @return
+   * @since 2.0
+   */
+  @Override
+  public byte[] getFciBytes() {
+    if (this.hasFci()) {
+      return this.fciBytes;
+    } else {
+      throw new IllegalStateException("No FCI is available in this AbstractSmartCard");
+    }
+  }
+
+  /**
+   * @return
+   * @since 2.0
+   */
+  @Override
+  public byte[] getAtrBytes() {
+    if (this.hasAtr()) {
+      return this.atrBytes;
+    } else {
+      throw new IllegalStateException("No ATR is available in this AbstractSmartCard");
     }
   }
 
@@ -708,25 +765,5 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
   private static void copyMapSfi(Map<Short, Byte> src, Map<Short, Byte> dest) {
     dest.clear();
     dest.putAll(src);
-  }
-
-  @Override
-  public boolean hasFci() {
-    return false;
-  }
-
-  @Override
-  public byte[] getFciBytes() {
-    return new byte[0];
-  }
-
-  @Override
-  public boolean hasAtr() {
-    return false;
-  }
-
-  @Override
-  public byte[] getAtrBytes() {
-    return new byte[0];
   }
 }

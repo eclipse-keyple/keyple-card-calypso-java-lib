@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -22,7 +21,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-class FileHeaderAdapter implements Serializable, FileHeader {
+class FileHeaderAdapter implements FileHeader {
 
   private final short lid;
   private final int recordsNumber;

@@ -11,4 +11,4 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso.transaction;
 
-public interface PoSecuritySettingsInterface {}
+public interface PoSecuritySettings {}

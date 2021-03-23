@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.NoSuchElementException;
 import org.eclipse.keyple.calypso.smartcard.po.DirectoryHeader;
@@ -25,7 +24,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-class DirectoryHeaderAdapter implements Serializable, DirectoryHeader {
+class DirectoryHeaderAdapter implements DirectoryHeader {
 
   private final short lid;
   private final byte[] accessConditions;

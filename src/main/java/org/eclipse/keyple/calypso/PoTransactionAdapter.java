@@ -95,7 +95,7 @@ class PoTransactionAdapter implements PoTransaction {
    * @since 2.0
    */
   public PoTransactionAdapter(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettingsInterface poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
 
     this(poResource);
 

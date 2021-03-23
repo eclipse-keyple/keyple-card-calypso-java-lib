@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.io.Serializable;
 import java.util.*;
 import org.eclipse.keyple.calypso.smartcard.po.FileData;
 import org.eclipse.keyple.core.util.Assert;
@@ -23,7 +22,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-class FileDataAdapter implements Serializable, FileData {
+class FileDataAdapter implements FileData {
 
   private final TreeMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 

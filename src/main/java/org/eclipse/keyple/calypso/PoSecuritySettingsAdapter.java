@@ -11,23 +11,31 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettingsInterface;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
 import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.service.selection.CardResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class PoSecuritySettingsAdapter implements PoSecuritySettingsInterface {
+/**
+ * (package-private)<br>
+ *
+ * @since 2.0
+ */
+class PoSecuritySettingsAdapter implements PoSecuritySettings {
+
+  private static final Logger logger = LoggerFactory.getLogger(PoSecuritySettingsAdapter.class);
+
   private CardResource<CalypsoSamSmartCard> samResource;
-  /** List of authorized KVCs */
-  private List<Byte> authorizedKvcList;
-
-  /** EnumMap associating session levels and corresponding KIFs */
-  private EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKif;
-
-  private EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKvc;
-  private EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumber;
+  private final List<Byte> authorizedKvcList;
+  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKIFs;
+  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKVCs;
+  private final EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers;
 
   private PoTransaction.SessionSetting.ModificationMode sessionModificationMode;
   private PoTransaction.SessionSetting.RatificationMode ratificationMode;
@@ -35,6 +43,169 @@ public class PoSecuritySettingsAdapter implements PoSecuritySettingsInterface {
   private KeyReference defaultPinCipheringKey;
   private PoTransaction.SvSettings.LogRead svGetLogReadMode;
   private PoTransaction.SvSettings.NegativeBalance svNegativeBalance;
+
+  /**
+   * (package-private)<br>
+   * Creates an
+   *
+   * @since 2.0
+   */
+  PoSecuritySettingsAdapter() {
+    // TODO check if we need thread safe collections here
+    authorizedKvcList = new ArrayList<Byte>();
+    defaultKIFs =
+        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
+            PoTransaction.SessionSetting.AccessLevel.class);
+    defaultKVCs =
+        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
+            PoTransaction.SessionSetting.AccessLevel.class);
+    defaultKeyRecordNumbers =
+        new EnumMap<PoTransaction.SessionSetting.AccessLevel, Byte>(
+            PoTransaction.SessionSetting.AccessLevel.class);
+  }
+
+  /**
+   * (package-private) Sets the SAM resource.
+   *
+   * @param samResource A SAM resource.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setSamResource(CardResource<CalypsoSamSmartCard> samResource) {
+    this.samResource = samResource;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the list of authorized KVC.
+   *
+   * @param authorizedKvcList A list of authorized KVC.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter putAuthorizedKVCs(List<Byte> authorizedKvcList) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("PoSecuritySettings authorized KVC list = {}", samResource);
+    }
+    this.authorizedKvcList.addAll(authorizedKvcList);
+    return this;
+  }
+
+  /**
+   * (package-private) Puts a map of default KIFs.
+   *
+   * @param defaultKIFs A map.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter putDefaultKIFs(
+      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKIFs) {
+    this.defaultKIFs.putAll(defaultKIFs);
+    return this;
+  }
+
+  /**
+   * (package-private) Puts a map of default KVCs.
+   *
+   * @param defaultKVCs A map.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter putDefaultKvc(
+      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKVCs) {
+    this.defaultKVCs.putAll(defaultKVCs);
+    return this;
+  }
+
+  /**
+   * (package-private) Puts a map of default key record numbers.
+   *
+   * @param defaultKeyRecordNumbers A map.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter putDefaultKeyRecordNumbers(
+      Map<PoTransaction.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers) {
+    this.defaultKeyRecordNumbers.putAll(defaultKeyRecordNumbers);
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the session modification mode.
+   *
+   * @param sessionModificationMode The session modification mode.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setSessionModificationMode(
+      PoTransaction.SessionSetting.ModificationMode sessionModificationMode) {
+    this.sessionModificationMode = sessionModificationMode;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the ratification mode.
+   *
+   * @param ratificationMode The ratification mode.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setRatificationMode(
+      PoTransaction.SessionSetting.RatificationMode ratificationMode) {
+    this.ratificationMode = ratificationMode;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the PIN transmission mode.
+   *
+   * @param pinTransmissionMode The PIN transmission mode.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setPinTransmissionMode(
+      PoTransaction.PinTransmissionMode pinTransmissionMode) {
+    this.pinTransmissionMode = pinTransmissionMode;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the default PIN ciphering key transmission mode.
+   *
+   * @param defaultPinCipheringKey The PIN ciphering key.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setDefaultPinCipheringKey(KeyReference defaultPinCipheringKey) {
+    this.defaultPinCipheringKey = defaultPinCipheringKey;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the SV get log read mode.
+   *
+   * @param svGetLogReadMode The SV get log read mode.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setSvGetLogReadMode(
+      PoTransaction.SvSettings.LogRead svGetLogReadMode) {
+    this.svGetLogReadMode = svGetLogReadMode;
+    return this;
+  }
+
+  /**
+   * (package-private) Sets the SV negative balance mode.
+   *
+   * @param svNegativeBalance The SV negative balance mode.
+   * @return The object instance.
+   * @since 2.0
+   */
+  public PoSecuritySettingsAdapter setSvNegativeBalance(
+      PoTransaction.SvSettings.NegativeBalance svNegativeBalance) {
+    this.svNegativeBalance = svNegativeBalance;
+    return this;
+  }
 
   /**
    * (package-private)<br>
@@ -83,7 +254,7 @@ public class PoSecuritySettingsAdapter implements PoSecuritySettingsInterface {
    * @since 2.0
    */
   Byte getSessionDefaultKif(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKif.get(sessionAccessLevel);
+    return defaultKIFs.get(sessionAccessLevel);
   }
 
   /**
@@ -93,7 +264,7 @@ public class PoSecuritySettingsAdapter implements PoSecuritySettingsInterface {
    * @since 2.0
    */
   Byte getSessionDefaultKvc(PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKvc.get(sessionAccessLevel);
+    return defaultKVCs.get(sessionAccessLevel);
   }
 
   /**
@@ -104,21 +275,21 @@ public class PoSecuritySettingsAdapter implements PoSecuritySettingsInterface {
    */
   Byte getSessionDefaultKeyRecordNumber(
       PoTransaction.SessionSetting.AccessLevel sessionAccessLevel) {
-    return defaultKeyRecordNumber.get(sessionAccessLevel);
+    return defaultKeyRecordNumbers.get(sessionAccessLevel);
   }
 
   /**
    * (package-private)<br>
    * Check if the provided kvc value is authorized or not.
    *
-   * <p>If no list of authorized kvc is defined (authorizedKvcList null), all kvc are authorized.
+   * <p>If no list of authorized kvc is defined (authorizedKvcList empty), all kvc are authorized.
    *
    * @param kvc to be tested.
    * @return true if the kvc is authorized
    * @since 2.0
    */
   boolean isSessionKvcAuthorized(byte kvc) {
-    return authorizedKvcList == null || authorizedKvcList.contains(kvc);
+    return authorizedKvcList.isEmpty() || authorizedKvcList.contains(kvc);
   }
 
   /**

@@ -13,7 +13,7 @@ package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
 import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettingsInterface;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
 import org.eclipse.keyple.calypso.transaction.PoTransaction;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -44,7 +44,7 @@ public class PoTransactionFactory {
    * @since 2.0
    */
   public static PoTransaction getService(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettingsInterface poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
     return new PoTransactionAdapter(poResource, poSecuritySettings);
   }
 
