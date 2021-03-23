@@ -12,11 +12,12 @@
 package org.eclipse.keyple.calypso;
 
 /**
+ * (package-private)<br>
  * Parent abstract class of all Keyple PO APDU commands exceptions.
  *
  * @since 2.0
  */
-public abstract class CalypsoPoCommandException extends CalypsoCardCommandException {
+abstract class CalypsoPoCommandException extends CalypsoCardCommandException {
 
   /**
    * @param message the message to identify the exception context.

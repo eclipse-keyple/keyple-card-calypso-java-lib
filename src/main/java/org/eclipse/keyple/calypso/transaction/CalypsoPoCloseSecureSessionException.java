@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso.transaction;
 
-import org.eclipse.keyple.calypso.CalypsoPoCommandException;
-
 /**
  * Indicates that the PO has refused the secure session closing.<br>
  * This is usually due to an incorrect SAM signature, or that the secure session has been altered by
@@ -23,18 +21,10 @@ import org.eclipse.keyple.calypso.CalypsoPoCommandException;
 public class CalypsoPoCloseSecureSessionException extends CalypsoPoTransactionException {
 
   /**
-   * Encapsulates the {@link CalypsoPoCommandException} exception.
-   *
    * @param message message to identify the exception context.
    * @param cause the cause.
    */
-  public CalypsoPoCloseSecureSessionException(String message, CalypsoPoCommandException cause) {
+  public CalypsoPoCloseSecureSessionException(String message, Exception cause) {
     super(message, cause);
-  }
-
-  /** @return the cause {@link CalypsoPoCommandException} */
-  @Override
-  public synchronized CalypsoPoCommandException getCause() {
-    return (CalypsoPoCommandException) super.getCause();
   }
 }

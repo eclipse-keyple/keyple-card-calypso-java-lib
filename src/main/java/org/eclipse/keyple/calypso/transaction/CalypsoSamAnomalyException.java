@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso.transaction;
 
-import org.eclipse.keyple.calypso.CalypsoSamCommandException;
-
 /**
  * Indicates an anomaly in the SAM.<br>
  * This can occur if the SAM is not Calypso compliant.
@@ -20,18 +18,10 @@ import org.eclipse.keyple.calypso.CalypsoSamCommandException;
 public class CalypsoSamAnomalyException extends CalypsoPoTransactionException {
 
   /**
-   * Encapsulates an unexpected {@link CalypsoSamCommandException} exception.
-   *
    * @param message message to identify the exception context.
    * @param cause the cause.
    */
-  public CalypsoSamAnomalyException(String message, CalypsoSamCommandException cause) {
+  public CalypsoSamAnomalyException(String message, Throwable cause) {
     super(message, cause);
-  }
-
-  /** @return the unexpected cause {@link CalypsoSamCommandException} */
-  @Override
-  public synchronized CalypsoSamCommandException getCause() {
-    return (CalypsoSamCommandException) super.getCause();
   }
 }

@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso.transaction;
 
-import org.eclipse.keyple.calypso.CalypsoPoCommandException;
-
 /**
  * Indicates an anomaly in the PO.<br>
  * This can occur if the PO is not Calypso compliant.
@@ -20,18 +18,10 @@ import org.eclipse.keyple.calypso.CalypsoPoCommandException;
 public class CalypsoPoAnomalyException extends CalypsoPoTransactionException {
 
   /**
-   * Encapsulates an unexpected {@link CalypsoPoCommandException} exception.
-   *
    * @param message message to identify the exception context.
    * @param cause the cause.
    */
-  public CalypsoPoAnomalyException(String message, CalypsoPoCommandException cause) {
+  public CalypsoPoAnomalyException(String message, Throwable cause) {
     super(message, cause);
-  }
-
-  /** @return the unexpected cause {@link CalypsoPoCommandException} */
-  @Override
-  public synchronized CalypsoPoCommandException getCause() {
-    return (CalypsoPoCommandException) super.getCause();
   }
 }
