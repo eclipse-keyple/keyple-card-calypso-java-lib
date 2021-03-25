@@ -11,9 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.smartcard.po.ElementaryFile;
-import org.eclipse.keyple.calypso.smartcard.po.FileData;
-import org.eclipse.keyple.calypso.smartcard.po.FileHeader;
+import org.eclipse.keyple.calypso.po.ElementaryFile;
+import org.eclipse.keyple.calypso.po.FileData;
+import org.eclipse.keyple.calypso.po.FileHeader;
 
 /**
  * (package-private)<br>

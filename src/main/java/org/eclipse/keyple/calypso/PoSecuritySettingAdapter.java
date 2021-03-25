@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.slf4j.Logger;
@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-class PoSecuritySettingsAdapter implements PoSecuritySettings {
+class PoSecuritySettingAdapter implements PoSecuritySetting {
 
-  private static final Logger logger = LoggerFactory.getLogger(PoSecuritySettingsAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(PoSecuritySettingAdapter.class);
 
   private CardResource<CalypsoSamSmartCard> samResource;
   private final List<Byte> authorizedKvcList;
@@ -51,7 +51,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    *
    * @since 2.0
    */
-  PoSecuritySettingsAdapter() {
+  PoSecuritySettingAdapter() {
     // TODO check if we need thread safe collections here
     authorizedKvcList = new ArrayList<Byte>();
     defaultKIFs =
@@ -72,7 +72,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setSamResource(CardResource<CalypsoSamSmartCard> samResource) {
+  public PoSecuritySettingAdapter setSamResource(CardResource<CalypsoSamSmartCard> samResource) {
     this.samResource = samResource;
     return this;
   }
@@ -84,9 +84,9 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter putAuthorizedKVCs(List<Byte> authorizedKvcList) {
+  public PoSecuritySettingAdapter putAuthorizedKVCs(List<Byte> authorizedKvcList) {
     if (logger.isTraceEnabled()) {
-      logger.trace("PoSecuritySettings authorized KVC list = {}", samResource);
+      logger.trace("PoSecuritySetting authorized KVC list = {}", samResource);
     }
     this.authorizedKvcList.addAll(authorizedKvcList);
     return this;
@@ -99,7 +99,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter putDefaultKIFs(
+  public PoSecuritySettingAdapter putDefaultKIFs(
       Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKIFs) {
     this.defaultKIFs.putAll(defaultKIFs);
     return this;
@@ -112,7 +112,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter putDefaultKvc(
+  public PoSecuritySettingAdapter putDefaultKvc(
       Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKVCs) {
     this.defaultKVCs.putAll(defaultKVCs);
     return this;
@@ -125,7 +125,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter putDefaultKeyRecordNumbers(
+  public PoSecuritySettingAdapter putDefaultKeyRecordNumbers(
       Map<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKeyRecordNumbers) {
     this.defaultKeyRecordNumbers.putAll(defaultKeyRecordNumbers);
     return this;
@@ -138,7 +138,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setSessionModificationMode(
+  public PoSecuritySettingAdapter setSessionModificationMode(
       PoTransactionService.SessionSetting.ModificationMode sessionModificationMode) {
     this.sessionModificationMode = sessionModificationMode;
     return this;
@@ -151,7 +151,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setRatificationMode(
+  public PoSecuritySettingAdapter setRatificationMode(
       PoTransactionService.SessionSetting.RatificationMode ratificationMode) {
     this.ratificationMode = ratificationMode;
     return this;
@@ -164,7 +164,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setPinTransmissionMode(
+  public PoSecuritySettingAdapter setPinTransmissionMode(
       PoTransactionService.PinTransmissionMode pinTransmissionMode) {
     this.pinTransmissionMode = pinTransmissionMode;
     return this;
@@ -177,7 +177,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setDefaultPinCipheringKey(KeyReference defaultPinCipheringKey) {
+  public PoSecuritySettingAdapter setDefaultPinCipheringKey(KeyReference defaultPinCipheringKey) {
     this.defaultPinCipheringKey = defaultPinCipheringKey;
     return this;
   }
@@ -189,7 +189,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setSvGetLogReadMode(
+  public PoSecuritySettingAdapter setSvGetLogReadMode(
       PoTransactionService.SvSettings.LogRead svGetLogReadMode) {
     this.svGetLogReadMode = svGetLogReadMode;
     return this;
@@ -202,7 +202,7 @@ class PoSecuritySettingsAdapter implements PoSecuritySettings {
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingsAdapter setSvNegativeBalance(
+  public PoSecuritySettingAdapter setSvNegativeBalance(
       PoTransactionService.SvSettings.NegativeBalance svNegativeBalance) {
     this.svNegativeBalance = svNegativeBalance;
     return this;

@@ -9,35 +9,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.smartcard.po;
+package org.eclipse.keyple.calypso.sam;
 
-/**
- * This POJO contains the description of a Calypso EF.
- *
- * @since 2.0
- */
-public interface ElementaryFile {
-  /**
-   * Gets the associated SFI.
-   *
-   * @return the SFI
-   * @since 2.0
-   */
-  byte getSfi();
+import org.eclipse.keyple.core.service.Reader;
 
-  /**
-   * Gets the file header.
-   *
-   * @return a header reference or null if header is not yet set.
-   * @since 2.0
-   */
-  FileHeader getHeader();
+public interface SamResource {
+  Reader getReader();
 
-  /**
-   * Gets the file data.
-   *
-   * @return a not null data reference.
-   * @since 2.0
-   */
-  FileData getData();
+  CalypsoSamSmartCard getSmartCard();
 }

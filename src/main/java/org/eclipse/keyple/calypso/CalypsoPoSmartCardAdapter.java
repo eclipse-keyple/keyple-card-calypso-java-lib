@@ -13,7 +13,7 @@ package org.eclipse.keyple.calypso;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import org.eclipse.keyple.calypso.smartcard.po.*;
+import org.eclipse.keyple.calypso.po.*;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.AnswerToReset;
 import org.eclipse.keyple.core.card.ApduResponse;

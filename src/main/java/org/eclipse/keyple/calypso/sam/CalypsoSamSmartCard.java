@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.smartcard.sam;
+package org.eclipse.keyple.calypso.sam;
 
 import org.eclipse.keyple.core.service.selection.spi.SmartCard;
 

@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.smartcard.po;
+package org.eclipse.keyple.calypso.po;
 
 import java.util.NoSuchElementException;
 import java.util.SortedMap;

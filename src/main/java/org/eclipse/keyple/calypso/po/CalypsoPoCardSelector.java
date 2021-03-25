@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.selection.po;
+package org.eclipse.keyple.calypso.po;
 
 import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 
@@ -18,11 +18,11 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelector;
  *
  * @since 2.0
  */
-public final class CalypsoPoSelector extends CardSelector {
+public final class CalypsoPoCardSelector extends CardSelector {
 
   private static final int SW_PO_INVALIDATED = 0x6283;
 
-  private CalypsoPoSelector() {}
+  private CalypsoPoCardSelector() {}
 
   /**
    * Indicates if an invalidated PO should be selected or not.
@@ -44,7 +44,7 @@ public final class CalypsoPoSelector extends CardSelector {
    * @return This object instance.
    * @since 2.0
    */
-  public CalypsoPoSelector acceptInvalidatedPo(InvalidatedPo invalidatedPo) {
+  public CalypsoPoCardSelector acceptInvalidatedPo(InvalidatedPo invalidatedPo) {
     if (invalidatedPo == InvalidatedPo.ACCEPT) {
       this.getAidSelector().addSuccessfulStatusCode(SW_PO_INVALIDATED);
     }

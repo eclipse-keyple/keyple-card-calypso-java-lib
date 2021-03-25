@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.eclipse.keyple.calypso.selection.po.SelectFileControl;
-import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
-import org.eclipse.keyple.calypso.smartcard.po.ElementaryFile;
-import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
-import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.po.ElementaryFile;
+import org.eclipse.keyple.calypso.po.PoRevision;
+import org.eclipse.keyple.calypso.po.SelectFileControl;
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.Reader;
@@ -65,7 +65,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   /** The reader for PO. */
   private final ProxyReader poReader;
   /** The PO security settings used to manage the secure session */
-  private PoSecuritySettingsAdapter poSecuritySettings;
+  private PoSecuritySettingAdapter poSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current CalypsoPoSmartCard */
@@ -86,22 +86,22 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   /**
    * Constructor.
    *
-   * <p>Secure operations are enabled by the presence of {@link PoSecuritySettings}.
+   * <p>Secure operations are enabled by the presence of {@link PoSecuritySetting}.
    *
    * @param poResource the PO resource (combination of {@link Reader} and {@link
    *     CalypsoPoSmartCard}).
-   * @param poSecuritySettings a set of security settings ({@link PoSecuritySettings}) including a.
+   * @param poSecuritySetting a set of security settings ({@link PoSecuritySetting}) including a.
    *     {@link CardResource} based on a {@link CalypsoSamSmartCard}.
    * @since 2.0
    */
   public PoTransactionServiceAdapter(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySetting poSecuritySetting) {
 
     this(poResource);
 
-    this.poSecuritySettings = (PoSecuritySettingsAdapter) poSecuritySettings;
+    this.poSecuritySettings = (PoSecuritySettingAdapter) poSecuritySetting;
 
-    samCommandProcessor = new SamCommandProcessor(poResource, poSecuritySettings);
+    samCommandProcessor = new SamCommandProcessor(poResource, poSecuritySetting);
   }
 
   /**
@@ -130,7 +130,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    *
    * @param accessLevel access level of the session (personalization, load or debit).
    * @param poCommands the po commands inside session.
-   * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySettings} is available
+   * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySetting} is available
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
    */

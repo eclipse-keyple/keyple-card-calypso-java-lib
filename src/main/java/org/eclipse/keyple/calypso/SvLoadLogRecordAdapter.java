@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.smartcard.po.SvLoadLogRecord;
+import org.eclipse.keyple.calypso.po.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -9,8 +9,27 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.selection.po;
+package org.eclipse.keyple.calypso.po;
 
-import org.eclipse.keyple.core.service.selection.spi.CardSelection;
+/**
+ * Calypso revisions
+ *
+ * @since 2.0
+ */
+public enum PoRevision {
 
-public interface CalypsoPoSelection extends CardSelection {}
+  /** Calypso Revision 1 (CLA 0x94) */
+  REV1_0,
+
+  /** Calypso Revision 2.4 (CLA 0x94) */
+  REV2_4,
+
+  /** Calypso Revision 3.1 (CLA 0x00) */
+  REV3_1,
+
+  /** Calypso Revision 3.1 CLAP (CLA 0x00, application type 0x90) */
+  REV3_1_CLAP,
+
+  /** Calypso Revision 3.2 (CLA 0x00) */
+  REV3_2
+}

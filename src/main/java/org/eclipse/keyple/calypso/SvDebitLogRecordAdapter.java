@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.smartcard.po.SvDebitLogRecord;
+import org.eclipse.keyple.calypso.po.SvDebitLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**

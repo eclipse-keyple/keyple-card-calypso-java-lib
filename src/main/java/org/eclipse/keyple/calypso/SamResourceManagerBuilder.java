@@ -9,6 +9,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.transaction;
+package org.eclipse.keyple.calypso;
 
-public interface PoSecuritySettings {}
+public class SamResourceManagerBuilder {}

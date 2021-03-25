@@ -11,23 +11,26 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-/**
- * Factory of {@link CalypsoCardExtension}.
- *
- * @since 2.0
- */
-public final class CalypsoCardExtensionFactory {
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.sam.SamResource;
+import org.eclipse.keyple.core.service.Reader;
 
-  /** (private) */
-  private CalypsoCardExtensionFactory() {}
+class SamResourceAdapter implements SamResource {
+  private final Reader reader;
+  private final CalypsoSamSmartCard smartCard;
 
-  /**
-   * Create a {@link CalypsoCardExtension}.
-   *
-   * @return A not null reference.
-   * @since 2.0
-   */
-  public static CalypsoCardExtension getCardExtension() {
-    return new CalypsoCardExtensionAdapter();
+  public SamResourceAdapter(Reader reader, CalypsoSamSmartCard smartCard) {
+    this.reader = reader;
+    this.smartCard = smartCard;
+  }
+
+  @Override
+  public Reader getReader() {
+    return this.reader;
+  }
+
+  @Override
+  public CalypsoSamSmartCard getSmartCard() {
+    return this.smartCard;
   }
 }

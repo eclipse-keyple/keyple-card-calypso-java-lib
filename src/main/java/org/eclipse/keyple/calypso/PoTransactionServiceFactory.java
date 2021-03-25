@@ -11,9 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
-import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
+import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -35,17 +35,17 @@ public class PoTransactionServiceFactory {
    *
    * <p>The required PO resource (combination of {@link Reader} and {@link CalypsoPoSmartCard}).
    * <br>
-   * The PO security settings is a set of security settings ({@link PoSecuritySettings}) including a
+   * The PO security settings is a set of security settings ({@link PoSecuritySetting}) including a
    * {@link CardResource} based on a {@link CalypsoSamSmartCard}.
    *
    * @param poResource The PO resource.
-   * @param poSecuritySettings The PO security settings
+   * @param poSecuritySetting The PO security settings
    * @return A not null reference.
    * @since 2.0
    */
   public static PoTransactionService getService(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
-    return new PoTransactionServiceAdapter(poResource, poSecuritySettings);
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySetting poSecuritySetting) {
+    return new PoTransactionServiceAdapter(poResource, poSecuritySetting);
   }
 
   /**

@@ -9,9 +9,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.selection.sam;
+package org.eclipse.keyple.calypso.sam;
 
-import org.eclipse.keyple.calypso.smartcard.sam.SamRevision;
 import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 
 /**
@@ -36,34 +35,31 @@ public final class CalypsoSamSelector extends CardSelector {
       /* match the provided serial number (could be a regex substring) */
       snRegex = builder.serialNumber;
     }
-    if (builder.targetSamRevision == null) {
-      targetSamRevision = SamRevision.AUTO;
-    } else {
-      targetSamRevision = builder.targetSamRevision;
-    }
+    targetSamRevision = builder.targetSamRevision;
     unlockData = builder.unlockData;
     /*
      * build the final Atr regex according to the SAM subtype and serial number if any.
      *
      * The header is starting with 3B, its total length is 4 or 6 bytes (8 or 10 hex digits)
      */
-    switch (targetSamRevision) {
-      case C1:
-      case S1D:
-      case S1E:
-        atrRegex =
-            "3B(.{6}|.{10})805A..80"
-                + targetSamRevision.getApplicationTypeMask()
-                + "20.{4}"
-                + snRegex
-                + "829000";
-        break;
-      case AUTO:
-        /* match any ATR */
-        atrRegex = ".*";
-        break;
-      default:
-        throw new IllegalArgumentException("Unknown SAM subtype.");
+    if (targetSamRevision != null) {
+      switch (targetSamRevision) {
+        case C1:
+        case S1D:
+        case S1E:
+          atrRegex =
+              "3B(.{6}|.{10})805A..80"
+                  + targetSamRevision.getApplicationTypeMask()
+                  + "20.{4}"
+                  + snRegex
+                  + "829000";
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown SAM subtype.");
+      }
+    } else {
+      /* match any ATR */
+      atrRegex = ".*";
     }
     this.getAtrFilter().setAtrRegex(atrRegex);
   }

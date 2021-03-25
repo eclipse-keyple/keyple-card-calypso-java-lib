@@ -13,21 +13,21 @@ package org.eclipse.keyple.calypso;
 
 import java.util.EnumMap;
 import java.util.List;
-import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
- * Builds instances of {@link PoSecuritySettings} from values configured by the setters.
+ * Builds instances of {@link PoSecuritySetting} from values configured by the setters.
  *
  * <p>The object provides default values when instantiated, a fluent builder to adjust the settings
  * to the application needs.
  *
  * @since 2.0
  */
-public class PoSecuritySettingsBuilder {
+public class PoSecuritySettingBuilder {
 
   public static final PoTransactionService.SessionSetting.ModificationMode
       defaultSessionModificationMode = PoTransactionService.SessionSetting.ModificationMode.ATOMIC;
@@ -42,10 +42,10 @@ public class PoSecuritySettingsBuilder {
       PoTransactionService.SvSettings.NegativeBalance.FORBIDDEN;
 
   /** Private constructor */
-  private PoSecuritySettingsBuilder() {}
+  private PoSecuritySettingBuilder() {}
 
   /**
-   * Creates builder to build a {@link PoSecuritySettingsBuilder}.
+   * Creates builder to build a {@link PoSecuritySettingBuilder}.
    *
    * <p>A SAM resource has to be provided and is the only mandatory setting.
    *
@@ -58,7 +58,7 @@ public class PoSecuritySettingsBuilder {
   }
 
   /**
-   * Builder class for {@link PoSecuritySettingsBuilder}
+   * Builder class for {@link PoSecuritySettingBuilder}
    *
    * @since 2.0
    */
@@ -270,13 +270,13 @@ public class PoSecuritySettingsBuilder {
     }
 
     /**
-     * Build a new instance of {@code PoSecuritySettings}.
+     * Build a new instance of {@code PoSecuritySetting}.
      *
      * @return A not null reference.
      * @since 2.0
      */
-    public PoSecuritySettings build() {
-      return new PoSecuritySettingsAdapter()
+    public PoSecuritySetting build() {
+      return new PoSecuritySettingAdapter()
           .setSamResource(samResource)
           .putAuthorizedKVCs(authorizedKvcList)
           .putDefaultKIFs(defaultKif)

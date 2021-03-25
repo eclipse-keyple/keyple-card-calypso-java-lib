@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
+import org.eclipse.keyple.calypso.po.PoRevision;
 
 /** Builds the Open Secure Session APDU command. */
 abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>

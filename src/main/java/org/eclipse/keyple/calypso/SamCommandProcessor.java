@@ -14,11 +14,11 @@ package org.eclipse.keyple.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.eclipse.keyple.calypso.smartcard.po.CalypsoPoSmartCard;
-import org.eclipse.keyple.calypso.smartcard.po.PoRevision;
-import org.eclipse.keyple.calypso.smartcard.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
+import org.eclipse.keyple.calypso.po.PoRevision;
+import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySettings;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.selection.CardResource;
@@ -54,7 +54,7 @@ class SamCommandProcessor {
   /** The PO resource */
   private final CardResource<CalypsoPoSmartCard> poResource;
   /** The security settings. */
-  private final PoSecuritySettingsAdapter poSecuritySettings;
+  private final PoSecuritySettingAdapter poSecuritySettings;
   /*
    * The digest data cache stores all PO data to be send to SAM during a Secure Session. The 1st
    * buffer is the data buffer to be provided with Digest Init. The following buffers are PO
@@ -74,13 +74,13 @@ class SamCommandProcessor {
    * Constructor
    *
    * @param poResource the PO resource containing the PO reader and the Calypso PO information.
-   * @param poSecuritySettings the security settings from the application layer.
+   * @param poSecuritySetting the security settings from the application layer.
    * @since 2.0
    */
   SamCommandProcessor(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySettings poSecuritySettings) {
+      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySetting poSecuritySetting) {
     this.poResource = poResource;
-    this.poSecuritySettings = (PoSecuritySettingsAdapter) poSecuritySettings;
+    this.poSecuritySettings = (PoSecuritySettingAdapter) poSecuritySetting;
     this.samResource = this.poSecuritySettings.getSamResource();
     samReader = (ProxyReader) this.samResource.getReader();
   }
@@ -170,7 +170,7 @@ class SamCommandProcessor {
    * Determine the work KIF from the value returned by the PO and the session access level.
    *
    * <p>If the value provided by the PO undetermined (FFh), the actual value of the work KIF is
-   * found in the PoSecuritySettings according to the session access level.
+   * found in the PoSecuritySetting according to the session access level.
    *
    * <p>If the value provided by the PO is not undetermined, the work KIF is set to this value.
    *
