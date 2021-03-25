@@ -12,7 +12,7 @@
 package org.eclipse.keyple.calypso.sam;
 
 /**
- * This enumeration registers all supported revisions of SAM.
+ * All supported revisions of SAM.
  *
  * @since 0.9
  */

@@ -16,6 +16,28 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import org.eclipse.keyple.core.service.selection.spi.SmartCard;
 
+/**
+ * This POJO concentrates all the information we know about the PO being processed: from the
+ * selection stage to the end of the transaction.
+ *
+ * <p>An instance of CalypsoPoSmartCard is obtained by casting the AbstractSmartCard object from the
+ * selection process (e.g. (CalypsoPoSmartCard)(cardSelectionsResult.getActiveSmartCard()))
+ *
+ * <p>The various information contained in CalypsoPoSmartCard is accessible by getters and includes:
+ *
+ * <ul>
+ *   <li>The application identification fields (revision/version, class, DF name, serial number,
+ *       ATR, issuer)
+ *   <li>The indication of the presence of optional features (Stored Value, PIN, Rev3.2 mode,
+ *       ratification management)
+ *   <li>The management information of the modification buffer
+ *   <li>The invalidation status
+ *   <li>The files, counters, SV data read or modified during the execution of the processes defined
+ *       by the PO transaction service.
+ * </ul>
+ *
+ * @since 2.0
+ */
 public interface CalypsoPoSmartCard extends SmartCard {
   /**
    * Gets the PO revision.

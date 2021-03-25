@@ -13,6 +13,11 @@ package org.eclipse.keyple.calypso.sam;
 
 import org.eclipse.keyple.core.service.selection.spi.SmartCard;
 
+/**
+ * This POJO concentrates all the information we know about the SAM currently selected.
+ *
+ * @since 2.0
+ */
 public interface CalypsoSamSmartCard extends SmartCard {
   /**
    * Gets the SAM revision as an enum constant

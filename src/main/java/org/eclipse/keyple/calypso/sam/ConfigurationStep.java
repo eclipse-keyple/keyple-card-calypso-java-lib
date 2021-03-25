@@ -9,6 +9,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso;
+package org.eclipse.keyple.calypso.sam;
 
-public class SamResourceManagerBuilder {}
+/**
+ * Last step to configure the SAM resource manager.
+ *
+ * @since 2.0
+ */
+public interface ConfigurationStep {
+
+  /**
+   * Finalizes the configuration of the SAM resource manager, initializes the list of SAM resources,
+   * activates all required observations, if any.
+   *
+   * @since 2.0
+   */
+  void configure();
+}

@@ -13,10 +13,8 @@ package org.eclipse.keyple.calypso;
 
 import java.util.EnumMap;
 import java.util.List;
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
-import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
@@ -49,12 +47,12 @@ public class PoSecuritySettingBuilder {
    *
    * <p>A SAM resource has to be provided and is the only mandatory setting.
    *
-   * @param samResource The SAM resource.
+   * @param samProfileName The SAM profile name.
    * @return created builder
    * @since 2.0
    */
-  public static Builder builder(CardResource<CalypsoSamSmartCard> samResource) {
-    return new Builder(samResource);
+  public static Builder builder(String samProfileName) {
+    return new Builder(samProfileName);
   }
 
   /**
@@ -63,7 +61,7 @@ public class PoSecuritySettingBuilder {
    * @since 2.0
    */
   public static final class Builder {
-    private final CardResource<CalypsoSamSmartCard> samResource;
+    private final String samProfileName;
     /** List of authorized KVCs */
     private List<Byte> authorizedKvcList;
 
@@ -92,13 +90,13 @@ public class PoSecuritySettingBuilder {
     /**
      * Constructor The SAM resource we'll be working with is needed in any cases.
      *
-     * @param samResource The SAM resource
+     * @param samProfileName The SAM profile name.
      * @throws IllegalArgumentException If the argument is null.
      * @since 2.0
      */
-    public Builder(CardResource<CalypsoSamSmartCard> samResource) {
-      Assert.getInstance().notNull(samResource, "samResource");
-      this.samResource = samResource;
+    public Builder(String samProfileName) {
+      Assert.getInstance().notEmpty(samProfileName, "samResource");
+      this.samProfileName = samProfileName;
     }
 
     /**
@@ -277,7 +275,7 @@ public class PoSecuritySettingBuilder {
      */
     public PoSecuritySetting build() {
       return new PoSecuritySettingAdapter()
-          .setSamResource(samResource)
+          .setSamResource(samProfileName)
           .putAuthorizedKVCs(authorizedKvcList)
           .putDefaultKIFs(defaultKif)
           .putDefaultKvc(defaultKvc)

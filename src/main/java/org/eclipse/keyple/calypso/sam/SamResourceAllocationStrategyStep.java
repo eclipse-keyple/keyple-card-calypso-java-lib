@@ -12,35 +12,36 @@
 package org.eclipse.keyple.calypso.sam;
 
 /**
- * Step to configure the SAM manager with plugins.
+ * Step to configure the SAM manager allocation strategy.
  *
  * @since 2.0
  */
-public interface SamResourceManagerConfigurator {
+public interface SamResourceAllocationStrategyStep {
 
   /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.Plugin}.
+   * Configures the SAM resource manager to provide the first available SAM when a SAM allocation is
+   * made.
    *
    * @return next configuration step
    * @since 2.0
    */
-  SamResourceAllocationStrategyStep withPlugins();
+  PluginStep usingFirstSamAvailableAllocationStrategy();
 
   /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.PoolPlugin}.
+   * Configures the SAM resource manager to provide available SAMs on a cyclical basis to avoid
+   * always providing the same SAM.
    *
    * @return next configuration step
    * @since 2.0
    */
-  PoolPluginSamResourceAllocationStrategyStep withPoolPlugins();
+  PluginStep usingCyclicAllocationStrategy();
 
   /**
-   * Terminates the plugins configuration step.
+   * Configures the SAM resource manager to provide available SAMs randomly to avoid always
+   * providing the same SAM.
    *
    * @return next configuration step
    * @since 2.0
    */
-  SamResourceAllocationTimeoutStep endPluginsConfiguration();
+  PluginStep usingRandomAllocationStrategy();
 }

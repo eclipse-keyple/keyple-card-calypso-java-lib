@@ -15,10 +15,9 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
+import org.eclipse.keyple.calypso.sam.SamResource;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
-import org.eclipse.keyple.core.service.selection.CardResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
 
   private static final Logger logger = LoggerFactory.getLogger(PoSecuritySettingAdapter.class);
 
-  private CardResource<CalypsoSamSmartCard> samResource;
+  private String samProfileName;
   private final List<Byte> authorizedKvcList;
   private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKIFs;
   private final EnumMap<PoTransactionService.SessionSetting.AccessLevel, Byte> defaultKVCs;
@@ -68,12 +67,12 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   /**
    * (package-private) Sets the SAM resource.
    *
-   * @param samResource A SAM resource.
+   * @param samProfileName The SAM profile name.
    * @return The object instance.
    * @since 2.0
    */
-  public PoSecuritySettingAdapter setSamResource(CardResource<CalypsoSamSmartCard> samResource) {
-    this.samResource = samResource;
+  public PoSecuritySettingAdapter setSamResource(String samProfileName) {
+    this.samProfileName = samProfileName;
     return this;
   }
 
@@ -86,7 +85,7 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
    */
   public PoSecuritySettingAdapter putAuthorizedKVCs(List<Byte> authorizedKvcList) {
     if (logger.isTraceEnabled()) {
-      logger.trace("PoSecuritySetting authorized KVC list = {}", samResource);
+      logger.trace("PoSecuritySetting authorized KVC list = {}", authorizedKvcList);
     }
     this.authorizedKvcList.addAll(authorizedKvcList);
     return this;
@@ -211,11 +210,12 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   /**
    * (package-private)<br>
    *
-   * @return the Sam resource
+   * @return the SAM profile name.
    * @since 2.0
    */
-  CardResource<CalypsoSamSmartCard> getSamResource() {
-    return samResource;
+  SamResource getSamResource() {
+    // TODO use the SAM resource manager.
+    return null;
   }
 
   /**

@@ -12,11 +12,9 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.service.Reader;
-import org.eclipse.keyple.core.service.selection.CardResource;
 
 /**
  * Factory of {@link PoTransactionService}
@@ -33,31 +31,30 @@ public class PoTransactionServiceFactory {
   /**
    * Gets an instance of a {@link PoTransactionService} to operate a Calypso Secure session.
    *
-   * <p>The required PO resource (combination of {@link Reader} and {@link CalypsoPoSmartCard}).
-   * <br>
-   * The PO security settings is a set of security settings ({@link PoSecuritySetting}) including a
-   * {@link CardResource} based on a {@link CalypsoSamSmartCard}.
+   * <p>The PO security settings is a set of security settings ({@link PoSecuritySetting}) including
+   * the name of the SAM profile to request from the SAM resource manager.
    *
-   * @param poResource The PO resource.
+   * @param poReader The reader through which the card communicates.
+   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
    * @param poSecuritySetting The PO security settings
    * @return A not null reference.
    * @since 2.0
    */
   public static PoTransactionService getService(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySetting poSecuritySetting) {
-    return new PoTransactionServiceAdapter(poResource, poSecuritySetting);
+      Reader poReader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting) {
+    return new PoTransactionServiceAdapter(poReader, calypsoPoSmartCard, poSecuritySetting);
   }
 
   /**
-   * Gets an instance of a {@link PoTransactionService} to operate non-secured Calypso commands.
+   * Gets an instance of a {@link PoTransactionService} to operate non-secure Calypso commands.
    *
-   * <p>The required PO resource (combination of {@link Reader} and {@link CalypsoPoSmartCard}).
-   *
-   * @param poResource The PO resource.
+   * @param poReader The reader through which the card communicates.
+   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  public static PoTransactionService getService(CardResource<CalypsoPoSmartCard> poResource) {
-    return new PoTransactionServiceAdapter(poResource);
+  public static PoTransactionService getService(
+      Reader poReader, CalypsoPoSmartCard calypsoPoSmartCard) {
+    return new PoTransactionServiceAdapter(poReader, calypsoPoSmartCard);
   }
 }

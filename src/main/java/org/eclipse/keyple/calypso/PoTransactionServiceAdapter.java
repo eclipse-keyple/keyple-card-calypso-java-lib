@@ -22,11 +22,9 @@ import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
 import org.eclipse.keyple.calypso.po.ElementaryFile;
 import org.eclipse.keyple.calypso.po.PoRevision;
 import org.eclipse.keyple.calypso.po.SelectFileControl;
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.Reader;
-import org.eclipse.keyple.core.service.selection.CardResource;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
@@ -84,39 +82,38 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private ChannelControl channelControl;
 
   /**
-   * Constructor.
+   * Creates an instance of {@link PoTransactionService} for secure operations.
    *
    * <p>Secure operations are enabled by the presence of {@link PoSecuritySetting}.
    *
-   * @param poResource the PO resource (combination of {@link Reader} and {@link
-   *     CalypsoPoSmartCard}).
-   * @param poSecuritySetting a set of security settings ({@link PoSecuritySetting}) including a.
-   *     {@link CardResource} based on a {@link CalypsoSamSmartCard}.
+   * @param poReader The reader through which the card communicates.
+   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
+   * @param poSecuritySetting The security settings.
    * @since 2.0
    */
   public PoTransactionServiceAdapter(
-      CardResource<CalypsoPoSmartCard> poResource, PoSecuritySetting poSecuritySetting) {
+      Reader poReader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting) {
 
-    this(poResource);
+    this(poReader, calypsoPoSmartCard);
 
     this.poSecuritySettings = (PoSecuritySettingAdapter) poSecuritySetting;
 
-    samCommandProcessor = new SamCommandProcessor(poResource, poSecuritySetting);
+    samCommandProcessor = new SamCommandProcessor(calypsoPoSmartCard, poSecuritySetting);
   }
 
   /**
-   * Constructor.
+   * Creates an instance of {@link PoTransactionService} for non-secure operations.
    *
-   * @param poResource the PO resource (combination of {@link Reader} and {@link
-   *     CalypsoPoSmartCard}).
+   * @param poReader The reader through which the card communicates.
+   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
    * @since 2.0
    */
-  public PoTransactionServiceAdapter(CardResource<CalypsoPoSmartCard> poResource) {
-    this.poReader = (ProxyReader) poResource.getReader();
+  public PoTransactionServiceAdapter(Reader poReader, CalypsoPoSmartCard calypsoPoSmartCard) {
+    this.poReader = (ProxyReader) poReader;
 
-    this.calypsoPoSmartCard = (CalypsoPoSmartCardAdapter) poResource.getSmartCard();
+    this.calypsoPoSmartCard = (CalypsoPoSmartCardAdapter) calypsoPoSmartCard;
 
-    modificationsCounter = calypsoPoSmartCard.getModificationsCounter();
+    modificationsCounter = this.calypsoPoSmartCard.getModificationsCounter();
 
     sessionState = SessionState.SESSION_UNINITIALIZED;
 

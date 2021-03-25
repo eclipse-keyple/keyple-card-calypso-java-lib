@@ -13,8 +13,26 @@ package org.eclipse.keyple.calypso.sam;
 
 import org.eclipse.keyple.core.service.Reader;
 
+/**
+ * Contains a {@link CalypsoSamSmartCard} and its associated {@link Reader}.
+ *
+ * @since 2.0
+ */
 public interface SamResource {
+
+  /**
+   * Gets the reader
+   *
+   * @return the current {@link Reader} for this card
+   * @since 2.0
+   */
   Reader getReader();
 
+  /**
+   * Gets the {@link CalypsoSamSmartCard}.
+   *
+   * @return A not null reference.
+   * @since 2.0
+   */
   CalypsoSamSmartCard getSmartCard();
 }

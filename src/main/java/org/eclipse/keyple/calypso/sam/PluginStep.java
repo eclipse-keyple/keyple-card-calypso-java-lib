@@ -11,36 +11,34 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso.sam;
 
+import org.eclipse.keyple.core.service.Plugin;
+
 /**
- * Step to configure the SAM manager with plugins.
+ * Step to add pool plugins to the SAM manager.
  *
  * @since 2.0
  */
-public interface SamResourceManagerConfigurator {
+public interface PluginStep {
 
   /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.Plugin}.
+   * Adds a {@link Plugin} with or without plugin and reader observation.
+   *
+   * @param plugin The plugin to add.
+   * @param withPluginObservation true if the plugin has to be observed, false if not.
+   * @param withReaderObservation true if the readers have to be observed, false if not.
+   * @return next configuration step
+   * @throws IllegalArgumentException if the provided plugin is null.
+   * @throws IllegalStateException If the observation is required and the plugin or the readers are
+   *     not observable.
+   * @since 2.0
+   */
+  PluginStep addPlugin(Plugin plugin, boolean withPluginObservation, boolean withReaderObservation);
+
+  /**
+   * Terminates the addition of pool plugins.
    *
    * @return next configuration step
    * @since 2.0
    */
-  SamResourceAllocationStrategyStep withPlugins();
-
-  /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.PoolPlugin}.
-   *
-   * @return next configuration step
-   * @since 2.0
-   */
-  PoolPluginSamResourceAllocationStrategyStep withPoolPlugins();
-
-  /**
-   * Terminates the plugins configuration step.
-   *
-   * @return next configuration step
-   * @since 2.0
-   */
-  SamResourceAllocationTimeoutStep endPluginsConfiguration();
+  SamResourceManagerConfigurator addNoMorePlugins();
 }

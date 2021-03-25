@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
 import java.util.SortedMap;
 
 /**
- * Contains all known data content of a Calypso EF.
+ * This POJO contains all known data content of a Calypso EF.
  *
  * @since 2.0
  */

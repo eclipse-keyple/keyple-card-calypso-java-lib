@@ -28,7 +28,7 @@ import org.eclipse.keyple.core.util.Assert;
  *
  * @since 2.0
  */
-public class CalypsoSamCardSelectionAdapter implements CalypsoSamCardSelection, CardSelectionSpi {
+class CalypsoSamCardSelectionAdapter implements CalypsoSamCardSelection, CardSelectionSpi {
 
   private final CalypsoSamCardSelector calypsoSamCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>

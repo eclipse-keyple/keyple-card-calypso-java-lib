@@ -12,35 +12,28 @@
 package org.eclipse.keyple.calypso.sam;
 
 /**
- * Step to configure the SAM manager with plugins.
+ * Step to configure the SAM manager with SAM profiles.
  *
  * @since 2.0
  */
-public interface SamResourceManagerConfigurator {
+public interface SamProfileStep {
 
   /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.Plugin}.
+   * Adds a SAM profile with the provided name.
+   *
+   * @param name A string.
+   * @return next configuration step
+   * @throws IllegalArgumentException If the name is null or empty.
+   * @throws IllegalStateException If the name is already in use.
+   * @since 2.0
+   */
+  SamProfileParameterStep addSamProfile(String name);
+
+  /**
+   * Terminates the addition of SAM profiles.
    *
    * @return next configuration step
    * @since 2.0
    */
-  SamResourceAllocationStrategyStep withPlugins();
-
-  /**
-   * Configures the SAM resource manager with one or more {@link
-   * org.eclipse.keyple.core.service.PoolPlugin}.
-   *
-   * @return next configuration step
-   * @since 2.0
-   */
-  PoolPluginSamResourceAllocationStrategyStep withPoolPlugins();
-
-  /**
-   * Terminates the plugins configuration step.
-   *
-   * @return next configuration step
-   * @since 2.0
-   */
-  SamResourceAllocationTimeoutStep endPluginsConfiguration();
+  ConfigurationStep addNoMoreSamProfiles();
 }

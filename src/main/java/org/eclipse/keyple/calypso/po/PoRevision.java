@@ -12,7 +12,7 @@
 package org.eclipse.keyple.calypso.po;
 
 /**
- * Calypso revisions
+ * All supported revisions of Calypso PO.
  *
  * @since 2.0
  */
