@@ -205,7 +205,8 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
   }
 
   /**
-   * @return
+   * {@inheritDoc}
+   *
    * @since 2.0
    */
   @Override
@@ -214,7 +215,8 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
   }
 
   /**
-   * @return
+   * {@inheritDoc}
+   *
    * @since 2.0
    */
   @Override
@@ -223,7 +225,8 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
   }
 
   /**
-   * @return
+   * {@inheritDoc}
+   *
    * @since 2.0
    */
   @Override
@@ -236,7 +239,8 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
   }
 
   /**
-   * @return
+   * {@inheritDoc}
+   *
    * @since 2.0
    */
   @Override
@@ -275,16 +279,31 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final PoRevision getRevision() {
     return revision;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte[] getDfNameBytes() {
     return dfName;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final String getDfName() {
     return ByteArrayUtil.toHex(getDfNameBytes());
@@ -304,6 +323,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return calypsoSerialNumber;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte[] getApplicationSerialNumberBytes() {
     byte[] applicationSerialNumber = calypsoSerialNumber.clone();
@@ -312,11 +336,21 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return applicationSerialNumber;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final String getApplicationSerialNumber() {
     return ByteArrayUtil.toHex(getApplicationSerialNumberBytes());
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final String getStartupInfo() {
     return ByteArrayUtil.toHex(startupInfo);
@@ -330,6 +364,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     throw new IllegalStateException("Not yet implemented");
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final String getAtr() {
     return ByteArrayUtil.toHex(getAtrBytes());
@@ -372,71 +411,141 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return modificationsCounterMax;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getPlatform() {
     return startupInfo[SI_PLATFORM];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getApplicationType() {
     return startupInfo[SI_APPLICATION_TYPE];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isConfidentialSessionModeSupported() {
     return isConfidentialSessionModeSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isDeselectRatificationSupported() {
     return isDeselectRatificationSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isSvFeatureAvailable() {
     return isSvFeatureAvailable;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isPinFeatureAvailable() {
     return isPinFeatureAvailable;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isPublicAuthenticationSupported() {
     return isPublicAuthenticationSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getApplicationSubtype() {
     return startupInfo[SI_APPLICATION_SUBTYPE];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getSoftwareIssuer() {
     return startupInfo[SI_SOFTWARE_ISSUER];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getSoftwareVersion() {
     return startupInfo[SI_SOFTWARE_VERSION];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getSoftwareRevision() {
     return startupInfo[SI_SOFTWARE_REVISION];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final byte getSessionModification() {
     return startupInfo[SI_BUFFER_SIZE_INDICATOR];
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isDfInvalidated() {
     return isDfInvalidated;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isDfRatified() {
     if (isDfRatified != null) {
@@ -472,6 +581,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final int getSvBalance() {
     if (svBalance == null) {
@@ -480,6 +594,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return svBalance;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final int getSvLastTNum() {
     if (svBalance == null) {
@@ -488,6 +607,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return svLastTNum;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final SvLoadLogRecord getSvLoadLogRecord() {
     if (svLoadLogRecord == null) {
@@ -498,6 +622,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return svLoadLogRecord;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final SvDebitLogRecord getSvDebitLogLastRecord() {
     if (svDebitLogRecord == null) {
@@ -508,6 +637,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return svDebitLogRecord;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final List<SvDebitLogRecord> getSvDebitLogAllRecords() {
     // get the logs from the file data
@@ -543,6 +677,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return poClass;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final DirectoryHeader getDirectoryHeader() {
     return directoryHeader;
@@ -560,6 +699,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final ElementaryFile getFileBySfi(byte sfi) {
     ElementaryFile ef = efBySfi.get(sfi);
@@ -570,6 +714,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return ef;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final ElementaryFile getFileByLid(short lid) {
     Byte sfi = sfiByLid.get(lid);
@@ -580,6 +729,11 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return efBySfi.get(sfi);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final Map<Byte, ElementaryFile> getAllFiles() {
     return efBySfi;
@@ -601,11 +755,21 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
     return ef;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final boolean isPinBlocked() {
     return getPinAttemptRemaining() == 0;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public final int getPinAttemptRemaining() {
     if (pinAttemptCounter == null) {

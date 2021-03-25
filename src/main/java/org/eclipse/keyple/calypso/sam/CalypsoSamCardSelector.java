@@ -14,17 +14,17 @@ package org.eclipse.keyple.calypso.sam;
 import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 
 /**
- * The {@link CalypsoSamSelector} class extends {@link CardSelector} to handle specific Calypso SAM
- * needs such as model identification.
+ * The {@link CalypsoSamCardSelector} class extends {@link CardSelector} to handle specific Calypso
+ * SAM needs such as model identification.
  *
  * @since 2.0
  */
-public final class CalypsoSamSelector extends CardSelector {
+public final class CalypsoSamCardSelector extends CardSelector {
   private final SamRevision targetSamRevision;
   private final byte[] unlockData;
 
   /** Private constructor */
-  private CalypsoSamSelector(Builder builder) {
+  private CalypsoSamCardSelector(Builder builder) {
     String atrRegex;
     String snRegex;
     /* check if serialNumber is defined */
@@ -65,7 +65,7 @@ public final class CalypsoSamSelector extends CardSelector {
   }
 
   /**
-   * Builder of {@link CalypsoSamSelector}
+   * Builder of {@link CalypsoSamCardSelector}
    *
    * @since 2.0
    */
@@ -129,8 +129,8 @@ public final class CalypsoSamSelector extends CardSelector {
      * @return a new instance
      * @since 2.0
      */
-    public CalypsoSamSelector build() {
-      return new CalypsoSamSelector(this);
+    public CalypsoSamCardSelector build() {
+      return new CalypsoSamCardSelector(this);
     }
   }
 

@@ -731,6 +731,8 @@ final class CalypsoPoUtils {
    * @param sfi the SFI of the EF to read.
    * @param recordNumber the record number to read.
    * @return a {@link PoReadRecordsBuilder} object
+   * @throws IllegalArgumentException If one of the arguments is out of range.
+   * @since 2.0
    */
   static PoReadRecordsBuilder prepareReadRecordFile(PoClass poClass, byte sfi, int recordNumber) {
     Assert.getInstance()
@@ -748,6 +750,8 @@ final class CalypsoPoUtils {
    * @param poClass the class of the PO.
    * @param lid the LID of the EF to select.
    * @return a {@link PoSelectFileBuilder} object
+   * @throws IllegalArgumentException If one of the arguments is out of range.
+   * @since 2.0
    */
   static PoSelectFileBuilder prepareSelectFile(PoClass poClass, byte[] lid) {
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid");
@@ -761,6 +765,7 @@ final class CalypsoPoUtils {
    * @param poClass the class of the PO.
    * @param selectControl provides the navigation case: FIRST, NEXT or CURRENT.
    * @return a {@link PoSelectFileBuilder} object
+   * @since 2.0
    */
   static PoSelectFileBuilder prepareSelectFile(PoClass poClass, SelectFileControl selectControl) {
     return new PoSelectFileBuilder(poClass, selectControl);

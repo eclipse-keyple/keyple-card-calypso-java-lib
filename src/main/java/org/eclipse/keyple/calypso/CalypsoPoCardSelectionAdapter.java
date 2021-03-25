@@ -26,24 +26,37 @@ import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class CalypsoPoCardSelectionAdapter
-    implements CalypsoPoCardSelection, CardSelectionSpi, CalypsoPoCardSelectionInterface {
+/**
+ * (package-private)<br>
+ * Implementation of {@link CalypsoPoCardSelection}.
+ *
+ * @since 2.0
+ */
+final class CalypsoPoCardSelectionAdapter implements CalypsoPoCardSelection, CardSelectionSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoPoCardSelectionAdapter.class);
 
   private final List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> commandBuilders;
-  private final CalypsoPoCardSelector cardSelector;
+  private final CalypsoPoCardSelector calypsoPoCardSelector;
   private final PoClass poClass;
 
-  CalypsoPoCardSelectionAdapter(CalypsoPoCardSelector cardSelector) {
+  /**
+   * (package-private)<br>
+   * Creates an instance of {@link CalypsoPoCardSelection}.
+   *
+   * @param calypsoPoCardSelector A card selector.
+   * @since 2.0
+   * @throws IllegalArgumentException If calypsoPoCardSelector is null.
+   */
+  CalypsoPoCardSelectionAdapter(CalypsoPoCardSelector calypsoPoCardSelector) {
 
-    Assert.getInstance().notNull(cardSelector, "cardSelector");
+    Assert.getInstance().notNull(calypsoPoCardSelector, "calypsoPoCardSelector");
 
-    this.cardSelector = cardSelector;
+    this.calypsoPoCardSelector = calypsoPoCardSelector;
     this.commandBuilders =
         new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
     // deduces the class of the PO according to the type of selection
-    if (cardSelector.getAidSelector() == null) {
+    if (calypsoPoCardSelector.getAidSelector() == null) {
       poClass = PoClass.LEGACY;
     } else {
       poClass = PoClass.ISO;
@@ -55,34 +68,31 @@ final class CalypsoPoCardSelectionAdapter
   }
 
   /**
-   * Adds a command APDU to read a single record from the indicated EF.
+   * {@inheritDoc}
    *
-   * @param sfi the SFI of the EF to read
-   * @param recordNumber the record number to read
-   * @throws IllegalArgumentException if one of the provided argument is out of range
    * @since 2.0
    */
-  public final void prepareReadRecordFile(byte sfi, int recordNumber) {
+  @Override
+  public void prepareReadRecordFile(byte sfi, int recordNumber) {
     commandBuilders.add(CalypsoPoUtils.prepareReadRecordFile(poClass, sfi, recordNumber));
   }
 
   /**
-   * Adds a command APDU to select file with an LID provided as a 2-byte byte array.
+   * {@inheritDoc}
    *
-   * @param lid LID of the EF to select as a byte array
-   * @throws IllegalArgumentException if the argument is not an array of 2 bytes
    * @since 2.0
    */
+  @Override
   public void prepareSelectFile(byte[] lid) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, lid));
   }
 
   /**
-   * Adds a command APDU to select file with an LID provided as a short.
+   * {@inheritDoc}
    *
-   * @param lid A short
    * @since 2.0
    */
+  @Override
   public void prepareSelectFile(short lid) {
     byte[] bLid =
         new byte[] {
@@ -92,12 +102,11 @@ final class CalypsoPoCardSelectionAdapter
   }
 
   /**
-   * Adds a command APDU to select file according to the provided {@link SelectFileControl} enum
-   * entry indicating the navigation case: FIRST, NEXT or CURRENT.
+   * {@inheritDoc}
    *
-   * @param selectControl A {@link SelectFileControl} enum entry
    * @since 2.0
    */
+  @Override
   public void prepareSelectFile(SelectFileControl selectControl) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, selectControl));
   }
@@ -116,7 +125,7 @@ final class CalypsoPoCardSelectionAdapter
     }
     // TODO check the boolean use in every creation of CardRequest
     return new CardSelectionRequest(
-        cardSelector, new CardRequest(cardSelectionApduRequests, false));
+        calypsoPoCardSelector, new CardRequest(cardSelectionApduRequests, false));
   }
 
   /**
@@ -156,6 +165,6 @@ final class CalypsoPoCardSelectionAdapter
    */
   @Override
   public CardSelector getCardSelector() {
-    return cardSelector;
+    return calypsoPoCardSelector;
   }
 }
