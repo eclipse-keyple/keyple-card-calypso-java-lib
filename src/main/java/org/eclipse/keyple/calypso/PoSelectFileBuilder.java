@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * (package-private)<br>
  * Builds the Select File APDU commands.
  *
  * @since 2.0

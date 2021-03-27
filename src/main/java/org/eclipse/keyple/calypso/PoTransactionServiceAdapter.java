@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Implementation of {@link PoTransactionService}.
  *
  * @since 2.0

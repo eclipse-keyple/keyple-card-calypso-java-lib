@@ -16,7 +16,10 @@ import org.eclipse.keyple.core.card.ApduResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Builds the Write Record APDU command. */
+/**
+ * (package-private)<br>
+ * Builds the Write Record APDU command.
+ */
 final class PoWriteRecordBuilder extends AbstractPoCommandBuilder<PoWriteRecordParser> {
   private static final Logger logger = LoggerFactory.getLogger(PoWriteRecordBuilder.class);
 

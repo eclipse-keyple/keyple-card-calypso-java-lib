@@ -16,7 +16,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Parses the ChangeKey response.
  *
  * @since 2.0

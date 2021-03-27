@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Builds the SV Reload command.
  *
  * @since 2.0

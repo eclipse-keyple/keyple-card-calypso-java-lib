@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Builds the SV Undebit command.
  *
  * <p>Note: {@link PoSvUndebitBuilder} and {@link PoSvDebitBuilder} shares the same parser {@link

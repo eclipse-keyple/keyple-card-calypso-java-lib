@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Builds the SV Debit command.
  *
  * <p>Note: {@link PoSvDebitBuilder} and {@link PoSvUndebitBuilder} shares the same parser {@link

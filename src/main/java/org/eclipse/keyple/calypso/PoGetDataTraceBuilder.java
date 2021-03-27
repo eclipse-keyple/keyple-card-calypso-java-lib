@@ -15,6 +15,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Builds the Get data APDU commands.
  *
  * <p>This command can not be sent in session because it would generate a 6Cxx status in contact

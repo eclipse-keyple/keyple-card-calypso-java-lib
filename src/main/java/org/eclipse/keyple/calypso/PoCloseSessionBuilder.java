@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
+ * (package-private)<br>
  * Builds the Close Secure Session APDU command.
  *
  * @since 2.0
