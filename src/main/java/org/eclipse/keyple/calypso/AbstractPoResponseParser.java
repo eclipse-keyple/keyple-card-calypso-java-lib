@@ -14,6 +14,7 @@ package org.eclipse.keyple.calypso;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Superclass for all PO command parsers.
  *
  * @since 2.0

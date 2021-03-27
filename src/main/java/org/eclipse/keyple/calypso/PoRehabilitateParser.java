@@ -16,6 +16,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the Rehabilitate response.
  *
  * @since 2.0

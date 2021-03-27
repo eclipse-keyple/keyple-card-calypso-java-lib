@@ -15,6 +15,7 @@ import java.util.*;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the Read Records response.
  *
  * @since 2.0

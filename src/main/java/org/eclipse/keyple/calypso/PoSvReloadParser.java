@@ -16,6 +16,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the SV Reload response.
  *
  * <p>See specs: Calypso Stored Value balance (signed binaries' coding based on the two's complement

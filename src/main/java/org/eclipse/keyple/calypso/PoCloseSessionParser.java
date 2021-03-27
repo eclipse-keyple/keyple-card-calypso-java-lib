@@ -17,6 +17,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the Close Secure Session response.
  *
  * @since 2.0

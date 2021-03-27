@@ -19,6 +19,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
+ * (package-private)<br>
  * Parses the SV Get response.
  *
  * @since 2.0

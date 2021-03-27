@@ -21,6 +21,7 @@ import org.eclipse.keyple.core.util.bertlv.TLV;
 import org.eclipse.keyple.core.util.bertlv.Tag;
 
 /**
+ * (package-private)<br>
  * Parses the response to a Select File command.
  *
  * @since 2.0

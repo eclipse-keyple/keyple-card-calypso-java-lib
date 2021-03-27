@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
- * (package-private)<br>
+ * (package-private) <br>
  * Utility class used to check Calypso specific data.
  *
  * <p>Helps the preparation and the analysis of Calypso Po commands.

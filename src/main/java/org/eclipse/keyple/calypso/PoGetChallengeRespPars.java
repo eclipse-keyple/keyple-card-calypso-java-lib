@@ -14,6 +14,7 @@ package org.eclipse.keyple.calypso;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the PO Get challenge response.
  *
  * @since 2.0

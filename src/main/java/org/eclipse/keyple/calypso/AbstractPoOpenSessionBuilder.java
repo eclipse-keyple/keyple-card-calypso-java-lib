@@ -13,7 +13,10 @@ package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.po.PoRevision;
 
-/** Builds the Open Secure Session APDU command. */
+/**
+ * (package-private)<br>
+ * Builds the Open Secure Session APDU command.
+ */
 abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>
     extends AbstractPoCommandBuilder<T> {
 
