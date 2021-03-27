@@ -39,7 +39,7 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
    */
   public SamCardGenerateKeyBuilder(
       SamRevision revision, KeyReference cipheringKey, KeyReference sourceKey) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -74,7 +74,7 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
       data[4] = (byte) 0x90;
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
   }
 
   /**

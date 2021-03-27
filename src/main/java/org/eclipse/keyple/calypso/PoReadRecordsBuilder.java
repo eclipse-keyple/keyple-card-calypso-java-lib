@@ -55,7 +55,7 @@ final class PoReadRecordsBuilder extends AbstractPoCommandBuilder<PoReadRecordsP
    */
   public PoReadRecordsBuilder(
       PoClass poClass, int sfi, int firstRecordNumber, ReadMode readMode, int expectedLength) {
-    super(command, null);
+    super(command);
 
     this.sfi = sfi;
     this.firstRecordNumber = firstRecordNumber;
@@ -67,8 +67,8 @@ final class PoReadRecordsBuilder extends AbstractPoCommandBuilder<PoReadRecordsP
       p2 = (byte) (p2 - (byte) 0x01);
     }
     byte le = (byte) expectedLength;
-    this.request =
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le);
+    setApduRequest(
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

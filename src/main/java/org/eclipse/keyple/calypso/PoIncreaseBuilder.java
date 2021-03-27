@@ -42,7 +42,7 @@ final class PoIncreaseBuilder extends AbstractPoCommandBuilder<PoIncreaseParser>
    * @throws IllegalArgumentException - if the command is inconsistent
    */
   public PoIncreaseBuilder(PoClass poClass, byte sfi, int counterNumber, int incValue) {
-    super(command, null);
+    super(command);
 
     byte cla = poClass.getValue();
     this.sfi = sfi;
@@ -58,14 +58,14 @@ final class PoIncreaseBuilder extends AbstractPoCommandBuilder<PoIncreaseParser>
     byte p2 = (byte) (sfi * 8);
 
     /* this is a case4 command, we set Le = 0 */
-    this.request =
+    setApduRequest(
         new ApduRequest(
             cla,
             command.getInstructionByte(),
             (byte) counterNumber,
             p2,
             incValueBuffer,
-            (byte) 0x00);
+            (byte) 0x00));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

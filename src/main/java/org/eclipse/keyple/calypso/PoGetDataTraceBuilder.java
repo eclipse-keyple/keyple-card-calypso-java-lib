@@ -33,16 +33,16 @@ final class PoGetDataTraceBuilder extends AbstractPoCommandBuilder<PoGetDataTrac
    * @since 2.0
    */
   public PoGetDataTraceBuilder(PoClass poClass) {
-    super(command, null);
+    super(command);
 
-    this.request =
+    setApduRequest(
         new ApduRequest(
             poClass.getValue(),
             command.getInstructionByte(),
             (byte) 0x01,
             (byte) 0x85,
             null,
-            (byte) 0x00);
+            (byte) 0x00));
   }
 
   /**

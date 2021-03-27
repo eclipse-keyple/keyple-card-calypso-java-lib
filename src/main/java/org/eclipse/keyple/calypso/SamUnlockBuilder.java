@@ -32,7 +32,7 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
    * @since 2.0
    */
   public SamUnlockBuilder(SamRevision revision, byte[] unlockData) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -48,7 +48,7 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
       throw new IllegalArgumentException("Unlock data should be 8 ou 16 bytes long!");
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, unlockData, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, unlockData, null));
   }
 
   /**

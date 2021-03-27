@@ -45,7 +45,7 @@ final class SamReadKeyParametersBuilder
 
   public SamReadKeyParametersBuilder(SamRevision revision) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -55,14 +55,14 @@ final class SamReadKeyParametersBuilder
     byte p2 = (byte) 0xE0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00);
+            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -74,14 +74,14 @@ final class SamReadKeyParametersBuilder
 
     sourceKeyId[0] = kif;
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00);
+            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif, byte kvc) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -94,15 +94,15 @@ final class SamReadKeyParametersBuilder
     sourceKeyId[0] = kif;
     sourceKeyId[1] = kvc;
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00);
+            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
   }
 
   public SamReadKeyParametersBuilder(
       SamRevision revision, SourceRef sourceKeyRef, int recordNumber) {
 
-    super(command, null);
+    super(command);
 
     if (revision != null) {
       this.defaultRevision = revision;
@@ -132,14 +132,14 @@ final class SamReadKeyParametersBuilder
             "Unsupported SourceRef parameter " + sourceKeyRef.toString());
     }
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00);
+            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif, NavControl navControl) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -165,9 +165,9 @@ final class SamReadKeyParametersBuilder
 
     sourceKeyId[0] = kif;
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00);
+            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
   }
 
   /**

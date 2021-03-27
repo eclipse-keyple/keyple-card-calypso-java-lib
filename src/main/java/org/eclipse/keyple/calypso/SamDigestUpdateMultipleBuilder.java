@@ -36,7 +36,7 @@ final class SamDigestUpdateMultipleBuilder
    */
   public SamDigestUpdateMultipleBuilder(
       SamRevision revision, boolean encryptedSession, byte[] digestData) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -48,7 +48,7 @@ final class SamDigestUpdateMultipleBuilder
       throw new IllegalArgumentException("Digest data null or too long!");
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, digestData, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, digestData, null));
   }
 
   /**

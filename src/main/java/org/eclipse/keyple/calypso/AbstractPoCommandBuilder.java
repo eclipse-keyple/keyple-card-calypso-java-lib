@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
@@ -26,11 +25,10 @@ abstract class AbstractPoCommandBuilder<T extends AbstractPoResponseParser>
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
-   * @param request the ApduRequest (the instruction byte will be overwritten).
    * @since 2.0
    */
-  protected AbstractPoCommandBuilder(CalypsoPoCommand commandRef, ApduRequest request) {
-    super(commandRef, request);
+  protected AbstractPoCommandBuilder(CalypsoPoCommand commandRef) {
+    super(commandRef);
   }
 
   /**

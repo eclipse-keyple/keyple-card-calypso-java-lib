@@ -47,7 +47,7 @@ final class PoDecreaseBuilder extends AbstractPoCommandBuilder<PoDecreaseParser>
    * @since 2.0
    */
   public PoDecreaseBuilder(PoClass poClass, byte sfi, int counterNumber, int decValue) {
-    super(command, null);
+    super(command);
 
     byte cla = poClass.getValue();
     this.sfi = sfi;
@@ -63,9 +63,9 @@ final class PoDecreaseBuilder extends AbstractPoCommandBuilder<PoDecreaseParser>
     byte p2 = (byte) (sfi * 8);
 
     /* this is a case4 command, we set Le = 0 */
-    this.request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) counterNumber, p2, decValueBuffer, (byte) 0);
+            cla, command.getInstructionByte(), (byte) counterNumber, p2, decValueBuffer, (byte) 0));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

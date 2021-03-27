@@ -47,7 +47,7 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
   public SamReadCeilingsBuilder(
       SamRevision revision, CeilingsOperationType operationType, int index) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -75,7 +75,7 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
       p2 = (byte) (0xB8);
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
   }
 
   /**

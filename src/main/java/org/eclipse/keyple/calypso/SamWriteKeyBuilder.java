@@ -35,7 +35,7 @@ final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyPars
    */
   public SamWriteKeyBuilder(
       SamRevision revision, byte writingMode, byte keyReference, byte[] keyData) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -49,9 +49,9 @@ final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyPars
       throw new IllegalArgumentException("Key data should be between 40 and 80 bytes long!");
     }
 
-    request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), writingMode, keyReference, keyData, null);
+            cla, command.getInstructionByte(), writingMode, keyReference, keyData, null));
   }
 
   /**

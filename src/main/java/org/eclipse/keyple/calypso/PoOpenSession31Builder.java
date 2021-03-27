@@ -55,14 +55,14 @@ final class PoOpenSession31Builder
      */
     byte le = 0;
 
-    this.request =
+    setApduRequest(
         new ApduRequest(
             PoClass.ISO.getValue(),
             CalypsoPoCommand.getOpenSessionForRev(PoRevision.REV3_1).getInstructionByte(),
             p1,
             p2,
             samChallenge,
-            le);
+            le));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

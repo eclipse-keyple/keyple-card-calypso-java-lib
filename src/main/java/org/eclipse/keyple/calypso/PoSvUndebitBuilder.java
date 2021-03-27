@@ -47,7 +47,7 @@ final class PoSvUndebitBuilder extends AbstractPoCommandBuilder<PoSvUndebitParse
    */
   public PoSvUndebitBuilder(
       PoClass poClass, PoRevision poRevision, int amount, byte kvc, byte[] date, byte[] time) {
-    super(command, null);
+    super(command);
 
     /*
      * @see Calypso Layer ID 8.02 (200108)
@@ -114,8 +114,8 @@ final class PoSvUndebitBuilder extends AbstractPoCommandBuilder<PoSvUndebitParse
     System.arraycopy(
         undebitComplementaryData, 10, dataIn, 15, undebitComplementaryData.length - 10);
 
-    this.request =
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null);
+    setApduRequest(
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null));
   }
 
   /**

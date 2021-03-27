@@ -40,7 +40,7 @@ final class SamSvPrepareUndebitBuilder
       byte[] svGetHeader,
       byte[] svGetData,
       byte[] svUndebitCmdBuildDebitCmdBuildData) {
-    super(command, null);
+    super(command);
 
     byte cla = samRevision.getClassByte();
     byte p1 = (byte) 0x01;
@@ -56,7 +56,7 @@ final class SamSvPrepareUndebitBuilder
         4 + svGetData.length,
         svUndebitCmdBuildDebitCmdBuildData.length);
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
   }
 
   /**

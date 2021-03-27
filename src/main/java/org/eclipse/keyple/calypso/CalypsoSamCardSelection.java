@@ -9,31 +9,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.sam;
+package org.eclipse.keyple.calypso;
+
+import org.eclipse.keyple.core.service.selection.spi.CardSelection;
 
 /**
- * Step to configure the SAM manager with SAM profiles.
+ * (package-private)<br>
+ * SAM specific {@link CardSelection} providing means to define commands to execute during the
+ * selection phase.
  *
  * @since 2.0
  */
-public interface SamProfileStep {
-
-  /**
-   * Adds a SAM profile with the provided name.
-   *
-   * @param name A string.
-   * @return next configuration step
-   * @throws IllegalArgumentException If the name is null or empty.
-   * @throws IllegalStateException If the name is already in use.
-   * @since 2.0
-   */
-  SamProfileParameterStep addSamProfile(String name);
-
-  /**
-   * Terminates the addition of SAM profiles.
-   *
-   * @return next configuration step
-   * @since 2.0
-   */
-  ConfigurationStep addNoMoreSamProfiles();
-}
+interface CalypsoSamCardSelection extends CardSelection {}

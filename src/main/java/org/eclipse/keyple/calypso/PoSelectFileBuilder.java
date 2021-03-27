@@ -41,7 +41,7 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
    * @since 2.0
    */
   public PoSelectFileBuilder(PoClass poClass, SelectFileControl selectFileControl) {
-    super(command, null);
+    super(command);
 
     this.path = null;
     this.selectFileControl = selectFileControl;
@@ -68,7 +68,8 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
             "Unsupported selectFileControl parameter " + selectFileControl.toString());
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00);
+    setApduRequest(
+        new ApduRequest(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00));
 
     if (logger.isDebugEnabled()) {
       this.addSubName("SELECTIONCONTROL" + selectFileControl);
@@ -84,7 +85,7 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
    * @since 2.0
    */
   public PoSelectFileBuilder(PoClass poClass, byte[] selectionPath) {
-    super(command, null);
+    super(command);
 
     this.path = selectionPath;
     this.selectFileControl = null;
@@ -92,14 +93,14 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
     // handle the REV1 case
     byte p1 = (byte) (poClass == PoClass.LEGACY ? 0x08 : 0x09);
 
-    request =
+    setApduRequest(
         new ApduRequest(
             poClass.getValue(),
             command.getInstructionByte(),
             p1,
             (byte) 0x00,
             selectionPath,
-            (byte) 0x00);
+            (byte) 0x00));
 
     if (logger.isDebugEnabled()) {
       this.addSubName("SELECTIONPATH=" + ByteArrayUtil.toHex(selectionPath));

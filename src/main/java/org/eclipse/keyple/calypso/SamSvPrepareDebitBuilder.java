@@ -36,7 +36,7 @@ final class SamSvPrepareDebitBuilder
    */
   public SamSvPrepareDebitBuilder(
       SamRevision samRevision, byte[] svGetHeader, byte[] svGetData, byte[] svDebitCmdBuildData) {
-    super(command, null);
+    super(command);
 
     byte cla = samRevision.getClassByte();
     byte p1 = (byte) 0x01;
@@ -48,7 +48,7 @@ final class SamSvPrepareDebitBuilder
     System.arraycopy(
         svDebitCmdBuildData, 0, data, 4 + svGetData.length, svDebitCmdBuildData.length);
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
   }
 
   /**

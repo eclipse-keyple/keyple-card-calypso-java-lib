@@ -13,8 +13,6 @@ package org.eclipse.keyple.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.keyple.calypso.sam.CalypsoSamCardSelection;
-import org.eclipse.keyple.calypso.sam.CalypsoSamCardSelector;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.card.spi.CardSelectionSpi;

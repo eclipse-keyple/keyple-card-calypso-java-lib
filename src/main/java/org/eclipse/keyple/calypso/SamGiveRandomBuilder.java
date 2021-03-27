@@ -35,7 +35,7 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
    * @since 2.0
    */
   public SamGiveRandomBuilder(SamRevision revision, byte[] random) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -47,7 +47,7 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
       throw new IllegalArgumentException("Random value should be an 8 bytes long");
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, random, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, random, null));
   }
 
   /**

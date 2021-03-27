@@ -42,7 +42,7 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
    */
   public PoVerifyPinBuilder(
       PoClass poClass, PoTransactionService.PinTransmissionMode pinTransmissionMode, byte[] pin) {
-    super(command, null);
+    super(command);
 
     if (pin == null
         || (pinTransmissionMode == PoTransactionService.PinTransmissionMode.PLAIN
@@ -57,7 +57,7 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
-    this.request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, pin, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, pin, null));
     if (logger.isDebugEnabled()) {
       this.addSubName(pinTransmissionMode.toString());
     }
@@ -71,13 +71,13 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
    * @param poClass indicates which CLA byte should be used for the Apdu.
    */
   public PoVerifyPinBuilder(PoClass poClass) {
-    super(command, null);
+    super(command);
     cla = poClass.getValue();
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
-    this.request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, null));
     if (logger.isDebugEnabled()) {
       this.addSubName("Read presentation counter");
     }

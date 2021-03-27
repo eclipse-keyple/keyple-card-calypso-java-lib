@@ -214,7 +214,7 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
    * @since 2.0
    */
   SamResource getSamResource() {
-    // TODO use the SAM resource manager.
+    // TODO use the SAM resource service.
     return null;
   }
 

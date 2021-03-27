@@ -34,7 +34,7 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
    * @since 2.0
    */
   public SamGetChallengeBuilder(SamRevision revision, byte expectedResponseLength) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -46,8 +46,8 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
     byte p1 = 0x00;
     byte p2 = 0x00;
 
-    request =
-        new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength);
+    setApduRequest(
+        new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength));
   }
 
   /**

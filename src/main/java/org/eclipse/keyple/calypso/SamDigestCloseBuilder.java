@@ -34,7 +34,7 @@ final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestClo
    * @since 2.0
    */
   public SamDigestCloseBuilder(SamRevision revision, byte expectedResponseLength) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -47,8 +47,8 @@ final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestClo
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
-    request =
-        new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength);
+    setApduRequest(
+        new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength));
   }
 
   /**

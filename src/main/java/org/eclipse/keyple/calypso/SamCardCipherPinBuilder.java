@@ -42,7 +42,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    */
   public SamCardCipherPinBuilder(
       SamRevision revision, KeyReference cipheringKey, byte[] currentPin, byte[] newPin) {
-    super(command, null);
+    super(command);
 
     if (revision != null) {
       this.defaultRevision = revision;
@@ -78,7 +78,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
 
     System.arraycopy(currentPin, 0, data, 2, 4);
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
   }
 
   /**

@@ -33,7 +33,7 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
    * @since 2.0
    */
   public SamSvCheckBuilder(SamRevision revision, byte[] svPoSignature) {
-    super(command, null);
+    super(command);
     if (svPoSignature != null && (svPoSignature.length != 3 && svPoSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svPoSignature.");
     }
@@ -50,9 +50,9 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
       // the operation is not "abort"
       byte[] data = new byte[svPoSignature.length];
       System.arraycopy(svPoSignature, 0, data, 0, svPoSignature.length);
-      request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
     } else {
-      request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00);
+      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
     }
   }
 

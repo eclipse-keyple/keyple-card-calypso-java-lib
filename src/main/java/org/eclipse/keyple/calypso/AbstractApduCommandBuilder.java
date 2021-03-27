@@ -44,12 +44,8 @@ abstract class AbstractApduCommandBuilder {
 
   private String name;
 
-  /**
-   * The byte array APDU request.
-   *
-   * @since 2.0
-   */
-  protected ApduRequest request;
+  /** The byte array APDU request. */
+  private ApduRequest apduRequest;
 
   /**
    * (protected)<br>
@@ -57,19 +53,10 @@ abstract class AbstractApduCommandBuilder {
    * array.
    *
    * @param commandRef command reference (should not be null).
-   * @param request request.
    * @since 2.0
    */
-  protected AbstractApduCommandBuilder(CardCommand commandRef, ApduRequest request) {
+  protected AbstractApduCommandBuilder(CardCommand commandRef) {
     this.commandRef = commandRef;
-    this.request = request;
-    // set APDU name for non null request
-    if (logger.isDebugEnabled()) {
-      this.name = commandRef.getName();
-      if (request != null) {
-        this.request.setName(this.name);
-      }
-    }
   }
 
   /**
@@ -84,8 +71,8 @@ abstract class AbstractApduCommandBuilder {
   public final void addSubName(String subName) {
     if (subName.length() != 0) {
       this.name = this.name + " - " + subName;
-      if (request != null) {
-        this.request.setName(this.name);
+      if (apduRequest != null) {
+        this.apduRequest.setName(this.name);
       }
     }
   }
@@ -111,12 +98,20 @@ abstract class AbstractApduCommandBuilder {
   }
 
   /**
-   * Gets {@link ApduRequest} the request
+   * (package-private)<br>
+   * Sets the command {@link ApduRequest}.
    *
-   * @return A nullable reference
+   * @param apduRequest The APDU request.
+   */
+  void setApduRequest(ApduRequest apduRequest) {}
+
+  /**
+   * Gets the {@link ApduRequest}.
+   *
+   * @return A not null reference.
    * @since 2.0
    */
   public final ApduRequest getApduRequest() {
-    return request;
+    return apduRequest;
   }
 }

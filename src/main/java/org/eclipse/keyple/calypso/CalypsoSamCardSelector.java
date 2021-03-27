@@ -9,17 +9,19 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso.sam;
+package org.eclipse.keyple.calypso;
 
+import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 
 /**
+ * (private-package)<br>
  * The {@link CalypsoSamCardSelector} class extends {@link CardSelector} to handle specific Calypso
  * SAM needs such as model identification.
  *
  * @since 2.0
  */
-public final class CalypsoSamCardSelector extends CardSelector {
+final class CalypsoSamCardSelector extends CardSelector {
   private final SamRevision targetSamRevision;
   private final byte[] unlockData;
 

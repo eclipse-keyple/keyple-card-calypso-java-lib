@@ -48,7 +48,7 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
       byte workKeyKif,
       byte workKeyKVC,
       byte[] digestData) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -84,7 +84,7 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
       dataIn = digestData;
     }
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, dataIn, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, dataIn, null));
   }
 
   /**

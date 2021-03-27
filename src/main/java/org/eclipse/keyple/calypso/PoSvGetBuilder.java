@@ -45,13 +45,13 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
       PoClass poClass,
       PoRevision poRevision,
       PoTransactionService.SvSettings.Operation svOperation) {
-    super(command, null);
+    super(command);
     byte cla = poClass.getValue();
     byte p1 = poRevision == PoRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
     byte p2 =
         svOperation == PoTransactionService.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
-    this.request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
     if (logger.isDebugEnabled()) {
       this.addSubName(String.format("OPERATION=%s", svOperation.toString()));
     }

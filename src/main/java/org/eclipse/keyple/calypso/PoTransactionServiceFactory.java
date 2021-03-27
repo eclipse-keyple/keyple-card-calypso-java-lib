@@ -32,7 +32,7 @@ public class PoTransactionServiceFactory {
    * Gets an instance of a {@link PoTransactionService} to operate a Calypso Secure session.
    *
    * <p>The PO security settings is a set of security settings ({@link PoSecuritySetting}) including
-   * the name of the SAM profile to request from the SAM resource manager.
+   * the name of the SAM profile to request from the SAM resource service.
    *
    * @param poReader The reader through which the card communicates.
    * @param calypsoPoSmartCard The initial PO data provided by the selection process.

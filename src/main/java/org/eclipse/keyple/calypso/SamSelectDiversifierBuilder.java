@@ -35,7 +35,7 @@ final class SamSelectDiversifierBuilder
    * @since 2.0
    */
   public SamSelectDiversifierBuilder(SamRevision revision, byte[] diversifier) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -47,7 +47,7 @@ final class SamSelectDiversifierBuilder
     byte p1 = 0x00;
     byte p2 = 0x00;
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, diversifier, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, diversifier, null));
   }
 
   /**

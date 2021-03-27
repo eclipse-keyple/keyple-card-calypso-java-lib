@@ -48,7 +48,7 @@ final class SamReadEventCounterBuilder
   public SamReadEventCounterBuilder(
       SamRevision revision, SamEventCounterOperationType operationType, int index) {
 
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -71,8 +71,8 @@ final class SamReadEventCounterBuilder
       p2 = (byte) (0x80 + index);
     }
 
-    request =
-        new ApduRequest(cla, command.getInstructionByte(), (byte) 0x00, p2, null, (byte) 0x00);
+    setApduRequest(
+        new ApduRequest(cla, command.getInstructionByte(), (byte) 0x00, p2, null, (byte) 0x00));
   }
 
   /**

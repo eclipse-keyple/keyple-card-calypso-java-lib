@@ -54,7 +54,7 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
       byte[] date,
       byte[] time,
       byte[] free) {
-    super(command, null);
+    super(command);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(
@@ -119,8 +119,8 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
     System.arraycopy(reloadComplementaryData, 7, dataIn, 15, 3);
     System.arraycopy(reloadComplementaryData, 10, dataIn, 18, reloadComplementaryData.length - 10);
 
-    this.request =
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null);
+    setApduRequest(
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null));
   }
 
   /**

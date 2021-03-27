@@ -37,7 +37,7 @@ final class PoCloseSessionBuilder extends AbstractPoCommandBuilder<PoCloseSessio
    */
   public PoCloseSessionBuilder(
       PoClass poClass, boolean ratificationAsked, byte[] terminalSessionSignature) {
-    super(command, null);
+    super(command);
     // The optional parameter terminalSessionSignature could contain 4 or 8
     // bytes.
     if (terminalSessionSignature != null
@@ -54,14 +54,14 @@ final class PoCloseSessionBuilder extends AbstractPoCommandBuilder<PoCloseSessio
      */
     byte le = 0;
 
-    request =
+    setApduRequest(
         new ApduRequest(
             poClass.getValue(),
             command.getInstructionByte(),
             p1,
             (byte) 0x00,
             terminalSessionSignature,
-            le);
+            le));
   }
 
   /**
@@ -72,15 +72,15 @@ final class PoCloseSessionBuilder extends AbstractPoCommandBuilder<PoCloseSessio
    * @since 2.0
    */
   public PoCloseSessionBuilder(PoClass poClass) {
-    super(command, null);
-    request =
+    super(command);
+    setApduRequest(
         new ApduRequest(
             poClass.getValue(),
             command.getInstructionByte(),
             (byte) 0x00,
             (byte) 0x00,
             null,
-            (byte) 0);
+            (byte) 0));
   }
 
   /**

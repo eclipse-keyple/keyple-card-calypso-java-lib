@@ -47,7 +47,7 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
    */
   public PoSvDebitBuilder(
       PoClass poClass, PoRevision poRevision, int amount, byte kvc, byte[] date, byte[] time) {
-    super(command, null);
+    super(command);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     if (amount < 0 || amount > 32767) {
@@ -110,8 +110,8 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
     System.arraycopy(debitComplementaryData, 7, dataIn, 12, 3);
     System.arraycopy(debitComplementaryData, 10, dataIn, 15, debitComplementaryData.length - 10);
 
-    this.request =
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null);
+    setApduRequest(
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null));
   }
 
   /**

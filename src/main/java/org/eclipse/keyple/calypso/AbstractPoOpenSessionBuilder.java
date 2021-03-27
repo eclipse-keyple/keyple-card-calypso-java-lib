@@ -25,7 +25,7 @@ abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>
    * @throws IllegalArgumentException - if the request is inconsistent
    */
   AbstractPoOpenSessionBuilder(PoRevision revision) {
-    super(CalypsoPoCommand.getOpenSessionForRev(revision), null);
+    super(CalypsoPoCommand.getOpenSessionForRev(revision));
   }
 
   public static AbstractPoOpenSessionBuilder<AbstractPoOpenSessionParser> create(

@@ -12,7 +12,6 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
@@ -25,8 +24,8 @@ abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
 
   protected SamRevision defaultRevision = SamRevision.C1;
 
-  protected AbstractSamCommandBuilder(CalypsoSamCommand reference, ApduRequest request) {
-    super(reference, request);
+  protected AbstractSamCommandBuilder(CalypsoSamCommand reference) {
+    super(reference);
   }
 
   /**

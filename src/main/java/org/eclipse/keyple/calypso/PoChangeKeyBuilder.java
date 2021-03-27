@@ -31,7 +31,7 @@ final class PoChangeKeyBuilder extends AbstractPoCommandBuilder<PoChangeKeyParse
    * @since 2.0
    */
   public PoChangeKeyBuilder(PoClass poClass, byte keyIndex, byte[] cryptogram) {
-    super(command, null);
+    super(command);
 
     if (cryptogram == null || (cryptogram.length != 0x18 && cryptogram.length != 0x20)) {
       throw new IllegalArgumentException("Bad cryptogram value.");
@@ -41,7 +41,7 @@ final class PoChangeKeyBuilder extends AbstractPoCommandBuilder<PoChangeKeyParse
     byte p1 = (byte) 0x00;
     byte p2 = keyIndex;
 
-    this.request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, cryptogram, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, cryptogram, null));
   }
 
   /**

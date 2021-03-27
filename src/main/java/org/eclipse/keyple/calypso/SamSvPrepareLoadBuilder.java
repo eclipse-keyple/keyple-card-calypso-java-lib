@@ -38,7 +38,7 @@ final class SamSvPrepareLoadBuilder extends AbstractSamCommandBuilder<SamSvPrepa
    */
   public SamSvPrepareLoadBuilder(
       SamRevision samRevision, byte[] svGetHeader, byte[] svGetData, byte[] svReloadCmdBuildData) {
-    super(command, null);
+    super(command);
 
     byte cla = samRevision.getClassByte();
     byte p1 = (byte) 0x01;
@@ -50,7 +50,7 @@ final class SamSvPrepareLoadBuilder extends AbstractSamCommandBuilder<SamSvPrepa
     System.arraycopy(
         svReloadCmdBuildData, 0, data, 4 + svGetData.length, svReloadCmdBuildData.length);
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
   }
 
   /**

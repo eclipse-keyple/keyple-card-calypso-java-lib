@@ -35,7 +35,7 @@ final class SamDigestAuthenticateBuilder
    * @since 2.0
    */
   public SamDigestAuthenticateBuilder(SamRevision revision, byte[] signature) {
-    super(command, null);
+    super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
@@ -50,7 +50,7 @@ final class SamDigestAuthenticateBuilder
     byte p1 = 0x00;
     byte p2 = (byte) 0x00;
 
-    request = new ApduRequest(cla, command.getInstructionByte(), p1, p2, signature, null);
+    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, signature, null));
   }
 
   /**

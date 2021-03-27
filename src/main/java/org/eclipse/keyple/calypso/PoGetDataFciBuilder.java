@@ -33,16 +33,16 @@ final class PoGetDataFciBuilder extends AbstractPoCommandBuilder<PoGetDataFciPar
    * @since 2.0
    */
   public PoGetDataFciBuilder(PoClass poClass) {
-    super(command, null);
+    super(command);
 
-    request =
+    setApduRequest(
         new ApduRequest(
             poClass.getValue(),
             command.getInstructionByte(),
             (byte) 0x00,
             (byte) 0x6F,
             null,
-            (byte) 0x00);
+            (byte) 0x00));
   }
 
   /**

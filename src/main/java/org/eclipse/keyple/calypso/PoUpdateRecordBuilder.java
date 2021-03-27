@@ -44,7 +44,7 @@ final class PoUpdateRecordBuilder extends AbstractPoCommandBuilder<PoUpdateRecor
    * @since 2.0
    */
   public PoUpdateRecordBuilder(PoClass poClass, byte sfi, int recordNumber, byte[] newRecordData) {
-    super(command, null);
+    super(command);
 
     byte cla = poClass.getValue();
     this.sfi = sfi;
@@ -53,9 +53,9 @@ final class PoUpdateRecordBuilder extends AbstractPoCommandBuilder<PoUpdateRecor
 
     byte p2 = (sfi == 0) ? (byte) 0x04 : (byte) ((byte) (sfi * 8) + 4);
 
-    this.request =
+    setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null);
+            cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI=%02X, REC=%d", sfi, recordNumber);

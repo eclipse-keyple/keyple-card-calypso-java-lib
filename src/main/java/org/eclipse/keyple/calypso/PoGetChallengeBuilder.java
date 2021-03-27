@@ -30,14 +30,14 @@ final class PoGetChallengeBuilder extends AbstractPoCommandBuilder<PoGetChalleng
    * @since 2.0
    */
   public PoGetChallengeBuilder(PoClass poClass) {
-    super(command, null);
+    super(command);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
     byte le = (byte) 0x08;
 
-    this.request =
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le);
+    setApduRequest(
+        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le));
   }
 
   /**
