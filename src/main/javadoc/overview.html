@@ -1,15 +1,35 @@
 <html>
 <body>
-<p>This document is the specification of the API dedicated to the integration of the <b>Calypso Extension</b> in a <b>Keyple
-    Application</b>.</p>
-<h1>Card selection service</h1>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce nisl quam, eleifend at finibus ut, dapibus a mauris.
-    Nam convallis ex nisl, quis fermentum tellus fringilla ac. Duis et velit.</p>
-<h1>Calypso card data structures</h1>
-<p>Morbi euismod, eros at vulputate rhoncus, dolor tellus semper felis, sit amet gravida elit nisi a felis. Etiam eros
-    sem, porttitor ac finibus quis, convallis nec ligula. Integer sollicitudin ex.</p>
-<h1>Transaction service</h1>
-<p>In ullamcorper a felis et laoreet. Curabitur eu eros in leo bibendum dignissim. Proin sed mauris viverra, molestie
-    velit vitae, iaculis lectus. Mauris ut quam nunc. Vestibulum nec imperdiet metus.</p>
+<p>This document is the specification of the API dedicated to the integration of the <b>Calypso Card Extension</b> in a
+    <b>Keyple
+        Application</b>.</p>
+<p>All the entry points of the extension are provided by the interface {@link
+    org.eclipse.keyple.calypso.CalypsoCardExtension}.
+<p>{@link org.eclipse.keyple.calypso.CalypsoCardExtensionProvider#getService()} is to be used to get the unique instance
+    of the extension.</p>
+<p>The entry points are:</p>
+<ul>
+    <li>One method to create a selection case to be provided to the <b>Keyple Selection Service</b>.
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSelection(CalypsoPoCardSelector
+        calypsoPoCardSelector)}<br>
+        It targets a specific PO defined by the POJO {@link org.eclipse.keyple.calypso.po.CalypsoPoCardSelector} and
+        possibly supplemented with commands to be executed after the selection (see methods of {@link
+        org.eclipse.keyple.calypso.po.CalypsoPoCardSelection}).
+    </li>
+    <li>Two methods to configure the SAM resource service needed to process secure operations with POs.<br>
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#getSamResourceService()} and {@link
+        org.eclipse.keyple.calypso.CalypsoCardExtension#getPoSecuritySettingBuilder(java.lang.String samProfileName)}.
+    </li>
+    <li>Two methods to provide two types of transaction services: non-secure and secure.<br>
+        {@link
+        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader
+        reader, CalypsoPoSmartCard calypsoPoSmartCard)}<br>
+        {@link
+        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader
+        reader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting)}
+    </li>
+</ul>
+<p>The PO data collected at each step (selection, transaction) are stored in dedicated POJOs whose interfaces are
+    available in the {@link org.eclipse.keyple.calypso.po} package.</p>
 </body>
 </html>
