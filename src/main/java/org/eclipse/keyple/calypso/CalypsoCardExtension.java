@@ -74,13 +74,13 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
       Reader reader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting);
 
   /**
-   * Creates a PO transaction service to handle operations non secured.
+   * Creates a PO transaction service to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
    * @param calypsoPoSmartCard The initial PO data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  PoTransactionService createPoSecuredTransaction(
+  PoTransactionService createPoUnsecuredTransaction(
       Reader reader, CalypsoPoSmartCard calypsoPoSmartCard);
 }

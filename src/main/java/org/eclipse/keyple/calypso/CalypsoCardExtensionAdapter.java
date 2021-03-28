@@ -107,7 +107,7 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    * @since 2.0
    */
   @Override
-  public PoTransactionService createPoSecuredTransaction(
+  public PoTransactionService createPoUnsecuredTransaction(
       Reader reader, CalypsoPoSmartCard calypsoPoSmartCard) {
     return null;
   }

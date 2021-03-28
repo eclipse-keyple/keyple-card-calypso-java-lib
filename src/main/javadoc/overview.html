@@ -3,8 +3,8 @@
 <p>This document is the specification of the API dedicated to the integration of the <b>Calypso Card Extension</b> in a
     <b>Keyple
         Application</b>.</p>
-<p>All the entry points of the extension are provided by the interface {@link
-    org.eclipse.keyple.calypso.CalypsoCardExtension}.
+<p>All the entry points of the extension are provided by the {@link
+    org.eclipse.keyple.calypso.CalypsoCardExtension} interface.
 <p>{@link org.eclipse.keyple.calypso.CalypsoCardExtensionProvider#getService()} is to be used to get the unique instance
     of the extension.</p>
 <p>The entry points are:</p>
@@ -22,7 +22,7 @@
     </li>
     <li>Two methods to provide two types of transaction services: non-secure and secure.<br>
         {@link
-        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader
+        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader
         reader, CalypsoPoSmartCard calypsoPoSmartCard)}<br>
         {@link
         org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader
