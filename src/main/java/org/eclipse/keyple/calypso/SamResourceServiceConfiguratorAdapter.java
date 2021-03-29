@@ -11,19 +11,21 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.eclipse.keyple.calypso.sam.SamResourceServiceConfigurator;
 import org.eclipse.keyple.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.service.ObservablePlugin;
 import org.eclipse.keyple.core.service.Plugin;
 import org.eclipse.keyple.core.service.PoolPlugin;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
+/**
+ * (package-private)<br>
+ * Implementation of {@link SamResourceServiceConfigurator}.
+ * @since 2.0
+ */
 class SamResourceServiceConfiguratorAdapter
     implements SamResourceServiceConfigurator,
         SamResourceServiceConfigurator.PluginStep,
@@ -38,8 +40,9 @@ class SamResourceServiceConfiguratorAdapter
   private static final int DEFAULT_CYCLE_DURATION_MILLIS = 100;
   private static final int DEFAULT_TIMEOUT_MILLIS = 10000;
 
-  private SamAllocationStrategy samAllocationStrategy;
-  private PoolPluginAllocationStrategy poolPluginAllocationStrategy;
+  private SamResourceAllocationStrategy samResourceAllocationStrategy;
+  private PoolPluginSamResourceAllocationStrategy poolPluginSamResourceAllocationStrategy;
+  private final Set<Plugin> configuredPlugins;
   private final List<ConfiguredRegularPlugin> configuredRegularPlugins;
   private final List<ConfiguredPoolPlugin> configuredPoolPlugins;
   private final List<SamProfile> samProfiles;
@@ -49,102 +52,119 @@ class SamResourceServiceConfiguratorAdapter
 
   /** (private) */
   private SamResourceServiceConfiguratorAdapter() {
-    samAllocationStrategy = SamAllocationStrategy.FIRST_SAM_AVAILABLE;
-    poolPluginAllocationStrategy = PoolPluginAllocationStrategy.POOL_FIRST;
+    samResourceAllocationStrategy = SamResourceAllocationStrategy.FIRST;
+    poolPluginSamResourceAllocationStrategy = PoolPluginSamResourceAllocationStrategy.POOL_FIRST;
+    configuredPlugins = new HashSet<Plugin>();
     configuredRegularPlugins = new ArrayList<ConfiguredRegularPlugin>();
     configuredPoolPlugins = new ArrayList<ConfiguredPoolPlugin>();
     samProfiles = new ArrayList<SamProfile>();
-    cycleDurationMillis = DEFAULT_CYCLE_DURATION_MILLIS;
-    timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
   }
 
-  /** The different allocation strategies for regular plugins. */
-  private enum SamAllocationStrategy {
-    FIRST_SAM_AVAILABLE,
+  /**
+   * (package-private)<br>
+   * The different allocation strategies for regular plugins.
+   *
+   * @since 2.0
+   */
+  enum SamResourceAllocationStrategy {
+    FIRST,
     CYCLIC,
     RANDOM
   }
 
-  /** The different allocation strategies when a {@link PoolPlugin } is available. */
-  private enum PoolPluginAllocationStrategy {
+  /**
+   * (package-private)<br>
+   * The different allocation strategies when a {@link PoolPlugin } is available.
+   *
+   * @since 2.0
+   */
+  enum PoolPluginSamResourceAllocationStrategy {
     POOL_FIRST,
     POOL_LAST
   }
 
   /**
-   * (private)<br>
+   * (package-private)<br>
    * This POJO contains a plugin and the parameters that have been associated with it.
+   *
+   * @since 2.0
    */
-  private class ConfiguredRegularPlugin {
+  static class ConfiguredRegularPlugin {
     private final Plugin plugin;
     private final boolean withReaderMonitoring;
     private final boolean withCardMonitoring;
-    private final SamAllocationStrategy samAllocationStrategy;
 
-    ConfiguredRegularPlugin(
-        Plugin plugin,
-        boolean withReaderMonitoring,
-        boolean withCardMonitoring,
-        SamAllocationStrategy samAllocationStrategy) {
+    private ConfiguredRegularPlugin(
+        Plugin plugin, boolean withReaderMonitoring, boolean withCardMonitoring) {
       this.plugin = plugin;
       this.withReaderMonitoring = withReaderMonitoring;
       this.withCardMonitoring = withCardMonitoring;
-      this.samAllocationStrategy = samAllocationStrategy;
     }
 
-    public Plugin getPlugin() {
+    /**
+     * (package-private)<br>
+     * @return A not null {@link Plugin} reference.
+     */
+    Plugin getPlugin() {
       return plugin;
     }
 
-    public boolean isWithReaderMonitoring() {
+    /**
+     * (package-private)<br>
+     * @return true if the reader monitoring is required.
+     */
+    boolean isWithReaderMonitoring() {
       return withReaderMonitoring;
     }
 
-    public boolean isWithCardMonitoring() {
+    /**
+     * (package-private)<br>
+     * @return true if the card monitoring is required.
+     */
+    boolean isWithCardMonitoring() {
       return withCardMonitoring;
-    }
-
-    public SamAllocationStrategy getSamAllocationStrategy() {
-      return samAllocationStrategy;
     }
   }
 
   /**
-   * (private)<br>
+   * (package-private)<br>
    * This POJO contains a pool plugin and the parameters that have been associated with it.
+   *
+   * @since 2.0
    */
-  private class ConfiguredPoolPlugin {
+  static class ConfiguredPoolPlugin {
     private final PoolPlugin poolPlugin;
     private final boolean withCardMonitoring;
-    private final PoolPluginAllocationStrategy poolPluginAllocationStrategy;
 
-    public ConfiguredPoolPlugin(
-        PoolPlugin poolPlugin,
-        boolean withCardMonitoring,
-        PoolPluginAllocationStrategy poolPluginAllocationStrategy) {
+    private ConfiguredPoolPlugin(PoolPlugin poolPlugin, boolean withCardMonitoring) {
       this.poolPlugin = poolPlugin;
       this.withCardMonitoring = withCardMonitoring;
-      this.poolPluginAllocationStrategy = poolPluginAllocationStrategy;
     }
 
-    public PoolPlugin getPoolPlugin() {
+    /**
+     * (package-private)<br>
+     * @return A not null {@link PoolPlugin} reference.
+     */
+    PoolPlugin getPoolPlugin() {
       return poolPlugin;
     }
 
-    public boolean isWithCardMonitoring() {
+    /**
+     * (package-private)<br>
+     * @return true if the card monitoring is required.
+     */
+    boolean isWithCardMonitoring() {
       return withCardMonitoring;
-    }
-
-    public PoolPluginAllocationStrategy getPoolPluginAllocationStrategy() {
-      return poolPluginAllocationStrategy;
     }
   }
 
   /**
-   * (private)<br>
+   * (package-private)<br>
    * This POJO contains all the elements defining a SAM profile.
+   *
+   * @since 2.0
    */
-  private class SamProfile {
+  static class SamProfile {
     private final String name;
     private SamRevision samRevision;
     private String samSerialNumberRegex;
@@ -157,56 +177,71 @@ class SamResourceServiceConfiguratorAdapter
       this.name = name;
     }
 
-    public String getName() {
-      return name;
-    }
-
-    public SamRevision getSamRevision() {
-      return samRevision;
-    }
-
-    public void setSamRevision(SamRevision samRevision) {
+    private void setSamRevision(SamRevision samRevision) {
       this.samRevision = samRevision;
     }
 
-    public String getSamSerialNumberRegex() {
-      return samSerialNumberRegex;
-    }
-
-    public void setSamSerialNumberRegex(String samSerialNumberRegex) {
+    private void setSamSerialNumberRegex(String samSerialNumberRegex) {
       this.samSerialNumberRegex = samSerialNumberRegex;
     }
 
-    public String getSamKeyGroupReference() {
-      return samKeyGroupReference;
-    }
-
-    public void setSamKeyGroupReference(String samKeyGroupReference) {
+    private void setSamKeyGroupReference(String samKeyGroupReference) {
       this.samKeyGroupReference = samKeyGroupReference;
     }
 
-    public List<Plugin> getPlugins() {
-      return plugins;
-    }
-
-    public void setPlugins(Plugin... plugins) {
+    private void setPlugins(Plugin... plugins) {
       this.plugins = Arrays.asList(plugins);
     }
 
-    public String getReaderNameRegex() {
-      return readerNameRegex;
-    }
-
-    public void setReaderNameRegex(String readerNameRegex) {
+    private void setReaderNameRegex(String readerNameRegex) {
       this.readerNameRegex = readerNameRegex;
     }
 
-    public String getUnlockData() {
-      return unlockData;
+    private void setUnlockData(String unlockData) {
+      this.unlockData = unlockData;
     }
 
-    public void setUnlockData(String unlockData) {
-      this.unlockData = unlockData;
+    /**
+     * (package-private)<br>
+     *
+      * @return A not empty String containing the name of the profile.
+     */
+    String getName() {
+      return name;
+    }
+
+    /**
+     * (package-private)<br>
+     *
+     * @return The expected {@link SamRevision} or null if not specified.
+     */
+    SamRevision getSamRevision() {
+      return samRevision;
+    }
+
+    /**
+     * (package-private)<br>
+     *
+     * @return The expected {@link SamRevision} or null if not specified.
+     */
+    String getSamKeyGroupReference() {
+      return samKeyGroupReference;
+    }
+
+    String getSamSerialNumberRegex() {
+      return samSerialNumberRegex;
+    }
+
+    List<Plugin> getPlugins() {
+      return plugins;
+    }
+
+    String getReaderNameRegex() {
+      return readerNameRegex;
+    }
+
+    String getUnlockData() {
+      return unlockData;
     }
   }
 
@@ -226,8 +261,8 @@ class SamResourceServiceConfiguratorAdapter
    * @since 2.0
    */
   @Override
-  public PluginStep usingFirstSamAvailableAllocationStrategy() {
-    samAllocationStrategy = SamAllocationStrategy.FIRST_SAM_AVAILABLE;
+  public PluginStep usingFirstAllocationStrategy() {
+    samResourceAllocationStrategy = SamResourceAllocationStrategy.FIRST;
     return this;
   }
 
@@ -238,7 +273,7 @@ class SamResourceServiceConfiguratorAdapter
    */
   @Override
   public PluginStep usingCyclicAllocationStrategy() {
-    samAllocationStrategy = SamAllocationStrategy.CYCLIC;
+    samResourceAllocationStrategy = SamResourceAllocationStrategy.CYCLIC;
     return this;
   }
 
@@ -249,7 +284,7 @@ class SamResourceServiceConfiguratorAdapter
    */
   @Override
   public PluginStep usingRandomAllocationStrategy() {
-    samAllocationStrategy = SamAllocationStrategy.RANDOM;
+    samResourceAllocationStrategy = SamResourceAllocationStrategy.RANDOM;
     return this;
   }
 
@@ -264,16 +299,9 @@ class SamResourceServiceConfiguratorAdapter
 
     Assert.getInstance().notNull(plugin, "plugin");
 
-    if (withReaderMonitoring && !(plugin instanceof ObservablePlugin)) {
-      throw new IllegalStateException(
-          "Reader monitoring is requested but the provided plugin is not observable.");
-    }
-
+    configuredPlugins.add(plugin);
     configuredRegularPlugins.add(
-        new ConfiguredRegularPlugin(
-            plugin, withReaderMonitoring, withCardMonitoring, samAllocationStrategy));
-
-    samAllocationStrategy = SamAllocationStrategy.FIRST_SAM_AVAILABLE;
+        new ConfiguredRegularPlugin(plugin, withReaderMonitoring, withCardMonitoring));
     return this;
   }
 
@@ -309,7 +337,7 @@ class SamResourceServiceConfiguratorAdapter
    */
   @Override
   public PoolPluginStep usingPoolPluginFirstAllocationStrategy() {
-    poolPluginAllocationStrategy = PoolPluginAllocationStrategy.POOL_FIRST;
+    poolPluginSamResourceAllocationStrategy = PoolPluginSamResourceAllocationStrategy.POOL_FIRST;
     return this;
   }
 
@@ -320,7 +348,7 @@ class SamResourceServiceConfiguratorAdapter
    */
   @Override
   public PoolPluginStep usingPoolPluginLastAllocationStrategy() {
-    poolPluginAllocationStrategy = PoolPluginAllocationStrategy.POOL_LAST;
+    poolPluginSamResourceAllocationStrategy = PoolPluginSamResourceAllocationStrategy.POOL_LAST;
     return this;
   }
 
@@ -334,8 +362,8 @@ class SamResourceServiceConfiguratorAdapter
 
     Assert.getInstance().notNull(poolPlugin, "poolPlugin");
 
-    configuredPoolPlugins.add(
-        new ConfiguredPoolPlugin(poolPlugin, withCardMonitoring, poolPluginAllocationStrategy));
+    configuredPlugins.add(poolPlugin);
+    configuredPoolPlugins.add(new ConfiguredPoolPlugin(poolPlugin, withCardMonitoring));
 
     return this;
   }
@@ -362,7 +390,7 @@ class SamResourceServiceConfiguratorAdapter
   @Override
   public SamResourceAllocationTimingParameterStep endPluginsConfiguration() {
 
-    if (configuredRegularPlugins.isEmpty() || configuredPoolPlugins.isEmpty()) {
+    if (configuredRegularPlugins.isEmpty() && configuredPoolPlugins.isEmpty()) {
       throw new IllegalStateException("No plugin has been added.");
     }
     return this;
@@ -375,6 +403,8 @@ class SamResourceServiceConfiguratorAdapter
    */
   @Override
   public SamProfileStep usingDefaultAllocationTimingParameters() {
+    cycleDurationMillis = DEFAULT_CYCLE_DURATION_MILLIS;
+    timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
     return this;
   }
 
@@ -397,7 +427,6 @@ class SamResourceServiceConfiguratorAdapter
    * @since 2.0
    */
   @Override
-  // TODO rename to createSamProfile????
   public SamProfileParameterStep addSamProfile(String name) {
     samProfile = new SamProfile(name);
     return this;
@@ -411,7 +440,7 @@ class SamResourceServiceConfiguratorAdapter
   @Override
   public ConfigurationStep addNoMoreSamProfiles() {
 
-    if (samProfile == null) {
+    if (samProfiles.isEmpty()) {
       throw new IllegalStateException("No SAM profile has been added.");
     }
 
@@ -472,7 +501,7 @@ class SamResourceServiceConfiguratorAdapter
 
     Assert.getInstance().notEmpty(samKeyGroupReference, "samKeyGroupReference");
 
-    if (samProfile.getSamRevision() != null) {
+    if (samProfile.getSamKeyGroupReference() != null) {
       throw new IllegalStateException("SAM key group reference has already been set.");
     }
 
@@ -492,24 +521,7 @@ class SamResourceServiceConfiguratorAdapter
     // check if all provided plugins are valid and known as configured regular or pool plugins.
     for (Plugin plugin : plugins) {
       Assert.getInstance().notNull(plugin, "plugin");
-      boolean pluginConfigured = false;
-      for (ConfiguredRegularPlugin configuredRegularPlugin : configuredRegularPlugins) {
-        if (plugin.equals(configuredRegularPlugin.getPlugin())) {
-          pluginConfigured = true;
-          break;
-        }
-      }
-      if (pluginConfigured) {
-        continue;
-      }
-      pluginConfigured = false;
-      for (ConfiguredPoolPlugin configuredPoolPlugin : configuredPoolPlugins) {
-        if (plugin.equals(configuredPoolPlugin.getPoolPlugin())) {
-          pluginConfigured = true;
-          break;
-        }
-      }
-      if (!pluginConfigured) {
+      if (!configuredPlugins.contains(plugin)) {
         throw new IllegalStateException("Plugin not configured: " + plugin.getName());
       }
     }
@@ -554,7 +566,7 @@ class SamResourceServiceConfiguratorAdapter
 
     Assert.getInstance().notEmpty(unlockData, "unlockData");
 
-    if (ByteArrayUtil.fromHex(unlockData).length == 0) {
+    if (!ByteArrayUtil.isValidHexString(unlockData)) {
       throw new IllegalArgumentException("Invalid hexadecimal string.");
     }
 
@@ -582,5 +594,36 @@ class SamResourceServiceConfiguratorAdapter
    * @since 2.0
    */
   @Override
-  public void configure() {}
+  public void configure() {
+    ((SamResourceServiceAdapter) CalypsoCardExtensionProvider.getService().getSamResourceService())
+        .configure(this);
+  }
+
+  SamResourceAllocationStrategy getSamResourceAllocationStrategy() {
+    return samResourceAllocationStrategy;
+  }
+
+  PoolPluginSamResourceAllocationStrategy getPoolPluginAllocationStrategy() {
+    return poolPluginSamResourceAllocationStrategy;
+  }
+
+  List<ConfiguredRegularPlugin> getConfiguredRegularPlugins() {
+    return configuredRegularPlugins;
+  }
+
+  List<ConfiguredPoolPlugin> getConfiguredPoolPlugins() {
+    return configuredPoolPlugins;
+  }
+
+  List<SamProfile> getSamProfiles() {
+    return samProfiles;
+  }
+
+  int getCycleDurationMillis() {
+    return cycleDurationMillis;
+  }
+
+  int getTimeoutMillis() {
+    return timeoutMillis;
+  }
 }

@@ -73,6 +73,8 @@ public interface SamResourceServiceConfigurator {
      * <p><u>Note:</u> The order of the plugins is important because it will be kept during the
      * allocation process unless redefined by SAM profiles.
      *
+     * <p>The plugin or readers must be observable for the monitoring operations to have an effect.
+     *
      * @param plugin The plugin to add.
      * @param withReaderMonitoring true if the plugin must be observed to automatically detect
      *     reader connections/disconnections, false otherwise.
@@ -80,8 +82,6 @@ public interface SamResourceServiceConfigurator {
      *     insertions/removals, false otherwise.
      * @return Next configuration step.
      * @throws IllegalArgumentException If the provided plugin is null.
-     * @throws IllegalStateException If the observation is required and the plugin or the readers
-     *     are not observable.
      * @since 2.0
      */
     PluginStep addPlugin(Plugin plugin, boolean withReaderMonitoring, boolean withCardMonitoring);
@@ -113,8 +113,6 @@ public interface SamResourceServiceConfigurator {
      * @param withCardMonitoring true if the readers must be observed to automatically detect card
      *     insertions/removals, false otherwise.
      * @throws IllegalArgumentException If the provided pool plugin is null.
-     * @throws IllegalStateException If the observation is required and the readers are not
-     *     observable.
      * @return Next configuration step.
      * @since 2.0
      */
@@ -204,7 +202,7 @@ public interface SamResourceServiceConfigurator {
      * @return Next configuration step.
      * @since 2.0
      */
-    PluginStep usingFirstSamAvailableAllocationStrategy();
+    PluginStep usingFirstAllocationStrategy();
 
     /**
      * Configures the SAM resource service to provide available SAMs on a cyclical basis to avoid

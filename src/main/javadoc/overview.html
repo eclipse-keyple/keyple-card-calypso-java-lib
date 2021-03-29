@@ -1,13 +1,11 @@
 <html>
 <body>
 <p>This document is the specification of the API dedicated to the integration of the <b>Calypso Card Extension</b> in a
-    <b>Keyple
-        Application</b>.</p>
-<p>All the entry points of the extension are provided by the {@link
-    org.eclipse.keyple.calypso.CalypsoCardExtension} interface.
+    <b>Keyple Application</b>.</p>
+<h1>Overview</h1>
 <p>{@link org.eclipse.keyple.calypso.CalypsoCardExtensionProvider#getService()} is to be used to get the unique instance
-    of the extension.</p>
-<p>The entry points are:</p>
+    of the {@link org.eclipse.keyple.calypso.CalypsoCardExtension} interface containing all the entry points provided by
+    the extension:</p>
 <ul>
     <li>One method to create a selection case to be provided to the <b>Keyple Selection Service</b>.
         {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSelection(CalypsoPoCardSelector

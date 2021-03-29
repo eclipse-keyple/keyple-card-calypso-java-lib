@@ -24,6 +24,8 @@ import org.eclipse.keyple.calypso.sam.SamResourceServiceConfigurator;
  */
 class SamResourceServiceAdapter implements SamResourceService {
 
+  private SamResourceServiceConfigurator configurator;
+
   /**
    * {@inheritDoc}
    *
@@ -58,5 +60,9 @@ class SamResourceServiceAdapter implements SamResourceService {
   @Override
   public List<SamResource> getSamResources(String samProfileName) {
     return null;
+  }
+
+  void configure(SamResourceServiceConfigurator configurator) {
+    this.configurator = configurator;
   }
 }
