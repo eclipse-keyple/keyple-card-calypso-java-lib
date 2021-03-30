@@ -24,6 +24,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 /**
  * (package-private)<br>
  * Implementation of {@link SamResourceServiceConfigurator}.
+ *
  * @since 2.0
  */
 class SamResourceServiceConfiguratorAdapter
@@ -103,6 +104,7 @@ class SamResourceServiceConfiguratorAdapter
 
     /**
      * (package-private)<br>
+     *
      * @return A not null {@link Plugin} reference.
      */
     Plugin getPlugin() {
@@ -111,6 +113,7 @@ class SamResourceServiceConfiguratorAdapter
 
     /**
      * (package-private)<br>
+     *
      * @return true if the reader monitoring is required.
      */
     boolean isWithReaderMonitoring() {
@@ -119,6 +122,7 @@ class SamResourceServiceConfiguratorAdapter
 
     /**
      * (package-private)<br>
+     *
      * @return true if the card monitoring is required.
      */
     boolean isWithCardMonitoring() {
@@ -143,6 +147,7 @@ class SamResourceServiceConfiguratorAdapter
 
     /**
      * (package-private)<br>
+     *
      * @return A not null {@link PoolPlugin} reference.
      */
     PoolPlugin getPoolPlugin() {
@@ -151,6 +156,7 @@ class SamResourceServiceConfiguratorAdapter
 
     /**
      * (package-private)<br>
+     *
      * @return true if the card monitoring is required.
      */
     boolean isWithCardMonitoring() {
@@ -168,7 +174,7 @@ class SamResourceServiceConfiguratorAdapter
     private final String name;
     private SamRevision samRevision;
     private String samSerialNumberRegex;
-    private String samKeyGroupReference;
+    private String readerGroupReference;
     private List<Plugin> plugins;
     private String readerNameRegex;
     private String unlockData;
@@ -185,8 +191,8 @@ class SamResourceServiceConfiguratorAdapter
       this.samSerialNumberRegex = samSerialNumberRegex;
     }
 
-    private void setSamKeyGroupReference(String samKeyGroupReference) {
-      this.samKeyGroupReference = samKeyGroupReference;
+    private void setReaderGroupReference(String readerGroupReference) {
+      this.readerGroupReference = readerGroupReference;
     }
 
     private void setPlugins(Plugin... plugins) {
@@ -204,7 +210,7 @@ class SamResourceServiceConfiguratorAdapter
     /**
      * (package-private)<br>
      *
-      * @return A not empty String containing the name of the profile.
+     * @return A not empty String containing the name of the profile.
      */
     String getName() {
       return name;
@@ -224,8 +230,8 @@ class SamResourceServiceConfiguratorAdapter
      *
      * @return The expected {@link SamRevision} or null if not specified.
      */
-    String getSamKeyGroupReference() {
-      return samKeyGroupReference;
+    String getReaderGroupReference() {
+      return readerGroupReference;
     }
 
     String getSamSerialNumberRegex() {
@@ -497,15 +503,15 @@ class SamResourceServiceConfiguratorAdapter
    * @since 2.0
    */
   @Override
-  public SamProfileParameterStep setSamKeyGroupReference(String samKeyGroupReference) {
+  public SamProfileParameterStep setReaderGroupReference(String readerGroupReference) {
 
-    Assert.getInstance().notEmpty(samKeyGroupReference, "samKeyGroupReference");
+    Assert.getInstance().notEmpty(readerGroupReference, "readerGroupReference");
 
-    if (samProfile.getSamKeyGroupReference() != null) {
-      throw new IllegalStateException("SAM key group reference has already been set.");
+    if (samProfile.getReaderGroupReference() != null) {
+      throw new IllegalStateException("SAM reader group reference has already been set.");
     }
 
-    samProfile.setSamKeyGroupReference(samKeyGroupReference);
+    samProfile.setReaderGroupReference(readerGroupReference);
 
     return this;
   }
