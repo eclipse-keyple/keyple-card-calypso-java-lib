@@ -300,17 +300,17 @@ public interface SamResourceServiceConfigurator {
     SamProfileParameterStep setSamSerialNumberRegex(String samSerialNumberRegex);
 
     /**
-     * Sets a filter to target all SAM having the provided specific key group reference.
+     * Sets a filter to target all SAM having the provided specific reader group reference.
      *
      * <p>This parameter only applies to a pool plugin.
      *
-     * @param samKeyGroupReference A key group reference.
+     * @param readerGroupReference A reader group reference.
      * @return Next configuration step.
-     * @throws IllegalArgumentException If samKeyGroupReference is null or empty.
+     * @throws IllegalArgumentException If readerGroupReference is null or empty.
      * @throws IllegalStateException If this parameter has already been set.
      * @since 2.0
      */
-    SamProfileParameterStep setSamKeyGroupReference(String samKeyGroupReference);
+    SamProfileParameterStep setReaderGroupReference(String readerGroupReference);
 
     /**
      * Restricts the scope of the search during the allocation process to the provided plugins.
