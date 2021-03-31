@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 /**
  * (package-private)<br>
  * Builds the Increase APDU command.
+ *
+ * @since 2.0
  */
 final class PoIncreaseBuilder extends AbstractPoCommandBuilder<PoIncreaseParser> {
 

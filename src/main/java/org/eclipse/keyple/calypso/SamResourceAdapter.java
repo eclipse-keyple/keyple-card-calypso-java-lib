@@ -11,15 +11,15 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.sam.SamResource;
+import org.eclipse.keyple.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.core.service.Reader;
 
 class SamResourceAdapter implements SamResource {
   private final Reader reader;
-  private final CalypsoSamSmartCard smartCard;
+  private final SamSmartCard smartCard;
 
-  public SamResourceAdapter(Reader reader, CalypsoSamSmartCard smartCard) {
+  public SamResourceAdapter(Reader reader, SamSmartCard smartCard) {
     this.reader = reader;
     this.smartCard = smartCard;
   }
@@ -30,7 +30,7 @@ class SamResourceAdapter implements SamResource {
   }
 
   @Override
-  public CalypsoSamSmartCard getSmartCard() {
+  public SamSmartCard getSmartCard() {
     return this.smartCard;
   }
 }

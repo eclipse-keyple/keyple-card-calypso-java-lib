@@ -15,7 +15,7 @@ import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 
 /**
- * (private-package)<br>
+ * (package-private)<br>
  * The {@link CalypsoSamCardSelector} class extends {@link CardSelector} to handle specific Calypso
  * SAM needs such as model identification.
  *

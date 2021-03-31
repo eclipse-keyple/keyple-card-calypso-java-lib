@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * (package-private)<br>
  * Builds the Open Session command for a PO revision 2.4.
  *
  * @since 2.0

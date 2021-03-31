@@ -45,9 +45,9 @@ abstract class AbstractApduResponseParser {
   protected final ApduResponse response;
 
   /**
-   * Parsers are usually created by their associated builder. The CalypsoSamSmartCard field
-   * maintains a link between the builder and the parser in order to allow the parser to access the
-   * builder parameters that were used to create the command (e.g. SFI, registration number, etc.).
+   * Parsers are usually created by their associated builder. The SamSmartCard field maintains a
+   * link between the builder and the parser in order to allow the parser to access the builder
+   * parameters that were used to create the command (e.g. SFI, registration number, etc.).
    *
    * @since 2.0
    */

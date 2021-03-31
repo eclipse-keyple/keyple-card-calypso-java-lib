@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.service.selection.spi.SmartCard;
  *
  * @since 2.0
  */
-public interface CalypsoSamSmartCard extends SmartCard {
+public interface SamSmartCard extends SmartCard {
   /**
    * Gets the SAM revision as an enum constant
    *

@@ -16,6 +16,7 @@ import org.eclipse.keyple.calypso.po.PoRevision;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * Parses the Open session response from a PO revision 2.4 .
  *
  * @since 2.0

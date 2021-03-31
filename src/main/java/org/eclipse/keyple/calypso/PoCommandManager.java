@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>This flag is set when invoking the method notifyCommandsProcessed and reset when a new
  * AbstractPoCommandBuilder is added or when a attempt
+ *
+ * @since 2.0
  */
 class PoCommandManager {
   private static final Logger logger = LoggerFactory.getLogger(PoCommandManager.class);

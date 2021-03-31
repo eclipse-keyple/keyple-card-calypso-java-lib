@@ -15,8 +15,8 @@ import static org.eclipse.keyple.calypso.sam.SamRevision.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.eclipse.keyple.calypso.sam.CalypsoSamSmartCard;
 import org.eclipse.keyple.calypso.sam.SamRevision;
+import org.eclipse.keyple.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.core.card.AnswerToReset;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.card.CardSelectionResponse;
@@ -27,13 +27,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link CalypsoSamSmartCard}.
+ * Implementation of {@link SamSmartCard}.
  *
  * @since 2.0
  */
-final class CalypsoSamSmartCardAdapter implements CalypsoSamSmartCard, SmartCardSpi {
+final class SamSmartCardAdapter implements SamSmartCard, SmartCardSpi {
 
-  private static final Logger logger = LoggerFactory.getLogger(CalypsoSamSmartCardAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(SamSmartCardAdapter.class);
 
   private final byte[] fciBytes;
   private final byte[] atrBytes;
@@ -53,7 +53,7 @@ final class CalypsoSamSmartCardAdapter implements CalypsoSamSmartCard, SmartCard
    * @param cardSelectionResponse the response to the selection command.
    * @since 2.0
    */
-  CalypsoSamSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
+  SamSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
 
     ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
     if (fci != null) {
