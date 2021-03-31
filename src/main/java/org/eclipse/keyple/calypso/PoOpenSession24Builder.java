@@ -63,7 +63,7 @@ final class PoOpenSession24Builder
     setApduRequest(
         new ApduRequest(
             PoClass.LEGACY.getValue(),
-            CalypsoPoCommand.getOpenSessionForRev(PoRevision.REV2_4).getInstructionByte(),
+            PoCommand.getOpenSessionForRev(PoRevision.REV2_4).getInstructionByte(),
             p1,
             p2,
             samChallenge,

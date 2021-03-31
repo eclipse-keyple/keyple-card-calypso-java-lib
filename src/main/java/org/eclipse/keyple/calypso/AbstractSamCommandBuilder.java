@@ -24,7 +24,7 @@ abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
 
   protected SamRevision defaultRevision = SamRevision.C1;
 
-  protected AbstractSamCommandBuilder(CalypsoSamCommand reference) {
+  protected AbstractSamCommandBuilder(SamCommand reference) {
     super(reference);
   }
 
@@ -42,7 +42,7 @@ abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
    * @since 2.0
    */
   @Override
-  public CalypsoSamCommand getCommandRef() {
-    return (CalypsoSamCommand) commandRef;
+  public SamCommand getCommandRef() {
+    return (SamCommand) commandRef;
   }
 }

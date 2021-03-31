@@ -18,11 +18,16 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelector;
  *
  * @since 2.0
  */
-public final class CalypsoPoCardSelector extends CardSelector {
+public final class PoCardSelector extends CardSelector {
 
   private static final int SW_PO_INVALIDATED = 0x6283;
 
-  private CalypsoPoCardSelector() {}
+  /**
+   * Creates an instance.
+   *
+   * @since 2.0
+   */
+  public PoCardSelector() {}
 
   /**
    * Indicates if an invalidated PO should be selected or not.
@@ -38,13 +43,13 @@ public final class CalypsoPoCardSelector extends CardSelector {
   }
 
   /**
-   * Sets the desired behaviour in case of invalidated POs
+   * Sets the desired behaviour in case of an invalidated POs
    *
    * @param invalidatedPo the {@link InvalidatedPo} wanted behaviour.
    * @return This object instance.
    * @since 2.0
    */
-  public CalypsoPoCardSelector acceptInvalidatedPo(InvalidatedPo invalidatedPo) {
+  public PoCardSelector acceptInvalidatedPo(InvalidatedPo invalidatedPo) {
     if (invalidatedPo == InvalidatedPo.ACCEPT) {
       this.getAidSelector().addSuccessfulStatusCode(SW_PO_INVALIDATED);
     }

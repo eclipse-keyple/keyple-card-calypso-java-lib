@@ -28,7 +28,7 @@ final class CalypsoPoTerminatedException extends CalypsoPoCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoTerminatedException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoTerminatedException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

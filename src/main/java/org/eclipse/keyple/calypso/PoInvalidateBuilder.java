@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class PoInvalidateBuilder extends AbstractPoCommandBuilder<PoInvalidateParser> {
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.INVALIDATE;
+  private static final PoCommand command = PoCommand.INVALIDATE;
 
   /**
    * Instantiates a new PoInvalidateBuilder.

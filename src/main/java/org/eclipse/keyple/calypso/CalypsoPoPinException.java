@@ -28,7 +28,7 @@ final class CalypsoPoPinException extends CalypsoPoCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoPinException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoPinException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

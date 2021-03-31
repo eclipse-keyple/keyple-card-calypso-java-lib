@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class PoGetDataTraceBuilder extends AbstractPoCommandBuilder<PoGetDataTraceParser> {
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.GET_DATA_TRACE;
+  private static final PoCommand command = PoCommand.GET_DATA_TRACE;
 
   /**
    * Instantiates a new PoGetDataTraceBuilder.

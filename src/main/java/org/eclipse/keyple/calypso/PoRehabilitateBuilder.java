@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class PoRehabilitateBuilder extends AbstractPoCommandBuilder<PoRehabilitateParser> {
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.REHABILITATE;
+  private static final PoCommand command = PoCommand.REHABILITATE;
 
   /**
    * Instantiates a new PoRehabilitateBuilder.

@@ -25,8 +25,7 @@ abstract class CalypsoPoCommandException extends CalypsoCardCommandException {
    * @param statusCode the status code (optional).
    * @since 2.0
    */
-  protected CalypsoPoCommandException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  protected CalypsoPoCommandException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

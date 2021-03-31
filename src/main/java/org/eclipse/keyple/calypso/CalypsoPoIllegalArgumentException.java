@@ -27,7 +27,7 @@ final class CalypsoPoIllegalArgumentException extends CalypsoPoCommandException 
    * @param command the Calypso PO command.
    * @since 2.0
    */
-  CalypsoPoIllegalArgumentException(String message, CalypsoPoCommand command) {
+  CalypsoPoIllegalArgumentException(String message, PoCommand command) {
     super(message, command, null);
   }
 }

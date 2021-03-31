@@ -62,7 +62,7 @@ final class PoOpenSession32Builder
     setApduRequest(
         new ApduRequest(
             PoClass.ISO.getValue(),
-            CalypsoPoCommand.getOpenSessionForRev(PoRevision.REV3_2).getInstructionByte(),
+            PoCommand.getOpenSessionForRev(PoRevision.REV3_2).getInstructionByte(),
             p1,
             p2,
             dataIn,

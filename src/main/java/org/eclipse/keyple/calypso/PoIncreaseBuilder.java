@@ -25,7 +25,7 @@ final class PoIncreaseBuilder extends AbstractPoCommandBuilder<PoIncreaseParser>
   private static final Logger logger = LoggerFactory.getLogger(PoIncreaseBuilder.class);
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.INCREASE;
+  private static final PoCommand command = PoCommand.INCREASE;
 
   /* Construction arguments */
   private final int sfi;

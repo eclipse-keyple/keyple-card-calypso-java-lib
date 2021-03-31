@@ -27,8 +27,7 @@ final class CalypsoPoSessionBufferOverflowException extends CalypsoPoCommandExce
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoSessionBufferOverflowException(
-      String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoSessionBufferOverflowException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

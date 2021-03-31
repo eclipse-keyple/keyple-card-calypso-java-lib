@@ -55,7 +55,7 @@ abstract class AbstractPoResponseParser extends AbstractApduResponseParser {
       Integer statusCode) {
 
     CalypsoCardCommandException e;
-    CalypsoPoCommand command = (CalypsoPoCommand) commandRef;
+    PoCommand command = (PoCommand) commandRef;
     if (exceptionClass == CalypsoPoAccessForbiddenException.class) {
       e = new CalypsoPoAccessForbiddenException(message, command, statusCode);
     } else if (exceptionClass == CalypsoPoDataAccessException.class) {

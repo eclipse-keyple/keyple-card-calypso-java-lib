@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  * @since 2.0
  */
 final class PoChangeKeyBuilder extends AbstractPoCommandBuilder<PoChangeKeyParser> {
-  private static final CalypsoPoCommand command = CalypsoPoCommand.CHANGE_KEY;
+  private static final PoCommand command = PoCommand.CHANGE_KEY;
 
   /**
    * Change Key Calypso command

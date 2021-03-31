@@ -27,7 +27,7 @@ final class CalypsoPoSecurityContextException extends CalypsoPoCommandException 
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoSecurityContextException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoSecurityContextException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

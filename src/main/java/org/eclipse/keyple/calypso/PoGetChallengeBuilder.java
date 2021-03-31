@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class PoGetChallengeBuilder extends AbstractPoCommandBuilder<PoGetChallengeRespPars> {
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.GET_CHALLENGE;
+  private static final PoCommand command = PoCommand.GET_CHALLENGE;
 
   /**
    * Instantiates a new PoGetChallengeBuilder.

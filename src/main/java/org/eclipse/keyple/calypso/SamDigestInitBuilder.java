@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInitParser> {
 
   /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_INIT;
+  private static final SamCommand command = SamCommand.DIGEST_INIT;
 
   /**
    * Instantiates a new SamDigestInitBuilder.

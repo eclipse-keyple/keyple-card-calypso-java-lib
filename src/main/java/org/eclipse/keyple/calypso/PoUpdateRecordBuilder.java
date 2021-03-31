@@ -26,7 +26,7 @@ final class PoUpdateRecordBuilder extends AbstractPoCommandBuilder<PoUpdateRecor
   private static final Logger logger = LoggerFactory.getLogger(PoUpdateRecordBuilder.class);
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.UPDATE_RECORD;
+  private static final PoCommand command = PoCommand.UPDATE_RECORD;
 
   /* Construction arguments */
   private final int sfi;

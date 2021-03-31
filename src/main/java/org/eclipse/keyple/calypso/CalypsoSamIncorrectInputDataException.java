@@ -27,8 +27,7 @@ final class CalypsoSamIncorrectInputDataException extends CalypsoSamCommandExcep
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamIncorrectInputDataException(
-      String message, CalypsoSamCommand command, Integer statusCode) {
+  CalypsoSamIncorrectInputDataException(String message, SamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

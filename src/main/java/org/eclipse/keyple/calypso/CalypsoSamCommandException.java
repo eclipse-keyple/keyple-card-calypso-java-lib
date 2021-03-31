@@ -25,8 +25,7 @@ abstract class CalypsoSamCommandException extends CalypsoCardCommandException {
    * @param statusCode the status code (optional).
    * @since 2.0
    */
-  protected CalypsoSamCommandException(
-      String message, CalypsoSamCommand command, Integer statusCode) {
+  protected CalypsoSamCommandException(String message, SamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

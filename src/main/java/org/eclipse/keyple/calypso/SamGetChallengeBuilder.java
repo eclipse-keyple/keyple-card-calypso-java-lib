@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChallengeParser> {
 
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.GET_CHALLENGE;
+  private static final SamCommand command = SamCommand.GET_CHALLENGE;
 
   /**
    * Instantiates a new SamGetChallengeBuilder.

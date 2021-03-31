@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamReadKeyParametersBuilder
     extends AbstractSamCommandBuilder<SamReadKeyParametersParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.READ_KEY_PARAMETERS;
+  private static final SamCommand command = SamCommand.READ_KEY_PARAMETERS;
 
   public static final int MAX_WORK_KEY_REC_NUMB = 126;
 

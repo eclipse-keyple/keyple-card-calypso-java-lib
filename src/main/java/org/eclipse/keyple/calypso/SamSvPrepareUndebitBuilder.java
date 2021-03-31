@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamSvPrepareUndebitBuilder
     extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_UNDEBIT;
+  private static final SamCommand command = SamCommand.SV_PREPARE_UNDEBIT;
 
   /**
    * Instantiates a new SamSvPrepareUndebitBuilder to prepare a transaction to cancel a previous

@@ -25,10 +25,10 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * This POJO concentrates all the information we know about the PO being processed: from the
  * selection stage to the end of the transaction.
  *
- * <p>An instance of CalypsoPoSmartCard is obtained by casting the AbstractSmartCard object from the
- * selection process (e.g. (CalypsoPoSmartCard)(cardSelectionsResult.getActiveSmartCard()))
+ * <p>An instance of PoSmartCard is obtained by casting the AbstractSmartCard object from the
+ * selection process (e.g. (PoSmartCard)(cardSelectionsResult.getActiveSmartCard()))
  *
- * <p>The various information contained in CalypsoPoSmartCard is accessible by getters and includes:
+ * <p>The various information contained in PoSmartCard is accessible by getters and includes:
  *
  * <ul>
  *   <li>The application identification fields (revision/version, class, DF name, serial number,
@@ -43,7 +43,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSpi {
+final class PoSmartCardAdapter implements PoSmartCard, SmartCardSpi {
   private final byte[] fciBytes;
   private final byte[] atrBytes;
   private final boolean isConfidentialSessionModeSupported;
@@ -107,7 +107,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
    * @param cardSelectionResponse the response to the selection application command.
    * @since 2.0
    */
-  CalypsoPoSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
+  PoSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
 
     ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
     if (fci != null) {
@@ -694,7 +694,7 @@ final class CalypsoPoSmartCardAdapter implements CalypsoPoSmartCard, SmartCardSp
    * @param directoryHeader the DF metadata (should be not null).
    * @return the current instance.
    */
-  final CalypsoPoSmartCard setDirectoryHeader(DirectoryHeader directoryHeader) {
+  final PoSmartCard setDirectoryHeader(DirectoryHeader directoryHeader) {
     this.directoryHeader = directoryHeader;
     return this;
   }

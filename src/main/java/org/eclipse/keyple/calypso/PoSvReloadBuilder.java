@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser> {
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.SV_RELOAD;
+  private static final PoCommand command = PoCommand.SV_RELOAD;
 
   private final PoClass poClass;
   private final PoRevision poRevision;

@@ -43,7 +43,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamCardSelection, CardSel
    */
   CalypsoSamCardSelectionAdapter(CalypsoSamCardSelector calypsoSamCardSelector) {
 
-    Assert.getInstance().notNull(calypsoSamCardSelector, "calypsoPoCardSelector");
+    Assert.getInstance().notNull(calypsoSamCardSelector, "poCardSelector");
 
     this.calypsoSamCardSelector = calypsoSamCardSelector;
     this.commandBuilders =

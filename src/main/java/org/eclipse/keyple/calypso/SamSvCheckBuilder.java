@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamResponseParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_CHECK;
+  private static final SamCommand command = SamCommand.SV_CHECK;
 
   /**
    * Instantiates a new SamSvCheckBuilder to authenticate a card SV transaction.

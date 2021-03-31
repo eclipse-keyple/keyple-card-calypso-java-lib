@@ -11,10 +11,10 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.po.CalypsoPoCardSelection;
-import org.eclipse.keyple.calypso.po.CalypsoPoCardSelector;
-import org.eclipse.keyple.calypso.po.CalypsoPoSmartCard;
-import org.eclipse.keyple.calypso.sam.SamResourceService;
+import org.eclipse.keyple.calypso.po.PoCardSelection;
+import org.eclipse.keyple.calypso.po.PoCardSelector;
+import org.eclipse.keyple.calypso.po.PoSmartCard;
+import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
@@ -28,34 +28,36 @@ import org.eclipse.keyple.core.service.Reader;
 public interface CalypsoCardExtension extends KeypleCardExtension {
 
   /**
-   * Creates an instance of {@link CalypsoPoCardSelection} that can be extended later with specific
+   * Creates an instance of {@link PoCardSelection} that can be extended later with specific
    * commands.
    *
-   * @param calypsoPoCardSelector A PO card selector.
+   * @param poCardSelector A PO card selector.
    * @return A not null reference.
    * @since 2.0
    */
-  CalypsoPoCardSelection createPoSelection(CalypsoPoCardSelector calypsoPoCardSelector);
+  PoCardSelection createPoSelection(PoCardSelector poCardSelector);
 
   /**
-   * Gets the {@link SamResourceService} as a singleton.
+   * Creates an instance of {@link SamCardResourceProfileExtension} to be provided to the {@link
+   * org.eclipse.keyple.core.service.CardResourceService}.
    *
    * @return A not null reference.
    * @since 2.0
    */
-  SamResourceService getSamResourceService();
+  SamCardResourceProfileExtension createSamCardResourceProfileExtension();
 
   /**
    * Gets a builder of {@link PoSecuritySetting} for the provided SAM profile name.
    *
    * <p>The SAM profile name must match one of the profiles configured in the {@link
-   * SamResourceService}.
+   * org.eclipse.keyple.core.service.CardResourceService}.
    *
-   * @param samProfileName A SAM profile name.
+   * @param samCardResourceProfileName A SAM card resource profile name as defined in the {@link
+   *     org.eclipse.keyple.core.service.CardResourceService}.
    * @return A not null reference.
    * @since 2.0
    */
-  PoSecuritySettingBuilder getPoSecuritySettingBuilder(String samProfileName);
+  PoSecuritySettingBuilder getPoSecuritySettingBuilder(String samCardResourceProfileName);
 
   /**
    * Creates a PO transaction service to handle operations secured with a SAM.
@@ -65,22 +67,21 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
    * {@link PoSecuritySettingBuilder}.
    *
    * @param reader The reader through which the card communicates.
-   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
+   * @param poSmartCard The initial PO data provided by the selection process.
    * @param poSecuritySetting The security settings.
    * @return A not null reference.
    * @since 2.0
    */
   PoTransactionService createPoSecuredTransaction(
-      Reader reader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting);
+      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting);
 
   /**
    * Creates a PO transaction service to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
-   * @param calypsoPoSmartCard The initial PO data provided by the selection process.
+   * @param poSmartCard The initial PO data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  PoTransactionService createPoUnsecuredTransaction(
-      Reader reader, CalypsoPoSmartCard calypsoPoSmartCard);
+  PoTransactionService createPoUnsecuredTransaction(Reader reader, PoSmartCard poSmartCard);
 }

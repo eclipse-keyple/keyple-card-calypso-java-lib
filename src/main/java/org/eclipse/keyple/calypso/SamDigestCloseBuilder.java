@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestCloseParser> {
 
   /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_CLOSE;
+  private static final SamCommand command = SamCommand.DIGEST_CLOSE;
 
   /**
    * Instantiates a new SamDigestCloseBuilder .

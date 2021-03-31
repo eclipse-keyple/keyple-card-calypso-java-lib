@@ -1,33 +1,39 @@
 <html>
+
 <body>
-<p>This document is the specification of the API dedicated to the integration of the <b>Calypso Card Extension</b> in a
-    <b>Keyple Application</b>.</p>
+<p>This document is the specification of the API dedicated to the integration of the <strong>Calypso Card
+    Extension</strong> in a<strong>Keyple Application</strong>.</p>
 <h1>Overview</h1>
-<p>{@link org.eclipse.keyple.calypso.CalypsoCardExtensionProvider#getService()} is to be used to get the unique instance
-    of the {@link org.eclipse.keyple.calypso.CalypsoCardExtension} interface containing all the entry points provided by
-    the extension:</p>
+<p>
+    Use {@link org.eclipse.keyple.calypso.CalypsoCardExtensionProvider#getService()} to get the unique
+    instance of the {@link org.eclipse.keyple.calypso.CalypsoCardExtension} interface containing all the entry points
+    provided by the extension:
+</p>
 <ul>
-    <li>One method to create a selection case to be provided to the <b>Keyple Selection Service</b>.
-        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSelection(CalypsoPoCardSelector
-        calypsoPoCardSelector)}<br>
-        It targets a specific PO defined by the POJO {@link org.eclipse.keyple.calypso.po.CalypsoPoCardSelector} and
-        possibly supplemented with commands to be executed after the selection (see methods of {@link
-        org.eclipse.keyple.calypso.po.CalypsoPoCardSelection}).
+    <li>
+        Creation of a selection case targeting a specific PO to be provided to the <strong>Keyple Selection
+        Service</strong>.<br>
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSelection(PoCardSelector poCardSelector)}<br>
+        A selection case targets a specific PO defined by the POJO {@link org.eclipse.keyple.calypso.po.PoCardSelector}
+        and possibly supplemented with commands to be executed after the selection (see methods of {@link org.eclipse.keyple.calypso.po.PoCardSelection}).
     </li>
-    <li>Two methods to configure the SAM resource service needed to process secure operations with POs.<br>
-        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#getSamResourceService()} and {@link
-        org.eclipse.keyple.calypso.CalypsoCardExtension#getPoSecuritySettingBuilder(java.lang.String samProfileName)}.
+    <li>
+        Creation of specific SAM Card Resource profiles with the <strong>Keyple Card Resource Service</strong>.<br>
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createSamCardResourceProfileExtension createSamCardResourceProfileExtension ()}
+        to be referenced in the PO security settings
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#getPoSecuritySettingBuilder(java.lang.String samProfileName)}.
     </li>
-    <li>Two methods to provide two types of transaction services: non-secure and secure.<br>
-        {@link
-        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader
-        reader, CalypsoPoSmartCard calypsoPoSmartCard)}<br>
-        {@link
-        org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader
-        reader, CalypsoPoSmartCard calypsoPoSmartCard, PoSecuritySetting poSecuritySetting)}
+    <li>
+        Transaction service to perform non-secure operations with a PO.<br>
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard)}
+    </li>
+    <li>
+        Transaction service to perform secure operations with a PO (<strong>Calypso Secure Session</strong>).<br>
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting)}
     </li>
 </ul>
 <p>The PO data collected at each step (selection, transaction) are stored in dedicated POJOs whose interfaces are
     available in the {@link org.eclipse.keyple.calypso.po} package.</p>
 </body>
+
 </html>

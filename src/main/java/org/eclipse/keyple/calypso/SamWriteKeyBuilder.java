@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.WRITE_KEY;
+  private static final SamCommand command = SamCommand.WRITE_KEY;
 
   /**
    * Builder constructor

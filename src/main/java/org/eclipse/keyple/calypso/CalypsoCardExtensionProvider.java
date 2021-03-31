@@ -12,7 +12,7 @@
 package org.eclipse.keyple.calypso;
 
 /**
- * Factory of {@link CalypsoCardExtension}.
+ * Provider of the {@link CalypsoCardExtension} service.
  *
  * @since 2.0
  */

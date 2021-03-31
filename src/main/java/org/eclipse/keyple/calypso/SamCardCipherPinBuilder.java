@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCipherPinParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_CIPHER_PIN;
+  private static final SamCommand command = SamCommand.CARD_CIPHER_PIN;
 
   /**
    * Instantiates a new SamCardCipherPinBuilder and generate the ciphered data for a Verify PIN or

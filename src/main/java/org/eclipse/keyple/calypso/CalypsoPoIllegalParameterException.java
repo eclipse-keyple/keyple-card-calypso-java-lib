@@ -27,7 +27,7 @@ final class CalypsoPoIllegalParameterException extends CalypsoPoCommandException
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoIllegalParameterException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoIllegalParameterException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

@@ -24,7 +24,7 @@ final class PoWriteRecordBuilder extends AbstractPoCommandBuilder<PoWriteRecordP
   private static final Logger logger = LoggerFactory.getLogger(PoWriteRecordBuilder.class);
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.WRITE_RECORD;
+  private static final PoCommand command = PoCommand.WRITE_RECORD;
 
   /* Construction arguments */
   private final int sfi;

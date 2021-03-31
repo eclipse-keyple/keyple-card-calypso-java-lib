@@ -28,7 +28,7 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
   private static final Logger logger = LoggerFactory.getLogger(PoSvGetBuilder.class);
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.SV_GET;
+  private static final PoCommand command = PoCommand.SV_GET;
 
   private final PoTransactionService.SvSettings.Operation svOperation;
   private final byte[] header;

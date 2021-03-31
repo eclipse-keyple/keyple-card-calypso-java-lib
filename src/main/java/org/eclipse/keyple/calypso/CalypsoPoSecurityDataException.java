@@ -29,7 +29,7 @@ final class CalypsoPoSecurityDataException extends CalypsoPoCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoSecurityDataException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoSecurityDataException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

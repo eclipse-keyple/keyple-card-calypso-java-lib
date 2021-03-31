@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class PoGetDataFciBuilder extends AbstractPoCommandBuilder<PoGetDataFciParser> {
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.GET_DATA_FCI;
+  private static final PoCommand command = PoCommand.GET_DATA_FCI;
 
   /**
    * Instantiates a new PoGetDataFciBuilder.

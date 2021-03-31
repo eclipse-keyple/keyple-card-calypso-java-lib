@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParser> {
   private static final Logger logger = LoggerFactory.getLogger(PoVerifyPinBuilder.class);
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.VERIFY_PIN;
+  private static final PoCommand command = PoCommand.VERIFY_PIN;
 
   private final byte cla;
   private final boolean readCounterOnly;

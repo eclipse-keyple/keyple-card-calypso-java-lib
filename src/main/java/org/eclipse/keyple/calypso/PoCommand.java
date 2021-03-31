@@ -19,7 +19,7 @@ import org.eclipse.keyple.calypso.po.PoRevision;
  *
  * @since 2.0
  */
-enum CalypsoPoCommand implements CardCommand {
+enum PoCommand implements CardCommand {
 
   /** get data. */
   GET_DATA_FCI("Get Data'FCI'", (byte) 0xCA),
@@ -103,7 +103,7 @@ enum CalypsoPoCommand implements CardCommand {
    * @param instructionByte the instruction byte.
    * @since 2.0
    */
-  CalypsoPoCommand(String name, byte instructionByte) {
+  PoCommand(String name, byte instructionByte) {
     this.name = name;
     this.instructionByte = instructionByte;
   }
@@ -135,7 +135,7 @@ enum CalypsoPoCommand implements CardCommand {
    * @return Returned command
    * @since 2.0
    */
-  public static CalypsoPoCommand getOpenSessionForRev(PoRevision rev) {
+  public static PoCommand getOpenSessionForRev(PoRevision rev) {
     switch (rev) {
       case REV1_0:
         return OPEN_SESSION_10;

@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelection;
  *
  * @since 2.0
  */
-public interface CalypsoPoCardSelection extends CardSelection {
+public interface PoCardSelection extends CardSelection {
 
   /**
    * Adds a command APDU to read a single record from the indicated EF.

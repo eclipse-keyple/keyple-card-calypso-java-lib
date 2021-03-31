@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamDigestUpdateBuilder extends AbstractSamCommandBuilder<SamDigestUpdateParser> {
 
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE;
+  private static final SamCommand command = SamCommand.DIGEST_UPDATE;
 
   /**
    * Instantiates a new SamDigestUpdateBuilder.

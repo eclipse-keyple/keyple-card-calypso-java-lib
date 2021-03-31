@@ -26,7 +26,7 @@ final class PoReadRecordsBuilder extends AbstractPoCommandBuilder<PoReadRecordsP
 
   private static final Logger logger = LoggerFactory.getLogger(PoReadRecordsBuilder.class);
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.READ_RECORDS;
+  private static final PoCommand command = PoCommand.READ_RECORDS;
 
   /** Indicates if one or multiple records */
   public enum ReadMode {

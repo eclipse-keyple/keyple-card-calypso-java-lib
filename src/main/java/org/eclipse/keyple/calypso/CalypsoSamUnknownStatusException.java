@@ -27,7 +27,7 @@ final class CalypsoSamUnknownStatusException extends CalypsoSamCommandException 
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamUnknownStatusException(String message, CalypsoSamCommand command, Integer statusCode) {
+  CalypsoSamUnknownStatusException(String message, SamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

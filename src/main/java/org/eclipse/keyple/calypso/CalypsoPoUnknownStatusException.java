@@ -27,7 +27,7 @@ final class CalypsoPoUnknownStatusException extends CalypsoPoCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoUnknownStatusException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoUnknownStatusException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

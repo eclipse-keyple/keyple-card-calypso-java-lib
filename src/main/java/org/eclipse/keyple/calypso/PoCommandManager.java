@@ -39,7 +39,7 @@ class PoCommandManager {
   private final List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands =
       new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
 
-  private CalypsoPoCommand svLastCommand;
+  private PoCommand svLastCommand;
   private PoTransactionService.SvSettings.Operation svOperation;
   private boolean svOperationComplete = false;
 
@@ -94,7 +94,7 @@ class PoCommandManager {
               "This SV command can only be placed in the first position in the list of prepared commands");
         }
 
-        if (svLastCommand != CalypsoPoCommand.SV_GET) {
+        if (svLastCommand != PoCommand.SV_GET) {
           // @see Calypso Layer ID 8.07/8.08 (200108)
           throw new IllegalStateException("This SV command must follow an SV Get command");
         }

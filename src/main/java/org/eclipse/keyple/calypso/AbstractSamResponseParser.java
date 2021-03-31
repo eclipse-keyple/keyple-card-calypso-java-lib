@@ -81,7 +81,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
       Integer statusCode) {
 
     CalypsoCardCommandException e;
-    CalypsoSamCommand command = (CalypsoSamCommand) commandRef;
+    SamCommand command = (SamCommand) commandRef;
     if (exceptionClass == CalypsoSamAccessForbiddenException.class) {
       e = new CalypsoSamAccessForbiddenException(message, command, statusCode);
     } else if (exceptionClass == CalypsoSamCounterOverflowException.class) {

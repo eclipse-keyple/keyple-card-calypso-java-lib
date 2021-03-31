@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.UNLOCK;
+  private static final SamCommand command = SamCommand.UNLOCK;
 
   /**
    * Builder constructor

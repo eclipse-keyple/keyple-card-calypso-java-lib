@@ -28,7 +28,7 @@ final class CalypsoPoDataAccessException extends CalypsoPoCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoDataAccessException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoDataAccessException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

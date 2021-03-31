@@ -28,7 +28,7 @@ final class CalypsoPoDataOutOfBoundsException extends CalypsoPoCommandException 
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoPoDataOutOfBoundsException(String message, CalypsoPoCommand command, Integer statusCode) {
+  CalypsoPoDataOutOfBoundsException(String message, PoCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

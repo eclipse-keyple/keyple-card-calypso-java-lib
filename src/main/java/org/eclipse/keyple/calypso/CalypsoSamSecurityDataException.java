@@ -29,7 +29,7 @@ final class CalypsoSamSecurityDataException extends CalypsoSamCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamSecurityDataException(String message, CalypsoSamCommand command, Integer statusCode) {
+  CalypsoSamSecurityDataException(String message, SamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

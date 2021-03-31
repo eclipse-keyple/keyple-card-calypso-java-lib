@@ -27,7 +27,7 @@ final class PoAppendRecordBuilder extends AbstractPoCommandBuilder<PoAppendRecor
   private static final Logger logger = LoggerFactory.getLogger(PoAppendRecordBuilder.class);
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.APPEND_RECORD;
+  private static final PoCommand command = PoCommand.APPEND_RECORD;
 
   /* Construction arguments */
   private final int sfi;

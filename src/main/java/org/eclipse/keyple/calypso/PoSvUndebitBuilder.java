@@ -27,7 +27,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class PoSvUndebitBuilder extends AbstractPoCommandBuilder<PoSvUndebitParser> {
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.SV_UNDEBIT;
+  private static final PoCommand command = PoCommand.SV_UNDEBIT;
 
   private final PoClass poClass;
   private final PoRevision poRevision;

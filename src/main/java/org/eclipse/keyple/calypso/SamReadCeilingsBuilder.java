@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeilingsParser> {
   /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.READ_CEILINGS;
+  private static final SamCommand command = SamCommand.READ_CEILINGS;
 
   public static final int MAX_CEILING_NUMB = 26;
 

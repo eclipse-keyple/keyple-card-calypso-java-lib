@@ -27,7 +27,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
 
   /** The command. */
-  private static final CalypsoPoCommand command = CalypsoPoCommand.SV_DEBIT;
+  private static final PoCommand command = PoCommand.SV_DEBIT;
 
   private final PoClass poClass;
   private final PoRevision poRevision;

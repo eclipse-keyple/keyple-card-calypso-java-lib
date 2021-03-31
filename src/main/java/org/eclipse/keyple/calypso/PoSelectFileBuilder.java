@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFileParser> {
   private static final Logger logger = LoggerFactory.getLogger(PoSelectFileBuilder.class);
 
-  private static final CalypsoPoCommand command = CalypsoPoCommand.SELECT_FILE;
+  private static final PoCommand command = PoCommand.SELECT_FILE;
 
   /* Construction arguments */
   private final byte[] path;

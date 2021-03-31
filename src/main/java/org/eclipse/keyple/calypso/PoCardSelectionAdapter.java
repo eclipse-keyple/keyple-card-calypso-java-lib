@@ -13,8 +13,8 @@ package org.eclipse.keyple.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.keyple.calypso.po.CalypsoPoCardSelection;
-import org.eclipse.keyple.calypso.po.CalypsoPoCardSelector;
+import org.eclipse.keyple.calypso.po.PoCardSelection;
+import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.SelectFileControl;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.calypso.transaction.CalypsoPoAnomalyException;
@@ -28,35 +28,35 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link CalypsoPoCardSelection}.
+ * Implementation of {@link PoCardSelection}.
  *
  * @since 2.0
  */
-final class CalypsoPoCardSelectionAdapter implements CalypsoPoCardSelection, CardSelectionSpi {
+final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi {
 
-  private static final Logger logger = LoggerFactory.getLogger(CalypsoPoCardSelectionAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(PoCardSelectionAdapter.class);
 
   private final List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> commandBuilders;
-  private final CalypsoPoCardSelector calypsoPoCardSelector;
+  private final PoCardSelector poCardSelector;
   private final PoClass poClass;
 
   /**
    * (package-private)<br>
-   * Creates an instance of {@link CalypsoPoCardSelection}.
+   * Creates an instance of {@link PoCardSelection}.
    *
-   * @param calypsoPoCardSelector A card selector.
+   * @param poCardSelector A card selector.
    * @since 2.0
-   * @throws IllegalArgumentException If calypsoPoCardSelector is null.
+   * @throws IllegalArgumentException If poCardSelector is null.
    */
-  CalypsoPoCardSelectionAdapter(CalypsoPoCardSelector calypsoPoCardSelector) {
+  PoCardSelectionAdapter(PoCardSelector poCardSelector) {
 
-    Assert.getInstance().notNull(calypsoPoCardSelector, "calypsoPoCardSelector");
+    Assert.getInstance().notNull(poCardSelector, "poCardSelector");
 
-    this.calypsoPoCardSelector = calypsoPoCardSelector;
+    this.poCardSelector = poCardSelector;
     this.commandBuilders =
         new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
     // deduces the class of the PO according to the type of selection
-    if (calypsoPoCardSelector.getAidSelector() == null) {
+    if (poCardSelector.getAidSelector() == null) {
       poClass = PoClass.LEGACY;
     } else {
       poClass = PoClass.ISO;
@@ -125,7 +125,7 @@ final class CalypsoPoCardSelectionAdapter implements CalypsoPoCardSelection, Car
     }
     // TODO check the boolean use in every creation of CardRequest
     return new CardSelectionRequest(
-        calypsoPoCardSelector, new CardRequest(cardSelectionApduRequests, false));
+        poCardSelector, new CardRequest(cardSelectionApduRequests, false));
   }
 
   /**
@@ -143,8 +143,7 @@ final class CalypsoPoCardSelectionAdapter implements CalypsoPoCardSelection, Car
           "Mismatch in the number of requests/responses");
     }
 
-    CalypsoPoSmartCardAdapter calypsoPoSmartCard =
-        new CalypsoPoSmartCardAdapter(cardSelectionResponse);
+    PoSmartCardAdapter calypsoPoSmartCard = new PoSmartCardAdapter(cardSelectionResponse);
 
     if (!commandBuilders.isEmpty()) {
       try {
@@ -165,6 +164,6 @@ final class CalypsoPoCardSelectionAdapter implements CalypsoPoCardSelection, Car
    */
   @Override
   public CardSelector getCardSelector() {
-    return calypsoPoCardSelector;
+    return poCardSelector;
   }
 }

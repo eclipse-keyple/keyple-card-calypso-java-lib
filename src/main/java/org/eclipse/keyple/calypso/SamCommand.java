@@ -17,7 +17,7 @@ package org.eclipse.keyple.calypso;
  *
  * @since 2.0
  */
-enum CalypsoSamCommand implements CardCommand {
+enum SamCommand implements CardCommand {
 
   /** select diversifier. */
   SELECT_DIVERSIFIER("Select Diversifier", (byte) 0x14),
@@ -89,7 +89,7 @@ enum CalypsoSamCommand implements CardCommand {
    * @param instructionByte the instruction byte.
    * @since 2.0
    */
-  CalypsoSamCommand(String name, byte instructionByte) {
+  SamCommand(String name, byte instructionByte) {
     this.name = name;
     this.instructionByte = instructionByte;
   }
