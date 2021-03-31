@@ -16,6 +16,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private)<br>
  * This abstract class defines the parser used to handle APDU's response.
  *
  * @since 2.0

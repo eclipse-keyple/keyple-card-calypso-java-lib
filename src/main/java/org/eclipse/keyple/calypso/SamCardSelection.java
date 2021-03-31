@@ -20,4 +20,4 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelection;
  *
  * @since 2.0
  */
-interface CalypsoSamCardSelection extends CardSelection {}
+interface SamCardSelection extends CardSelection {}

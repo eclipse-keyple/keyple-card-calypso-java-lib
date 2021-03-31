@@ -25,6 +25,7 @@ import org.eclipse.keyple.core.service.ServiceApiProperties;
 
 /**
  * (package-private)<br>
+ * Implementation of {@link CalypsoCardExtension}.
  *
  * @since 2.0
  */

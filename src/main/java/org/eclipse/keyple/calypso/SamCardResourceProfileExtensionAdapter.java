@@ -95,8 +95,8 @@ public class SamCardResourceProfileExtensionAdapter
 
     CardSelectionService samSelectionService = CardSelectionServiceFactory.getService();
 
-    CalypsoSamCardSelectionAdapter calypsoSamCardSelectionAdapter =
-        new CalypsoSamCardSelectionAdapter(calypsoSamCardSelector);
+    SamCardSelectionAdapter calypsoSamCardSelectionAdapter =
+        new SamCardSelectionAdapter(calypsoSamCardSelector);
 
     samSelectionService.prepareSelection(calypsoSamCardSelectionAdapter);
 

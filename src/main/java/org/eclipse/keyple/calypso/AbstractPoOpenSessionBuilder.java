@@ -16,6 +16,8 @@ import org.eclipse.keyple.calypso.po.PoRevision;
 /**
  * (package-private)<br>
  * Builds the Open Secure Session APDU command.
+ *
+ * @since 2.0
  */
 abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>
     extends AbstractPoCommandBuilder<T> {
@@ -26,6 +28,7 @@ abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>
    * @param revision the revision of the PO.
    * @throws IllegalArgumentException - if the key index is 0 and rev is 2.4
    * @throws IllegalArgumentException - if the request is inconsistent
+   * @since 2.0
    */
   AbstractPoOpenSessionBuilder(PoRevision revision) {
     super(PoCommand.getOpenSessionForRev(revision));

@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * (package-private)<br>
  * The SamCommandProcessor class is dedicated to the management of commands sent to the SAM.
  *
  * <p>In particular, it manages the cryptographic computations related to the secure session (digest

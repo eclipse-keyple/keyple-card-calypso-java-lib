@@ -22,11 +22,11 @@ import org.eclipse.keyple.core.util.Assert;
 
 /**
  * (package-private)<br>
- * Implementation of {@link CalypsoSamCardSelection}.
+ * Implementation of {@link SamCardSelection}.
  *
  * @since 2.0
  */
-class CalypsoSamCardSelectionAdapter implements CalypsoSamCardSelection, CardSelectionSpi {
+class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
 
   private final CalypsoSamCardSelector calypsoSamCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
@@ -34,14 +34,14 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamCardSelection, CardSel
 
   /**
    * (package-private)<br>
-   * Creates a {@link CalypsoSamCardSelection}.<br>
+   * Creates a {@link SamCardSelection}.<br>
    * Prepares the unlock command if unlock data are defined in the provided {@link
    * CalypsoSamCardSelector}.
    *
    * @param calypsoSamCardSelector The SAM selector.
    * @since 2.0
    */
-  CalypsoSamCardSelectionAdapter(CalypsoSamCardSelector calypsoSamCardSelector) {
+  SamCardSelectionAdapter(CalypsoSamCardSelector calypsoSamCardSelector) {
 
     Assert.getInstance().notNull(calypsoSamCardSelector, "poCardSelector");
 

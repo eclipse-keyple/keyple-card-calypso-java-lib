@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private) <br>
  * Builds the Digest Update APDU command.
  *
  * @since 2.0 This command have to be sent twice for each command executed during a session. First

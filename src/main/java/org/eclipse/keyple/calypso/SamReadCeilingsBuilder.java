@@ -16,6 +16,7 @@ import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
+ * (package-private) <br>
  * Builds the Read Ceilings APDU command.
  *
  * @since 2.0

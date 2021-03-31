@@ -65,7 +65,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the SAM resource.
+   * (package-private) <br>
+   * Sets the SAM resource.
    *
    * @param samProfileName The SAM profile name.
    * @return The object instance.
@@ -77,7 +78,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the list of authorized KVC.
+   * (package-private) <br>
+   * Gets the list of authorized KVC.
    *
    * @param authorizedKvcList A list of authorized KVC.
    * @return The object instance.
@@ -92,7 +94,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Puts a map of default KIFs.
+   * (package-private) <br>
+   * uts a map of default KIFs.
    *
    * @param defaultKIFs A map.
    * @return The object instance.
@@ -105,7 +108,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Puts a map of default KVCs.
+   * (package-private) <br>
+   * uts a map of default KVCs.
    *
    * @param defaultKVCs A map.
    * @return The object instance.
@@ -118,7 +122,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Puts a map of default key record numbers.
+   * (package-private) <br>
+   * uts a map of default key record numbers.
    *
    * @param defaultKeyRecordNumbers A map.
    * @return The object instance.
@@ -131,7 +136,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the session modification mode.
+   * (package-private) <br>
+   * Gets the session modification mode.
    *
    * @param sessionModificationMode The session modification mode.
    * @return The object instance.
@@ -144,7 +150,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the ratification mode.
+   * (package-private) <br>
+   * Gets the ratification mode.
    *
    * @param ratificationMode The ratification mode.
    * @return The object instance.
@@ -157,7 +164,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the PIN transmission mode.
+   * (package-private) <br>
+   * Gets the PIN transmission mode.
    *
    * @param pinTransmissionMode The PIN transmission mode.
    * @return The object instance.
@@ -170,7 +178,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the default PIN ciphering key transmission mode.
+   * (package-private) <br>
+   * Gets the default PIN ciphering key transmission mode.
    *
    * @param defaultPinCipheringKey The PIN ciphering key.
    * @return The object instance.
@@ -182,7 +191,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the SV get log read mode.
+   * (package-private) <br>
+   * Gets the SV get log read mode.
    *
    * @param svGetLogReadMode The SV get log read mode.
    * @return The object instance.
@@ -195,7 +205,8 @@ class PoSecuritySettingAdapter implements PoSecuritySetting {
   }
 
   /**
-   * (package-private) Sets the SV negative balance mode.
+   * (package-private) <br>
+   * Gets the SV negative balance mode.
    *
    * @param svNegativeBalance The SV negative balance mode.
    * @return The object instance.
