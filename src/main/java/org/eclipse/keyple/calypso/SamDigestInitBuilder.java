@@ -33,8 +33,8 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
    * @param verificationMode the verification mode.
    * @param confidentialSessionMode the confidential session mode (rev 3.2).
    * @param workKeyRecordNumber the work key record number.
-   * @param workKeyKif from the AbstractPoOpenSessionBuilder response.
-   * @param workKeyKVC from the AbstractPoOpenSessionBuilder response.
+   * @param workKif from the AbstractPoOpenSessionBuilder response.
+   * @param workKvc from the AbstractPoOpenSessionBuilder response.
    * @param digestData all data out from the AbstractPoOpenSessionBuilder response.
    * @throws IllegalArgumentException - if the work key record number
    * @throws IllegalArgumentException - if the digest data is null
@@ -46,15 +46,15 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
       boolean verificationMode,
       boolean confidentialSessionMode,
       byte workKeyRecordNumber,
-      byte workKeyKif,
-      byte workKeyKVC,
+      byte workKif,
+      byte workKvc,
       byte[] digestData) {
     super(command);
     if (revision != null) {
       this.defaultRevision = revision;
     }
 
-    if (workKeyRecordNumber == 0x00 && (workKeyKif == 0x00 || workKeyKVC == 0x00)) {
+    if (workKeyRecordNumber == 0x00 && (workKif == 0x00 || workKvc == 0x00)) {
       throw new IllegalArgumentException("Bad key record number, kif or kvc!");
     }
     if (digestData == null) {
@@ -70,7 +70,7 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
     }
 
     byte p2 = (byte) 0xFF;
-    if (workKeyKif == (byte) 0xFF) {
+    if (workKif == (byte) 0xFF) {
       p2 = workKeyRecordNumber;
     }
 
@@ -78,8 +78,8 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
 
     if (p2 == (byte) 0xFF) {
       dataIn = new byte[2 + digestData.length];
-      dataIn[0] = workKeyKif;
-      dataIn[1] = workKeyKVC;
+      dataIn[0] = workKif;
+      dataIn[1] = workKvc;
       System.arraycopy(digestData, 0, dataIn, 2, digestData.length);
     } else {
       dataIn = digestData;

@@ -29,23 +29,25 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
    * Instantiates a new SamDigestUpdateBuilder and generate the ciphered data for a key ciphered by
    * another.
    *
-   * <p>If the provided ciphering key reference is null, the source key is ciphered with the null
+   * <p>If bot KIF and KVC of the ciphering are equal to 0, the source key is ciphered with the null
    * key.
    *
-   * @param revision of the SAM.
-   * @param cipheringKey the key used to ciphering the source key (the null key is used if this.
-   *     reference is null)
-   * @param sourceKey the reference of the key to be loaded.
+   * @param samRevision The SAM samRevision.
+   * @param cipheringKif The KIF of the ciphering key.
+   * @param cipheringKvc The KVC of the ciphering key.
+   * @param sourceKif The KIF of the source key.
+   * @param sourceKvc The KVC of the source key.
    * @since 2.0
    */
   public SamCardGenerateKeyBuilder(
-      SamRevision revision, KeyReference cipheringKey, KeyReference sourceKey) {
+      SamRevision samRevision,
+      byte cipheringKif,
+      byte cipheringKvc,
+      byte sourceKif,
+      byte sourceKvc) {
     super(command);
-    if (revision != null) {
-      this.defaultRevision = revision;
-    }
-    if (sourceKey == null) {
-      throw new IllegalArgumentException("The source key reference can't be null.");
+    if (samRevision != null) {
+      this.defaultRevision = samRevision;
     }
 
     byte cla = this.defaultRevision.getClassByte();
@@ -54,24 +56,24 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
     byte p2;
     byte[] data;
 
-    if (cipheringKey == null) {
+    if (cipheringKif == 0 && cipheringKvc == 0) {
       // case where the source key is ciphered by the null key
       p1 = (byte) 0xFF;
       p2 = (byte) 0x00;
 
       data = new byte[3];
-      data[0] = sourceKey.getKif();
-      data[1] = sourceKey.getKvc();
+      data[0] = sourceKif;
+      data[1] = sourceKvc;
       data[2] = (byte) 0x90;
     } else {
       p1 = (byte) 0xFF;
       p2 = (byte) 0xFF;
 
       data = new byte[5];
-      data[0] = cipheringKey.getKif();
-      data[1] = cipheringKey.getKvc();
-      data[2] = sourceKey.getKif();
-      data[3] = sourceKey.getKvc();
+      data[0] = cipheringKif;
+      data[1] = cipheringKvc;
+      data[2] = sourceKif;
+      data[3] = sourceKvc;
       data[4] = (byte) 0x90;
     }
 

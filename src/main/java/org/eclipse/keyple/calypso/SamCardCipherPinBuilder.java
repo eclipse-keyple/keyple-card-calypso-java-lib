@@ -35,14 +35,19 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    * <p>In the case of a PIN update, the current and new PINs must be provided.
    *
    * @param revision of the SAM.
-   * @param cipheringKey the key used to encipher the PIN data.
+   * @param cipheringKif the KIF of the key used to encipher the PIN data.
+   * @param cipheringKvc the KVC of the key used to encipher the PIN data.
    * @param currentPin the current PIN (a 4-byte byte array).
    * @param newPin the new PIN (a 4-byte byte array if the operation in progress is a PIN update,
    *     null if the operation in progress is a PIN verification)
    * @since 2.0
    */
   public SamCardCipherPinBuilder(
-      SamRevision revision, KeyReference cipheringKey, byte[] currentPin, byte[] newPin) {
+      SamRevision revision,
+      byte cipheringKif,
+      byte cipheringKvc,
+      byte[] currentPin,
+      byte[] newPin) {
     super(command);
 
     if (revision != null) {
@@ -74,8 +79,8 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
     }
     p2 = (byte) 0xFF; // KIF and KVC in incoming data
 
-    data[0] = cipheringKey.getKif();
-    data[1] = cipheringKey.getKvc();
+    data[0] = cipheringKif;
+    data[1] = cipheringKvc;
 
     System.arraycopy(currentPin, 0, data, 2, 4);
 

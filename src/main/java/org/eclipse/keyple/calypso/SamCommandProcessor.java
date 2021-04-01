@@ -19,6 +19,7 @@ import org.eclipse.keyple.calypso.po.PoSmartCard;
 import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
+import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.CardResource;
@@ -58,8 +59,8 @@ class SamCommandProcessor {
   private boolean sessionEncryption;
   private boolean verificationMode;
   private byte workKeyRecordNumber;
-  private byte workKeyKif;
-  private byte workKeyKVC;
+  private byte workKif;
+  private byte workKvc;
   private boolean isDiversificationDone;
   private boolean isDigestInitDone;
   private boolean isDigesterInitialized;
@@ -217,9 +218,9 @@ class SamCommandProcessor {
     // TODO check in which case this key number is needed
     // this.workKeyRecordNumber =
     // poSecuritySettings.getSessionDefaultKeyRecordNumber(accessLevel);
-    this.workKeyKif = determineWorkKif(poKif, accessLevel);
+    this.workKif = determineWorkKif(poKif, accessLevel);
     // TODO handle Rev 1.0 case where KVC is not available
-    this.workKeyKVC = poKVC;
+    this.workKvc = poKVC;
 
     if (logger.isDebugEnabled()) {
       logger.debug(
@@ -342,8 +343,8 @@ class SamCommandProcessor {
               verificationMode,
               poSmartCard.isConfidentialSessionModeSupported(),
               workKeyRecordNumber,
-              workKeyKif,
-              workKeyKVC,
+              workKif,
+              workKvc,
               poDigestDataCache.get(0)));
       poDigestDataCache.remove(0);
       // note that the digest init has been made
@@ -507,14 +508,17 @@ class SamCommandProcessor {
       throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
-    KeyReference pinCipheringKey;
+    byte pinCipheringKif;
+    byte pinCipheringKvc;
 
-    if (workKeyKif != 0) {
+    if (workKif != 0) {
       // the current work key has been set (a secure session is open)
-      pinCipheringKey = new KeyReference(workKeyKif, workKeyKVC);
+      pinCipheringKif = workKif;
+      pinCipheringKvc = workKvc;
     } else {
       // no current work key is available (outside secure session)
-      pinCipheringKey = poSecuritySettings.getDefaultPinCipheringKey();
+      pinCipheringKif = poSecuritySettings.getDefaultPinCipheringKif();
+      pinCipheringKvc = poSecuritySettings.getDefaultPinCipheringKvc();
     }
 
     if (!isDiversificationDone) {
@@ -535,7 +539,8 @@ class SamCommandProcessor {
     int cardCipherPinCmdIndex = samCommands.size();
 
     SamCardCipherPinBuilder samCardCipherPinBuilder =
-        new SamCardCipherPinBuilder(samRevision, pinCipheringKey, currentPin, newPin);
+        new SamCardCipherPinBuilder(
+            samRevision, pinCipheringKif, pinCipheringKvc, currentPin, newPin);
 
     samCommands.add(samCardCipherPinBuilder);
 

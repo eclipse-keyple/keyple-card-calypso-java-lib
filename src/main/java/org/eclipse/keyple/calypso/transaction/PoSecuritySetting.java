@@ -9,12 +9,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.calypso;
+package org.eclipse.keyple.calypso.transaction;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
@@ -26,7 +25,7 @@ import org.eclipse.keyple.core.util.Assert;
  *
  * @since 2.0
  */
-class PoSecuritySetting {
+public class PoSecuritySetting {
 
   private final String samCardResourceProfileName;
   private final List<Byte> authorizedKvcList;
@@ -37,9 +36,10 @@ class PoSecuritySetting {
   private final PoTransactionService.SessionSetting.ModificationMode sessionModificationMode;
   private final PoTransactionService.SessionSetting.RatificationMode ratificationMode;
   private final PoTransactionService.PinTransmissionMode pinTransmissionMode;
-  private final KeyReference defaultPinCipheringKey;
   private final boolean isLoadAndDebitSvLogRequired;
   private final boolean isSvNegativeBalanceAllowed;
+  private final byte defaultPinCipheringKif;
+  private final byte defaultPinCipheringKvc;
 
   /**
    * CalypsoSamCardSelectorBuilder of {@link PoSecuritySetting}.
@@ -55,7 +55,6 @@ class PoSecuritySetting {
             PoTransactionService.SessionSetting.RatificationMode.CLOSE_RATIFIED;
     private static final PoTransactionService.PinTransmissionMode defaultPinTransmissionMode =
         PoTransactionService.PinTransmissionMode.ENCRYPTED;
-    private static final KeyReference nullPinCipheringKey = new KeyReference((byte) 0, (byte) 0);
     private boolean isLoadAndDebitSvLogRequired = false;
     private boolean isSvNegativeBalanceAllowed = false;
     private final String samCardResourceProfileName;
@@ -79,7 +78,8 @@ class PoSecuritySetting {
         defaultSessionModificationMode;
     PoTransactionService.SessionSetting.RatificationMode ratificationMode = defaultRatificationMode;
     PoTransactionService.PinTransmissionMode pinTransmissionMode = defaultPinTransmissionMode;
-    KeyReference defaultPinCipheringKey = nullPinCipheringKey;
+    private byte defaultPinCipheringKif = (byte) 0;
+    private byte defaultPinCipheringKvc = (byte) 0;
 
     /**
      * (private)<br>
@@ -228,7 +228,8 @@ class PoSecuritySetting {
      * @since 2.0
      */
     public PoSecuritySettingBuilder pinCipheringKey(byte kif, byte kvc) {
-      this.defaultPinCipheringKey = new KeyReference(kif, kvc);
+      this.defaultPinCipheringKif = kif;
+      this.defaultPinCipheringKvc = kvc;
       return this;
     }
 
@@ -325,8 +326,9 @@ class PoSecuritySetting {
   }
 
   /**
-   * Gets the default session KIF.
+   * Gets the default session KIF for the provided session level.
    *
+   * @param sessionAccessLevel The session level.
    * @return null if no value has been set.
    * @since 2.0
    */
@@ -336,8 +338,9 @@ class PoSecuritySetting {
   }
 
   /**
-   * Gets the default session KVC.
+   * Gets the default session KVC for the provided session level.
    *
+   * @param sessionAccessLevel The session level.
    * @return null if no value has been set.
    * @since 2.0
    */
@@ -347,8 +350,9 @@ class PoSecuritySetting {
   }
 
   /**
-   * Gets the default session key record number.
+   * Gets the default session key record number for the provided session level.
    *
+   * @param sessionAccessLevel The session level.
    * @return null if no value has been set.
    * @since 2.0
    */
@@ -372,13 +376,27 @@ class PoSecuritySetting {
   }
 
   /**
-   * Gets the default key reference to be used for PIN encryption.
+   * Gets the default KIF to be used for PIN encryption.
    *
-   * @return A not null reference.
+   * <p>The default value is 0.
+   *
+   * @return A byte.
    * @since 2.0
    */
-  public KeyReference getDefaultPinCipheringKey() {
-    return defaultPinCipheringKey;
+  public byte getDefaultPinCipheringKif() {
+    return defaultPinCipheringKif;
+  }
+
+  /**
+   * Gets the default KVC to be used for PIN encryption.
+   *
+   * <p>The default value is 0.
+   *
+   * @return A byte.
+   * @since 2.0
+   */
+  public byte getDefaultPinCipheringKvc() {
+    return defaultPinCipheringKvc;
   }
 
   /**
@@ -429,7 +447,8 @@ class PoSecuritySetting {
     this.sessionModificationMode = builder.sessionModificationMode;
     this.ratificationMode = builder.ratificationMode;
     this.pinTransmissionMode = builder.pinTransmissionMode;
-    this.defaultPinCipheringKey = builder.defaultPinCipheringKey;
+    this.defaultPinCipheringKif = builder.defaultPinCipheringKif;
+    this.defaultPinCipheringKvc = builder.defaultPinCipheringKvc;
     this.isLoadAndDebitSvLogRequired = builder.isLoadAndDebitSvLogRequired;
     this.isSvNegativeBalanceAllowed = builder.isSvNegativeBalanceAllowed;
   }

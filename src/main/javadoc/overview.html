@@ -18,18 +18,13 @@
         and possibly supplemented with commands to be executed after the selection (see methods of {@link org.eclipse.keyple.calypso.po.PoCardSelection}).
     </li>
     <li>
-        Creation of specific SAM Card Resource profiles with the <strong>Keyple Card Resource Service</strong>.<br>
-        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createSamCardResourceProfileExtension createSamCardResourceProfileExtension ()}
-        to be referenced in the PO security settings
-        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#getPoSecuritySettingBuilder(java.lang.String samProfileName)}.
-    </li>
-    <li>
         Transaction service to perform non-secure operations with a PO.<br>
         {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard)}
     </li>
     <li>
         Transaction service to perform secure operations with a PO (<strong>Calypso Secure Session</strong>).<br>
-        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting)}
+        {@link org.eclipse.keyple.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting)}<br>
+        The {@link org.eclipse.keyple.calypso.transaction.PoSecuritySetting} POJO is used to define the security elements of the transaction.
     </li>
 </ul>
 <p>The PO data collected at each step (selection, transaction) are stored in dedicated POJOs whose interfaces are
