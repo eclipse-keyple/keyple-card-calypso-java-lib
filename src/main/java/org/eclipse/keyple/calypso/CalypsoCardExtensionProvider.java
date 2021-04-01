@@ -28,6 +28,6 @@ public final class CalypsoCardExtensionProvider {
    * @since 2.0
    */
   public static CalypsoCardExtension getService() {
-    return new CalypsoCardExtensionAdapter();
+    return CalypsoCardExtensionAdapter.getInstance();
   }
 }

@@ -15,7 +15,6 @@ import org.eclipse.keyple.calypso.po.PoCardSelection;
 import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.PoSmartCard;
 import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.CardApiProperties;
 import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
@@ -30,6 +29,24 @@ import org.eclipse.keyple.core.service.ServiceApiProperties;
  * @since 2.0
  */
 final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExtensionSpi {
+
+  /** singleton instance of CalypsoCardExtensionAdapter */
+  private static final CalypsoCardExtensionAdapter uniqueInstance =
+      new CalypsoCardExtensionAdapter();
+
+  /** Private constructor. */
+  private CalypsoCardExtensionAdapter() {}
+
+  /**
+   * (package-private)<br>
+   * Gets the single instance of CalypsoCardExtensionAdapter.
+   *
+   * @return The instance of CalypsoCardExtensionAdapter.
+   * @since 2.0
+   */
+  static CalypsoCardExtensionAdapter getInstance() {
+    return uniqueInstance;
+  }
 
   /**
    * {@inheritDoc}
@@ -67,23 +84,13 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    * @since 2.0
    */
   @Override
-  public PoCardSelection createPoSelection(PoCardSelector poCardSelector) {
-    return null;
+  public PoCardSelection createPoCardSelection(PoCardSelector poCardSelector) {
+    return new PoCardSelectionAdapter(poCardSelector);
   }
 
   @Override
   public SamCardResourceProfileExtension createSamCardResourceProfileExtension() {
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public PoSecuritySettingBuilder getPoSecuritySettingBuilder(String samCardResourceProfileName) {
-    return null;
+    return new SamCardResourceProfileExtensionAdapter();
   }
 
   /**
@@ -94,7 +101,7 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
   @Override
   public PoTransactionService createPoSecuredTransaction(
       Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
-    return null;
+    return new PoTransactionServiceAdapter(reader, poSmartCard, poSecuritySetting);
   }
 
   /**
@@ -104,6 +111,6 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    */
   @Override
   public PoTransactionService createPoUnsecuredTransaction(Reader reader, PoSmartCard poSmartCard) {
-    return null;
+    return new PoTransactionServiceAdapter(reader, poSmartCard);
   }
 }

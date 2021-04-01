@@ -26,7 +26,7 @@ final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyPars
   private static final SamCommand command = SamCommand.WRITE_KEY;
 
   /**
-   * Builder constructor
+   * CalypsoSamCardSelectorBuilder constructor
    *
    * @param revision the SAM revision.
    * @param writingMode the writing mode (P1).

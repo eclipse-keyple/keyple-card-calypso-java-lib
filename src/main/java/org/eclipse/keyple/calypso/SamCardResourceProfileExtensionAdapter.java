@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ProxyReader;
@@ -20,14 +22,16 @@ import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
+import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
+ * (package-private)<br>
  * Implementation of {@link SamCardResourceProfileExtension}.
  *
  * @since 2.0
  */
-public class SamCardResourceProfileExtensionAdapter
+class SamCardResourceProfileExtensionAdapter
     implements SamCardResourceProfileExtension, CardResourceProfileExtensionSpi {
 
   private SamRevision samRevision;
@@ -48,6 +52,13 @@ public class SamCardResourceProfileExtensionAdapter
    */
   @Override
   public SamCardResourceProfileExtension setSamRevision(SamRevision samRevision) {
+
+    Assert.getInstance().notNull(samRevision, "samRevision");
+
+    if (this.samRevision != null) {
+      throw new IllegalStateException("SAM revision has already been set.");
+    }
+
     this.samRevision = samRevision;
     return this;
   }
@@ -59,6 +70,19 @@ public class SamCardResourceProfileExtensionAdapter
    */
   @Override
   public SamCardResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex) {
+
+    Assert.getInstance().notEmpty(samSerialNumberRegex, "samSerialNumberRegex");
+
+    if (this.samSerialNumberRegex != null) {
+      throw new IllegalStateException("SAM serial number regex has already been set.");
+    }
+
+    try {
+      Pattern.compile(samSerialNumberRegex);
+    } catch (PatternSyntaxException exception) {
+      throw new IllegalArgumentException("Invalid regular expression: " + samSerialNumberRegex);
+    }
+
     this.samSerialNumberRegex = samSerialNumberRegex;
     return this;
   }
@@ -70,6 +94,13 @@ public class SamCardResourceProfileExtensionAdapter
    */
   @Override
   public SamCardResourceProfileExtension setSamUnlockData(String samUnlockData) {
+
+    Assert.getInstance().notEmpty(samUnlockData, "samUnlockData");
+
+    if (!ByteArrayUtil.isValidHexString(samUnlockData)) {
+      throw new IllegalArgumentException("Invalid hexadecimal string.");
+    }
+
     this.samUnlockData = samUnlockData;
     return this;
   }
@@ -88,7 +119,7 @@ public class SamCardResourceProfileExtensionAdapter
 
     CalypsoSamCardSelector calypsoSamCardSelector =
         CalypsoSamCardSelector.builder()
-            .setTargetSamRevision(samRevision)
+            .setSamRevision(samRevision)
             .setSerialNumber(samSerialNumberRegex)
             .setUnlockData(ByteArrayUtil.fromHex(samUnlockData))
             .build();

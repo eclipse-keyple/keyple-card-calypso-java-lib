@@ -771,32 +771,5 @@ public interface PoTransactionService {
        */
       UNDO
     }
-
-    /**
-     * Defines the reading modes of the SV log.
-     *
-     * @since 2.0
-     */
-    public enum LogRead {
-      /** Request only the RELOAD or DEBIT log according to the currently specified operation */
-      SINGLE,
-      /** Request both RELOAD and DEBIT logs */
-      ALL
-    }
-
-    /**
-     * Defines the acceptance modes for negative balances.
-     *
-     * @since 2.0
-     */
-    public enum NegativeBalance {
-      /**
-       * An SV exception will be raised if the attempted debit of the SV would result in a negative
-       * balance.
-       */
-      FORBIDDEN,
-      /** Negative balance is allowed */
-      AUTHORIZED
-    }
   }
 }

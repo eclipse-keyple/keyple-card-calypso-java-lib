@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Keyple Service** Java library contains the core Keyple interfaces and classes.
+The **Keyple Calypso Extension** Java library contains interfaces and classes to manage operations with Calypso card products.
 
 This library **should be import explicitly** by the main application.
 

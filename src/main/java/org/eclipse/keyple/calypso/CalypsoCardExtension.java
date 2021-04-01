@@ -15,7 +15,6 @@ import org.eclipse.keyple.calypso.po.PoCardSelection;
 import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.PoSmartCard;
 import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.Reader;
@@ -35,7 +34,7 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
    * @return A not null reference.
    * @since 2.0
    */
-  PoCardSelection createPoSelection(PoCardSelector poCardSelector);
+  PoCardSelection createPoCardSelection(PoCardSelector poCardSelector);
 
   /**
    * Creates an instance of {@link SamCardResourceProfileExtension} to be provided to the {@link
@@ -47,24 +46,11 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
   SamCardResourceProfileExtension createSamCardResourceProfileExtension();
 
   /**
-   * Gets a builder of {@link PoSecuritySetting} for the provided SAM profile name.
-   *
-   * <p>The SAM profile name must match one of the profiles configured in the {@link
-   * org.eclipse.keyple.core.service.CardResourceService}.
-   *
-   * @param samCardResourceProfileName A SAM card resource profile name as defined in the {@link
-   *     org.eclipse.keyple.core.service.CardResourceService}.
-   * @return A not null reference.
-   * @since 2.0
-   */
-  PoSecuritySettingBuilder getPoSecuritySettingBuilder(String samCardResourceProfileName);
-
-  /**
    * Creates a PO transaction service to handle operations secured with a SAM.
    *
    * <p>The reader and the PO's initial data are those from the selection.<br>
-   * The security settings must match the specific needs of the PO and must have been built with a
-   * {@link PoSecuritySettingBuilder}.
+   * The provided {@link PoSecuritySetting} must match the specific needs of the PO (SAM card
+   * resource profile and other optional settings).
    *
    * @param reader The reader through which the card communicates.
    * @param poSmartCard The initial PO data provided by the selection process.

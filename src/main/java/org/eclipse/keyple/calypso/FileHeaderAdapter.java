@@ -46,7 +46,7 @@ class FileHeaderAdapter implements FileHeader {
 
   /**
    * (package-private)<br>
-   * Builder pattern
+   * CalypsoSamCardSelectorBuilder pattern
    *
    * @since 2.0
    */

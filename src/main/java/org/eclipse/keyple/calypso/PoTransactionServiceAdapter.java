@@ -63,7 +63,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   /** The reader for PO. */
   private final ProxyReader poReader;
   /** The PO security settings used to manage the secure session */
-  private PoSecuritySettingAdapter poSecuritySettings;
+  private PoSecuritySetting poSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current PoSmartCard */
@@ -96,7 +96,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     this(poReader, poSmartCard);
 
-    this.poSecuritySettings = (PoSecuritySettingAdapter) poSecuritySetting;
+    this.poSecuritySettings = (PoSecuritySetting) poSecuritySetting;
 
     samCommandProcessor = new SamCommandProcessor(poSmartCard, poSecuritySetting);
   }
@@ -1450,7 +1450,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       throw new CalypsoPoTransactionIllegalStateException(
           "Stored Value is not available for this PO.");
     }
-    if (SvSettings.LogRead.ALL.equals(poSecuritySettings.getSvGetLogReadMode())
+    if (poSecuritySettings.isLoadAndDebitSvLogRequired()
         && (calypsoPoSmartCard.getRevision() != PoRevision.REV3_2)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 PO add two SvGet commands (for RELOAD then for DEBIT).
@@ -1537,7 +1537,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private void prepareSvDebitPriv(int amount, byte[] date, byte[] time)
       throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
-    if (SvSettings.NegativeBalance.FORBIDDEN.equals(poSecuritySettings.getSvNegativeBalance())
+    if (!poSecuritySettings.isSvNegativeBalanceAllowed()
         && (calypsoPoSmartCard.getSvBalance() - amount) < 0) {
       throw new CalypsoPoTransactionIllegalStateException("Negative balances not allowed.");
     }

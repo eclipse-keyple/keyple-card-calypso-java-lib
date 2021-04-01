@@ -46,7 +46,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
 
   /**
    * (package-private)<br>
-   * Builder pattern
+   * CalypsoSamCardSelectorBuilder pattern
    *
    * @since 2.0
    */

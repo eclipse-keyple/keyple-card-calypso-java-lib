@@ -22,58 +22,27 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelector;
  * @since 2.0
  */
 final class CalypsoSamCardSelector extends CardSelector {
+
   private final SamRevision targetSamRevision;
   private final byte[] unlockData;
 
   /** Private constructor */
-  private CalypsoSamCardSelector(Builder builder) {
-    String atrRegex;
-    String snRegex;
-    /* check if serialNumber is defined */
-    if (builder.serialNumber == null || builder.serialNumber.isEmpty()) {
-      /* match all serial numbers */
-      snRegex = ".{8}";
-    } else {
-      /* match the provided serial number (could be a regex substring) */
-      snRegex = builder.serialNumber;
-    }
-    targetSamRevision = builder.targetSamRevision;
-    unlockData = builder.unlockData;
-    /*
-     * build the final Atr regex according to the SAM subtype and serial number if any.
-     *
-     * The header is starting with 3B, its total length is 4 or 6 bytes (8 or 10 hex digits)
-     */
-    if (targetSamRevision != null) {
-      switch (targetSamRevision) {
-        case C1:
-        case S1D:
-        case S1E:
-          atrRegex =
-              "3B(.{6}|.{10})805A..80"
-                  + targetSamRevision.getApplicationTypeMask()
-                  + "20.{4}"
-                  + snRegex
-                  + "829000";
-          break;
-        default:
-          throw new IllegalArgumentException("Unknown SAM subtype.");
-      }
-    } else {
-      /* match any ATR */
-      atrRegex = ".*";
-    }
-    this.getAtrFilter().setAtrRegex(atrRegex);
+  private CalypsoSamCardSelector(CalypsoSamCardSelectorBuilder builder) {
+    setAtrFilter(new AtrFilter(builder.atrRegex));
+    this.targetSamRevision = builder.targetSamRevision;
+    this.unlockData = builder.unlockData;
   }
 
   /**
-   * Builder of {@link CalypsoSamCardSelector}
+   * CalypsoSamCardSelectorBuilder of {@link CalypsoSamCardSelector}
    *
    * @since 2.0
    */
-  public static final class Builder {
+  public static final class CalypsoSamCardSelectorBuilder {
+
     private SamRevision targetSamRevision;
     private String serialNumber;
+    String atrRegex;
     private byte[] unlockData;
 
     /**
@@ -81,7 +50,7 @@ final class CalypsoSamCardSelector extends CardSelector {
      *
      * @since 2.0
      */
-    public Builder() {
+    public CalypsoSamCardSelectorBuilder() {
       super();
     }
 
@@ -92,7 +61,7 @@ final class CalypsoSamCardSelector extends CardSelector {
      * @return the builder instance
      * @since 2.0
      */
-    public Builder setTargetSamRevision(SamRevision targetSamRevision) {
+    public CalypsoSamCardSelectorBuilder setSamRevision(SamRevision targetSamRevision) {
       this.targetSamRevision = targetSamRevision;
       return this;
     }
@@ -104,7 +73,7 @@ final class CalypsoSamCardSelector extends CardSelector {
      * @return the builder instance
      * @since 2.0
      */
-    public Builder setSerialNumber(String serialNumber) {
+    public CalypsoSamCardSelectorBuilder setSerialNumber(String serialNumber) {
       this.serialNumber = serialNumber;
       return this;
     }
@@ -117,7 +86,7 @@ final class CalypsoSamCardSelector extends CardSelector {
      * @throws IllegalArgumentException if the provided buffer size is not 8 or 16
      * @since 2.0
      */
-    public Builder setUnlockData(byte[] unlockData) {
+    public CalypsoSamCardSelectorBuilder setUnlockData(byte[] unlockData) {
       if (unlockData == null || (unlockData.length != 8 && unlockData.length != 16)) {
         throw new IllegalArgumentException("Bad unlock data length. Should be 8 or 16 bytes.");
       }
@@ -132,6 +101,39 @@ final class CalypsoSamCardSelector extends CardSelector {
      * @since 2.0
      */
     public CalypsoSamCardSelector build() {
+      String snRegex;
+      /* check if serialNumber is defined */
+      if (serialNumber == null || serialNumber.isEmpty()) {
+        /* match all serial numbers */
+        snRegex = ".{8}";
+      } else {
+        /* match the provided serial number (could be a regex substring) */
+        snRegex = serialNumber;
+      }
+      /*
+       * build the final Atr regex according to the SAM subtype and serial number if any.
+       *
+       * The header is starting with 3B, its total length is 4 or 6 bytes (8 or 10 hex digits)
+       */
+      if (targetSamRevision != null) {
+        switch (targetSamRevision) {
+          case C1:
+          case S1D:
+          case S1E:
+            this.atrRegex =
+                "3B(.{6}|.{10})805A..80"
+                    + targetSamRevision.getApplicationTypeMask()
+                    + "20.{4}"
+                    + snRegex
+                    + "829000";
+            break;
+          default:
+            throw new IllegalArgumentException("Unknown SAM subtype.");
+        }
+      } else {
+        /* match any ATR */
+        this.atrRegex = ".*";
+      }
       return new CalypsoSamCardSelector(this);
     }
   }
@@ -142,14 +144,14 @@ final class CalypsoSamCardSelector extends CardSelector {
    * @return a new builder instance
    * @since 2.0
    */
-  public static Builder builder() {
-    return new Builder();
+  public static CalypsoSamCardSelectorBuilder builder() {
+    return new CalypsoSamCardSelectorBuilder();
   }
 
   /**
-   * Gets the targeted SAM revision
+   * Gets the specified SAM revision.
    *
-   * @return the target SAM revision value
+   * @return null if no SAM revision has been set.
    * @since 2.0
    */
   public SamRevision getTargetSamRevision() {

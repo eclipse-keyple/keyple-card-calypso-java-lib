@@ -16,11 +16,13 @@ import java.util.Arrays;
 import java.util.List;
 import org.eclipse.keyple.calypso.po.PoRevision;
 import org.eclipse.keyple.calypso.po.PoSmartCard;
-import org.eclipse.keyple.calypso.sam.SamResource;
+import org.eclipse.keyple.calypso.sam.SamRevision;
+import org.eclipse.keyple.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.*;
+import org.eclipse.keyple.core.service.CardResource;
+import org.eclipse.keyple.core.service.CardResourceServiceProvider;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,19 +49,12 @@ class SamCommandProcessor {
   private static final byte SIGNATURE_LENGTH_REV_INF_32 = (byte) 0x04;
   private static final byte SIGNATURE_LENGTH_REV32 = (byte) 0x08;
 
-  /** The SAM resource */
-  private final SamResource samResource;
-  /** The Proxy reader to communicate with the SAM */
   private final ProxyReader samReader;
-  /** The security settings. */
-  private final PoSecuritySettingAdapter poSecuritySettings;
-  /*
-   * The digest data cache stores all PO data to be send to SAM during a Secure Session. The 1st
-   * buffer is the data buffer to be provided with Digest Init. The following buffers are PO
-   * command/response pairs
-   */
+  private final PoSecuritySetting poSecuritySettings;
   private static final List<byte[]> poDigestDataCache = new ArrayList<byte[]>();
   private final PoSmartCard poSmartCard;
+  private final byte[] samSerialNumber;
+  private final SamRevision samRevision;
   private boolean sessionEncryption;
   private boolean verificationMode;
   private byte workKeyRecordNumber;
@@ -78,9 +73,15 @@ class SamCommandProcessor {
    */
   SamCommandProcessor(PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
     this.poSmartCard = poSmartCard;
-    this.poSecuritySettings = (PoSecuritySettingAdapter) poSecuritySetting;
-    this.samResource = this.poSecuritySettings.getSamResource();
-    samReader = (ProxyReader) this.samResource.getReader();
+    this.poSecuritySettings = poSecuritySetting;
+    CardResource samResource =
+        CardResourceServiceProvider.getService()
+            .getCardResources(poSecuritySettings.getCardResourceProfileName())
+            .get(0);
+    SamSmartCard samSmartCard = (SamSmartCard) samResource.getSmartCard();
+    samRevision = samSmartCard.getSamRevision();
+    samSerialNumber = samSmartCard.getSerialNumber();
+    samReader = (ProxyReader) samResource.getReader();
   }
 
   /**
@@ -111,8 +112,7 @@ class SamCommandProcessor {
       // build the SAM Select Diversifier command to provide the SAM with the PO S/N
       AbstractApduCommandBuilder selectDiversifier =
           new SamSelectDiversifierBuilder(
-              samResource.getSmartCard().getSamRevision(),
-              poSmartCard.getApplicationSerialNumberBytes());
+              samRevision, poSmartCard.getApplicationSerialNumberBytes());
 
       apduRequests.add(selectDiversifier.getApduRequest());
 
@@ -127,7 +127,7 @@ class SamCommandProcessor {
             : CHALLENGE_LENGTH_REV_INF_32;
 
     AbstractSamCommandBuilder<? extends AbstractSamResponseParser> samGetChallengeBuilder =
-        new SamGetChallengeBuilder(samResource.getSmartCard().getSamRevision(), challengeLength);
+        new SamGetChallengeBuilder(samRevision, challengeLength);
 
     apduRequests.add(samGetChallengeBuilder.getApduRequest());
 
@@ -225,7 +225,7 @@ class SamCommandProcessor {
       logger.debug(
           "initialize: POREVISION = {}, SAMREVISION = {}, SESSIONENCRYPTION = {}, VERIFICATIONMODE = {}",
           poSmartCard.getRevision(),
-          samResource.getSmartCard().getSamRevision(),
+          samRevision,
           sessionEncryption,
           verificationMode);
       logger.debug(
@@ -338,7 +338,7 @@ class SamCommandProcessor {
       // only couples of PO request/response
       samCommands.add(
           new SamDigestInitBuilder(
-              samResource.getSmartCard().getSamRevision(),
+              samRevision,
               verificationMode,
               poSmartCard.isConfidentialSessionModeSupported(),
               workKeyRecordNumber,
@@ -353,10 +353,7 @@ class SamCommandProcessor {
     // Build and append Digest Update commands
     for (int i = 0; i < poDigestDataCache.size(); i++) {
       samCommands.add(
-          new SamDigestUpdateBuilder(
-              samResource.getSmartCard().getSamRevision(),
-              sessionEncryption,
-              poDigestDataCache.get(i)));
+          new SamDigestUpdateBuilder(samRevision, sessionEncryption, poDigestDataCache.get(i)));
     }
 
     // clears cached commands once they have been processed
@@ -366,7 +363,7 @@ class SamCommandProcessor {
       // Build and append Digest Close command
       samCommands.add(
           (new SamDigestCloseBuilder(
-              samResource.getSmartCard().getSamRevision(),
+              samRevision,
               poSmartCard.getRevision().equals(PoRevision.REV3_2)
                   ? SIGNATURE_LENGTH_REV32
                   : SIGNATURE_LENGTH_REV_INF_32)));
@@ -451,8 +448,7 @@ class SamCommandProcessor {
     // Check the PO signature part with the SAM
     // Build and send SAM Digest Authenticate command
     SamDigestAuthenticateBuilder samDigestAuthenticateBuilder =
-        new SamDigestAuthenticateBuilder(
-            samResource.getSmartCard().getSamRevision(), poSignatureLo);
+        new SamDigestAuthenticateBuilder(samRevision, poSignatureLo);
 
     List<ApduRequest> samApduRequests = new ArrayList<ApduRequest>();
     samApduRequests.add(samDigestAuthenticateBuilder.getApduRequest());
@@ -525,8 +521,7 @@ class SamCommandProcessor {
       /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
-              samResource.getSmartCard().getSamRevision(),
-              poSmartCard.getApplicationSerialNumberBytes()));
+              samRevision, poSmartCard.getApplicationSerialNumberBytes()));
       isDiversificationDone = true;
     }
 
@@ -535,14 +530,12 @@ class SamCommandProcessor {
       samCommands.addAll(getPendingSamCommands(false));
     }
 
-    samCommands.add(
-        new SamGiveRandomBuilder(samResource.getSmartCard().getSamRevision(), poChallenge));
+    samCommands.add(new SamGiveRandomBuilder(samRevision, poChallenge));
 
     int cardCipherPinCmdIndex = samCommands.size();
 
     SamCardCipherPinBuilder samCardCipherPinBuilder =
-        new SamCardCipherPinBuilder(
-            samResource.getSmartCard().getSamRevision(), pinCipheringKey, currentPin, newPin);
+        new SamCardCipherPinBuilder(samRevision, pinCipheringKey, currentPin, newPin);
 
     samCommands.add(samCardCipherPinBuilder);
 
@@ -597,8 +590,7 @@ class SamCommandProcessor {
       /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
-              samResource.getSmartCard().getSamRevision(),
-              poSmartCard.getApplicationSerialNumberBytes()));
+              samRevision, poSmartCard.getApplicationSerialNumberBytes()));
       isDiversificationDone = true;
     }
 
@@ -627,17 +619,17 @@ class SamCommandProcessor {
 
     svPrepareOperationRespPars.checkStatus();
 
-    byte[] samId = samResource.getSmartCard().getSerialNumber();
     byte[] prepareOperationData = svPrepareOperationRespPars.getApduResponse().getDataOut();
 
-    byte[] operationComplementaryData = new byte[samId.length + prepareOperationData.length];
+    byte[] operationComplementaryData =
+        new byte[samSerialNumber.length + prepareOperationData.length];
 
-    System.arraycopy(samId, 0, operationComplementaryData, 0, samId.length);
+    System.arraycopy(samSerialNumber, 0, operationComplementaryData, 0, samSerialNumber.length);
     System.arraycopy(
         prepareOperationData,
         0,
         operationComplementaryData,
-        samId.length,
+        samSerialNumber.length,
         prepareOperationData.length);
 
     return operationComplementaryData;
@@ -667,10 +659,7 @@ class SamCommandProcessor {
     // get the complementary data from the SAM
     SamSvPrepareLoadBuilder samSvPrepareLoadBuilder =
         new SamSvPrepareLoadBuilder(
-            samResource.getSmartCard().getSamRevision(),
-            svGetHeader,
-            svGetData,
-            poSvReloadBuilder.getSvReloadData());
+            samRevision, svGetHeader, svGetData, poSvReloadBuilder.getSvReloadData());
 
     return getSvComplementaryData(samSvPrepareLoadBuilder);
   }
@@ -698,10 +687,7 @@ class SamCommandProcessor {
     // get the complementary data from the SAM
     SamSvPrepareDebitBuilder samSvPrepareDebitBuilder =
         new SamSvPrepareDebitBuilder(
-            samResource.getSmartCard().getSamRevision(),
-            svGetHeader,
-            svGetData,
-            poSvDebitBuilder.getSvDebitData());
+            samRevision, svGetHeader, svGetData, poSvDebitBuilder.getSvDebitData());
 
     return getSvComplementaryData(samSvPrepareDebitBuilder);
   }
@@ -729,10 +715,7 @@ class SamCommandProcessor {
     // get the complementary data from the SAM
     SamSvPrepareUndebitBuilder samSvPrepareUndebitBuilder =
         new SamSvPrepareUndebitBuilder(
-            samResource.getSmartCard().getSamRevision(),
-            svGetHeader,
-            svGetData,
-            poSvUndebitBuilder.getSvUndebitData());
+            samRevision, svGetHeader, svGetData, poSvUndebitBuilder.getSvUndebitData());
 
     return getSvComplementaryData(samSvPrepareUndebitBuilder);
   }
@@ -754,7 +737,7 @@ class SamCommandProcessor {
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
     SamSvCheckBuilder samSvCheckBuilder =
-        new SamSvCheckBuilder(samResource.getSmartCard().getSamRevision(), svOperationResponseData);
+        new SamSvCheckBuilder(samRevision, svOperationResponseData);
     samCommands.add(samSvCheckBuilder);
 
     // build a SAM CardRequest

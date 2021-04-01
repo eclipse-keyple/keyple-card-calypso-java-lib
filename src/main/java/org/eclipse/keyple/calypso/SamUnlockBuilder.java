@@ -26,7 +26,7 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
   private static final SamCommand command = SamCommand.UNLOCK;
 
   /**
-   * Builder constructor
+   * CalypsoSamCardSelectorBuilder constructor
    *
    * @param revision the SAM revision.
    * @param unlockData the unlock data.
