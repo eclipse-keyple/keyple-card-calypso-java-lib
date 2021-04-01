@@ -13,6 +13,7 @@ package org.eclipse.keyple.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
@@ -28,37 +29,24 @@ import org.eclipse.keyple.core.util.Assert;
  */
 class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
 
-  private final CalypsoSamCardSelector calypsoSamCardSelector;
+  private final CardSelector samCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
       commandBuilders;
 
   /**
    * (package-private)<br>
-   * Creates a {@link SamCardSelection}.<br>
-   * Prepares the unlock command if unlock data are defined in the provided {@link
-   * CalypsoSamCardSelector}.
+   * Creates a {@link SamCardSelection}.
    *
-   * @param calypsoSamCardSelector The SAM selector.
+   * @param samCardSelector The SAM selector.
    * @since 2.0
    */
-  SamCardSelectionAdapter(CalypsoSamCardSelector calypsoSamCardSelector) {
+  SamCardSelectionAdapter(CardSelector samCardSelector) {
 
-    Assert.getInstance().notNull(calypsoSamCardSelector, "poCardSelector");
+    Assert.getInstance().notNull(samCardSelector, "samCardSelector");
 
-    this.calypsoSamCardSelector = calypsoSamCardSelector;
+    this.samCardSelector = samCardSelector;
     this.commandBuilders =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
-
-    // TODO check if it is the right place to do this
-    byte[] unlockData = calypsoSamCardSelector.getUnlockData();
-    if (unlockData != null) {
-      // a unlock data value has been set, let's add the unlock command to be executed
-      // following the selection
-      commandBuilders.add(
-          new SamUnlockBuilder(
-              calypsoSamCardSelector.getTargetSamRevision(),
-              calypsoSamCardSelector.getUnlockData()));
-    }
   }
 
   /**
@@ -75,7 +63,7 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
     }
     // TODO check the boolean use in every creation of CardRequest
     return new CardSelectionRequest(
-        calypsoSamCardSelector, new CardRequest(cardSelectionApduRequests, false));
+        samCardSelector, new CardRequest(cardSelectionApduRequests, false));
   }
 
   /**
@@ -112,6 +100,22 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
    */
   @Override
   public CardSelector getCardSelector() {
-    return calypsoSamCardSelector;
+    return samCardSelector;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public void prepareUnlock(SamRevision samRevision, byte[] unlockData) {
+
+    Assert.getInstance()
+        .notNull(samRevision, "samRevision")
+        .notNull(unlockData, "unlockData")
+        .isTrue(unlockData.length == 8 || unlockData.length == 16, "length");
+
+    commandBuilders.add(new SamUnlockBuilder(samRevision, unlockData));
   }
 }

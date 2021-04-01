@@ -63,13 +63,13 @@ public interface SamCardResourceProfileExtension extends KeypleCardResourceProfi
   SamCardResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex);
 
   /**
-   * Sets the lock value expected by the SAM to be unlocked.
+   * Sets the lock value expected by the SAM to be unlocked (8 or 16 bytes).
    *
    * <p>This parameter only applies to a regular plugin.
    *
-   * @param samUnlockData An hexadecimal representation of the unlock value.
+   * @param samUnlockData A hexadecimal representation of the 16 or 32 digit long unlock value.
    * @return Next configuration step.
-   * @throws IllegalArgumentException If unlockData is null or malformed.
+   * @throws IllegalArgumentException If unlockData is null, malformed or out of range.
    * @throws IllegalStateException If this parameter has already been set.
    * @since 2.0
    */

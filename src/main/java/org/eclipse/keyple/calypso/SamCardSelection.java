@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
+import org.eclipse.keyple.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.service.selection.spi.CardSelection;
 
 /**
@@ -20,4 +21,20 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelection;
  *
  * @since 2.0
  */
-interface SamCardSelection extends CardSelection {}
+interface SamCardSelection extends CardSelection {
+
+  /**
+   * Prepares an APDU command to be sent to the SAM during the selection process to unlock it.
+   *
+   * <p>The provided unlock data will be sent to the SAM as payload of the UNLOCK APDU command.
+   *
+   * <p>Note that at this stage the SAM is not yet selected, so we can only presume what its version
+   * is.
+   *
+   * @param samRevision The supposed {@link SamRevision}.
+   * @param unlockData A byte array containing the unlock data (8 or 16 bytes).
+   * @throws IllegalArgumentException If one of the provided argument is null or out of range.
+   * @since 2.0
+   */
+  void prepareUnlock(SamRevision samRevision, byte[] unlockData);
+}

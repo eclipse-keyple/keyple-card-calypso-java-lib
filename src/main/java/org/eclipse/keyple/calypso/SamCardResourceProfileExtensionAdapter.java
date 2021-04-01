@@ -22,6 +22,7 @@ import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
+import org.eclipse.keyple.core.service.selection.spi.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
@@ -95,7 +96,13 @@ class SamCardResourceProfileExtensionAdapter
   @Override
   public SamCardResourceProfileExtension setSamUnlockData(String samUnlockData) {
 
-    Assert.getInstance().notEmpty(samUnlockData, "samUnlockData");
+    Assert.getInstance()
+        .notEmpty(samUnlockData, "samUnlockData")
+        .isTrue(samUnlockData.length() == 16 || samUnlockData.length() == 32, "length");
+
+    if (this.samUnlockData != null) {
+      throw new IllegalStateException("The unlock data has already been set.");
+    }
 
     if (!ByteArrayUtil.isValidHexString(samUnlockData)) {
       throw new IllegalArgumentException("Invalid hexadecimal string.");
@@ -103,6 +110,53 @@ class SamCardResourceProfileExtensionAdapter
 
     this.samUnlockData = samUnlockData;
     return this;
+  }
+
+  /**
+   * (private) Build a regular expression to be used as ATR filter in the SAM selection process.
+   *
+   * <p>Both argument are optional and can be null.
+   *
+   * @param samRevision The target SAM revision.
+   * @param samSerialNumberRegex A regular expression matching the SAM serial number.
+   * @return A not empty string containing a regular
+   */
+  private String buildAtrRegex(SamRevision samRevision, String samSerialNumberRegex) {
+    String atrRegex;
+    String snRegex;
+    /* check if serialNumber is defined */
+    if (samSerialNumberRegex == null || samSerialNumberRegex.isEmpty()) {
+      /* match all serial numbers */
+      snRegex = ".{8}";
+    } else {
+      /* match the provided serial number (could be a regex substring) */
+      snRegex = samSerialNumberRegex;
+    }
+    /*
+     * build the final Atr regex according to the SAM subtype and serial number if any.
+     *
+     * The header is starting with 3B, its total length is 4 or 6 bytes (8 or 10 hex digits)
+     */
+    if (samRevision != null) {
+      switch (samRevision) {
+        case C1:
+        case S1D:
+        case S1E:
+          atrRegex =
+              "3B(.{6}|.{10})805A..80"
+                  + samRevision.getApplicationTypeMask()
+                  + "20.{4}"
+                  + snRegex
+                  + "829000";
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown SAM subtype.");
+      }
+    } else {
+      /* match any ATR */
+      atrRegex = ".*";
+    }
+    return atrRegex;
   }
 
   /**
@@ -117,19 +171,21 @@ class SamCardResourceProfileExtensionAdapter
       return null;
     }
 
-    CalypsoSamCardSelector calypsoSamCardSelector =
-        CalypsoSamCardSelector.builder()
-            .setSamRevision(samRevision)
-            .setSerialNumber(samSerialNumberRegex)
-            .setUnlockData(ByteArrayUtil.fromHex(samUnlockData))
-            .build();
+    CardSelector samCardSelector = new CardSelector();
+
+    samCardSelector.setAtrFilter(
+        new CardSelector.AtrFilter(buildAtrRegex(samRevision, samSerialNumberRegex)));
 
     CardSelectionService samSelectionService = CardSelectionServiceFactory.getService();
 
-    SamCardSelectionAdapter calypsoSamCardSelectionAdapter =
-        new SamCardSelectionAdapter(calypsoSamCardSelector);
+    SamCardSelection samCardSelection = new SamCardSelectionAdapter(samCardSelector);
 
-    samSelectionService.prepareSelection(calypsoSamCardSelectionAdapter);
+    // prepare the UNLOCK command if unlock data has been defined
+    if (samUnlockData != null) {
+      samCardSelection.prepareUnlock(samRevision, ByteArrayUtil.fromHex(samUnlockData));
+    }
+
+    samSelectionService.prepareSelection(samCardSelection);
 
     CardSelectionResult samCardSelectionResult =
         samSelectionService.processCardSelectionScenario((Reader) reader);
