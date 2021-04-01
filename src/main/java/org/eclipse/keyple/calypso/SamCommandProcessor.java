@@ -548,7 +548,7 @@ class SamCommandProcessor {
     CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
 
     // execute the command
-    CardResponse samCardResponse = null;
+    CardResponse samCardResponse;
     samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     ApduResponse cardCipherPinResponse =
@@ -612,7 +612,7 @@ class SamCommandProcessor {
     CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
 
     // execute the command
-    CardResponse samCardResponse = null;
+    CardResponse samCardResponse;
     samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
 
     ApduResponse svPrepareResponse =

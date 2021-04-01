@@ -116,7 +116,7 @@ final class SamReadKeyParametersBuilder
 
     byte cla = this.defaultRevision.getClassByte();
 
-    byte p2 = 0x00;
+    byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
 
     switch (sourceKeyRef) {
@@ -147,7 +147,7 @@ final class SamReadKeyParametersBuilder
 
     byte cla = this.defaultRevision.getClassByte();
 
-    byte p2 = 0x00;
+    byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
 
     switch (navControl) {

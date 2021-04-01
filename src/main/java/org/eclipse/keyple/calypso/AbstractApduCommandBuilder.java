@@ -12,8 +12,6 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -31,8 +29,6 @@ import org.slf4j.LoggerFactory;
  * @since 2.0
  */
 abstract class AbstractApduCommandBuilder {
-
-  private static final Logger logger = LoggerFactory.getLogger(AbstractApduCommandBuilder.class);
 
   /**
    * The reference field {@link CardCommand} is used to find the type of command concerned when
@@ -104,7 +100,9 @@ abstract class AbstractApduCommandBuilder {
    *
    * @param apduRequest The APDU request.
    */
-  void setApduRequest(ApduRequest apduRequest) {}
+  void setApduRequest(ApduRequest apduRequest) {
+    this.apduRequest = apduRequest;
+  }
 
   /**
    * Gets the {@link ApduRequest}.

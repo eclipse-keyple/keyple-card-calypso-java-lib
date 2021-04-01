@@ -648,7 +648,7 @@ public interface PoTransactionService {
   /**
    * The PO Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
    */
-  public enum SessionState {
+  enum SessionState {
     /** Initial state of a PO transaction. The PO must have been previously selected. */
     SESSION_UNINITIALIZED,
     /** The secure session is active. */
@@ -662,7 +662,7 @@ public interface PoTransactionService {
    *
    * @since 2.0
    */
-  public enum PinTransmissionMode {
+  enum PinTransmissionMode {
     PLAIN,
     ENCRYPTED
   }
@@ -672,7 +672,7 @@ public interface PoTransactionService {
    *
    * @since 2.0
    */
-  public static class SessionSetting {
+  class SessionSetting {
     /**
      * The modification mode indicates whether the secure session can be closed and reopened to
      * manage the limitation of the PO buffer memory.
@@ -741,7 +741,7 @@ public interface PoTransactionService {
    *
    * @since 2.0
    */
-  public static class SvSettings {
+  class SvSettings {
     /**
      * Defines the type of operation to be performed
      *
@@ -751,7 +751,7 @@ public interface PoTransactionService {
       /** Increase the balance of the stored value */
       RELOAD,
       /** Decrease the balance of the stored value */
-      DEBIT;
+      DEBIT
     }
 
     /**

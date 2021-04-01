@@ -106,7 +106,7 @@ public interface FileHeader {
    *
    * @since 2.0
    */
-  public enum FileType {
+  enum FileType {
     /**
      * A Linear EF is made of 1 to several records.
      *
@@ -141,6 +141,6 @@ public interface FileHeader {
      *
      * @since 2.0
      */
-    SIMULATED_COUNTERS;
+    SIMULATED_COUNTERS
   }
 }

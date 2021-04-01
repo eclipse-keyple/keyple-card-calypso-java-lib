@@ -96,7 +96,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     this(poReader, poSmartCard);
 
-    this.poSecuritySettings = (PoSecuritySetting) poSecuritySetting;
+    this.poSecuritySettings = poSecuritySetting;
 
     samCommandProcessor = new SamCommandProcessor(poSmartCard, poSecuritySetting);
   }

@@ -42,7 +42,7 @@ final class PoOpenSession24Parser extends AbstractPoOpenSessionParser {
   public static SecureSession createSecureSession(byte[] apduResponseData) {
     boolean previousSessionRatified;
 
-    /**
+    /*
      * In rev 2.4 mode, the response to the Open Secure Session command is as follows:
      *
      * <p><code>KK CC CC CC CC [RR RR] [NN..NN]</code>
