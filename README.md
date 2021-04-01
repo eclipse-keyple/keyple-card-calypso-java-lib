@@ -1,4 +1,4 @@
-# Keyple Java Service
+# Keyple Java Calypso Extension
 
 ## Overview
 
