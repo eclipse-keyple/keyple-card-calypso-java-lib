@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
-import org.eclipse.keyple.core.service.selection.spi.CardSelector;
+import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
@@ -171,10 +171,10 @@ class SamCardResourceProfileExtensionAdapter
       return null;
     }
 
-    CardSelector samCardSelector = new CardSelector();
-
-    samCardSelector.setAtrFilter(
-        new CardSelector.AtrFilter(buildAtrRegex(samRevision, samSerialNumberRegex)));
+    CardSelector samCardSelector =
+        CardSelector.builder()
+            .filterByAtr(buildAtrRegex(samRevision, samSerialNumberRegex))
+            .build();
 
     CardSelectionService samSelectionService = CardSelectionServiceFactory.getService();
 

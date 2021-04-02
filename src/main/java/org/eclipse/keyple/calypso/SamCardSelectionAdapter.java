@@ -18,7 +18,7 @@ import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesExce
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.service.selection.spi.CardSelector;
+import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 
 /**

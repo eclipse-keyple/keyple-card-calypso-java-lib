@@ -14,14 +14,13 @@ package org.eclipse.keyple.calypso;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.keyple.calypso.po.PoCardSelection;
-import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.SelectFileControl;
 import org.eclipse.keyple.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.calypso.transaction.CalypsoPoAnomalyException;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.service.selection.spi.CardSelector;
+import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +35,10 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
 
   private static final Logger logger = LoggerFactory.getLogger(PoCardSelectionAdapter.class);
 
+  private static final int SW_PO_INVALIDATED = 0x6283;
+
   private final List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> commandBuilders;
-  private final PoCardSelector poCardSelector;
+  private final CardSelector poCardSelector;
   private final PoClass poClass;
 
   /**
@@ -48,15 +49,20 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    * @throws IllegalArgumentException If poCardSelector is null.
    */
-  PoCardSelectionAdapter(PoCardSelector poCardSelector) {
+  PoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedPo) {
 
     Assert.getInstance().notNull(poCardSelector, "poCardSelector");
 
     this.poCardSelector = poCardSelector;
+
+    if (acceptInvalidatedPo) {
+      this.poCardSelector.addSuccessfulStatusCode(SW_PO_INVALIDATED);
+    }
+
     this.commandBuilders =
         new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
     // deduces the class of the PO according to the type of selection
-    if (poCardSelector.getAidSelector() == null) {
+    if (poCardSelector.getAid() == null) {
       poClass = PoClass.LEGACY;
     } else {
       poClass = PoClass.ISO;

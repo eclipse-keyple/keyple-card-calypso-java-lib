@@ -12,13 +12,13 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.po.PoCardSelection;
-import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.PoSmartCard;
 import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.Reader;
+import org.eclipse.keyple.core.service.selection.CardSelector;
 
 /**
  * Card extension dedicated to the management of Calypso cards.
@@ -28,14 +28,15 @@ import org.eclipse.keyple.core.service.Reader;
 public interface CalypsoCardExtension extends KeypleCardExtension {
 
   /**
-   * Creates an instance of {@link PoCardSelection} that can be extended later with specific
+   * Creates an instance of {@link PoCardSelection} that can be supplemented later with specific
    * commands.
    *
    * @param poCardSelector A PO card selector.
+   * @param acceptInvalidatedPo true if invalidated PO must be accepted, false if not.
    * @return A not null reference.
    * @since 2.0
    */
-  PoCardSelection createPoCardSelection(PoCardSelector poCardSelector);
+  PoCardSelection createPoCardSelection(CardSelector poCardSelector, boolean acceptInvalidatedPo);
 
   /**
    * Creates an instance of {@link SamCardResourceProfileExtension} to be provided to the {@link

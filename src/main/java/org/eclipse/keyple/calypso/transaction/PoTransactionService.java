@@ -48,7 +48,7 @@ public interface PoTransactionService {
    * <p>It is the starting point of the sequence:
    *
    * <ul>
-   *   <li>{@link #processOpening(SessionSetting.AccessLevel)}
+   *   <li>{@link #processOpening(SessionAccessLevel)}
    *   <li>[{@link #processPoCommands()}]
    *   <li>[...]
    *   <li>[{@link #processPoCommands()}]
@@ -64,20 +64,20 @@ public interface PoTransactionService {
    * constructor used must be the one expecting a reference to a valid {@link PoSecuritySetting}
    * object, otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
    *
-   * <p>The secure session is opened with the {@link SessionSetting.AccessLevel} passed as an
-   * argument depending on whether it is a personalization, reload or debit transaction profile..
+   * <p>The secure session is opened with the {@link SessionAccessLevel} passed as an argument
+   * depending on whether it is a personalization, reload or debit transaction profile..
    *
    * <p>The possible overflow of the internal session buffer of the PO is managed in two ways
    * depending on the setting chosen in {@link PoSecuritySetting}.
    *
    * <ul>
-   *   <li>If the session was opened with the {@link SessionSetting.ModificationMode#ATOMIC} mode
-   *       and the previously prepared commands will cause the buffer to be exceeded, then an {@link
+   *   <li>If the session was opened with the default atomic mode and the previously prepared
+   *       commands will cause the buffer to be exceeded, then an {@link
    *       CalypsoAtomicTransactionException} is raised and no transmission to the PO is made. <br>
-   *   <li>If the session was opened with the {@link SessionSetting.ModificationMode#MULTIPLE} mode
-   *       and the buffer is to be exceeded then a split into several secure sessions is performed
-   *       automatically. However, regardless of the number of intermediate sessions performed, a
-   *       secure session is opened at the end of the execution of this method.
+   *   <li>If the session was opened with the multiple session mode and the buffer is to be exceeded
+   *       then a split into several secure sessions is performed automatically. However, regardless
+   *       of the number of intermediate sessions performed, a secure session is opened at the end
+   *       of the execution of this method.
    * </ul>
    *
    * <p>Be aware that in the "MULTIPLE" case we lose the benefit of the atomicity of the secure
@@ -121,7 +121,7 @@ public interface PoTransactionService {
    * <p><i>Note: to understand in detail how the secure session works please refer to the PO
    * specification documents.</i>
    *
-   * @param accessLevel An {@link SessionSetting.AccessLevel} enum entry.
+   * @param sessionAccessLevel An {@link SessionAccessLevel} enum entry.
    * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySetting} is available
    * @throws CalypsoAtomicTransactionException if the PO session buffer were to overflow
    * @throws CalypsoUnauthorizedKvcException if the card KVC is not authorized
@@ -129,7 +129,7 @@ public interface PoTransactionService {
    *     errors)
    * @since 2.0
    */
-  void processOpening(SessionSetting.AccessLevel accessLevel);
+  void processOpening(SessionAccessLevel sessionAccessLevel);
 
   /**
    * Process all previously prepared PO commands outside or inside a Secure Session.
@@ -146,9 +146,9 @@ public interface PoTransactionService {
    *   <li>If no secure session is opened, the PO channel is closed depending on whether or not
    *       prepareReleasePoChannel has been called.
    *   <li>The PO session buffer overflows are managed in the same way as in {@link
-   *       #processOpening(SessionSetting.AccessLevel)}. For example, when the {@link
-   *       SessionSetting.ModificationMode#MULTIPLE} mode is chosen, the commands are separated in
-   *       as many sessions as necessary to respect the capacity of the PO buffer.
+   *       #processOpening(SessionAccessLevel)}. For example, when the multiple session mode is
+   *       enabled, the commands are separated in as many sessions as necessary to respect the
+   *       capacity of the PO buffer.
    * </ul>
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
@@ -159,7 +159,7 @@ public interface PoTransactionService {
 
   /**
    * Terminates the Secure Session sequence started with {@link
-   * #processOpening(SessionSetting.AccessLevel)}.
+   * #processOpening(SessionAccessLevel)}.
    *
    * <p><b>Nominal case</b>
    *
@@ -658,92 +658,44 @@ public interface PoTransactionService {
   }
 
   /**
-   * Defines the PIN transmission modes: plain or encrypted.
+   * The PO Transaction Access Level: personalization, loading or debiting.
    *
    * @since 2.0
    */
-  enum PinTransmissionMode {
-    PLAIN,
-    ENCRYPTED
-  }
+  public enum SessionAccessLevel {
 
-  /**
-   * Contains the Calypso Secure Session set of parameters.
-   *
-   * @since 2.0
-   */
-  class SessionSetting {
-    /**
-     * The modification mode indicates whether the secure session can be closed and reopened to
-     * manage the limitation of the PO buffer memory.
-     *
-     * @since 2.0
-     */
-    public enum ModificationMode {
-      /**
-       * The secure session is atomic. The consistency of the content of the resulting PO memory is
-       * guaranteed.
-       */
-      ATOMIC,
-      /**
-       * Several secure sessions can be chained (to manage the writing of large amounts of data).
-       * The resulting content of the PO's memory can be inconsistent if the PO is removed during
-       * the process.
-       */
-      MULTIPLE
+    /** Session Access Level used for personalization purposes. */
+    SESSION_LVL_PERSO("perso", (byte) 0x01),
+    /** Session Access Level used for reloading purposes. */
+    SESSION_LVL_LOAD("load", (byte) 0x02),
+    /** Session Access Level used for validating and debiting purposes. */
+    SESSION_LVL_DEBIT("debit", (byte) 0x03);
+
+    private final String name;
+    private final byte sessionKey;
+
+    SessionAccessLevel(String name, byte sessionKey) {
+      this.name = name;
+      this.sessionKey = sessionKey;
     }
 
-    /**
-     * The PO Transaction Access Level: personalization, loading or debiting.
-     *
-     * @since 2.0
-     */
-    public enum AccessLevel {
-
-      /** Session Access Level used for personalization purposes. */
-      SESSION_LVL_PERSO("perso", (byte) 0x01),
-      /** Session Access Level used for reloading purposes. */
-      SESSION_LVL_LOAD("load", (byte) 0x02),
-      /** Session Access Level used for validating and debiting purposes. */
-      SESSION_LVL_DEBIT("debit", (byte) 0x03);
-
-      private final String name;
-      private final byte sessionKey;
-
-      AccessLevel(String name, byte sessionKey) {
-        this.name = name;
-        this.sessionKey = sessionKey;
-      }
-
-      public String getName() {
-        return name;
-      }
-
-      public byte getSessionKey() {
-        return sessionKey;
-      }
+    public String getName() {
+      return name;
     }
 
-    /**
-     * The ratification mode defines the behavior of processClosing regarding the ratification
-     * process.
-     *
-     * @since 2.0
-     */
-    public enum RatificationMode {
-      CLOSE_RATIFIED,
-      CLOSE_NOT_RATIFIED
+    public byte getSessionKey() {
+      return sessionKey;
     }
   }
 
   /**
-   * Defines the Stored Value transactions parameters
+   * Defines the Stored Value transactions parameters.
    *
    * @since 2.0
    */
   class SvSettings {
     /**
-     * Defines the type of operation to be performed
+     * Defines the type of Stored Value operation to be performed.
      *
      * @since 2.0
      */
@@ -755,7 +707,7 @@ public interface PoTransactionService {
     }
 
     /**
-     * Defines the type of action.
+     * Defines the type Stored Value of action.
      *
      * @since 2.0
      */

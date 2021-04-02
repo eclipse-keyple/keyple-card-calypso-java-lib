@@ -12,7 +12,6 @@
 package org.eclipse.keyple.calypso;
 
 import org.eclipse.keyple.calypso.po.PoCardSelection;
-import org.eclipse.keyple.calypso.po.PoCardSelector;
 import org.eclipse.keyple.calypso.po.PoSmartCard;
 import org.eclipse.keyple.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.calypso.transaction.PoSecuritySetting;
@@ -22,6 +21,7 @@ import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.ServiceApiProperties;
+import org.eclipse.keyple.core.service.selection.CardSelector;
 
 /**
  * (package-private)<br>
@@ -85,8 +85,9 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    * @since 2.0
    */
   @Override
-  public PoCardSelection createPoCardSelection(PoCardSelector poCardSelector) {
-    return new PoCardSelectionAdapter(poCardSelector);
+  public PoCardSelection createPoCardSelection(
+      CardSelector poCardSelector, boolean acceptInvalidatedPo) {
+    return new PoCardSelectionAdapter(poCardSelector, acceptInvalidatedPo);
   }
 
   @Override

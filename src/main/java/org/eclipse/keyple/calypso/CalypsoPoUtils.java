@@ -524,22 +524,22 @@ final class CalypsoPoUtils {
         .keyIndexes(keyIndexes)
         .dfStatus(dfStatus)
         .kvc(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_PERSO,
             proprietaryInformation[SEL_KVCS_OFFSET])
         .kvc(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_LOAD,
             proprietaryInformation[SEL_KVCS_OFFSET + 1])
         .kvc(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT,
             proprietaryInformation[SEL_KVCS_OFFSET + 2])
         .kif(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_PERSO,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_PERSO,
             proprietaryInformation[SEL_KIFS_OFFSET])
         .kif(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_LOAD,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_LOAD,
             proprietaryInformation[SEL_KIFS_OFFSET + 1])
         .kif(
-            PoTransactionService.SessionSetting.AccessLevel.SESSION_LVL_DEBIT,
+            PoTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT,
             proprietaryInformation[SEL_KIFS_OFFSET + 2])
         .build();
   }

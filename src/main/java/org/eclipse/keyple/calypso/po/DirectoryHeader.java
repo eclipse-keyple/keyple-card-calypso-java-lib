@@ -59,7 +59,7 @@ public interface DirectoryHeader {
    * @return true if the KIF for the provided level is available
    * @since 2.0
    */
-  boolean isKifAvailable(PoTransactionService.SessionSetting.AccessLevel level);
+  boolean isKifAvailable(PoTransactionService.SessionAccessLevel level);
 
   /**
    * Returns true if the KVC for the provided level is available.
@@ -68,7 +68,7 @@ public interface DirectoryHeader {
    * @return true if the KVC for the provided level is available
    * @since 2.0
    */
-  boolean isKvcAvailable(PoTransactionService.SessionSetting.AccessLevel level);
+  boolean isKvcAvailable(PoTransactionService.SessionAccessLevel level);
 
   /**
    * Gets the KIF associated to the provided session access level.
@@ -79,7 +79,7 @@ public interface DirectoryHeader {
    * @throws NoSuchElementException if KIF is not found.
    * @since 2.0
    */
-  byte getKif(PoTransactionService.SessionSetting.AccessLevel level);
+  byte getKif(PoTransactionService.SessionAccessLevel level);
 
   /**
    * Gets the KVC associated to the provided session access level.
@@ -90,5 +90,5 @@ public interface DirectoryHeader {
    * @throws NoSuchElementException if KVC is not found.
    * @since 2.0
    */
-  byte getKvc(PoTransactionService.SessionSetting.AccessLevel level);
+  byte getKvc(PoTransactionService.SessionAccessLevel level);
 }

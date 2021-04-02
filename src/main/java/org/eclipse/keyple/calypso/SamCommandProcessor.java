@@ -174,14 +174,14 @@ class SamCommandProcessor {
    * <p>If the value provided by the PO is not undetermined, the work KIF is set to this value.
    *
    * @param poKif the KIF value from the PO.
-   * @param accessLevel the session access level.
+   * @param sessionAccessLevel the session access level.
    * @return the work KIF value byte
    */
   private byte determineWorkKif(
-      byte poKif, PoTransactionService.SessionSetting.AccessLevel accessLevel) {
+      byte poKif, PoTransactionService.SessionAccessLevel sessionAccessLevel) {
     byte kif;
     if (poKif == KIF_UNDEFINED) {
-      kif = poSecuritySettings.getSessionDefaultKif(accessLevel);
+      kif = poSecuritySettings.getSessionDefaultKif(sessionAccessLevel);
     } else {
       kif = poKif;
     }
@@ -206,7 +206,7 @@ class SamCommandProcessor {
    * @since 2.0
    */
   void initializeDigester(
-      PoTransactionService.SessionSetting.AccessLevel accessLevel,
+      PoTransactionService.SessionAccessLevel sessionAccessLevel,
       boolean sessionEncryption,
       boolean verificationMode,
       byte poKif,
@@ -217,8 +217,8 @@ class SamCommandProcessor {
     this.verificationMode = verificationMode;
     // TODO check in which case this key number is needed
     // this.workKeyRecordNumber =
-    // poSecuritySettings.getSessionDefaultKeyRecordNumber(accessLevel);
-    this.workKif = determineWorkKif(poKif, accessLevel);
+    // poSecuritySettings.getSessionDefaultKeyRecordNumber(sessionAccessLevel);
+    this.workKif = determineWorkKif(poKif, sessionAccessLevel);
     // TODO handle Rev 1.0 case where KVC is not available
     this.workKvc = poKVC;
 

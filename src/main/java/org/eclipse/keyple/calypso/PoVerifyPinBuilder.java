@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.calypso;
 
-import org.eclipse.keyple.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.slf4j.Logger;
@@ -35,21 +34,21 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
    * Verify the PIN
    *
    * @param poClass indicates which CLA byte should be used for the Apdu.
-   * @param pinTransmissionMode defines the way the PIN code is transmitted: in clear or encrypted.
-   *     form.
+   * @param encryptPinTransmission true if the PIN transmission has to be encrypted.
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of a encrypted.
    *     transmission (@see setCipheredPinData).
    * @since 2.0
    */
-  public PoVerifyPinBuilder(
-      PoClass poClass, PoTransactionService.PinTransmissionMode pinTransmissionMode, byte[] pin) {
+  public PoVerifyPinBuilder(PoClass poClass, boolean encryptPinTransmission, byte[] pin) {
     super(command);
 
+    if (logger.isDebugEnabled()) {
+      this.addSubName(encryptPinTransmission ? "ENCRYPTED" : "PLAIN");
+    }
+
     if (pin == null
-        || (pinTransmissionMode == PoTransactionService.PinTransmissionMode.PLAIN
-            && pin.length != 4)
-        || (pinTransmissionMode == PoTransactionService.PinTransmissionMode.ENCRYPTED
-            && pin.length != 8)) {
+        || (!encryptPinTransmission && pin.length != 4)
+        || (encryptPinTransmission && pin.length != 8)) {
       throw new IllegalArgumentException("The PIN must be 4 bytes long");
     }
 
@@ -59,9 +58,6 @@ final class PoVerifyPinBuilder extends AbstractPoCommandBuilder<PoVerifyPinParse
     byte p2 = (byte) 0x00;
 
     setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, pin, null));
-    if (logger.isDebugEnabled()) {
-      this.addSubName(pinTransmissionMode.toString());
-    }
 
     readCounterOnly = false;
   }

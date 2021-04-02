@@ -71,7 +71,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   /** the type of the notified event. */
   private SessionState sessionState;
   /** The current secure session access level: PERSO, RELOAD, DEBIT */
-  private SessionSetting.AccessLevel currentAccessLevel;
+  private SessionAccessLevel currentSessionAccessLevel;
   /** modifications counter management */
   private int modificationsCounter;
   /** The object for managing PO commands */
@@ -125,14 +125,14 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   /**
    * Open a single Secure Session.
    *
-   * @param accessLevel access level of the session (personalization, load or debit).
+   * @param sessionAccessLevel access level of the session (personalization, load or debit).
    * @param poCommands the po commands inside session.
    * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySetting} is available
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
    */
   private void processAtomicOpening(
-      SessionSetting.AccessLevel accessLevel,
+      SessionAccessLevel sessionAccessLevel,
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands) {
 
     // This method should be called only if no session was previously open
@@ -184,7 +184,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     AbstractPoCommandBuilder<AbstractPoOpenSessionParser> openSessionCmdBuild =
         AbstractPoOpenSessionBuilder.create(
             calypsoPoSmartCard.getRevision(),
-            accessLevel.getSessionKey(),
+            sessionAccessLevel.getSessionKey(),
             sessionTerminalChallenge,
             sfi,
             recordNumber);
@@ -250,7 +250,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // Update) until the session closing. At this moment, all SAM Apdu will be processed at
     // once.
     samCommandProcessor.initializeDigester(
-        accessLevel, false, false, poKif, poKvc, poApduResponses.get(0).getDataOut());
+        sessionAccessLevel, false, false, poKif, poKvc, poApduResponses.get(0).getDataOut());
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
@@ -320,7 +320,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     List<ApduRequest> poApduRequests = getApduRequests(poCommands);
 
     // Create a CardRequest from the ApduRequest list, PO AID as Selector, manage the logical
-    // channel according to the channelControl enum
+    // channel according to the channelControl
     CardRequest poCardRequest = new CardRequest(poApduRequests, false);
 
     // Transmit the commands to the PO
@@ -390,7 +390,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    *
    * @param poModificationCommands a list of commands that can modify the PO memory content.
    * @param poAnticipatedResponses a list of anticipated PO responses to the modification commands.
-   * @param ratificationMode the ratification mode tells if the session is closed ratified or not.
+   * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
+   *     ratification command must be sent.
    * @param channelControl indicates if the card channel of the PO reader must be closed after the.
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
@@ -399,7 +400,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private void processAtomicClosing(
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poModificationCommands,
       List<ApduResponse> poAnticipatedResponses,
-      SessionSetting.RatificationMode ratificationMode,
+      boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
 
     checkSessionIsOpen();
@@ -436,7 +437,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     PoCloseSessionBuilder closeSessionCmdBuild =
         new PoCloseSessionBuilder(
             calypsoPoSmartCard.getPoClass(),
-            SessionSetting.RatificationMode.CLOSE_RATIFIED.equals(ratificationMode),
+            !isRatificationMechanismEnabled,
             sessionTerminalSignature);
 
     poApduRequests.add(closeSessionCmdBuild.getApduRequest());
@@ -446,8 +447,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     // Add the PO Ratification command if any
     boolean ratificationCommandAdded;
-    if (SessionSetting.RatificationMode.CLOSE_RATIFIED.equals(ratificationMode)
-        && ((Reader) poReader).isContactless()) {
+    if (isRatificationMechanismEnabled && ((Reader) poReader).isContactless()) {
       poApduRequests.add(PoRatificationBuilder.getApduRequest(calypsoPoSmartCard.getPoClass()));
       ratificationCommandAdded = true;
     } else {
@@ -565,7 +565,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * from previous reading operations.
    *
    * @param poCommands a list of commands that can modify the PO memory content.
-   * @param ratificationMode the ratification mode tells if the session is closed ratified or not.
+   * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
+   *     ratification command must be sent.
    * @param channelControl indicates if the card channel of the PO reader must be closed after the.
    *     last command
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
@@ -573,10 +574,11 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    */
   private void processAtomicClosing(
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands,
-      SessionSetting.RatificationMode ratificationMode,
+      boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
     List<ApduResponse> poAnticipatedResponses = getAnticipatedResponses(poCommands);
-    processAtomicClosing(poCommands, poAnticipatedResponses, ratificationMode, channelControl);
+    processAtomicClosing(
+        poCommands, poAnticipatedResponses, isRatificationMechanismEnabled, channelControl);
   }
 
   /**
@@ -665,8 +667,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void processOpening(SessionSetting.AccessLevel accessLevel) {
-    currentAccessLevel = accessLevel;
+  public final void processOpening(SessionAccessLevel sessionAccessLevel) {
+    currentSessionAccessLevel = sessionAccessLevel;
 
     // create a sublist of AbstractPoCommandBuilder to be sent atomically
     List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
@@ -684,11 +686,10 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
         if (overflow.get()) {
           // Open the session with the current commands
-          processAtomicOpening(currentAccessLevel, poAtomicCommands);
+          processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
           // Closes the session, resets the modifications buffer counters for the next
-          // round (set the contact mode to avoid the transmission of the ratification)
-          processAtomicClosing(
-              null, SessionSetting.RatificationMode.CLOSE_RATIFIED, ChannelControl.KEEP_OPEN);
+          // round.
+          processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
           resetModificationsBufferCounter();
           // Clear the list and add the command that did not fit in the PO modifications
           // buffer. We also update the usage counter without checking the result.
@@ -706,7 +707,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       }
     }
 
-    processAtomicOpening(currentAccessLevel, poAtomicCommands);
+    processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
 
     // sets the flag indicating that the commands have been executed
     poCommandManager.notifyCommandsProcessed();
@@ -781,12 +782,11 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           // kept all along the process.
           processAtomicPoCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
           // Close the session and reset the modifications buffer counters for the next
-          // round (set the contact mode to avoid the transmission of the ratification)
-          processAtomicClosing(
-              null, SessionSetting.RatificationMode.CLOSE_RATIFIED, ChannelControl.KEEP_OPEN);
+          // round
+          processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
           resetModificationsBufferCounter();
           // We reopen a new session for the remaining commands to be sent
-          processAtomicOpening(currentAccessLevel, null);
+          processAtomicOpening(currentSessionAccessLevel, null);
           // Clear the list and add the command that did not fit in the PO modifications
           // buffer. We also update the usage counter without checking the result.
           poAtomicBuilders.clear();
@@ -853,7 +853,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           // Reopen a session with the same access level if it was previously closed in
           // this current processClosing
           if (sessionPreviouslyClosed) {
-            processAtomicOpening(currentAccessLevel, null);
+            processAtomicOpening(currentSessionAccessLevel, null);
           }
 
           // If at least one non-modifying was prepared, we use processAtomicPoCommands
@@ -862,19 +862,13 @@ class PoTransactionServiceAdapter implements PoTransactionService {
             processAtomicPoCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
             // Clear the list of commands sent
             poAtomicCommands.clear();
-            processAtomicClosing(
-                poAtomicCommands,
-                SessionSetting.RatificationMode.CLOSE_RATIFIED,
-                ChannelControl.KEEP_OPEN);
+            processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
             resetModificationsBufferCounter();
             sessionPreviouslyClosed = true;
             atLeastOneReadCommand = false;
           } else {
             // All commands in the list are 'modifying the PO'
-            processAtomicClosing(
-                poAtomicCommands,
-                SessionSetting.RatificationMode.CLOSE_RATIFIED,
-                ChannelControl.KEEP_OPEN);
+            processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
             // Clear the list of commands sent
             poAtomicCommands.clear();
             resetModificationsBufferCounter();
@@ -899,12 +893,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     if (sessionPreviouslyClosed) {
       // Reopen if needed, to close the session with the requested conditions
       // (CommunicationMode and channelControl)
-      processAtomicOpening(currentAccessLevel, null);
+      processAtomicOpening(currentSessionAccessLevel, null);
     }
 
     // Finally, close the session as requested
     processAtomicClosing(
-        poAtomicCommands, poSecuritySettings.getRatificationMode(), channelControl);
+        poAtomicCommands, poSecuritySettings.isRatificationMechanismEnabled(), channelControl);
 
     // sets the flag indicating that the commands have been executed
     poCommandManager.notifyCommandsProcessed();
@@ -968,8 +962,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           "No commands should have been prepared prior to a PIN submission.");
     }
 
-    if (poSecuritySettings != null
-        && PinTransmissionMode.ENCRYPTED.equals(poSecuritySettings.getPinTransmissionMode())) {
+    if (poSecuritySettings != null && !poSecuritySettings.isPinTransmissionEncryptionDisabled()) {
       poCommandManager.addRegularCommand(
           new PoGetChallengeBuilder(calypsoPoSmartCard.getPoClass()));
 
@@ -996,11 +989,10 @@ class PoTransactionServiceAdapter implements PoTransactionService {
             SAM_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
       }
       poCommandManager.addRegularCommand(
-          new PoVerifyPinBuilder(
-              calypsoPoSmartCard.getPoClass(), PinTransmissionMode.ENCRYPTED, cipheredPin));
+          new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass(), true, cipheredPin));
     } else {
       poCommandManager.addRegularCommand(
-          new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass(), PinTransmissionMode.PLAIN, pin));
+          new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass(), false, pin));
     }
 
     // transmit and receive data with the PO
@@ -1101,8 +1093,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
               - APDU_HEADER_LENGTH);
       if (isSessionBufferOverflowed(neededSessionBufferSpace.get())) {
         // raise an exception if in atomic mode
-        if (poSecuritySettings.getSessionModificationMode()
-            == SessionSetting.ModificationMode.ATOMIC) {
+        if (!poSecuritySettings.isMultipleSessionEnabled()) {
           throw new CalypsoAtomicTransactionException(
               "ATOMIC mode error! This command would overflow the PO modifications buffer: "
                   + builder.getName());
