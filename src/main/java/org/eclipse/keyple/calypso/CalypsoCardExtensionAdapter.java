@@ -90,6 +90,11 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
     return new PoCardSelectionAdapter(poCardSelector, acceptInvalidatedPo);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
   @Override
   public SamCardResourceProfileExtension createSamCardResourceProfileExtension() {
     return new SamCardResourceProfileExtensionAdapter();

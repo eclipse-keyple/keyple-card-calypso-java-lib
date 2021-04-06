@@ -646,18 +646,6 @@ public interface PoTransactionService {
   void prepareRehabilitate();
 
   /**
-   * The PO Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
-   */
-  enum SessionState {
-    /** Initial state of a PO transaction. The PO must have been previously selected. */
-    SESSION_UNINITIALIZED,
-    /** The secure session is active. */
-    SESSION_OPEN,
-    /** The secure session is closed. */
-    SESSION_CLOSED
-  }
-
-  /**
    * The PO Transaction Access Level: personalization, loading or debiting.
    *
    * @since 2.0

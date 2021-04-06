@@ -82,6 +82,18 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private ChannelControl channelControl;
 
   /**
+   * The PO Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
+   */
+  private enum SessionState {
+    /** Initial state of a PO transaction. The PO must have been previously selected. */
+    SESSION_UNINITIALIZED,
+    /** The secure session is active. */
+    SESSION_OPEN,
+    /** The secure session is closed. */
+    SESSION_CLOSED
+  }
+
+  /**
    * Creates an instance of {@link PoTransactionService} for secure operations.
    *
    * <p>Secure operations are enabled by the presence of {@link PoSecuritySetting}.
@@ -241,7 +253,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           String.format("%02X", poKvc));
     }
 
-    if (!poSecuritySettings.isSessionKvcAuthorized(poKvc)) {
+    if (!poSecuritySettings.isKvcAuthorized(poKvc)) {
       throw new CalypsoUnauthorizedKvcException(
           String.format("Unauthorized KVC error: PO KVC = %02X", poKvc));
     }

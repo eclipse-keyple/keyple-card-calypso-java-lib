@@ -181,7 +181,7 @@ class SamCommandProcessor {
       byte poKif, PoTransactionService.SessionAccessLevel sessionAccessLevel) {
     byte kif;
     if (poKif == KIF_UNDEFINED) {
-      kif = poSecuritySettings.getSessionDefaultKif(sessionAccessLevel);
+      kif = poSecuritySettings.getKif(sessionAccessLevel);
     } else {
       kif = poKif;
     }
@@ -517,8 +517,8 @@ class SamCommandProcessor {
       pinCipheringKvc = workKvc;
     } else {
       // no current work key is available (outside secure session)
-      pinCipheringKif = poSecuritySettings.getDefaultPinCipheringKif();
-      pinCipheringKvc = poSecuritySettings.getDefaultPinCipheringKvc();
+      pinCipheringKif = poSecuritySettings.getPinCipheringKif();
+      pinCipheringKvc = poSecuritySettings.getPinCipheringKvc();
     }
 
     if (!isDiversificationDone) {

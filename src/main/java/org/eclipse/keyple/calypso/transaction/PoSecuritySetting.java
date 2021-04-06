@@ -31,12 +31,13 @@ public class PoSecuritySetting {
   private final boolean isMultipleSessionEnabled;
   private final boolean isRatificationMechanismEnabled;
   private final boolean isPinTransmissionEncryptionDisabled;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKIFs;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKVCs;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKeyRecordNumbers;
+  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
+  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
+  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte>
+      keyRecordNumberBySessionLevel;
   private final List<Byte> authorizedKvcList;
-  private final byte defaultPinCipheringKif;
-  private final byte defaultPinCipheringKvc;
+  private final byte pinCipheringKif;
+  private final byte pinCipheringKvc;
   private final boolean isLoadAndDebitSvLogRequired;
   private final boolean isSvNegativeBalanceAllowed;
 
@@ -50,12 +51,12 @@ public class PoSecuritySetting {
     this.isMultipleSessionEnabled = builder.isMultipleSessionEnabled;
     this.isRatificationMechanismEnabled = builder.isRatificationMechanismEnabled;
     this.isPinTransmissionEncryptionDisabled = builder.isPinTransmissionEncryptionDisabled;
-    this.defaultKIFs = builder.defaultKIFs;
-    this.defaultKVCs = builder.defaultKVCs;
-    this.defaultKeyRecordNumbers = builder.defaultKeyRecordNumbers;
+    this.kifBySessionLevel = builder.kifBySessionLevel;
+    this.kvcBySessionLevel = builder.kvcBySessionLevel;
+    this.keyRecordNumberBySessionLevel = builder.keyRecordNumberBySessionLevel;
     this.authorizedKvcList = builder.authorizedKvcList;
-    this.defaultPinCipheringKif = builder.defaultPinCipheringKif;
-    this.defaultPinCipheringKvc = builder.defaultPinCipheringKvc;
+    this.pinCipheringKif = builder.pinCipheringKif;
+    this.pinCipheringKvc = builder.pinCipheringKvc;
     this.isLoadAndDebitSvLogRequired = builder.isLoadAndDebitSvLogRequired;
     this.isSvNegativeBalanceAllowed = builder.isSvNegativeBalanceAllowed;
   }
@@ -115,8 +116,8 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getSessionDefaultKif(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
-    return defaultKIFs.get(sessionAccessLevel);
+  public Byte getKif(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+    return kifBySessionLevel.get(sessionAccessLevel);
   }
 
   /**
@@ -128,8 +129,8 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getSessionDefaultKvc(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
-    return defaultKVCs.get(sessionAccessLevel);
+  public Byte getKvc(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+    return kvcBySessionLevel.get(sessionAccessLevel);
   }
 
   /**
@@ -141,9 +142,8 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getSessionDefaultKeyRecordNumber(
-      PoTransactionService.SessionAccessLevel sessionAccessLevel) {
-    return defaultKeyRecordNumbers.get(sessionAccessLevel);
+  public Byte getKeyRecordNumber(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+    return keyRecordNumberBySessionLevel.get(sessionAccessLevel);
   }
 
   /**
@@ -156,7 +156,7 @@ public class PoSecuritySetting {
    * @return true if the kvc is authorized or if no authorization list has been defined.
    * @since 2.0
    */
-  public boolean isSessionKvcAuthorized(byte kvc) {
+  public boolean isKvcAuthorized(byte kvc) {
     return authorizedKvcList.isEmpty() || authorizedKvcList.contains(kvc);
   }
 
@@ -168,8 +168,8 @@ public class PoSecuritySetting {
    * @return A byte.
    * @since 2.0
    */
-  public byte getDefaultPinCipheringKif() {
-    return defaultPinCipheringKif;
+  public byte getPinCipheringKif() {
+    return pinCipheringKif;
   }
 
   /**
@@ -180,8 +180,8 @@ public class PoSecuritySetting {
    * @return A byte.
    * @since 2.0
    */
-  public byte getDefaultPinCipheringKvc() {
-    return defaultPinCipheringKvc;
+  public byte getPinCipheringKvc() {
+    return pinCipheringKvc;
   }
 
   /**
@@ -209,6 +209,23 @@ public class PoSecuritySetting {
   }
 
   /**
+   * Creates an instance of {@link PoSecuritySetting} builder to setup the security options for the
+   * {@link PoTransactionService}.
+   *
+   * <p>The only mandatory parameter is the name of the SAM card resource.
+   *
+   * <p>The default values of the other parameters are documented in their respective getters.
+   *
+   * @param samCardResourceProfileName The name of the SAM card resource associated with these
+   *     parameters.
+   * @return A builder instance.
+   * @since 2.0
+   */
+  public static PoSecuritySettingBuilder builder(String samCardResourceProfileName) {
+    return new PoSecuritySettingBuilder(samCardResourceProfileName);
+  }
+
+  /**
    * Builder of {@link PoSecuritySetting}.
    *
    * @since 2.0
@@ -219,12 +236,13 @@ public class PoSecuritySetting {
     private boolean isMultipleSessionEnabled;
     private boolean isRatificationMechanismEnabled;
     private boolean isPinTransmissionEncryptionDisabled;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKIFs;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKVCs;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> defaultKeyRecordNumbers;
+    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
+    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
+    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte>
+        keyRecordNumberBySessionLevel;
     private List<Byte> authorizedKvcList;
-    private byte defaultPinCipheringKif;
-    private byte defaultPinCipheringKvc;
+    private byte pinCipheringKif;
+    private byte pinCipheringKvc;
     private boolean isLoadAndDebitSvLogRequired;
     private boolean isSvNegativeBalanceAllowed;
 
@@ -238,26 +256,25 @@ public class PoSecuritySetting {
      *
      * @param samCardResourceProfileName The name of the SAM card resource associated with these
      *     parameters.
-     * @since 2.0
      */
-    public PoSecuritySettingBuilder(String samCardResourceProfileName) {
+    private PoSecuritySettingBuilder(String samCardResourceProfileName) {
       this.samCardResourceProfileName = samCardResourceProfileName;
       // set default values for all optional parameters
       this.isMultipleSessionEnabled = false;
       this.isRatificationMechanismEnabled = false;
       this.isPinTransmissionEncryptionDisabled = false;
-      this.defaultKIFs =
+      this.kifBySessionLevel =
           new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
               PoTransactionService.SessionAccessLevel.class);
-      this.defaultKVCs =
+      this.kvcBySessionLevel =
           new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
               PoTransactionService.SessionAccessLevel.class);
-      this.defaultKeyRecordNumbers =
+      this.keyRecordNumberBySessionLevel =
           new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
               PoTransactionService.SessionAccessLevel.class);
       this.authorizedKvcList = new ArrayList<Byte>();
-      this.defaultPinCipheringKif = (byte) 0;
-      this.defaultPinCipheringKvc = (byte) 0;
+      this.pinCipheringKif = (byte) 0;
+      this.pinCipheringKvc = (byte) 0;
       this.isLoadAndDebitSvLogRequired = false;
       this.isSvNegativeBalanceAllowed = false;
     }
@@ -306,15 +323,15 @@ public class PoSecuritySetting {
      * Set the default KIF for the provide session level.
      *
      * @param sessionAccessLevel the session level.
-     * @param sessionDefaultKif the desired default KIF.
+     * @param kif the desired default KIF.
      * @return The object instance.
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignSessionDefaultKif(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte sessionDefaultKif) {
+    public PoSecuritySettingBuilder assignKif(
+        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte kif) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
-      this.defaultKIFs.put(sessionAccessLevel, sessionDefaultKif);
+      this.kifBySessionLevel.put(sessionAccessLevel, kif);
       return this;
     }
 
@@ -322,15 +339,15 @@ public class PoSecuritySetting {
      * Set the default KVC for the provide session level. P
      *
      * @param sessionAccessLevel the session level.
-     * @param sessionDefaultKvc the desired default KVC.
+     * @param kvc the desired default KVC.
      * @return The object instance.
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignSessionDefaultKvc(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte sessionDefaultKvc) {
+    public PoSecuritySettingBuilder assignKvc(
+        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte kvc) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
-      this.defaultKVCs.put(sessionAccessLevel, sessionDefaultKvc);
+      this.kvcBySessionLevel.put(sessionAccessLevel, kvc);
       return this;
     }
 
@@ -338,16 +355,15 @@ public class PoSecuritySetting {
      * Set the default key record number
      *
      * @param sessionAccessLevel the session level.
-     * @param sessionDefaultKeyRecordNumber the desired default key record number.
+     * @param keyRecordNumber the desired default key record number.
      * @return The object instance.
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignSessionDefaultKeyRecordNumber(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel,
-        byte sessionDefaultKeyRecordNumber) {
+    public PoSecuritySettingBuilder assignKeyRecordNumber(
+        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte keyRecordNumber) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
-      this.defaultKeyRecordNumbers.put(sessionAccessLevel, sessionDefaultKeyRecordNumber);
+      this.keyRecordNumberBySessionLevel.put(sessionAccessLevel, keyRecordNumber);
       return this;
     }
 
@@ -376,8 +392,8 @@ public class PoSecuritySetting {
      * @since 2.0
      */
     public PoSecuritySettingBuilder pinCipheringKey(byte kif, byte kvc) {
-      this.defaultPinCipheringKif = kif;
-      this.defaultPinCipheringKvc = kvc;
+      this.pinCipheringKif = kif;
+      this.pinCipheringKvc = kvc;
       return this;
     }
 
