@@ -9,6 +9,7 @@ release/
 # Gradle
 .gradle/
 build/
+gradle/license_header.txt
 
 # Eclipse
 .classpath
