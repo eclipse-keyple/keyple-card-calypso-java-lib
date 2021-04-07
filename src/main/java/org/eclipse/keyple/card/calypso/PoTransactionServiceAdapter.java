@@ -47,8 +47,9 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private static final String SAM_COMMUNICATION_ERROR =
       "A communication error with the SAM occurred while ";
   private static final String SAM_COMMAND_ERROR = "A SAM command error occurred while";
-  public static final String TRANSMITTING_COMMANDS = "transmitting commands.";
-  public static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
+  private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
+  private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
+  private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
   // commands that modify the content of the PO in session have a cost on the session buffer equal
   // to the length of the outgoing data plus 6 bytes
@@ -145,26 +146,14 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       SessionAccessLevel sessionAccessLevel,
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands) {
 
-    // This method should be called only if no session was previously open
+    // This method should be invoked only if no session was previously open
     checkSessionIsNotOpen();
 
     if (poSecuritySettings == null) {
-      throw new CalypsoPoTransactionIllegalStateException("No SAM resource is available");
+      throw new CalypsoPoTransactionIllegalStateException("No security settings are available.");
     }
 
-    // gets the terminal challenge
-    byte[] sessionTerminalChallenge;
-    try {
-      sessionTerminalChallenge = samCommandProcessor.getSessionTerminalChallenge();
-    } catch (CalypsoSamCommandException e) {
-      throw new CalypsoSamAnomalyException(
-          SAM_COMMAND_ERROR + "getting the terminal challenge: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "getting the terminal challenge.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + "getting terminal challenge.", e);
-    }
+    byte[] sessionTerminalChallenge = getSessionTerminalChallenge();
 
     // PO ApduRequest List to hold Open Secure Session and other optional commands
     List<ApduRequest> poApduRequests = new ArrayList<ApduRequest>();
@@ -342,7 +331,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // Do some basic checks
     checkCommandsResponsesSynchronization(poApduRequests.size(), poApduResponses.size());
 
-    // Add all commands data to the digest computation if this method is called within a Secure
+    // Add all commands data to the digest computation if this method is invoked within a Secure
     // Session.
     if (sessionState == SessionState.SESSION_OPEN) {
       samCommandProcessor.pushPoExchangeDataList(poApduRequests, poApduResponses, 0);
@@ -369,7 +358,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    *   <li>The SAM certificate is retrieved from the Digest Close response. The terminal signature
    *       is identified.
    *   <li>Then, on the PO reader, a CardRequest is transmitted with a {@link ChannelControl} set to
-   *       CLOSE_AFTER or KEEP_OPEN depending on whether or not prepareReleasePoChannel was called,
+   *       CLOSE_AFTER or KEEP_OPEN depending on whether or not prepareReleasePoChannel was invoked,
    *       and apduRequests including the new PO commands to send in the session, a Close Session
    *       command (defined with the SAM certificate), and optionally a ratificationCommand.
    *       <ul>
@@ -428,19 +417,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     // All SAM digest operations will now run at once.
     // Get Terminal Signature from the latest response
-    byte[] sessionTerminalSignature;
-    try {
-      sessionTerminalSignature = samCommandProcessor.getTerminalSignature();
-    } catch (CalypsoSamCommandException e) {
-      throw new CalypsoSamAnomalyException(
-          SAM_COMMAND_ERROR + "getting the terminal signature: " + e.getCommand().getName(), e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          SAM_COMMUNICATION_ERROR + "getting the terminal signature.", e);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "getting the terminal signature.", e);
-    }
+    byte[] sessionTerminalSignature = getSessionTerminalSignature();
+
     boolean ratificationCommandResponseReceived;
 
     // Build the PO Close Session command. The last one for this session
@@ -491,6 +469,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       ratificationCommandResponseReceived = false;
     } catch (ReaderCommunicationException e) {
       throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
@@ -508,53 +488,16 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     }
 
     // Check the PO's response to Close Secure Session
-    PoCloseSessionParser poCloseSessionPars;
-    try {
-      poCloseSessionPars =
-          (PoCloseSessionParser)
-              CalypsoPoUtils.updateCalypsoPo(
-                  calypsoPoSmartCard, closeSessionCmdBuild, poApduResponses.get(closeCommandIndex));
-    } catch (CalypsoPoSecurityDataException e) {
-      throw new CalypsoPoCloseSecureSessionException("Invalid PO session", e);
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
-    }
+    PoCloseSessionParser poCloseSessionPars =
+        getPoCloseSessionParser(poApduResponses, closeSessionCmdBuild, closeCommandIndex);
 
     // Check the PO signature
-    try {
-      samCommandProcessor.authenticatePoSignature(poCloseSessionPars.getSignatureLo());
-    } catch (CalypsoSamSecurityDataException e) {
-      throw new CalypsoSessionAuthenticationException(
-          "The authentication of the PO by the SAM has failed.", e);
-    } catch (CalypsoSamCommandException e) {
-      throw new CalypsoSamAnomalyException(
-          SAM_COMMAND_ERROR + "authenticating the PO signature: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
-      throw new CalypsoSamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
-    } catch (CardCommunicationException e) {
-      throw new CalypsoSamIOException(
-          SAM_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
-    }
+    checkPoSignature(poCloseSessionPars.getSignatureLo());
 
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
     if (poCommandManager.isSvOperationCompleteOneTime()) {
-      try {
-        samCommandProcessor.checkSvStatus(poCloseSessionPars.getPostponedData());
-      } catch (CalypsoSamSecurityDataException e) {
-        throw new CalypsoSvAuthenticationException(
-            "The checking of the SV operation by the SAM has failed.", e);
-      } catch (CalypsoSamCommandException e) {
-        throw new CalypsoSamAnomalyException(
-            SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
-      } catch (ReaderCommunicationException e) {
-        throw new CalypsoSamIOException(
-            SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
-      } catch (CardCommunicationException e) {
-        throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
-      }
+      checkSvOperationStatus(poCloseSessionPars.getPostponedData());
     }
 
     sessionState = SessionState.SESSION_CLOSED;
@@ -901,8 +844,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       }
     }
     if (sessionPreviouslyClosed) {
-      // Reopen if needed, to close the session with the requested conditions
-      // (CommunicationMode and channelControl)
+      // Reopen a session if necessary
       processAtomicOpening(currentSessionAccessLevel, null);
     }
 
@@ -1029,7 +971,136 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (CardCommunicationException e) {
       throw new CalypsoPoIOException(PO_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
+  }
+
+  /**
+   * Gets the terminal challenge from the SAM, and raises exceptions if necessary.
+   *
+   * @return A not null reference.
+   * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
+   * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
+   */
+  private byte[] getSessionTerminalChallenge() {
+    byte[] sessionTerminalChallenge;
+    try {
+      sessionTerminalChallenge = samCommandProcessor.getSessionTerminalChallenge();
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "getting the terminal challenge: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "getting the terminal challenge.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + "getting terminal challenge.", e);
+    }
+    return sessionTerminalChallenge;
+  }
+
+  /**
+   * Gets the terminal signature from the SAM, and raises exceptions if necessary.
+   *
+   * @return A not null reference.
+   * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
+   * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
+   */
+  private byte[] getSessionTerminalSignature() {
+    byte[] sessionTerminalSignature;
+    try {
+      sessionTerminalSignature = samCommandProcessor.getTerminalSignature();
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "getting the terminal signature: " + e.getCommand().getName(), e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "getting the terminal signature.", e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "getting the terminal signature.", e);
+    }
+    return sessionTerminalSignature;
+  }
+
+  /**
+   * Ask the SAM to verify the signature of the PO, and raises exceptions if necessary.
+   *
+   * @param poSignature The PO signature.
+   * @throws CalypsoSessionAuthenticationException If the PO authentication failed.
+   * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
+   * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
+   */
+  private void checkPoSignature(byte[] poSignature) {
+    try {
+      samCommandProcessor.authenticatePoSignature(poSignature);
+    } catch (CalypsoSamSecurityDataException e) {
+      throw new CalypsoSessionAuthenticationException(
+          "The authentication of the PO by the SAM has failed.", e);
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "authenticating the PO signature: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
+    }
+  }
+
+  /**
+   * Ask the SAM to verify the SV operation status from the PO postponed data, raises exceptions if
+   * needed.
+   *
+   * @param poPostponedData The postponed data from the pO.
+   * @throws CalypsoSvAuthenticationException If the SV verification failed.
+   * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
+   * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
+   */
+  private void checkSvOperationStatus(byte[] poPostponedData) {
+    try {
+      samCommandProcessor.checkSvStatus(poPostponedData);
+    } catch (CalypsoSamSecurityDataException e) {
+      throw new CalypsoSvAuthenticationException(
+          "The checking of the SV operation by the SAM has failed.", e);
+    } catch (CalypsoSamCommandException e) {
+      throw new CalypsoSamAnomalyException(
+          SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new CalypsoSamIOException(
+          SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
+    } catch (CardCommunicationException e) {
+      throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
+    }
+  }
+
+  /**
+   * Get the close session parser.
+   *
+   * @param poApduResponses The responses received from the PO.
+   * @param closeSessionCmdBuild The command builder.
+   * @param closeCommandIndex The index of the close command within the request.
+   * @throws CalypsoPoCloseSecureSessionException If a security error occurs.
+   * @throws CalypsoPoAnomalyException If PO returned an unexpected response.
+   */
+  private PoCloseSessionParser getPoCloseSessionParser(
+      List<ApduResponse> poApduResponses,
+      PoCloseSessionBuilder closeSessionCmdBuild,
+      int closeCommandIndex) {
+    PoCloseSessionParser poCloseSessionPars;
+    try {
+      poCloseSessionPars =
+          (PoCloseSessionParser)
+              CalypsoPoUtils.updateCalypsoPo(
+                  calypsoPoSmartCard, closeSessionCmdBuild, poApduResponses.get(closeCommandIndex));
+    } catch (CalypsoPoSecurityDataException e) {
+      throw new CalypsoPoCloseSecureSessionException("Invalid PO session", e);
+    } catch (CalypsoPoCommandException e) {
+      throw new CalypsoPoAnomalyException(
+          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
+    }
+    return poCloseSessionPars;
   }
 
   /**
