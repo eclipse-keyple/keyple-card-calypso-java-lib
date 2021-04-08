@@ -49,6 +49,7 @@ class SamCommandProcessor {
   private static final byte CHALLENGE_LENGTH_REV32 = (byte) 0x08;
   private static final byte SIGNATURE_LENGTH_REV_INF_32 = (byte) 0x04;
   private static final byte SIGNATURE_LENGTH_REV32 = (byte) 0x08;
+  private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
   private final ProxyReader samReader;
   private final PoSecuritySetting poSecuritySettings;
@@ -134,9 +135,13 @@ class SamCommandProcessor {
 
     // Transmit the CardRequest to the SAM and get back the CardResponse (list of ApduResponse)
     CardResponse samCardResponse;
-    samCardResponse =
-        samReader.transmitCardRequest(
-            new CardRequest(apduRequests, false), ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse =
+          samReader.transmitCardRequest(
+              new CardRequest(apduRequests, false), ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
     byte[] sessionTerminalChallenge;
@@ -399,7 +404,11 @@ class SamCommandProcessor {
     // Transmit CardRequest and get CardResponse
     CardResponse samCardResponse;
 
-    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
 
@@ -457,7 +466,11 @@ class SamCommandProcessor {
     CardRequest samCardRequest = new CardRequest(samApduRequests, false);
 
     CardResponse samCardResponse;
-    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     // Get transaction result parsing the response
     List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
@@ -549,7 +562,11 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse;
-    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     ApduResponse cardCipherPinResponse =
         samCardResponse.getApduResponses().get(cardCipherPinCmdIndex);
@@ -613,7 +630,11 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse;
-    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     ApduResponse svPrepareResponse =
         samCardResponse.getApduResponses().get(svPrepareOperationCmdIndex);
@@ -750,7 +771,11 @@ class SamCommandProcessor {
 
     // execute the command
     CardResponse samCardResponse;
-    samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusCodeException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
 
     ApduResponse svCheckResponse = samCardResponse.getApduResponses().get(0);
 
