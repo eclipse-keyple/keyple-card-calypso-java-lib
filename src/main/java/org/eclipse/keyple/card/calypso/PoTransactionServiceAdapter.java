@@ -20,6 +20,7 @@ import org.eclipse.keyple.card.calypso.po.ElementaryFile;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
+import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.Reader;
@@ -103,13 +104,21 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   public PoTransactionServiceAdapter(
-      Reader poReader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
+      Reader poReader,
+      PoSmartCard poSmartCard,
+      PoSecuritySetting poSecuritySetting,
+      SamCardResourceProfileExtension samCardResourceProfileExtension,
+      ProxyReader samReader) {
 
     this(poReader, poSmartCard);
 
     this.poSecuritySettings = poSecuritySetting;
 
-    samCommandProcessor = new SamCommandProcessor(poSmartCard, poSecuritySetting);
+    samCommandProcessor = new SamCommandProcessor(
+            poSmartCard,
+            poSecuritySetting,
+            samCardResourceProfileExtension,
+            samReader);
   }
 
   /**

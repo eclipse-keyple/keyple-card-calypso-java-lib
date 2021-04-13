@@ -11,22 +11,31 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.card.calypso.po.PoSmartCard;
+import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
-import org.eclipse.keyple.core.card.*;
-import org.eclipse.keyple.core.service.CardResource;
-import org.eclipse.keyple.core.service.CardResourceServiceProvider;
+import org.eclipse.keyple.core.card.ApduRequest;
+import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.card.CardCommunicationException;
+import org.eclipse.keyple.core.card.CardRequest;
+import org.eclipse.keyple.core.card.CardResponse;
+import org.eclipse.keyple.core.card.ChannelControl;
+import org.eclipse.keyple.core.card.ProxyReader;
+import org.eclipse.keyple.core.card.ReaderCommunicationException;
+import org.eclipse.keyple.core.card.UnexpectedStatusCodeException;
+import org.eclipse.keyple.core.card.spi.CardResourceProfileExtensionSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * (package-private)<br>
@@ -73,17 +82,22 @@ class SamCommandProcessor {
    * @param poSecuritySetting the security settings from the application layer.
    * @since 2.0
    */
-  SamCommandProcessor(PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
+  SamCommandProcessor(
+          PoSmartCard poSmartCard,
+          PoSecuritySetting poSecuritySetting,
+          SamCardResourceProfileExtension samCardResourceProfileExtension,
+          ProxyReader reader) {
     this.poSmartCard = poSmartCard;
     this.poSecuritySettings = poSecuritySetting;
-    CardResource samResource =
-        CardResourceServiceProvider.getService()
-            .getCardResources(poSecuritySettings.getCardResourceProfileName())
-            .get(0);
-    SamSmartCard samSmartCard = (SamSmartCard) samResource.getSmartCard();
+//    CardResource samResource =
+//        CardResourceServiceProvider.getService()
+//            .getCardResources(poSecuritySettings.getCardResourceProfileName())
+//            .get(0);
+//    SamSmartCard samSmartCard = (SamSmartCard) samResource.getSmartCard();
+    SamSmartCard samSmartCard = (SamSmartCard) ((CardResourceProfileExtensionSpi) samCardResourceProfileExtension).matches(reader);
     samRevision = samSmartCard.getSamRevision();
     samSerialNumber = samSmartCard.getSerialNumber();
-    samReader = (ProxyReader) samResource.getReader();
+    samReader = (ProxyReader) reader;
   }
 
   /**

@@ -19,6 +19,7 @@ import org.eclipse.keyple.core.card.ProxyReader;
 import org.eclipse.keyple.core.card.spi.CardResourceProfileExtensionSpi;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
+import org.eclipse.keyple.core.service.ObservableReader;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;

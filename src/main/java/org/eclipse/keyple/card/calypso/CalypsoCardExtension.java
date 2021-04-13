@@ -16,6 +16,7 @@ import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
+import org.eclipse.keyple.core.card.ProxyReader;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.selection.CardSelector;
@@ -61,7 +62,7 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
    * @since 2.0
    */
   PoTransactionService createPoSecuredTransaction(
-      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting);
+      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting, SamCardResourceProfileExtension samCardResourceProfileExtension, ProxyReader samReader);
 
   /**
    * Creates a PO transaction service to handle non secured operations.

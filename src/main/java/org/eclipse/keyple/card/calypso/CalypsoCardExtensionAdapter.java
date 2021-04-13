@@ -17,6 +17,7 @@ import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.CardApiProperties;
+import org.eclipse.keyple.core.card.ProxyReader;
 import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
 import org.eclipse.keyple.core.service.Reader;
@@ -107,8 +108,13 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    */
   @Override
   public PoTransactionService createPoSecuredTransaction(
-      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
-    return new PoTransactionServiceAdapter(reader, poSmartCard, poSecuritySetting);
+          Reader reader,
+          PoSmartCard poSmartCard,
+          PoSecuritySetting poSecuritySetting,
+          SamCardResourceProfileExtension samCardResourceProfileExtension,
+          ProxyReader samReader)
+  {
+    return new PoTransactionServiceAdapter(reader, poSmartCard, poSecuritySetting, samCardResourceProfileExtension, samReader);
   }
 
   /**
