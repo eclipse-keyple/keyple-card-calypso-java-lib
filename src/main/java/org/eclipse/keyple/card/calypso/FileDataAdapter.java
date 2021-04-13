@@ -15,6 +15,7 @@ import java.util.*;
 import org.eclipse.keyple.card.calypso.po.FileData;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -266,18 +267,14 @@ class FileDataAdapter implements FileData {
     records.put(1, content);
   }
 
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.0
+   */
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("FileData{");
-    sb.append("records={");
-    for (Map.Entry<Integer, byte[]> rec : records.entrySet()) {
-      sb.append("(");
-      sb.append(rec.getKey());
-      sb.append("=0x");
-      sb.append(ByteArrayUtil.toHex(rec.getValue()));
-      sb.append(")");
-    }
-    sb.append("}}");
-    return sb.toString();
+    return JsonUtil.toJson(this);
   }
 }
