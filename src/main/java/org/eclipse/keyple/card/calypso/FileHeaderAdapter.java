@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
 import org.eclipse.keyple.card.calypso.po.FileHeader;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -328,18 +328,14 @@ class FileHeaderAdapter implements FileHeader {
     return lid;
   }
 
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.0
+   */
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("FileHeader{");
-    sb.append("lid=0x").append(Integer.toHexString(lid & 0xFFFF));
-    sb.append(", recordsNumber=").append(recordsNumber);
-    sb.append(", recordSize=").append(recordSize);
-    sb.append(", type=").append(type);
-    sb.append(", accessConditions=").append("0x").append(ByteArrayUtil.toHex(accessConditions));
-    sb.append(", keyIndexes=").append("0x").append(ByteArrayUtil.toHex(keyIndexes));
-    sb.append(", dfStatus=0x").append(dfStatus);
-    sb.append(", sharedReference=0x").append(Integer.toHexString(sharedReference));
-    sb.append('}');
-    return sb.toString();
+    return JsonUtil.toJson(this);
   }
 }

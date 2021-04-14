@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.po.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -203,32 +204,13 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   }
 
   /**
-   * Gets the SV load log record a JSON formatted string
+   * Gets the object content as a Json string.
    *
-   * @return A not empty String
+   * @return A not empty string.
    * @since 2.0
    */
   @Override
   public String toString() {
-    return "{\"SvLoadLogRecord\":{"
-        + "\"amount\":"
-        + getAmount()
-        + ", \"balance\":"
-        + getBalance()
-        + ", \"debitDate\":"
-        + getLoadDate()
-        + ", \"loadTime\":"
-        + getLoadDate()
-        + ", \"freeBytes\":"
-        + ByteArrayUtil.toHex(getFreeByteBytes())
-        + ", \"kvc\":"
-        + getKvc()
-        + ", \"samId\":"
-        + ByteArrayUtil.toHex(getSamIdBytes())
-        + ", \"svTransactionNumber\":"
-        + getSvTNum()
-        + ", \"svSamTransactionNumber\":"
-        + getSamTNum()
-        + "}}";
+    return JsonUtil.toJson(this);
   }
 }

@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
@@ -125,13 +126,16 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
   @Override
   public CardSelectionRequest getCardSelectionRequest() {
     List<ApduRequest> cardSelectionApduRequests = new ArrayList<ApduRequest>();
-    for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-        commandBuilders) {
-      cardSelectionApduRequests.add(commandBuilder.getApduRequest());
+    if (!commandBuilders.isEmpty()) {
+      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
+          commandBuilders) {
+        cardSelectionApduRequests.add(commandBuilder.getApduRequest());
+      }
+      return new CardSelectionRequest(
+          poCardSelector, new CardRequest(cardSelectionApduRequests, false));
+    } else {
+      return new CardSelectionRequest(poCardSelector, null);
     }
-    // TODO check the boolean use in every creation of CardRequest
-    return new CardSelectionRequest(
-        poCardSelector, new CardRequest(cardSelectionApduRequests, false));
   }
 
   /**
@@ -142,7 +146,15 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
   @Override
   // TODO check how to handle exceptions in this method
   public SmartCardSpi parse(CardSelectionResponse cardSelectionResponse) {
-    List<ApduResponse> apduResponses = cardSelectionResponse.getCardResponse().getApduResponses();
+    CardResponse cardResponse = cardSelectionResponse.getCardResponse();
+
+    List<ApduResponse> apduResponses;
+
+    if (cardResponse != null) {
+      apduResponses = cardResponse.getApduResponses();
+    } else {
+      apduResponses = Collections.emptyList();
+    }
 
     if (commandBuilders.size() != apduResponses.size()) {
       throw new CalypsoDesynchronizedExchangesException(

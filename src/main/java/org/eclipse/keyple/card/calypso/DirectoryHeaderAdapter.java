@@ -16,7 +16,7 @@ import java.util.NoSuchElementException;
 import org.eclipse.keyple.card.calypso.po.DirectoryHeader;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -253,16 +253,14 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     return lid;
   }
 
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.0
+   */
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("DirectoryHeader{");
-    sb.append("lid=0x").append(Integer.toHexString(lid & 0xFFFF));
-    sb.append(", accessConditions=").append("0x").append(ByteArrayUtil.toHex(accessConditions));
-    sb.append(", keyIndexes=").append("0x").append(ByteArrayUtil.toHex(keyIndexes));
-    sb.append(", dfStatus=0x").append(dfStatus);
-    sb.append(", kif=").append(kif);
-    sb.append(", kvc=").append(kvc);
-    sb.append('}');
-    return sb.toString();
+    return JsonUtil.toJson(this);
   }
 }

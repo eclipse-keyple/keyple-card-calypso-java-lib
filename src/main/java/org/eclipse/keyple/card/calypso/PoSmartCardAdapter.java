@@ -20,6 +20,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.card.CardSelectionResponse;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * This POJO concentrates all the information we know about the PO being processed: from the
@@ -929,5 +930,16 @@ final class PoSmartCardAdapter implements PoSmartCard, SmartCardSpi {
   private static void copyMapSfi(Map<Short, Byte> src, Map<Short, Byte> dest) {
     dest.clear();
     dest.putAll(src);
+  }
+
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.0
+   */
+  @Override
+  public String toString() {
+    return JsonUtil.toJson(this);
   }
 }

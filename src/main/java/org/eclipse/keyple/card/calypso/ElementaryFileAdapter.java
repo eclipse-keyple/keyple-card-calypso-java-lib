@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.po.ElementaryFile;
 import org.eclipse.keyple.card.calypso.po.FileData;
 import org.eclipse.keyple.card.calypso.po.FileHeader;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -125,13 +126,14 @@ class ElementaryFileAdapter implements ElementaryFile {
     return sfi;
   }
 
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.0
+   */
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("ElementaryFile{");
-    sb.append("sfi=").append(sfi);
-    sb.append(", header=").append(header);
-    sb.append(", data=").append(data);
-    sb.append('}');
-    return sb.toString();
+    return JsonUtil.toJson(this);
   }
 }
