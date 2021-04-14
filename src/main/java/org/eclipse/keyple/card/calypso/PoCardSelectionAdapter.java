@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
@@ -152,7 +153,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
     if (cardResponse != null) {
       apduResponses = cardResponse.getApduResponses();
     } else {
-      apduResponses = new ArrayList<ApduResponse>(0);
+      apduResponses = Collections.emptyList();
     }
 
     if (commandBuilders.size() != apduResponses.size()) {
