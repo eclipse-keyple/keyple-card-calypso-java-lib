@@ -127,9 +127,10 @@ public interface PoTransactionService {
    * @throws CalypsoUnauthorizedKvcException if the card KVC is not authorized
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
+   * @return The object instance.
    * @since 2.0
    */
-  void processOpening(SessionAccessLevel sessionAccessLevel);
+  PoTransactionService processOpening(SessionAccessLevel sessionAccessLevel);
 
   /**
    * Process all previously prepared PO commands outside or inside a Secure Session.
@@ -153,9 +154,10 @@ public interface PoTransactionService {
    *
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
+   * @return The object instance.
    * @since 2.0
    */
-  void processPoCommands();
+  PoTransactionService processPoCommands();
 
   /**
    * Terminates the Secure Session sequence started with {@link
@@ -245,9 +247,10 @@ public interface PoTransactionService {
    *     errors)
    * @throws CalypsoPoTransactionIllegalStateException if the PIN feature is not available for this
    *     PO or if commands have been prepared before invoking this process method.
+   * @return The object instance.
    * @since 2.0
    */
-  void processVerifyPin(byte[] pin);
+  PoTransactionService processVerifyPin(byte[] pin);
 
   /**
    * Invokes {@link #processVerifyPin(byte[])} with a string converted into an array of bytes as
@@ -260,9 +263,10 @@ public interface PoTransactionService {
    *
    * @param pin an ASCII string (4-character long).
    * @see #processVerifyPin(byte[])
+   * @return The object instance.
    * @since 2.0
    */
-  void processVerifyPin(String pin);
+  PoTransactionService processVerifyPin(String pin);
 
   /**
    * Requests the closing of the PO channel.
@@ -277,9 +281,10 @@ public interface PoTransactionService {
    * <p>In case the transaction was interrupted (exception), an additional invocation of
    * processPoCommands must be made to effectively close the channel.
    *
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareReleasePoChannel();
+  PoTransactionService prepareReleasePoChannel();
 
   /**
    * Schedules the execution of a <b>Select File</b> command based on the file's LID.
@@ -288,9 +293,10 @@ public interface PoTransactionService {
    * {@link PoSmartCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
    *
    * @param lid the LID of the EF to select.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSelectFile(byte[] lid);
+  PoTransactionService prepareSelectFile(byte[] lid);
 
   /**
    * Schedules the execution of a <b>Select File</b> command using a navigation control defined by
@@ -300,9 +306,10 @@ public interface PoTransactionService {
    * {@link PoSmartCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
    *
    * @param control A {@link SelectFileControl} enum entry.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSelectFile(SelectFileControl control);
+  PoTransactionService prepareSelectFile(SelectFileControl control);
 
   /**
    * Schedules the execution of a <b>Read Records</b> command to read a single record from the
@@ -317,9 +324,10 @@ public interface PoTransactionService {
    * @param sfi the SFI of the EF to read.
    * @param recordNumber the record number to read.
    * @throws IllegalArgumentException if one of the provided argument is out of range
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareReadRecordFile(byte sfi, int recordNumber);
+  PoTransactionService prepareReadRecordFile(byte sfi, int recordNumber);
 
   /**
    * Schedules the execution of a <b>Read Records</b> command to read one or more records from the
@@ -337,9 +345,11 @@ public interface PoTransactionService {
    * @param numberOfRecords the number of records expected.
    * @param recordSize the record length.
    * @throws IllegalArgumentException if one of the provided argument is out of range
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareReadRecordFile(byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize);
+  PoTransactionService prepareReadRecordFile(
+      byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize);
 
   /**
    * Schedules the execution of a <b>Read Records</b> command to reads a record of the indicated EF,
@@ -357,9 +367,10 @@ public interface PoTransactionService {
    * @param sfi the SFI of the EF.
    * @param countersNumber the number of the last counter to be read.
    * @throws IllegalArgumentException if one of the provided argument is out of range
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareReadCounterFile(byte sfi, int countersNumber);
+  PoTransactionService prepareReadCounterFile(byte sfi, int countersNumber);
 
   /**
    * Schedules the execution of a <b>Append Record</b> command to adds the data provided in the
@@ -372,9 +383,10 @@ public interface PoTransactionService {
    * @param sfi the sfi to select.
    * @param recordData the new record data to write.
    * @throws IllegalArgumentException if the command is inconsistent
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareAppendRecord(byte sfi, byte[] recordData);
+  PoTransactionService prepareAppendRecord(byte sfi, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Update Record</b> command to overwrites the target file's
@@ -390,9 +402,10 @@ public interface PoTransactionService {
    *     left unchanged.
    * @throws IllegalArgumentException if record number is {@code <} 1
    * @throws IllegalArgumentException if the request is inconsistent
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData);
+  PoTransactionService prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Write Record</b> command to updates the target file's record
@@ -408,9 +421,10 @@ public interface PoTransactionService {
    *     beyond length are left unchanged.
    * @throws IllegalArgumentException if record number is {@code <} 1
    * @throws IllegalArgumentException if the request is inconsistent
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData);
+  PoTransactionService prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Increase command</b> command to increase the target counter.
@@ -424,9 +438,10 @@ public interface PoTransactionService {
    *     [FFFFFFh])
    * @throws IllegalArgumentException if the decrement value is out of range
    * @throws IllegalArgumentException if the command is inconsistent
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareIncreaseCounter(byte sfi, int counterNumber, int incValue);
+  PoTransactionService prepareIncreaseCounter(byte sfi, int counterNumber, int incValue);
 
   /**
    * Schedules the execution of a <b>Decrease command</b> command to decrease the target counter.
@@ -440,9 +455,10 @@ public interface PoTransactionService {
    *     [FFFFFFh])
    * @throws IllegalArgumentException if the decrement value is out of range
    * @throws IllegalArgumentException if the command is inconsistent
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareDecreaseCounter(byte sfi, int counterNumber, int decValue);
+  PoTransactionService prepareDecreaseCounter(byte sfi, int counterNumber, int decValue);
 
   /**
    * Schedules the execution of a command to set the value of the target counter.
@@ -471,9 +487,10 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException if the desired value is out of range or if the command is
    *     inconsistent
    * @throws CalypsoPoTransactionIllegalStateException if the current counter value is unknown.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSetCounter(byte sfi, int counterNumber, int newValue);
+  PoTransactionService prepareSetCounter(byte sfi, int counterNumber, int newValue);
 
   /**
    * Schedules the execution of a <b>Verify Pin</b> command without PIN presentation in order to get
@@ -487,9 +504,10 @@ public interface PoTransactionService {
    *
    * @throws CalypsoPoTransactionIllegalStateException if the PIN feature is not available for this
    *     PO.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareCheckPinStatus();
+  PoTransactionService prepareCheckPinStatus();
 
   /**
    * Schedules the execution of a <b>SV Get</b> command to prepare an SV operation or simply
@@ -506,9 +524,10 @@ public interface PoTransactionService {
    *     negative reload
    * @throws CalypsoPoTransactionIllegalStateException if the SV feature is not available for this
    *     PO.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction);
+  PoTransactionService prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction);
 
   /**
    * Schedules the execution of a <b>SV Reload</b> command to increase the current SV balance and
@@ -527,9 +546,10 @@ public interface PoTransactionService {
    *     PO.
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
+  PoTransactionService prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
       throws CalypsoPoTransactionException;
 
   /**
@@ -547,9 +567,10 @@ public interface PoTransactionService {
    *     PO.
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvReload(int amount) throws CalypsoPoTransactionException;
+  PoTransactionService prepareSvReload(int amount) throws CalypsoPoTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
@@ -568,9 +589,10 @@ public interface PoTransactionService {
    *     when. subtracted and 0..32768 when added.
    * @param date 2-byte free value.
    * @param time 2-byte free value.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvDebit(int amount, byte[] date, byte[] time);
+  PoTransactionService prepareSvDebit(int amount, byte[] date, byte[] time);
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
@@ -594,9 +616,10 @@ public interface PoTransactionService {
    *
    * @param amount the amount to be subtracted or added, positive integer in the range 0..32767
    *     when. subtracted and 0..32768 when added.
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvDebit(int amount);
+  PoTransactionService prepareSvDebit(int amount);
 
   /**
    * Schedules the execution of <b>Read Records</b> commands to read all SV logs.
@@ -619,9 +642,10 @@ public interface PoTransactionService {
    * ()}, {@link PoSmartCard#getSvDebitLogLastRecord()}, {@link
    * PoSmartCard#getSvDebitLogAllRecords()}. *
    *
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSvReadAllLogs();
+  PoTransactionService prepareSvReadAllLogs();
 
   /**
    * Schedules the execution of a <b>Invalidate</b> command.
@@ -630,9 +654,10 @@ public interface PoTransactionService {
    * (depends on the access rights given to this command in the file structure of the PO).
    *
    * @throws CalypsoPoTransactionIllegalStateException if the PO is already invalidated
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareInvalidate();
+  PoTransactionService prepareInvalidate();
 
   /**
    * Schedules the execution of a <b>Rehabilitate</b> command.
@@ -641,9 +666,10 @@ public interface PoTransactionService {
    * (depends on the access rights given to this command in the file structure of the PO).
    *
    * @throws CalypsoPoTransactionIllegalStateException if the PO is not invalidated
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareRehabilitate();
+  PoTransactionService prepareRehabilitate();
 
   /**
    * The PO Transaction Access Level: personalization, loading or debiting.

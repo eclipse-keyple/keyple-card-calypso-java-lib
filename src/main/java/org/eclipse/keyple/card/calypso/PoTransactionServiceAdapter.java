@@ -620,7 +620,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void processOpening(SessionAccessLevel sessionAccessLevel) {
+  public final PoTransactionService processOpening(SessionAccessLevel sessionAccessLevel) {
     currentSessionAccessLevel = sessionAccessLevel;
 
     // create a sublist of AbstractPoCommandBuilder to be sent atomically
@@ -664,6 +664,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     // sets the flag indicating that the commands have been executed
     poCommandManager.notifyCommandsProcessed();
+
+    return this;
   }
 
   /**
@@ -770,12 +772,14 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void processPoCommands() {
+  public final PoTransactionService processPoCommands() {
     if (sessionState == SessionState.SESSION_OPEN) {
       processPoCommandsInSession();
     } else {
       processPoCommandsOutOfSession(channelControl);
     }
+
+    return this;
   }
 
   /**
@@ -900,7 +904,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void processVerifyPin(byte[] pin) {
+  public final PoTransactionService processVerifyPin(byte[] pin) {
     Assert.getInstance()
         .notNull(pin, "pin")
         .isEqual(pin.length, CalypsoPoUtils.PIN_LENGTH, "PIN length");
@@ -952,6 +956,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     // sets the flag indicating that the commands have been executed
     poCommandManager.notifyCommandsProcessed();
+
+    return this;
   }
 
   /**
@@ -960,8 +966,10 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void processVerifyPin(String pin) {
+  public final PoTransactionService processVerifyPin(String pin) {
     processVerifyPin(pin.getBytes());
+
+    return this;
   }
 
   private CardResponse safePoTransmit(CardRequest poCardRequest, ChannelControl channelControl) {
@@ -1245,8 +1253,10 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareReleasePoChannel() {
+  public final PoTransactionService prepareReleasePoChannel() {
     channelControl = ChannelControl.CLOSE_AFTER;
+
+    return this;
   }
 
   /**
@@ -1255,10 +1265,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSelectFile(byte[] lid) {
+  public final PoTransactionService prepareSelectFile(byte[] lid) {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         CalypsoPoUtils.prepareSelectFile(calypsoPoSmartCard.getPoClass(), lid));
+
+    return this;
   }
 
   /**
@@ -1267,10 +1279,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSelectFile(SelectFileControl control) {
+  public final PoTransactionService prepareSelectFile(SelectFileControl control) {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         CalypsoPoUtils.prepareSelectFile(calypsoPoSmartCard.getPoClass(), control));
+
+    return this;
   }
 
   /**
@@ -1279,10 +1293,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareReadRecordFile(byte sfi, int recordNumber) {
+  public final PoTransactionService prepareReadRecordFile(byte sfi, int recordNumber) {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         CalypsoPoUtils.prepareReadRecordFile(calypsoPoSmartCard.getPoClass(), sfi, recordNumber));
+
+    return this;
   }
 
   /**
@@ -1291,7 +1307,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareReadRecordFile(
+  public final PoTransactionService prepareReadRecordFile(
       byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize) {
 
     Assert.getInstance() //
@@ -1344,6 +1360,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
                 expectedLength));
       }
     }
+
+    return this;
   }
 
   /**
@@ -1352,8 +1370,10 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareReadCounterFile(byte sfi, int countersNumber) {
+  public final PoTransactionService prepareReadCounterFile(byte sfi, int countersNumber) {
     prepareReadRecordFile(sfi, 1, 1, countersNumber * 3);
+
+    return this;
   }
 
   /**
@@ -1362,13 +1382,15 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareAppendRecord(byte sfi, byte[] recordData) {
+  public final PoTransactionService prepareAppendRecord(byte sfi, byte[] recordData) {
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi");
 
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         new PoAppendRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordData));
+
+    return this;
   }
 
   /**
@@ -1377,7 +1399,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData) {
+  public final PoTransactionService prepareUpdateRecord(
+      byte sfi, int recordNumber, byte[] recordData) {
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
         .isInRange(
@@ -1386,6 +1409,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         new PoUpdateRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordNumber, recordData));
+
+    return this;
   }
 
   /**
@@ -1394,7 +1419,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData) {
+  public final PoTransactionService prepareWriteRecord(
+      byte sfi, int recordNumber, byte[] recordData) {
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
         .isInRange(
@@ -1403,6 +1429,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         new PoWriteRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordNumber, recordData));
+
+    return this;
   }
 
   /**
@@ -1411,7 +1439,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareIncreaseCounter(byte sfi, int counterNumber, int incValue) {
+  public final PoTransactionService prepareIncreaseCounter(
+      byte sfi, int counterNumber, int incValue) {
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
         .isInRange(
@@ -1425,6 +1454,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         new PoIncreaseBuilder(calypsoPoSmartCard.getPoClass(), sfi, counterNumber, incValue));
+
+    return this;
   }
 
   /**
@@ -1433,7 +1464,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareDecreaseCounter(byte sfi, int counterNumber, int decValue) {
+  public final PoTransactionService prepareDecreaseCounter(
+      byte sfi, int counterNumber, int decValue) {
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
         .isInRange(
@@ -1447,6 +1479,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(
         new PoDecreaseBuilder(calypsoPoSmartCard.getPoClass(), sfi, counterNumber, decValue));
+
+    return this;
   }
 
   /**
@@ -1455,7 +1489,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSetCounter(byte sfi, int counterNumber, int newValue) {
+  public final PoTransactionService prepareSetCounter(byte sfi, int counterNumber, int newValue) {
     int delta;
     try {
       delta =
@@ -1495,6 +1529,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           sfi,
           newValue);
     }
+
+    return this;
   }
 
   /**
@@ -1503,12 +1539,14 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareCheckPinStatus() {
+  public final PoTransactionService prepareCheckPinStatus() {
     if (!calypsoPoSmartCard.isPinFeatureAvailable()) {
       throw new CalypsoPoTransactionIllegalStateException("PIN is not available for this PO.");
     }
     // create the builder and add it to the list of commands
     poCommandManager.addRegularCommand(new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass()));
+
+    return this;
   }
 
   /**
@@ -1517,7 +1555,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction) {
+  public final PoTransactionService prepareSvGet(
+      SvSettings.Operation svOperation, SvSettings.Action svAction) {
     if (!calypsoPoSmartCard.isSvFeatureAvailable()) {
       throw new CalypsoPoTransactionIllegalStateException(
           "Stored Value is not available for this PO.");
@@ -1540,6 +1579,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
             calypsoPoSmartCard.getPoClass(), calypsoPoSmartCard.getRevision(), svOperation),
         svOperation);
     this.svAction = svAction;
+
+    return this;
   }
 
   /**
@@ -1548,7 +1589,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvReload(int amount, byte[] date, byte[] time, byte[] free) {
+  public final PoTransactionService prepareSvReload(
+      int amount, byte[] date, byte[] time, byte[] free) {
     // create the initial builder with the application data
     PoSvReloadBuilder svReloadCmdBuild =
         new PoSvReloadBuilder(
@@ -1582,6 +1624,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
 
     // create and keep the PoCommand
     poCommandManager.addStoredValueCommand(svReloadCmdBuild, SvSettings.Operation.RELOAD);
+
+    return this;
   }
 
   /**
@@ -1590,9 +1634,11 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvReload(int amount) {
+  public final PoTransactionService prepareSvReload(int amount) {
     final byte[] zero = {0x00, 0x00};
     prepareSvReload(amount, zero, zero, zero);
+
+    return this;
   }
 
   /**
@@ -1679,7 +1725,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvDebit(int amount, byte[] date, byte[] time) {
+  public final PoTransactionService prepareSvDebit(int amount, byte[] date, byte[] time) {
     try {
       if (SvSettings.Action.DO.equals(svAction)) {
         prepareSvDebitPriv(amount, date, time);
@@ -1697,6 +1743,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       throw new CalypsoSamIOException(
           SAM_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
     }
+
+    return this;
   }
 
   /**
@@ -1705,9 +1753,11 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvDebit(int amount) {
+  public final PoTransactionService prepareSvDebit(int amount) {
     final byte[] zero = {0x00, 0x00};
     prepareSvDebit(amount, zero, zero);
+
+    return this;
   }
 
   /**
@@ -1716,7 +1766,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareSvReadAllLogs() {
+  public final PoTransactionService prepareSvReadAllLogs() {
     if (calypsoPoSmartCard.getApplicationSubtype()
         != CalypsoPoUtils.STORED_VALUE_FILE_STRUCTURE_ID) {
       throw new CalypsoPoTransactionIllegalStateException(
@@ -1731,6 +1781,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
         1,
         CalypsoPoUtils.SV_DEBIT_LOG_FILE_NB_REC,
         CalypsoPoUtils.SV_LOG_FILE_REC_LENGTH);
+
+    return this;
   }
 
   /**
@@ -1739,11 +1791,13 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareInvalidate() {
+  public final PoTransactionService prepareInvalidate() {
     if (calypsoPoSmartCard.isDfInvalidated()) {
       throw new CalypsoPoTransactionIllegalStateException("This PO is already invalidated.");
     }
     poCommandManager.addRegularCommand(new PoInvalidateBuilder(calypsoPoSmartCard.getPoClass()));
+
+    return this;
   }
 
   /**
@@ -1752,10 +1806,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * @since 2.0
    */
   @Override
-  public final void prepareRehabilitate() {
+  public final PoTransactionService prepareRehabilitate() {
     if (!calypsoPoSmartCard.isDfInvalidated()) {
       throw new CalypsoPoTransactionIllegalStateException("This PO is not invalidated.");
     }
     poCommandManager.addRegularCommand(new PoRehabilitateBuilder(calypsoPoSmartCard.getPoClass()));
+
+    return this;
   }
 }
