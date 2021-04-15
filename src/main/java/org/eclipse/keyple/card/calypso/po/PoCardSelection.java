@@ -24,36 +24,40 @@ public interface PoCardSelection extends CardSelection {
   /**
    * Adds a command APDU to read a single record from the indicated EF.
    *
-   * @param sfi the SFI of the EF to read
-   * @param recordNumber the record number to read
-   * @throws IllegalArgumentException if one of the provided argument is out of range
+   * @param sfi The SFI of the EF to read
+   * @param recordNumber The record number to read
+   * @return The object instance.
+   * @throws IllegalArgumentException If one of the provided argument is out of range
    * @since 2.0
    */
-  void prepareReadRecordFile(byte sfi, int recordNumber);
+  PoCardSelection prepareReadRecordFile(byte sfi, int recordNumber);
 
   /**
    * Adds a command APDU to select file with an LID provided as a 2-byte byte array.
    *
    * @param lid LID of the EF to select as a byte array
-   * @throws IllegalArgumentException if the argument is not an array of 2 bytes
+   * @return The object instance.
+   * @throws IllegalArgumentException If the argument is not an array of 2 bytes
    * @since 2.0
    */
-  void prepareSelectFile(byte[] lid);
+  PoCardSelection prepareSelectFile(byte[] lid);
 
   /**
    * Adds a command APDU to select file with an LID provided as a short.
    *
    * @param lid A short
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSelectFile(short lid);
+  PoCardSelection prepareSelectFile(short lid);
 
   /**
    * Adds a command APDU to select file according to the provided {@link SelectFileControl} enum
    * entry indicating the navigation case: FIRST, NEXT or CURRENT.
    *
    * @param selectControl A {@link SelectFileControl} enum entry
+   * @return The object instance.
    * @since 2.0
    */
-  void prepareSelectFile(SelectFileControl selectControl);
+  PoCardSelection prepareSelectFile(SelectFileControl selectControl);
 }
