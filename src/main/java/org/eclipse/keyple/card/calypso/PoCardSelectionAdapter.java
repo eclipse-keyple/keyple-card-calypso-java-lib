@@ -80,8 +80,9 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public void prepareReadRecordFile(byte sfi, int recordNumber) {
+  public PoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
     commandBuilders.add(CalypsoPoUtils.prepareReadRecordFile(poClass, sfi, recordNumber));
+    return this;
   }
 
   /**
@@ -90,8 +91,9 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public void prepareSelectFile(byte[] lid) {
+  public PoCardSelection prepareSelectFile(byte[] lid) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, lid));
+    return this;
   }
 
   /**
@@ -100,12 +102,13 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public void prepareSelectFile(short lid) {
+  public PoCardSelection prepareSelectFile(short lid) {
     byte[] bLid =
         new byte[] {
           (byte) ((lid >> 8) & 0xff), (byte) (lid & 0xff),
         };
     prepareSelectFile(bLid);
+    return this;
   }
 
   /**
@@ -114,8 +117,9 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public void prepareSelectFile(SelectFileControl selectControl) {
+  public PoCardSelection prepareSelectFile(SelectFileControl selectControl) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, selectControl));
+    return this;
   }
 
   /**
