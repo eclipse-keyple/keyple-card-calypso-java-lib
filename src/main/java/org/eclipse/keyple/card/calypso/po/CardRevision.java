@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso.po;
  *
  * @since 2.0
  */
-public enum PoRevision {
+public enum CardRevision {
 
   /** Calypso Revision 1 (CLA 0x94) */
   REV1_0,

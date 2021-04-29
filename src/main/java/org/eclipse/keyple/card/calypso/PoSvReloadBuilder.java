@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -28,7 +28,7 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
   private static final PoCommand command = PoCommand.SV_RELOAD;
 
   private final PoClass poClass;
-  private final PoRevision poRevision;
+  private final CardRevision cardRevision;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -39,7 +39,7 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
    * data, then to create the final APDU with the data from the SAM (see finalizeBuilder).
    *
    * @param poClass the PO class.
-   * @param poRevision the PO revision.
+   * @param cardRevision the PO revision.
    * @param amount amount to debit (signed integer from -8388608 to 8388607).
    * @param kvc debit key KVC (not checked by the PO).
    * @param date debit date (not checked by the PO).
@@ -50,7 +50,7 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
    */
   public PoSvReloadBuilder(
       PoClass poClass,
-      PoRevision poRevision,
+      CardRevision cardRevision,
       int amount,
       byte kvc,
       byte[] date,
@@ -70,12 +70,12 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.poRevision = poRevision;
+    this.cardRevision = cardRevision;
     this.poClass = poClass;
 
     // handle the dataIn size with signatureHi length according to PO revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[18 + (poRevision == PoRevision.REV3_2 ? 10 : 5)];
+    dataIn = new byte[18 + (cardRevision == CardRevision.REV3_2 ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     dataIn[1] = date[0];
@@ -108,8 +108,8 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
    * @since 2.0
    */
   public void finalizeBuilder(byte[] reloadComplementaryData) {
-    if ((poRevision == PoRevision.REV3_2 && reloadComplementaryData.length != 20)
-        || (poRevision != PoRevision.REV3_2 && reloadComplementaryData.length != 15)) {
+    if ((cardRevision == CardRevision.REV3_2 && reloadComplementaryData.length != 20)
+        || (cardRevision != CardRevision.REV3_2 && reloadComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -138,7 +138,7 @@ final class PoSvReloadBuilder extends AbstractPoCommandBuilder<PoSvReloadParser>
     svReloadData[0] = command.getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svReloadData[3] = poRevision == PoRevision.REV3_2 ? (byte) 0x1C : (byte) 0x17;
+    svReloadData[3] = cardRevision == CardRevision.REV3_2 ? (byte) 0x1C : (byte) 0x17;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svReloadData, 4, 11);
     return svReloadData;

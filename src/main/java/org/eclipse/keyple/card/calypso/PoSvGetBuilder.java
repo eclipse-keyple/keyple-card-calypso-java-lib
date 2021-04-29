@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
@@ -38,18 +38,18 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
    * Instantiates a new PoSvGetBuilder.
    *
    * @param poClass the PO class.
-   * @param poRevision the PO revision.
+   * @param cardRevision the PO revision.
    * @param svOperation the desired SV operation.
    * @throws IllegalArgumentException - if the command is inconsistent
    * @since 2.0
    */
   public PoSvGetBuilder(
       PoClass poClass,
-      PoRevision poRevision,
+      CardRevision cardRevision,
       PoTransactionService.SvSettings.Operation svOperation) {
     super(command);
     byte cla = poClass.getValue();
-    byte p1 = poRevision == PoRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
+    byte p1 = cardRevision == CardRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
     byte p2 =
         svOperation == PoTransactionService.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 

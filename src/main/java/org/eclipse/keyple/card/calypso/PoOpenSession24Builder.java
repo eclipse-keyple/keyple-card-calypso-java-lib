@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -45,7 +45,7 @@ final class PoOpenSession24Builder
    * @since 2.0
    */
   public PoOpenSession24Builder(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-    super(PoRevision.REV2_4);
+    super(CardRevision.REV2_4);
 
     if (keyIndex == 0x00) {
       throw new IllegalArgumentException("Key index can't be null for rev 2.4!");
@@ -66,7 +66,7 @@ final class PoOpenSession24Builder
         new ApduRequest(
             ApduUtil.build(
                 PoClass.LEGACY.getValue(),
-                PoCommand.getOpenSessionForRev(PoRevision.REV2_4).getInstructionByte(),
+                PoCommand.getOpenSessionForRev(CardRevision.REV2_4).getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,

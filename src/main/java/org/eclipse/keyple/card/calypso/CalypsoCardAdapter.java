@@ -56,7 +56,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private final PoClass poClass;
   private final byte[] calypsoSerialNumber;
   private final byte[] startupInfo;
-  private final PoRevision revision;
+  private final CardRevision revision;
   private final byte[] dfName;
   private static final int PO_REV1_ATR_LENGTH = 20;
   private static final int REV1_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
@@ -146,7 +146,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
       bufferSizeValue = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
 
-      if (revision == PoRevision.REV2_4) {
+      if (revision == CardRevision.REV2_4) {
         /* old cards have their modification counter in number of commands */
         modificationCounterIsInBytes = false;
         modificationsCounterMax = REV2_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
@@ -172,7 +172,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
             "Unexpected ATR length: " + ByteArrayUtil.toHex(getAtrBytes()));
       }
 
-      revision = PoRevision.REV1_0;
+      revision = CardRevision.REV1_0;
       dfName = null;
       calypsoSerialNumber = new byte[8];
       /* old cards have their modification counter in number of commands */
@@ -198,7 +198,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       isDfInvalidated = false;
     }
     /* Rev1 and Rev2 expects the legacy class byte while Rev3 expects the ISO class byte */
-    if (revision == PoRevision.REV1_0 || revision == PoRevision.REV2_4) {
+    if (revision == CardRevision.REV1_0 || revision == CardRevision.REV2_4) {
       poClass = PoClass.LEGACY;
     } else {
       poClass = PoClass.ISO;
@@ -265,18 +265,18 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * </ul>
    *
    * @param applicationType the application type (field of startup info).
-   * @return the {@link PoRevision}
+   * @return the {@link CardRevision}
    */
-  private PoRevision determineRevision(byte applicationType) {
+  private CardRevision determineRevision(byte applicationType) {
     if (((applicationType & 0xFF) & (1 << 7)) != 0) {
       /* CLAP */
-      return PoRevision.REV3_1_CLAP;
+      return CardRevision.REV3_1_CLAP;
     } else if ((applicationType >> 3) == (byte) (0x05)) {
-      return PoRevision.REV3_2;
+      return CardRevision.REV3_2;
     } else if ((applicationType >> 3) == (byte) (0x04)) {
-      return PoRevision.REV3_1;
+      return CardRevision.REV3_1;
     } else {
-      return PoRevision.REV2_4;
+      return CardRevision.REV2_4;
     }
   }
 
@@ -286,7 +286,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final PoRevision getRevision() {
+  public final CardRevision getRevision() {
     return revision;
   }
 

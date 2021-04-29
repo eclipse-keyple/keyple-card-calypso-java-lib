@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 
 /**
  * (package-private)<br>
@@ -30,12 +30,12 @@ abstract class AbstractPoOpenSessionBuilder<T extends AbstractPoResponseParser>
    * @throws IllegalArgumentException - if the request is inconsistent
    * @since 2.0
    */
-  AbstractPoOpenSessionBuilder(PoRevision revision) {
+  AbstractPoOpenSessionBuilder(CardRevision revision) {
     super(PoCommand.getOpenSessionForRev(revision));
   }
 
   public static AbstractPoOpenSessionBuilder<AbstractPoOpenSessionParser> create(
-      PoRevision revision,
+      CardRevision revision,
       byte debitKeyIndex,
       byte[] sessionTerminalChallenge,
       int sfi,

@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -31,7 +31,7 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
   private static final PoCommand command = PoCommand.SV_DEBIT;
 
   private final PoClass poClass;
-  private final PoRevision poRevision;
+  private final CardRevision cardRevision;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -39,7 +39,7 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
    * Instantiates a new PoSvDebitBuilder.
    *
    * @param poClass indicates which CLA byte should be used for the Apdu.
-   * @param poRevision the PO revision.
+   * @param cardRevision the PO revision.
    * @param amount amount to debit (positive integer from 0 to 32767).
    * @param kvc the KVC.
    * @param date debit date (not checked by the PO).
@@ -48,7 +48,7 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
    * @since 2.0
    */
   public PoSvDebitBuilder(
-      PoClass poClass, PoRevision poRevision, int amount, byte kvc, byte[] date, byte[] time) {
+      PoClass poClass, CardRevision cardRevision, int amount, byte kvc, byte[] date, byte[] time) {
     super(command);
 
     /* @see Calypso Layer ID 8.02 (200108) */
@@ -64,12 +64,12 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.poRevision = poRevision;
+    this.cardRevision = cardRevision;
     this.poClass = poClass;
 
     // handle the dataIn size with signatureHi length according to PO revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[15 + (poRevision == PoRevision.REV3_2 ? 10 : 5)];
+    dataIn = new byte[15 + (cardRevision == CardRevision.REV3_2 ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     short amountShort = (short) -amount;
@@ -99,8 +99,8 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
    * @since 2.0
    */
   public void finalizeBuilder(byte[] debitComplementaryData) {
-    if ((poRevision == PoRevision.REV3_2 && debitComplementaryData.length != 20)
-        || (poRevision != PoRevision.REV3_2 && debitComplementaryData.length != 15)) {
+    if ((cardRevision == CardRevision.REV3_2 && debitComplementaryData.length != 20)
+        || (cardRevision != CardRevision.REV3_2 && debitComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -129,7 +129,7 @@ final class PoSvDebitBuilder extends AbstractPoCommandBuilder<PoSvDebitParser> {
     svDebitData[0] = command.getInstructionByte();
     // svDebitData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svDebitData[3] = poRevision == PoRevision.REV3_2 ? (byte) 0x19 : (byte) 0x14;
+    svDebitData[3] = cardRevision == CardRevision.REV3_2 ? (byte) 0x19 : (byte) 0x14;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svDebitData, 4, 8);
     return svDebitData;

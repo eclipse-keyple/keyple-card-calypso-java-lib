@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.po.CalypsoCard;
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
@@ -376,7 +376,7 @@ class SamCommandProcessor {
       samCommands.add(
           (new SamDigestCloseBuilder(
               samRevision,
-              calypsoCard.getRevision().equals(PoRevision.REV3_2)
+              calypsoCard.getRevision().equals(CardRevision.REV3_2)
                   ? SIGNATURE_LENGTH_REV32
                   : SIGNATURE_LENGTH_REV_INF_32)));
     }

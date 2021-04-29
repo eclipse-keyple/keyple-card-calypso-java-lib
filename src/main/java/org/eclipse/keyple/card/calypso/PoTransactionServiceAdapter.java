@@ -17,8 +17,8 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.keyple.card.calypso.po.CalypsoCard;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.card.calypso.po.ElementaryFile;
-import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
@@ -1591,7 +1591,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
           "Stored Value is not available for this PO.");
     }
     if (poSecuritySettings.isLoadAndDebitSvLogRequired()
-        && (calypsoPoSmartCard.getRevision() != PoRevision.REV3_2)) {
+        && (calypsoPoSmartCard.getRevision() != CardRevision.REV3_2)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 PO add two SvGet commands (for RELOAD then for DEBIT).
       SvSettings.Operation operation1 =

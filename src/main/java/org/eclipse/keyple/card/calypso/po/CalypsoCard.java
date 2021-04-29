@@ -50,7 +50,7 @@ public interface CalypsoCard extends SmartCard {
    * @return an enum giving the identified PO revision
    * @since 2.0
    */
-  PoRevision getRevision();
+  CardRevision getRevision();
 
   /**
    * Gets the DF name as an array of bytes.

@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
@@ -30,7 +30,7 @@ final class PoOpenSession32Parser extends AbstractPoOpenSessionParser {
    * @param builder the reference to the builder that created this parser.
    */
   public PoOpenSession32Parser(ApduResponse response, PoOpenSession32Builder builder) {
-    super(response, builder, PoRevision.REV3_2);
+    super(response, builder, CardRevision.REV3_2);
   }
 
   /**

@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 
 /**
  * (package-private)<br>
@@ -129,13 +129,13 @@ enum PoCommand implements CardCommand {
   }
 
   /**
-   * Get the open session command for a given {@link PoRevision}
+   * Get the open session command for a given {@link CardRevision}
    *
    * @param rev Command revision.
    * @return Returned command
    * @since 2.0
    */
-  public static PoCommand getOpenSessionForRev(PoRevision rev) {
+  public static PoCommand getOpenSessionForRev(CardRevision rev) {
     switch (rev) {
       case REV1_0:
         return OPEN_SESSION_10;

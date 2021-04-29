@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -44,7 +44,7 @@ final class PoOpenSession31Builder
    * @since 2.0
    */
   public PoOpenSession31Builder(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-    super(PoRevision.REV3_1);
+    super(CardRevision.REV3_1);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -61,7 +61,7 @@ final class PoOpenSession31Builder
         new ApduRequest(
             ApduUtil.build(
                 PoClass.ISO.getValue(),
-                PoCommand.getOpenSessionForRev(PoRevision.REV3_1).getInstructionByte(),
+                PoCommand.getOpenSessionForRev(CardRevision.REV3_1).getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,

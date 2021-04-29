@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.card.calypso.po.PoRevision;
+import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
@@ -98,7 +98,7 @@ abstract class AbstractPoOpenSessionParser extends AbstractPoResponseParser {
   AbstractPoOpenSessionParser(
       ApduResponse response,
       AbstractPoOpenSessionBuilder<AbstractPoOpenSessionParser> builder,
-      PoRevision revision) {
+      CardRevision revision) {
     super(response, builder);
     byte[] dataOut = response.getDataOut();
     if (dataOut.length > 0) {
@@ -106,7 +106,7 @@ abstract class AbstractPoOpenSessionParser extends AbstractPoResponseParser {
     }
   }
 
-  public AbstractPoOpenSessionParser create(ApduResponse response, PoRevision revision) {
+  public AbstractPoOpenSessionParser create(ApduResponse response, CardRevision revision) {
     switch (revision) {
       case REV1_0:
         return new PoOpenSession10Parser(response, (PoOpenSession10Builder) builder);
