@@ -22,8 +22,9 @@ import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchange
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.*;
-import org.eclipse.keyple.core.service.CardResource;
-import org.eclipse.keyple.core.service.CardResourceServiceProvider;
+import org.eclipse.keyple.core.service.resource.CardResource;
+import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ class SamCommandProcessor {
   private static final byte SIGNATURE_LENGTH_REV32 = (byte) 0x08;
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
+  private final CardResource samResource;
   private final ProxyReader samReader;
   private final PoSecuritySetting poSecuritySettings;
   private static final List<byte[]> poDigestDataCache = new ArrayList<byte[]>();
@@ -76,10 +78,14 @@ class SamCommandProcessor {
   SamCommandProcessor(PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
     this.poSmartCard = poSmartCard;
     this.poSecuritySettings = poSecuritySetting;
-    CardResource samResource =
-        CardResourceServiceProvider.getService()
-            .getCardResources(poSecuritySettings.getCardResourceProfileName())
-            .get(0);
+    String samProfileName = poSecuritySettings.getCardResourceProfileName();
+    if (samProfileName != null) {
+      samResource =
+          CardResourceServiceProvider.getService()
+              .getCardResource(poSecuritySettings.getCardResourceProfileName());
+    } else {
+      samResource = CardResourceServiceProvider.getService().getCardResource();
+    }
     SamSmartCard samSmartCard = (SamSmartCard) samResource.getSmartCard();
     samRevision = samSmartCard.getSamRevision();
     samSerialNumber = samSmartCard.getSerialNumber();
@@ -270,7 +276,7 @@ class SamCommandProcessor {
     // Add an ApduRequest to the digest computation: if the request is of case4 type, Le must be
     // excluded from the digest computation. In this cas, we remove here the last byte of the
     // command buffer.
-    if (request.isCase4()) {
+    if (ApduUtil.isCase4(request.getBytes())) {
       poDigestDataCache.add(
           Arrays.copyOfRange(request.getBytes(), 0, request.getBytes().length - 1));
     } else {
@@ -783,5 +789,9 @@ class SamCommandProcessor {
     SamSvCheckParser samSvCheckParser = samSvCheckBuilder.createResponseParser(svCheckResponse);
 
     samSvCheckParser.checkStatus();
+  }
+
+  public void releaseResource() {
+    CardResourceServiceProvider.getService().releaseCardResource(samResource);
   }
 }

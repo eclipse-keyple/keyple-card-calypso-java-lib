@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso.transaction;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import org.eclipse.keyple.core.service.resource.CardResourceService;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
@@ -212,17 +213,11 @@ public class PoSecuritySetting {
    * Creates an instance of {@link PoSecuritySetting} builder to setup the security options for the
    * {@link PoTransactionService}.
    *
-   * <p>The only mandatory parameter is the name of the SAM card resource.
-   *
-   * <p>The default values of the other parameters are documented in their respective getters.
-   *
-   * @param samCardResourceProfileName The name of the SAM card resource associated with these
-   *     parameters.
    * @return A builder instance.
    * @since 2.0
    */
-  public static PoSecuritySettingBuilder builder(String samCardResourceProfileName) {
-    return new PoSecuritySettingBuilder(samCardResourceProfileName);
+  public static PoSecuritySettingBuilder builder() {
+    return new PoSecuritySettingBuilder();
   }
 
   /**
@@ -232,7 +227,7 @@ public class PoSecuritySetting {
    */
   public static class PoSecuritySettingBuilder {
 
-    private final String samCardResourceProfileName;
+    private String samCardResourceProfileName;
     private boolean isMultipleSessionEnabled;
     private boolean isRatificationMechanismEnabled;
     private boolean isPinTransmissionEncryptionDisabled;
@@ -250,15 +245,9 @@ public class PoSecuritySetting {
      * Creates an instance of {@link PoSecuritySetting} to setup the security options for the {@link
      * PoTransactionService}.
      *
-     * <p>The only mandatory parameter is the name of the SAM card resource.
-     *
-     * <p>The default values of the other parameters are documented in their respective getters.
-     *
-     * @param samCardResourceProfileName The name of the SAM card resource associated with these
-     *     parameters.
+     * <p>The default values the parameters are documented in their respective getters.
      */
-    private PoSecuritySettingBuilder(String samCardResourceProfileName) {
-      this.samCardResourceProfileName = samCardResourceProfileName;
+    private PoSecuritySettingBuilder() {
       // set default values for all optional parameters
       this.isMultipleSessionEnabled = false;
       this.isRatificationMechanismEnabled = false;
@@ -280,11 +269,30 @@ public class PoSecuritySetting {
     }
 
     /**
+     * Set the card resource profile name.
+     *
+     * <p>It is not mandatory to define a name here as long as card resource service is used with
+     * the method {@link CardResourceService#getCardResource()} which returns the first available
+     * resource.<br>
+     * This case corresponds to the use of the card resource service in its minimal configuration.
+     *
+     * @param samCardResourceProfileName The name of the SAM card resource associated with these
+     *     parameters.
+     * @return The object instance.
+     * @throws IllegalArgumentException If the profile name is null or empty.
+     */
+    public PoSecuritySettingBuilder setSamCardResourceProfileName(
+        String samCardResourceProfileName) {
+      Assert.getInstance().notEmpty(samCardResourceProfileName, "samCardResourceProfileName");
+      this.samCardResourceProfileName = samCardResourceProfileName;
+      return this;
+    }
+
+    /**
      * Enable multiple session mode to allow more changes to the card than the session buffer can
      * handle.
      *
      * @return The object instance.
-     * @throws IllegalArgumentException If the argument is null.
      * @since 2.0
      */
     public PoSecuritySettingBuilder enableMultipleSession() {
@@ -299,7 +307,6 @@ public class PoSecuritySetting {
      * <p>This feature is particularly useful for validators.
      *
      * @return The object instance.
-     * @throws IllegalArgumentException If the argument is null.
      * @since 2.0
      */
     public PoSecuritySettingBuilder enableRatificationMechanism() {
@@ -311,7 +318,6 @@ public class PoSecuritySetting {
      * Disable the PIN transmission encryption.
      *
      * @return The object instance.
-     * @throws IllegalArgumentException If the argument is null.
      * @since 2.0
      */
     public PoSecuritySettingBuilder disablePinEncryption() {

@@ -41,12 +41,12 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       "A communication error with the PO reader occurred while ";
   private static final String PO_COMMUNICATION_ERROR =
       "A communication error with the PO occurred while ";
-  private static final String PO_COMMAND_ERROR = "A PO command error occurred while";
+  private static final String PO_COMMAND_ERROR = "A PO command error occurred while ";
   private static final String SAM_READER_COMMUNICATION_ERROR =
       "A communication error with the SAM reader occurred while ";
   private static final String SAM_COMMUNICATION_ERROR =
       "A communication error with the SAM occurred while ";
-  private static final String SAM_COMMAND_ERROR = "A SAM command error occurred while";
+  private static final String SAM_COMMAND_ERROR = "A SAM command error occurred while ";
   private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
@@ -621,51 +621,56 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    */
   @Override
   public final PoTransactionService processOpening(SessionAccessLevel sessionAccessLevel) {
-    currentSessionAccessLevel = sessionAccessLevel;
+    try {
+      currentSessionAccessLevel = sessionAccessLevel;
 
-    // create a sublist of AbstractPoCommandBuilder to be sent atomically
-    List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
-        new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
+      // create a sublist of AbstractPoCommandBuilder to be sent atomically
+      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
+          new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
 
-    AtomicInteger neededSessionBufferSpace = new AtomicInteger();
-    AtomicBoolean overflow = new AtomicBoolean();
+      AtomicInteger neededSessionBufferSpace = new AtomicInteger();
+      AtomicBoolean overflow = new AtomicBoolean();
 
-    for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-        poCommandManager.getPoCommandBuilders()) {
-      // check if the command is a modifying one and get it status (overflow yes/no,
-      // neededSessionBufferSpace)
-      // if the command overflows the session buffer in atomic modification mode, an exception
-      // is raised.
-      if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
-        if (overflow.get()) {
-          // Open the session with the current commands
-          processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
-          // Closes the session, resets the modifications buffer counters for the next
-          // round.
-          processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
-          resetModificationsBufferCounter();
-          // Clear the list and add the command that did not fit in the PO modifications
-          // buffer. We also update the usage counter without checking the result.
-          poAtomicCommands.clear();
-          poAtomicCommands.add(commandBuilder);
-          // just update modifications buffer usage counter, ignore result (always false)
-          isSessionBufferOverflowed(neededSessionBufferSpace.get());
+      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
+          poCommandManager.getPoCommandBuilders()) {
+        // check if the command is a modifying one and get it status (overflow yes/no,
+        // neededSessionBufferSpace)
+        // if the command overflows the session buffer in atomic modification mode, an exception
+        // is raised.
+        if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
+          if (overflow.get()) {
+            // Open the session with the current commands
+            processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
+            // Closes the session, resets the modifications buffer counters for the next
+            // round.
+            processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
+            resetModificationsBufferCounter();
+            // Clear the list and add the command that did not fit in the PO modifications
+            // buffer. We also update the usage counter without checking the result.
+            poAtomicCommands.clear();
+            poAtomicCommands.add(commandBuilder);
+            // just update modifications buffer usage counter, ignore result (always false)
+            isSessionBufferOverflowed(neededSessionBufferSpace.get());
+          } else {
+            // The command fits in the PO modifications buffer, just add it to the list
+            poAtomicCommands.add(commandBuilder);
+          }
         } else {
-          // The command fits in the PO modifications buffer, just add it to the list
+          // This command does not affect the PO modifications buffer
           poAtomicCommands.add(commandBuilder);
         }
-      } else {
-        // This command does not affect the PO modifications buffer
-        poAtomicCommands.add(commandBuilder);
       }
+
+      processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
+
+      // sets the flag indicating that the commands have been executed
+      poCommandManager.notifyCommandsProcessed();
+
+      return this;
+    } catch (RuntimeException e) {
+      releaseSamResourceSilently();
+      throw e;
     }
-
-    processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
-
-    // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
-
-    return this;
   }
 
   /**
@@ -773,13 +778,17 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    */
   @Override
   public final PoTransactionService processPoCommands() {
-    if (sessionState == SessionState.SESSION_OPEN) {
-      processPoCommandsInSession();
-    } else {
-      processPoCommandsOutOfSession(channelControl);
+    try {
+      if (sessionState == SessionState.SESSION_OPEN) {
+        processPoCommandsInSession();
+      } else {
+        processPoCommandsOutOfSession(channelControl);
+      }
+      return this;
+    } catch (RuntimeException e) {
+      releaseSamResourceSilently();
+      throw e;
     }
-
-    return this;
   }
 
   /**
@@ -789,75 +798,79 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    */
   @Override
   public final void processClosing() {
-    checkSessionIsOpen();
+    try {
+      checkSessionIsOpen();
 
-    boolean atLeastOneReadCommand = false;
-    boolean sessionPreviouslyClosed = false;
+      boolean atLeastOneReadCommand = false;
+      boolean sessionPreviouslyClosed = false;
 
-    AtomicInteger neededSessionBufferSpace = new AtomicInteger();
-    AtomicBoolean overflow = new AtomicBoolean();
+      AtomicInteger neededSessionBufferSpace = new AtomicInteger();
+      AtomicBoolean overflow = new AtomicBoolean();
 
-    List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
-        new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
-    for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-        poCommandManager.getPoCommandBuilders()) {
-      // check if the command is a modifying one and get it status (overflow yes/no,
-      // neededSessionBufferSpace)
-      // if the command overflows the session buffer in atomic modification mode, an exception
-      // is raised.
-      if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
-        if (overflow.get()) {
-          // Reopen a session with the same access level if it was previously closed in
-          // this current processClosing
-          if (sessionPreviouslyClosed) {
-            processAtomicOpening(currentSessionAccessLevel, null);
-          }
+      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
+          new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
+      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
+          poCommandManager.getPoCommandBuilders()) {
+        // check if the command is a modifying one and get it status (overflow yes/no,
+        // neededSessionBufferSpace)
+        // if the command overflows the session buffer in atomic modification mode, an exception
+        // is raised.
+        if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
+          if (overflow.get()) {
+            // Reopen a session with the same access level if it was previously closed in
+            // this current processClosing
+            if (sessionPreviouslyClosed) {
+              processAtomicOpening(currentSessionAccessLevel, null);
+            }
 
-          // If at least one non-modifying was prepared, we use processAtomicPoCommands
-          // instead of processAtomicClosing to send the list
-          if (atLeastOneReadCommand) {
-            processAtomicPoCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
-            // Clear the list of commands sent
-            poAtomicCommands.clear();
-            processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
-            resetModificationsBufferCounter();
-            sessionPreviouslyClosed = true;
-            atLeastOneReadCommand = false;
+            // If at least one non-modifying was prepared, we use processAtomicPoCommands
+            // instead of processAtomicClosing to send the list
+            if (atLeastOneReadCommand) {
+              processAtomicPoCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
+              // Clear the list of commands sent
+              poAtomicCommands.clear();
+              processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
+              resetModificationsBufferCounter();
+              sessionPreviouslyClosed = true;
+              atLeastOneReadCommand = false;
+            } else {
+              // All commands in the list are 'modifying the PO'
+              processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
+              // Clear the list of commands sent
+              poAtomicCommands.clear();
+              resetModificationsBufferCounter();
+              sessionPreviouslyClosed = true;
+            }
+
+            // Add the command that did not fit in the PO modifications
+            // buffer. We also update the usage counter without checking the result.
+            poAtomicCommands.add(commandBuilder);
+            // just update modifications buffer usage counter, ignore result (always false)
+            isSessionBufferOverflowed(neededSessionBufferSpace.get());
           } else {
-            // All commands in the list are 'modifying the PO'
-            processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
-            // Clear the list of commands sent
-            poAtomicCommands.clear();
-            resetModificationsBufferCounter();
-            sessionPreviouslyClosed = true;
+            // The command fits in the PO modifications buffer, just add it to the list
+            poAtomicCommands.add(commandBuilder);
           }
-
-          // Add the command that did not fit in the PO modifications
-          // buffer. We also update the usage counter without checking the result.
-          poAtomicCommands.add(commandBuilder);
-          // just update modifications buffer usage counter, ignore result (always false)
-          isSessionBufferOverflowed(neededSessionBufferSpace.get());
         } else {
-          // The command fits in the PO modifications buffer, just add it to the list
+          // This command does not affect the PO modifications buffer
           poAtomicCommands.add(commandBuilder);
+          atLeastOneReadCommand = true;
         }
-      } else {
-        // This command does not affect the PO modifications buffer
-        poAtomicCommands.add(commandBuilder);
-        atLeastOneReadCommand = true;
       }
-    }
-    if (sessionPreviouslyClosed) {
-      // Reopen a session if necessary
-      processAtomicOpening(currentSessionAccessLevel, null);
-    }
+      if (sessionPreviouslyClosed) {
+        // Reopen a session if necessary
+        processAtomicOpening(currentSessionAccessLevel, null);
+      }
 
-    // Finally, close the session as requested
-    processAtomicClosing(
-        poAtomicCommands, poSecuritySettings.isRatificationMechanismEnabled(), channelControl);
+      // Finally, close the session as requested
+      processAtomicClosing(
+          poAtomicCommands, poSecuritySettings.isRatificationMechanismEnabled(), channelControl);
 
-    // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
+      // sets the flag indicating that the commands have been executed
+      poCommandManager.notifyCommandsProcessed();
+    } finally {
+      releaseSamResourceSilently();
+    }
   }
 
   /**
@@ -1294,11 +1307,27 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    */
   @Override
   public final PoTransactionService prepareReadRecordFile(byte sfi, int recordNumber) {
-    // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        CalypsoPoUtils.prepareReadRecordFile(calypsoPoSmartCard.getPoClass(), sfi, recordNumber));
+    try {
+      // create the builder and add it to the list of commands
+      poCommandManager.addRegularCommand(
+          CalypsoPoUtils.prepareReadRecordFile(calypsoPoSmartCard.getPoClass(), sfi, recordNumber));
 
-    return this;
+      return this;
+    } catch (RuntimeException e) {
+      releaseSamResourceSilently();
+      throw e;
+    }
+  }
+
+  /** */
+  private void releaseSamResourceSilently() {
+    try {
+      if (samCommandProcessor != null) {
+        samCommandProcessor.releaseResource();
+      }
+    } catch (RuntimeException e) {
+      logger.error("Unexpected error during release card resource: {}", e.getMessage(), e);
+    }
   }
 
   /**

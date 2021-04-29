@@ -15,7 +15,7 @@ import org.eclipse.keyple.core.common.KeypleCardResourceProfileExtension;
 
 /**
  * Specific SAM Calypso Card Resource Profile Extension to identify and prepare Calyspo SAM within
- * the {@link org.eclipse.keyple.core.service.CardResourceService}.
+ * the {@link org.eclipse.keyple.core.service.resource.CardResourceService}.
  *
  * @since 2.0
  */
