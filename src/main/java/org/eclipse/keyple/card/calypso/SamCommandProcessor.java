@@ -55,7 +55,7 @@ class SamCommandProcessor {
   private final CardResource samResource;
   private final ProxyReader samReader;
   private final CardSecuritySetting cardSecuritySettings;
-  private static final List<byte[]> poDigestDataCache = new ArrayList<byte[]>();
+  private static final List<byte[]> cardDigestDataCache = new ArrayList<byte[]>();
   private final CalypsoCard calypsoCard;
   private final byte[] samSerialNumber;
   private final SamRevision samRevision;
@@ -184,17 +184,17 @@ class SamCommandProcessor {
    *
    * <p>If the value provided by the card is not undetermined, the work KIF is set to this value.
    *
-   * @param poKif the KIF value from the card.
+   * @param cardKif the KIF value from the card.
    * @param sessionAccessLevel the session access level.
    * @return the work KIF value byte
    */
   private byte determineWorkKif(
-      byte poKif, CardTransactionService.SessionAccessLevel sessionAccessLevel) {
+      byte cardKif, CardTransactionService.SessionAccessLevel sessionAccessLevel) {
     byte kif;
-    if (poKif == KIF_UNDEFINED) {
+    if (cardKif == KIF_UNDEFINED) {
       kif = cardSecuritySettings.getKif(sessionAccessLevel);
     } else {
-      kif = poKif;
+      kif = cardKif;
     }
     return kif;
   }
@@ -211,7 +211,7 @@ class SamCommandProcessor {
    *
    * @param sessionEncryption true if the session is encrypted.
    * @param verificationMode true if the verification mode is active.
-   * @param poKif the card KIF.
+   * @param cardKif the card KIF.
    * @param poKVC the card KVC.
    * @param digestData a first packet of data to digest.
    * @since 2.0
@@ -220,7 +220,7 @@ class SamCommandProcessor {
       CardTransactionService.SessionAccessLevel sessionAccessLevel,
       boolean sessionEncryption,
       boolean verificationMode,
-      byte poKif,
+      byte cardKif,
       byte poKVC,
       byte[] digestData) {
 
@@ -229,7 +229,7 @@ class SamCommandProcessor {
     // TODO check in which case this key number is needed
     // this.workKeyRecordNumber =
     // cardSecuritySettings.getSessionDefaultKeyRecordNumber(sessionAccessLevel);
-    this.workKif = determineWorkKif(poKif, sessionAccessLevel);
+    this.workKif = determineWorkKif(cardKif, sessionAccessLevel);
     // TODO handle Rev 1.0 case where KVC is not available
     this.workKvc = poKVC;
 
@@ -247,16 +247,16 @@ class SamCommandProcessor {
           workKeyRecordNumber);
       logger.debug(
           "initialize: KIF = {}, KVC {}, DIGESTDATA = {}",
-          String.format("%02X", poKif),
+          String.format("%02X", cardKif),
           String.format("%02X", poKVC),
           ByteArrayUtil.toHex(digestData));
     }
 
     // Clear data cache
-    poDigestDataCache.clear();
+    cardDigestDataCache.clear();
 
     // Build Digest Init command as first ApduRequest of the digest computation process
-    poDigestDataCache.add(digestData);
+    cardDigestDataCache.add(digestData);
 
     isDigestInitDone = false;
     isDigesterInitialized = true;
@@ -277,16 +277,16 @@ class SamCommandProcessor {
     // excluded from the digest computation. In this cas, we remove here the last byte of the
     // command buffer.
     if (ApduUtil.isCase4(request.getBytes())) {
-      poDigestDataCache.add(
+      cardDigestDataCache.add(
           Arrays.copyOfRange(request.getBytes(), 0, request.getBytes().length - 1));
     } else {
-      poDigestDataCache.add(request.getBytes());
+      cardDigestDataCache.add(request.getBytes());
     }
 
     logger.trace("pushCardExchangedData: RESPONSE = {}", response);
 
     // Add an ApduResponse to the digest computation
-    poDigestDataCache.add(response.getBytes());
+    cardDigestDataCache.add(response.getBytes());
   }
 
   /**
@@ -330,16 +330,16 @@ class SamCommandProcessor {
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
     // sanity checks
-    if (poDigestDataCache.isEmpty()) {
+    if (cardDigestDataCache.isEmpty()) {
       logger.debug("getSamDigestRequest: no data in cache.");
       throw new IllegalStateException("Digest data cache is empty.");
     }
 
-    if (!isDigestInitDone && poDigestDataCache.size() % 2 == 0) {
+    if (!isDigestInitDone && cardDigestDataCache.size() % 2 == 0) {
       // the number of buffers should be 2*n + 1
       logger.debug(
           "getSamDigestRequest: wrong number of buffer in cache NBR = {}.",
-          poDigestDataCache.size());
+          cardDigestDataCache.size());
       throw new IllegalStateException("Digest data cache is inconsistent.");
     }
 
@@ -356,20 +356,20 @@ class SamCommandProcessor {
               workKeyRecordNumber,
               workKif,
               workKvc,
-              poDigestDataCache.get(0)));
-      poDigestDataCache.remove(0);
+              cardDigestDataCache.get(0)));
+      cardDigestDataCache.remove(0);
       // note that the digest init has been made
       isDigestInitDone = true;
     }
 
     // Build and append Digest Update commands
-    for (int i = 0; i < poDigestDataCache.size(); i++) {
+    for (int i = 0; i < cardDigestDataCache.size(); i++) {
       samCommands.add(
-          new SamDigestUpdateBuilder(samRevision, sessionEncryption, poDigestDataCache.get(i)));
+          new SamDigestUpdateBuilder(samRevision, sessionEncryption, cardDigestDataCache.get(i)));
     }
 
     // clears cached commands once they have been processed
-    poDigestDataCache.clear();
+    cardDigestDataCache.clear();
 
     if (addDigestClose) {
       // Build and append Digest Close command

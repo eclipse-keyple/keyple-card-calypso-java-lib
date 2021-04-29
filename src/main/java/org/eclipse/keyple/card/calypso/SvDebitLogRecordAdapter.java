@@ -23,16 +23,16 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  */
 class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   final int offset;
-  final byte[] poResponse;
+  final byte[] cardResponse;
 
   /**
    * Constructor
    *
-   * @param poResponse the Sv Get or Read Record (SV Load log file) response data.
+   * @param cardResponse the Sv Get or Read Record (SV Load log file) response data.
    * @param offset the debit log offset in the response (may change from a card to another).
    */
-  public SvDebitLogRecordAdapter(byte[] poResponse, int offset) {
-    this.poResponse = poResponse;
+  public SvDebitLogRecordAdapter(byte[] cardResponse, int offset) {
+    this.cardResponse = cardResponse;
     this.offset = offset;
   }
 
@@ -43,7 +43,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getAmount() {
-    return ByteArrayUtil.twoBytesSignedToInt(poResponse, offset);
+    return ByteArrayUtil.twoBytesSignedToInt(cardResponse, offset);
   }
 
   /**
@@ -53,7 +53,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getBalance() {
-    return ByteArrayUtil.threeBytesSignedToInt(poResponse, offset + 14);
+    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 14);
   }
 
   /**
@@ -74,8 +74,8 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   @Override
   public byte[] getDebitTimeBytes() {
     final byte[] time = new byte[2];
-    time[0] = poResponse[offset + 4];
-    time[1] = poResponse[offset + 5];
+    time[0] = cardResponse[offset + 4];
+    time[1] = cardResponse[offset + 5];
     return time;
   }
 
@@ -97,8 +97,8 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   @Override
   public byte[] getDebitDateBytes() {
     final byte[] date = new byte[2];
-    date[0] = poResponse[offset + 2];
-    date[1] = poResponse[offset + 3];
+    date[0] = cardResponse[offset + 2];
+    date[1] = cardResponse[offset + 3];
     return date;
   }
 
@@ -109,7 +109,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public byte getKvc() {
-    return poResponse[offset + 6];
+    return cardResponse[offset + 6];
   }
 
   /**
@@ -130,7 +130,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   @Override
   public byte[] getSamIdBytes() {
     byte[] samId = new byte[4];
-    System.arraycopy(poResponse, offset + 7, samId, 0, 4);
+    System.arraycopy(cardResponse, offset + 7, samId, 0, 4);
     return samId;
   }
 
@@ -152,8 +152,8 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   @Override
   public byte[] getSvTNumBytes() {
     final byte[] tnNum = new byte[2];
-    tnNum[0] = poResponse[offset + 17];
-    tnNum[1] = poResponse[offset + 18];
+    tnNum[0] = cardResponse[offset + 17];
+    tnNum[1] = cardResponse[offset + 18];
     return tnNum;
   }
 
@@ -175,7 +175,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   @Override
   public byte[] getSamTNumBytes() {
     byte[] samTNum = new byte[3];
-    System.arraycopy(poResponse, offset + 11, samTNum, 0, 3);
+    System.arraycopy(cardResponse, offset + 11, samTNum, 0, 3);
     return samTNum;
   }
 

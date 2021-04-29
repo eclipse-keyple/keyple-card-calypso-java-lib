@@ -84,40 +84,40 @@ final class CardSvGetParser extends AbstractCardResponseParser {
    */
   public CardSvGetParser(byte[] svCommandHeader, ApduResponse response, CardSvGetBuilder builder) {
     super(response, builder);
-    byte[] poResponse = response.getDataOut();
+    byte[] cardResponse = response.getDataOut();
     // keep the command header
     this.svCommandHeader = svCommandHeader;
-    switch (poResponse.length) {
+    switch (cardResponse.length) {
       case 0x21: /* Compatibility mode, Reload */
       case 0x1E: /* Compatibility mode, Debit or Undebit */
         challengeOut = new byte[2];
         previousSignatureLo = new byte[3];
-        currentKVC = poResponse[0];
-        transactionNumber = ByteArrayUtil.twoBytesToInt(poResponse, 1);
-        System.arraycopy(poResponse, 3, previousSignatureLo, 0, 3);
-        challengeOut[0] = poResponse[6];
-        challengeOut[1] = poResponse[7];
-        balance = ByteArrayUtil.threeBytesSignedToInt(poResponse, 8);
-        if (poResponse.length == 0x21) {
+        currentKVC = cardResponse[0];
+        transactionNumber = ByteArrayUtil.twoBytesToInt(cardResponse, 1);
+        System.arraycopy(cardResponse, 3, previousSignatureLo, 0, 3);
+        challengeOut[0] = cardResponse[6];
+        challengeOut[1] = cardResponse[7];
+        balance = ByteArrayUtil.threeBytesSignedToInt(cardResponse, 8);
+        if (cardResponse.length == 0x21) {
           /* Reload */
-          loadLog = new SvLoadLogRecordAdapter(poResponse, 11);
+          loadLog = new SvLoadLogRecordAdapter(cardResponse, 11);
           debitLog = null;
         } else {
           /* Debit */
           loadLog = null;
-          debitLog = new SvDebitLogRecordAdapter(poResponse, 11);
+          debitLog = new SvDebitLogRecordAdapter(cardResponse, 11);
         }
         break;
       case 0x3D: /* Revision 3.2 mode */
         challengeOut = new byte[8];
         previousSignatureLo = new byte[6];
-        System.arraycopy(poResponse, 0, challengeOut, 0, 8);
-        currentKVC = poResponse[8];
-        transactionNumber = ByteArrayUtil.twoBytesToInt(poResponse, 9);
-        System.arraycopy(poResponse, 11, previousSignatureLo, 0, 6);
-        balance = ByteArrayUtil.threeBytesSignedToInt(poResponse, 17);
-        loadLog = new SvLoadLogRecordAdapter(poResponse, 20);
-        debitLog = new SvDebitLogRecordAdapter(poResponse, 42);
+        System.arraycopy(cardResponse, 0, challengeOut, 0, 8);
+        currentKVC = cardResponse[8];
+        transactionNumber = ByteArrayUtil.twoBytesToInt(cardResponse, 9);
+        System.arraycopy(cardResponse, 11, previousSignatureLo, 0, 6);
+        balance = ByteArrayUtil.threeBytesSignedToInt(cardResponse, 17);
+        loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
+        debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);
         break;
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");

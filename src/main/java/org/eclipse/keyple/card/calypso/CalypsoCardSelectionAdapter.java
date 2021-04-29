@@ -40,31 +40,31 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
   private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
       commandBuilders;
-  private final CardSelector poCardSelector;
+  private final CardSelector cardSelector;
   private final CalypsoCardClass calypsoCardClass;
 
   /**
    * (package-private)<br>
    * Creates an instance of {@link CalypsoCardSelection}.
    *
-   * @param poCardSelector A card selector.
+   * @param cardSelector A card selector.
    * @since 2.0
-   * @throws IllegalArgumentException If poCardSelector is null.
+   * @throws IllegalArgumentException If cardSelector is null.
    */
-  CalypsoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedCard) {
+  CalypsoCardSelectionAdapter(CardSelector cardSelector, boolean acceptInvalidatedCard) {
 
-    Assert.getInstance().notNull(poCardSelector, "poCardSelector");
+    Assert.getInstance().notNull(cardSelector, "cardSelector");
 
-    this.poCardSelector = poCardSelector;
+    this.cardSelector = cardSelector;
 
     if (acceptInvalidatedCard) {
-      this.poCardSelector.addSuccessfulStatusCode(SW_CARD_INVALIDATED);
+      this.cardSelector.addSuccessfulStatusCode(SW_CARD_INVALIDATED);
     }
 
     this.commandBuilders =
         new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
     // deduces the class of the card according to the type of selection
-    if (poCardSelector.getAid() == null) {
+    if (cardSelector.getAid() == null) {
       calypsoCardClass = CalypsoCardClass.LEGACY;
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
@@ -138,9 +138,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         cardSelectionApduRequests.add(commandBuilder.getApduRequest());
       }
       return new CardSelectionRequest(
-          poCardSelector, new CardRequest(cardSelectionApduRequests, false));
+          cardSelector, new CardRequest(cardSelectionApduRequests, false));
     } else {
-      return new CardSelectionRequest(poCardSelector, null);
+      return new CardSelectionRequest(cardSelector, null);
     }
   }
 
@@ -188,6 +188,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CardSelector getCardSelector() {
-    return poCardSelector;
+    return cardSelector;
   }
 }

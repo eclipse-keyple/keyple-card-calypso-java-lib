@@ -60,7 +60,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private static final Logger logger = LoggerFactory.getLogger(CardTransactionServiceAdapter.class);
 
   /** The reader for the card. */
-  private final ProxyReader poReader;
+  private final ProxyReader cardReader;
   /** The card security settings used to manage the secure session */
   private CardSecuritySetting cardSecuritySettings;
   /** The SAM commands processor */
@@ -97,15 +97,15 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    *
    * <p>Secure operations are enabled by the presence of {@link CardSecuritySetting}.
    *
-   * @param poReader The reader through which the card communicates.
+   * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
    * @since 2.0
    */
   public CardTransactionServiceAdapter(
-      Reader poReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+      Reader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
-    this(poReader, calypsoCard);
+    this(cardReader, calypsoCard);
 
     this.cardSecuritySettings = cardSecuritySetting;
 
@@ -115,12 +115,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /**
    * Creates an instance of {@link CardTransactionService} for non-secure operations.
    *
-   * @param poReader The reader through which the card communicates.
+   * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @since 2.0
    */
-  public CardTransactionServiceAdapter(Reader poReader, CalypsoCard calypsoCard) {
-    this.poReader = (ProxyReader) poReader;
+  public CardTransactionServiceAdapter(Reader cardReader, CalypsoCard calypsoCard) {
+    this.cardReader = (ProxyReader) cardReader;
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
 
@@ -157,7 +157,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     byte[] sessionTerminalChallenge = getSessionTerminalChallenge();
 
     // card ApduRequest List to hold Open Secure Session and other optional commands
-    List<ApduRequest> poApduRequests = new ArrayList<ApduRequest>();
+    List<ApduRequest> cardApduRequests = new ArrayList<ApduRequest>();
 
     // The sfi and record number to be read when the open secure session command is executed.
     // The default value is 0 (no record to read) but we will optimize the exchanges if a read
@@ -191,24 +191,24 @@ class CardTransactionServiceAdapter implements CardTransactionService {
             recordNumber);
 
     // Add the resulting ApduRequest to the card ApduRequest list
-    poApduRequests.add(openSessionCmdBuild.getApduRequest());
+    cardApduRequests.add(openSessionCmdBuild.getApduRequest());
 
     // Add all optional commands to the card ApduRequest list
     if (cardCommands != null) {
-      poApduRequests.addAll(getApduRequests(cardCommands));
+      cardApduRequests.addAll(getApduRequests(cardCommands));
     }
 
     // Create a CardRequest from the ApduRequest list, card AID as Selector, keep channel open
-    CardRequest poCardRequest = new CardRequest(poApduRequests, false);
+    CardRequest cardRequest = new CardRequest(cardApduRequests, false);
 
     // Transmit the commands to the card
-    CardResponse poCardResponse = safeTransmit(poCardRequest, ChannelControl.KEEP_OPEN);
+    CardResponse poCardResponse = safeTransmit(cardRequest, ChannelControl.KEEP_OPEN);
 
     // Retrieve and check the ApduResponses
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
 
     // Do some basic checks
-    checkCommandsResponsesSynchronization(poApduRequests.size(), poApduResponses.size());
+    checkCommandsResponsesSynchronization(cardApduRequests.size(), poApduResponses.size());
 
     // Parse the response to Open Secure Session (the first item of poApduResponses)
     // The updateCalypsoCard method fills the CalypsoCard object with the command data and
@@ -229,36 +229,36 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     byte[] sessionCardChallenge = poOpenSessionPars.getCardChallenge();
 
     // The card KIF
-    byte poKif = poOpenSessionPars.getSelectedKif();
+    byte cardKif = poOpenSessionPars.getSelectedKif();
 
     // The card KVC, may be null for card Rev 1.0
-    byte poKvc = poOpenSessionPars.getSelectedKvc();
+    byte cardKvc = poOpenSessionPars.getSelectedKvc();
 
     if (logger.isDebugEnabled()) {
       logger.debug(
           "processAtomicOpening => opening: CARDCHALLENGE = {}, CARDKIF = {}, CARDKVC = {}",
           ByteArrayUtil.toHex(sessionCardChallenge),
-          String.format("%02X", poKif),
-          String.format("%02X", poKvc));
+          String.format("%02X", cardKif),
+          String.format("%02X", cardKvc));
     }
 
-    if (!cardSecuritySettings.isKvcAuthorized(poKvc)) {
+    if (!cardSecuritySettings.isKvcAuthorized(cardKvc)) {
       throw new CalypsoUnauthorizedKvcException(
-          String.format("Unauthorized KVC error: card KVC = %02X", poKvc));
+          String.format("Unauthorized KVC error: card KVC = %02X", cardKvc));
     }
 
     // Initialize the digest processor. It will store all digest operations (Digest Init, Digest
     // Update) until the session closing. At this moment, all SAM Apdu will be processed at
     // once.
     samCommandProcessor.initializeDigester(
-        sessionAccessLevel, false, false, poKif, poKvc, poApduResponses.get(0).getDataOut());
+        sessionAccessLevel, false, false, cardKif, cardKvc, poApduResponses.get(0).getDataOut());
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
     // we skip it and start the loop at index 1.
     if ((cardCommands != null) && !cardCommands.isEmpty()) {
       // Add requests and responses to the digest processor
-      samCommandProcessor.pushCardExchangedData(poApduRequests, poApduResponses, 1);
+      samCommandProcessor.pushCardExchangedData(cardApduRequests, poApduResponses, 1);
     }
 
     // Remove Open Secure Session response and create a new CardResponse
@@ -318,25 +318,25 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       ChannelControl channelControl) {
 
     // Get the card ApduRequest List
-    List<ApduRequest> poApduRequests = getApduRequests(cardCommands);
+    List<ApduRequest> apduRequests = getApduRequests(cardCommands);
 
     // Create a CardRequest from the ApduRequest list, card AID as Selector, manage the logical
     // channel according to the channelControl
-    CardRequest poCardRequest = new CardRequest(poApduRequests, false);
+    CardRequest cardRequest = new CardRequest(apduRequests, false);
 
     // Transmit the commands to the card
-    CardResponse poCardResponse = safeTransmit(poCardRequest, channelControl);
+    CardResponse poCardResponse = safeTransmit(cardRequest, channelControl);
 
     // Retrieve and check the ApduResponses
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
 
     // Do some basic checks
-    checkCommandsResponsesSynchronization(poApduRequests.size(), poApduResponses.size());
+    checkCommandsResponsesSynchronization(apduRequests.size(), poApduResponses.size());
 
     // Add all commands data to the digest computation if this method is invoked within a Secure
     // Session.
     if (sessionState == SessionState.SESSION_OPEN) {
-      samCommandProcessor.pushCardExchangedData(poApduRequests, poApduResponses, 0);
+      samCommandProcessor.pushCardExchangedData(apduRequests, poApduResponses, 0);
     }
 
     try {
@@ -389,7 +389,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * The method is marked as deprecated because the advanced variant defined below must be used at
    * the application level.
    *
-   * @param poModificationCommands a list of commands that can modify the card memory content.
+   * @param cardModificationCommands a list of commands that can modify the card memory content.
    * @param poAnticipatedResponses a list of anticipated card responses to the modification
    *     commands.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
@@ -400,7 +400,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    *     errors)
    */
   private void processAtomicClosing(
-      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poModificationCommands,
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
+          cardModificationCommands,
       List<ApduResponse> poAnticipatedResponses,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
@@ -408,14 +409,14 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     checkSessionIsOpen();
 
     // Get the card ApduRequest List - for the first card exchange
-    List<ApduRequest> poApduRequests = getApduRequests(poModificationCommands);
+    List<ApduRequest> apduRequests = getApduRequests(cardModificationCommands);
 
     // Compute "anticipated" Digest Update (for optional poModificationCommands)
-    if ((poModificationCommands != null) && !poApduRequests.isEmpty()) {
-      checkCommandsResponsesSynchronization(poApduRequests.size(), poAnticipatedResponses.size());
+    if ((cardModificationCommands != null) && !apduRequests.isEmpty()) {
+      checkCommandsResponsesSynchronization(apduRequests.size(), poAnticipatedResponses.size());
       // Add all commands data to the digest computation: commands and anticipated
       // responses.
-      samCommandProcessor.pushCardExchangedData(poApduRequests, poAnticipatedResponses, 0);
+      samCommandProcessor.pushCardExchangedData(apduRequests, poAnticipatedResponses, 0);
     }
 
     // All SAM digest operations will now run at once.
@@ -429,26 +430,26 @@ class CardTransactionServiceAdapter implements CardTransactionService {
         new CardCloseSessionBuilder(
             calypsoCard.getCardClass(), !isRatificationMechanismEnabled, sessionTerminalSignature);
 
-    poApduRequests.add(closeSessionCmdBuild.getApduRequest());
+    apduRequests.add(closeSessionCmdBuild.getApduRequest());
 
     // Keep the position of the Close Session command in request list
-    int closeCommandIndex = poApduRequests.size() - 1;
+    int closeCommandIndex = apduRequests.size() - 1;
 
     // Add the card Ratification command if any
     boolean ratificationCommandAdded;
-    if (isRatificationMechanismEnabled && ((Reader) poReader).isContactless()) {
-      poApduRequests.add(CardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
+    if (isRatificationMechanismEnabled && ((Reader) cardReader).isContactless()) {
+      apduRequests.add(CardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
       ratificationCommandAdded = true;
     } else {
       ratificationCommandAdded = false;
     }
 
     // Transfer card commands
-    CardRequest poCardRequest = new CardRequest(poApduRequests, false);
+    CardRequest cardRequest = new CardRequest(apduRequests, false);
 
     CardResponse poCardResponse;
     try {
-      poCardResponse = poReader.transmitCardRequest(poCardRequest, channelControl);
+      poCardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
       // if the ratification command was added and no error occurred then the response has been
       // received
       ratificationCommandResponseReceived = ratificationCommandAdded;
@@ -463,7 +464,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       // We should have one response less than requests.
       if (!ratificationCommandAdded
           || poCardResponse == null
-          || poCardResponse.getApduResponses().size() != poApduRequests.size() - 1) {
+          || poCardResponse.getApduResponses().size() != apduRequests.size() - 1) {
         throw new CalypsoCardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
       }
       // we received all responses except the response to the ratification command
@@ -474,12 +475,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
+    List<ApduResponse> apduResponses = poCardResponse.getApduResponses();
 
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
     try {
-      CalypsoCardUtils.updateCalypsoCard(calypsoCard, poModificationCommands, poApduResponses);
+      CalypsoCardUtils.updateCalypsoCard(calypsoCard, cardModificationCommands, apduResponses);
     } catch (CalypsoCardCommandException e) {
       throw new CalypsoCardAnomalyException(
           CARD_COMMAND_ERROR
@@ -489,16 +490,16 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     }
 
     // Check the card's response to Close Secure Session
-    CardCloseSessionParser poCloseSessionPars =
-        getCardCloseSessionParser(poApduResponses, closeSessionCmdBuild, closeCommandIndex);
+    CardCloseSessionParser cardCloseSessionPars =
+        getCardCloseSessionParser(apduResponses, closeSessionCmdBuild, closeCommandIndex);
 
     // Check the card signature
-    checkCardSignature(poCloseSessionPars.getSignatureLo());
+    checkCardSignature(cardCloseSessionPars.getSignatureLo());
 
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
     if (cardCommandManager.isSvOperationCompleteOneTime()) {
-      checkSvOperationStatus(poCloseSessionPars.getPostponedData());
+      checkSvOperationStatus(cardCloseSessionPars.getPostponedData());
     }
 
     sessionState = SessionState.SESSION_CLOSED;
@@ -507,11 +508,11 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       // is not taken into account by
       // Sonar
       // Remove the ratification response
-      poApduResponses.remove(poApduResponses.size() - 1);
+      apduResponses.remove(apduResponses.size() - 1);
     }
 
     // Remove Close Secure Session response and create a new CardResponse
-    poApduResponses.remove(poApduResponses.size() - 1);
+    apduResponses.remove(apduResponses.size() - 1);
   }
 
   /**
@@ -724,7 +725,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private void processCardCommandsInSession() {
 
     // A session is open, we have to care about the card modifications buffer
-    List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poAtomicBuilders =
+    List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardAtomicBuilders =
         new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
 
     AtomicInteger neededSessionBufferSpace = new AtomicInteger();
@@ -741,7 +742,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           // The current command would overflow the modifications buffer in the card. We
           // send the current commands and update the parsers. The parsers Iterator is
           // kept all along the process.
-          processAtomicCardCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
+          processAtomicCardCommands(cardAtomicBuilders, ChannelControl.KEEP_OPEN);
           // Close the session and reset the modifications buffer counters for the next
           // round
           processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
@@ -750,22 +751,22 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           processAtomicOpening(currentSessionAccessLevel, null);
           // Clear the list and add the command that did not fit in the card modifications
           // buffer. We also update the usage counter without checking the result.
-          poAtomicBuilders.clear();
-          poAtomicBuilders.add(commandBuilder);
+          cardAtomicBuilders.clear();
+          cardAtomicBuilders.add(commandBuilder);
           // just update modifications buffer usage counter, ignore result (always false)
           isSessionBufferOverflowed(neededSessionBufferSpace.get());
         } else {
           // The command fits in the card modifications buffer, just add it to the list
-          poAtomicBuilders.add(commandBuilder);
+          cardAtomicBuilders.add(commandBuilder);
         }
       } else {
         // This command does not affect the card modifications buffer
-        poAtomicBuilders.add(commandBuilder);
+        cardAtomicBuilders.add(commandBuilder);
       }
     }
 
-    if (!poAtomicBuilders.isEmpty()) {
-      processAtomicCardCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
+    if (!cardAtomicBuilders.isEmpty()) {
+      processAtomicCardCommands(cardAtomicBuilders, ChannelControl.KEEP_OPEN);
     }
 
     // sets the flag indicating that the commands have been executed
@@ -808,7 +809,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       AtomicInteger neededSessionBufferSpace = new AtomicInteger();
       AtomicBoolean overflow = new AtomicBoolean();
 
-      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poAtomicCommands =
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardAtomicCommands =
           new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
       for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
           cardCommandManager.getCardCommandBuilders()) {
@@ -827,34 +828,34 @@ class CardTransactionServiceAdapter implements CardTransactionService {
             // If at least one non-modifying was prepared, we use processAtomicCardCommands
             // instead of processAtomicClosing to send the list
             if (atLeastOneReadCommand) {
-              processAtomicCardCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
+              processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
               // Clear the list of commands sent
-              poAtomicCommands.clear();
-              processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
+              cardAtomicCommands.clear();
+              processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
               resetModificationsBufferCounter();
               sessionPreviouslyClosed = true;
               atLeastOneReadCommand = false;
             } else {
               // All commands in the list are 'modifying the card'
-              processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
+              processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
               // Clear the list of commands sent
-              poAtomicCommands.clear();
+              cardAtomicCommands.clear();
               resetModificationsBufferCounter();
               sessionPreviouslyClosed = true;
             }
 
             // Add the command that did not fit in the card modifications
             // buffer. We also update the usage counter without checking the result.
-            poAtomicCommands.add(commandBuilder);
+            cardAtomicCommands.add(commandBuilder);
             // just update modifications buffer usage counter, ignore result (always false)
             isSessionBufferOverflowed(neededSessionBufferSpace.get());
           } else {
             // The command fits in the card modifications buffer, just add it to the list
-            poAtomicCommands.add(commandBuilder);
+            cardAtomicCommands.add(commandBuilder);
           }
         } else {
           // This command does not affect the card modifications buffer
-          poAtomicCommands.add(commandBuilder);
+          cardAtomicCommands.add(commandBuilder);
           atLeastOneReadCommand = true;
         }
       }
@@ -865,7 +866,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
       // Finally, close the session as requested
       processAtomicClosing(
-          poAtomicCommands, cardSecuritySettings.isRatificationMechanismEnabled(), channelControl);
+          cardAtomicCommands,
+          cardSecuritySettings.isRatificationMechanismEnabled(),
+          channelControl);
 
       // sets the flag indicating that the commands have been executed
       cardCommandManager.notifyCommandsProcessed();
@@ -882,22 +885,22 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   @Override
   public final void processCancel() {
     // card ApduRequest List to hold Close Secure Session command
-    List<ApduRequest> poApduRequests = new ArrayList<ApduRequest>();
+    List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
 
     // Build the card Close Session command (in "abort" mode since no signature is provided).
     CardCloseSessionBuilder closeSessionCmdBuild =
         new CardCloseSessionBuilder(calypsoCard.getCardClass());
 
-    poApduRequests.add(closeSessionCmdBuild.getApduRequest());
+    apduRequests.add(closeSessionCmdBuild.getApduRequest());
 
     // Transfer card commands
-    CardRequest poCardRequest = new CardRequest(poApduRequests, false);
+    CardRequest cardRequest = new CardRequest(apduRequests, false);
 
-    CardResponse poCardResponse = safeTransmit(poCardRequest, channelControl);
+    CardResponse cardResponse = safeTransmit(cardRequest, channelControl);
 
     try {
       closeSessionCmdBuild
-          .createResponseParser(poCardResponse.getApduResponses().get(0))
+          .createResponseParser(cardResponse.getApduResponses().get(0))
           .checkStatus();
     } catch (CalypsoCardCommandException e) {
       throw new CalypsoCardAnomalyException(
@@ -987,9 +990,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     return this;
   }
 
-  private CardResponse safeTransmit(CardRequest poCardRequest, ChannelControl channelControl) {
+  private CardResponse safeTransmit(CardRequest cardRequest, ChannelControl channelControl) {
     try {
-      return poReader.transmitCardRequest(poCardRequest, channelControl);
+      return cardReader.transmitCardRequest(cardRequest, channelControl);
     } catch (ReaderCommunicationException e) {
       throw new CalypsoCardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (CardCommunicationException e) {
