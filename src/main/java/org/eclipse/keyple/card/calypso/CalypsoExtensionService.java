@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
 import org.eclipse.keyple.card.calypso.po.PoSmartCard;
-import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
+import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.service.selection.CardSelector;
  *
  * @since 2.0
  */
-public interface CalypsoCardExtension extends KeypleCardExtension {
+public interface CalypsoExtensionService extends KeypleCardExtension {
 
   /**
    * Creates an instance of {@link PoCardSelection} that can be supplemented later with specific
@@ -39,13 +39,13 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
   PoCardSelection createPoCardSelection(CardSelector poCardSelector, boolean acceptInvalidatedPo);
 
   /**
-   * Creates an instance of {@link SamCardResourceProfileExtension} to be provided to the {@link
+   * Creates an instance of {@link CalypsoSamResourceProfileExtension} to be provided to the {@link
    * org.eclipse.keyple.core.service.resource.CardResourceService}.
    *
    * @return A not null reference.
    * @since 2.0
    */
-  SamCardResourceProfileExtension createSamCardResourceProfileExtension();
+  CalypsoSamResourceProfileExtension createSamCardResourceProfileExtension();
 
   /**
    * Creates a PO transaction service to handle operations secured with a SAM.

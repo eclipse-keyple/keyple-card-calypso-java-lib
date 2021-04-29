@@ -12,22 +12,22 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * Provider of the {@link CalypsoCardExtension} service.
+ * Provider of the {@link CalypsoExtensionService} service.
  *
  * @since 2.0
  */
-public final class CalypsoCardExtensionProvider {
+public final class CalypsoExtensionServiceProvider {
 
   /** (private) */
-  private CalypsoCardExtensionProvider() {}
+  private CalypsoExtensionServiceProvider() {}
 
   /**
-   * Create a {@link CalypsoCardExtension}.
+   * Create a {@link CalypsoExtensionService}.
    *
    * @return A not null reference.
    * @since 2.0
    */
-  public static CalypsoCardExtension getService() {
-    return CalypsoCardExtensionAdapter.getInstance();
+  public static CalypsoExtensionService getService() {
+    return CalypsoExtensionServiceAdapter.getInstance();
   }
 }

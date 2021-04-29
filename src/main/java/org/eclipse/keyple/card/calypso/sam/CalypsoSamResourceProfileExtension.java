@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.common.KeypleCardResourceProfileExtension;
  *
  * @since 2.0
  */
-public interface SamCardResourceProfileExtension extends KeypleCardResourceProfileExtension {
+public interface CalypsoSamResourceProfileExtension extends KeypleCardResourceProfileExtension {
 
   /**
    * Sets a filter to target all SAM having the provided specific {@link SamRevision}.
@@ -32,7 +32,7 @@ public interface SamCardResourceProfileExtension extends KeypleCardResourceProfi
    * @throws IllegalStateException If this parameter has already been set.
    * @since 2.0
    */
-  SamCardResourceProfileExtension setSamRevision(SamRevision samRevision);
+  CalypsoSamResourceProfileExtension setSamRevision(SamRevision samRevision);
 
   /**
    * Sets a filter targeting all SAMs having a serial number matching the provided regular
@@ -60,7 +60,7 @@ public interface SamCardResourceProfileExtension extends KeypleCardResourceProfi
    * @throws IllegalStateException If this parameter has already been set.
    * @since 2.0
    */
-  SamCardResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex);
+  CalypsoSamResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex);
 
   /**
    * Sets the lock value expected by the SAM to be unlocked (8 or 16 bytes).
@@ -73,5 +73,5 @@ public interface SamCardResourceProfileExtension extends KeypleCardResourceProfi
    * @throws IllegalStateException If this parameter has already been set.
    * @since 2.0
    */
-  SamCardResourceProfileExtension setSamUnlockData(String samUnlockData);
+  CalypsoSamResourceProfileExtension setSamUnlockData(String samUnlockData);
 }

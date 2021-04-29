@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
 import org.eclipse.keyple.card.calypso.po.PoSmartCard;
-import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
+import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.CardApiProperties;
@@ -25,27 +25,27 @@ import org.eclipse.keyple.core.service.selection.CardSelector;
 
 /**
  * (package-private)<br>
- * Implementation of {@link CalypsoCardExtension}.
+ * Implementation of {@link CalypsoExtensionService}.
  *
  * @since 2.0
  */
-final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExtensionSpi {
+final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, CardExtensionSpi {
 
-  /** singleton instance of CalypsoCardExtensionAdapter */
-  private static final CalypsoCardExtensionAdapter uniqueInstance =
-      new CalypsoCardExtensionAdapter();
+  /** singleton instance of CalypsoExtensionServiceAdapter */
+  private static final CalypsoExtensionServiceAdapter uniqueInstance =
+      new CalypsoExtensionServiceAdapter();
 
   /** Private constructor. */
-  private CalypsoCardExtensionAdapter() {}
+  private CalypsoExtensionServiceAdapter() {}
 
   /**
    * (package-private)<br>
-   * Gets the single instance of CalypsoCardExtensionAdapter.
+   * Gets the single instance of CalypsoExtensionServiceAdapter.
    *
-   * @return The instance of CalypsoCardExtensionAdapter.
+   * @return The instance of CalypsoExtensionServiceAdapter.
    * @since 2.0
    */
-  static CalypsoCardExtensionAdapter getInstance() {
+  static CalypsoExtensionServiceAdapter getInstance() {
     return uniqueInstance;
   }
 
@@ -96,8 +96,8 @@ final class CalypsoCardExtensionAdapter implements CalypsoCardExtension, CardExt
    * @since 2.0
    */
   @Override
-  public SamCardResourceProfileExtension createSamCardResourceProfileExtension() {
-    return new SamCardResourceProfileExtensionAdapter();
+  public CalypsoSamResourceProfileExtension createSamCardResourceProfileExtension() {
+    return new CalypsoSamResourceProfileExtensionAdapter();
   }
 
   /**

@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import org.eclipse.keyple.card.calypso.sam.SamCardResourceProfileExtension;
+import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ProxyReader;
 import org.eclipse.keyple.core.card.spi.CardResourceProfileExtensionSpi;
@@ -30,14 +30,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link SamCardResourceProfileExtension}.
+ * Implementation of {@link CalypsoSamResourceProfileExtension}.
  *
  * @since 2.0
  */
-class SamCardResourceProfileExtensionAdapter
-    implements SamCardResourceProfileExtension, CardResourceProfileExtensionSpi {
+class CalypsoSamResourceProfileExtensionAdapter
+    implements CalypsoSamResourceProfileExtension, CardResourceProfileExtensionSpi {
   private static final Logger logger =
-      LoggerFactory.getLogger(SamCardResourceProfileExtensionAdapter.class);
+      LoggerFactory.getLogger(CalypsoSamResourceProfileExtensionAdapter.class);
 
   private SamRevision samRevision;
   private String samSerialNumberRegex;
@@ -48,7 +48,7 @@ class SamCardResourceProfileExtensionAdapter
    *
    * @since 2.0
    */
-  SamCardResourceProfileExtensionAdapter() {}
+  CalypsoSamResourceProfileExtensionAdapter() {}
 
   /**
    * {@inheritDoc}
@@ -56,7 +56,7 @@ class SamCardResourceProfileExtensionAdapter
    * @since 2.0
    */
   @Override
-  public SamCardResourceProfileExtension setSamRevision(SamRevision samRevision) {
+  public CalypsoSamResourceProfileExtension setSamRevision(SamRevision samRevision) {
 
     Assert.getInstance().notNull(samRevision, "samRevision");
 
@@ -74,7 +74,7 @@ class SamCardResourceProfileExtensionAdapter
    * @since 2.0
    */
   @Override
-  public SamCardResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex) {
+  public CalypsoSamResourceProfileExtension setSamSerialNumberRegex(String samSerialNumberRegex) {
 
     Assert.getInstance().notEmpty(samSerialNumberRegex, "samSerialNumberRegex");
 
@@ -98,7 +98,7 @@ class SamCardResourceProfileExtensionAdapter
    * @since 2.0
    */
   @Override
-  public SamCardResourceProfileExtension setSamUnlockData(String samUnlockData) {
+  public CalypsoSamResourceProfileExtension setSamUnlockData(String samUnlockData) {
 
     Assert.getInstance()
         .notEmpty(samUnlockData, "samUnlockData")

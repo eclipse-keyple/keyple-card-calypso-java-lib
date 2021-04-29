@@ -5,25 +5,25 @@
     Extension</strong> in a <strong>Keyple Application</strong>.</p>
 <h1>Overview</h1>
 <p>
-    Use {@link org.eclipse.keyple.card.calypso.CalypsoCardExtensionProvider#getService()} to get the unique
-    instance of the {@link org.eclipse.keyple.card.calypso.CalypsoCardExtension} interface containing all the entry points
+    Use {@link org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider#getService()} to get the unique
+    instance of the {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService} interface containing all the entry points
     provided by the extension:
 </p>
 <ul>
     <li>
         Creation of a selection case targeting a specific PO to be provided to the <strong>Keyple Selection
         Service</strong>.<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoCardExtension#createPoCardSelection(CardSelector poCardSelector, boolean acceptInvalidatedPo)}<br>
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoCardSelection(CardSelector poCardSelector, boolean acceptInvalidatedPo)}<br>
         A selection case targets a specific PO defined by an instance of {@link org.eclipse.keyple.core.service.selection.CardSelector}
         and possibly supplemented with commands to be executed after the selection (see methods of {@link org.eclipse.keyple.card.calypso.po.PoCardSelection}).
     </li>
     <li>
         Transaction service to perform non-secure operations with a PO.<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoCardExtension#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard)}
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoUnsecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard)}
     </li>
     <li>
         Transaction service to perform secure operations with a PO (<strong>Calypso Secure Session</strong>).<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoCardExtension#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting)}<br>
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting)}<br>
         The {@link org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting} POJO is used to define the security elements of the transaction.
     </li>
 </ul>
