@@ -26,10 +26,10 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * This POJO concentrates all the information we know about the PO being processed: from the
  * selection stage to the end of the transaction.
  *
- * <p>An instance of PoSmartCard is obtained by casting the AbstractSmartCard object from the
- * selection process (e.g. (PoSmartCard)(cardSelectionsResult.getActiveSmartCard()))
+ * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
+ * selection process (e.g. (CalypsoCard)(cardSelectionsResult.getActiveSmartCard()))
  *
- * <p>The various information contained in PoSmartCard is accessible by getters and includes:
+ * <p>The various information contained in CalypsoCard is accessible by getters and includes:
  *
  * <ul>
  *   <li>The application identification fields (revision/version, class, DF name, serial number,
@@ -44,7 +44,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  *
  * @since 2.0
  */
-final class PoSmartCardAdapter implements PoSmartCard, SmartCardSpi {
+final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private final byte[] fciBytes;
   private final byte[] atrBytes;
   private final boolean isConfidentialSessionModeSupported;
@@ -108,7 +108,7 @@ final class PoSmartCardAdapter implements PoSmartCard, SmartCardSpi {
    * @param cardSelectionResponse the response to the selection application command.
    * @since 2.0
    */
-  PoSmartCardAdapter(CardSelectionResponse cardSelectionResponse) {
+  CalypsoCardAdapter(CardSelectionResponse cardSelectionResponse) {
 
     ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
     if (fci != null) {
@@ -695,7 +695,7 @@ final class PoSmartCardAdapter implements PoSmartCard, SmartCardSpi {
    * @param directoryHeader the DF metadata (should be not null).
    * @return the current instance.
    */
-  final PoSmartCard setDirectoryHeader(DirectoryHeader directoryHeader) {
+  final CalypsoCard setDirectoryHeader(DirectoryHeader directoryHeader) {
     this.directoryHeader = directoryHeader;
     return this;
   }

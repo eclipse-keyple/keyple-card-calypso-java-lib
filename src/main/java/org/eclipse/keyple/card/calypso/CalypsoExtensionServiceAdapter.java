@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
-import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
@@ -107,8 +107,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    */
   @Override
   public PoTransactionService createPoSecuredTransaction(
-      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
-    return new PoTransactionServiceAdapter(reader, poSmartCard, poSecuritySetting);
+      Reader reader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
+    return new PoTransactionServiceAdapter(reader, calypsoCard, poSecuritySetting);
   }
 
   /**
@@ -117,7 +117,7 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public PoTransactionService createPoUnsecuredTransaction(Reader reader, PoSmartCard poSmartCard) {
-    return new PoTransactionServiceAdapter(reader, poSmartCard);
+  public PoTransactionService createPoUnsecuredTransaction(Reader reader, CalypsoCard calypsoCard) {
+    return new PoTransactionServiceAdapter(reader, calypsoCard);
   }
 }

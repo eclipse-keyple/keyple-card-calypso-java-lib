@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
-import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
@@ -55,21 +55,21 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
    * resource profile and other optional settings).
    *
    * @param reader The reader through which the card communicates.
-   * @param poSmartCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial PO data provided by the selection process.
    * @param poSecuritySetting The security settings.
    * @return A not null reference.
    * @since 2.0
    */
   PoTransactionService createPoSecuredTransaction(
-      Reader reader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting);
+      Reader reader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting);
 
   /**
    * Creates a PO transaction service to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
-   * @param poSmartCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial PO data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  PoTransactionService createPoUnsecuredTransaction(Reader reader, PoSmartCard poSmartCard);
+  PoTransactionService createPoUnsecuredTransaction(Reader reader, CalypsoCard calypsoCard);
 }

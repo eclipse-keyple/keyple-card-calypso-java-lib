@@ -105,18 +105,18 @@ final class CalypsoPoUtils {
   private CalypsoPoUtils() {}
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Open Secure Session
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Open Secure Session
    * command received from the PO <br>
    * The ratification status and the data read at the time of the session opening are added to the
-   * PoSmartCard.
+   * CalypsoCard.
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param openSessionCmdBuild the Open Secure Session command builder.
    * @param apduResponse the response received.
    * @return the created response parser
    */
   private static AbstractPoOpenSessionParser updateCalypsoPoOpenSession(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       AbstractPoOpenSessionBuilder<AbstractPoOpenSessionParser> openSessionCmdBuild,
       ApduResponse apduResponse) {
     // create parser
@@ -157,18 +157,18 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Read Records command
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Read Records command
    * received from the PO <br>
-   * The records read are added to the {@link PoSmartCardAdapter} file structure
+   * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poReadRecordsBuilder the Read Records command builder.
    * @param apduResponse the response received.
    * @return the created response parser
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoReadRecordsParser updateCalypsoPoReadRecords(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoReadRecordsBuilder poReadRecordsBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -178,7 +178,7 @@ final class CalypsoPoUtils {
 
     poReadRecordsParser.checkStatus();
 
-    // iterate over read records to fill the PoSmartCard
+    // iterate over read records to fill the CalypsoCard
     for (Map.Entry<Integer, byte[]> entry : poReadRecordsParser.getRecords().entrySet()) {
       calypsoPoSmartCard.setContent(
           (byte) poReadRecordsBuilder.getSfi(), entry.getKey(), entry.getValue());
@@ -187,18 +187,18 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Select File command
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the PO <br>
    * Depending on the content of the response, either a {@link FileHeader} is added or the {@link
    * DirectoryHeader} is updated
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poSelectFileBuilder the Select File command builder.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoSelectFileParser updateCalypsoPoSelectFile(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoSelectFileBuilder poSelectFileBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -226,17 +226,17 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Update Record command sent
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Update Record command sent
    * and received from the PO <br>
-   * The records read are added to the {@link PoSmartCardAdapter} file structure
+   * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poUpdateRecordBuilder the Update Record command builder.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoUpdateRecordParser updateCalypsoPoUpdateRecord(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoUpdateRecordBuilder poUpdateRecordBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -254,18 +254,18 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Write Record command sent
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Write Record command sent
    * and received from the PO <br>
-   * The records read are added to the {@link PoSmartCardAdapter} file structure using the dedicated
-   * {@link PoSmartCardAdapter#fillContent } method.
+   * The records read are added to the {@link CalypsoCardAdapter} file structure using the dedicated
+   * {@link CalypsoCardAdapter#fillContent } method.
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poWriteRecordBuilder the Write Record command builder.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoWriteRecordParser updateCalypsoPoWriteRecord(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoWriteRecordBuilder poWriteRecordBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -283,17 +283,17 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Read Records command
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Read Records command
    * received from the PO <br>
-   * The records read are added to the {@link PoSmartCardAdapter} file structure
+   * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
    * @param poAppendRecordBuilder the Append Records command builder.
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoAppendRecordParser updateCalypsoPoAppendRecord(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoAppendRecordBuilder poAppendRecordBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -309,17 +309,17 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to a Decrease command received
+   * Updates the {@link CalypsoCardAdapter} object with the response to a Decrease command received
    * from the PO <br>
-   * The counter value is updated in the {@link PoSmartCardAdapter} file structure
+   * The counter value is updated in the {@link CalypsoCardAdapter} file structure
    *
    * @param poDecreaseBuilder the Decrease command builder.
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoDecreaseParser updateCalypsoPoDecrease(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoDecreaseBuilder poDecreaseBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -337,17 +337,17 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to an Increase command received
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Increase command received
    * from the PO <br>
-   * The counter value is updated in the {@link PoSmartCardAdapter} file structure
+   * The counter value is updated in the {@link CalypsoCardAdapter} file structure
    *
    * @param poIncreaseBuilder the Increase command builder.
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoIncreaseParser updateCalypsoPoIncrease(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoIncreaseBuilder poIncreaseBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -387,19 +387,19 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to an Verify Pin command
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Verify Pin command
    * received from the PO <br>
-   * The PIN attempt counter value is stored in the {@link PoSmartCardAdapter}<br>
+   * The PIN attempt counter value is stored in the {@link CalypsoCardAdapter}<br>
    * CalypsoPoPinException are filtered when the initial command targets the reading of the attempt
    * counter.
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poVerifyPinBuilder the Verify PIN command builder.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoVerifyPinParser updateCalypsoVerifyPin(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoVerifyPinBuilder poVerifyPinBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -422,18 +422,18 @@ final class CalypsoPoUtils {
   }
 
   /**
-   * Updates the {@link PoSmartCardAdapter} object with the response to an SV Get command received
+   * Updates the {@link CalypsoCardAdapter} object with the response to an SV Get command received
    * from the PO <br>
    * The SV Data values (KVC, command header, response data) are stored in {@link CalypsoPoUtils}
    * and made available through a dedicated getters for later use<br>
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to update.
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to update.
    * @param poSvGetBuilder the SV Get command builder.
    * @param apduResponse the response received.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   private static PoSvGetParser updateCalypsoPoSvGet(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       PoSvGetBuilder poSvGetBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -629,16 +629,16 @@ final class CalypsoPoUtils {
 
   /**
    * (package-private)<br>
-   * Fills the PoSmartCard with the PO's response to a single command
+   * Fills the CalypsoCard with the PO's response to a single command
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to fill with the. provided
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to fill with the. provided
    *     response from the PO
    * @param commandBuilder the builder of the command that get the response.
    * @param apduResponse the APDU response returned by the PO to the command.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   static AbstractPoResponseParser updateCalypsoPo(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder,
       ApduResponse apduResponse)
       throws CalypsoPoCommandException {
@@ -700,16 +700,16 @@ final class CalypsoPoUtils {
 
   /**
    * (package-private)<br>
-   * Fills the PoSmartCard with the PO's responses to a list of commands
+   * Fills the CalypsoCard with the PO's responses to a list of commands
    *
-   * @param calypsoPoSmartCard the {@link PoSmartCardAdapter} object to fill with the. provided
+   * @param calypsoPoSmartCard the {@link CalypsoCardAdapter} object to fill with the. provided
    *     response from the PO
    * @param commandBuilders the list of builders that get the responses.
    * @param apduResponses the APDU responses returned by the PO to all commands.
    * @throws CalypsoPoCommandException if a response from the PO was unexpected
    */
   static void updateCalypsoPo(
-      PoSmartCardAdapter calypsoPoSmartCard,
+      CalypsoCardAdapter calypsoPoSmartCard,
       List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> commandBuilders,
       List<ApduResponse> apduResponses)
       throws CalypsoPoCommandException {

@@ -11,9 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.transaction;
 
+import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.ElementaryFile;
 import org.eclipse.keyple.card.calypso.po.FileData;
-import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
 import org.eclipse.keyple.core.card.CardRequest;
 
@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.card.CardRequest;
  *
  * <p>Depending on the type of operations required, the presence of a SAM may be necessary.
  *
- * <p>The {@link PoSmartCard} object provided to the build is kept and updated at each step of using
+ * <p>The {@link CalypsoCard} object provided to the build is kept and updated at each step of using
  * the service. It is the main container of the data handled during the transaction and acts as a
  * card image.
  *
@@ -31,10 +31,10 @@ import org.eclipse.keyple.core.card.CardRequest;
  * <ul>
  *   <li>A command preparation step during which the application invokes prefixed "prepare" methods
  *       that will add to an internal list of commands to be executed by the PO. The incoming data
- *       to the PO are placed in {@link PoSmartCard}.
+ *       to the PO are placed in {@link CalypsoCard}.
  *   <li>A processing step corresponding to the prefixed "process" methods, which will carry out the
  *       communications with the PO and if necessary the SAM. The outgoing data from the PO are
- *       placed in {@link PoSmartCard}.
+ *       placed in {@link CalypsoCard}.
  * </ul>
  *
  * <p>Technical or data errors, security conditions, etc. are reported as exceptions.
@@ -56,7 +56,7 @@ public interface PoTransactionService {
    * </ul>
    *
    * <p>Each of the steps in this sequence may or may not be preceded by the preparation of one or
-   * more commands and ends with an update of the {@link PoSmartCard} object provided when
+   * more commands and ends with an update of the {@link CalypsoCard} object provided when
    * PoTransactionService was created.
    *
    * <p>As a prerequisite for invoking this method, since the Calypso Secure Session involves the
@@ -95,7 +95,7 @@ public interface PoTransactionService {
    *         <li>the open secure session command including the challenge terminal.
    *         <li>all previously prepared commands
    *       </ul>
-   *   <li>Receiving grouped responses and updating {@link PoSmartCard} with the collected data.
+   *   <li>Receiving grouped responses and updating {@link CalypsoCard} with the collected data.
    * </ul>
    *
    * For optimization purposes, if the first command prepared is the reading of a single record of a
@@ -138,7 +138,7 @@ public interface PoTransactionService {
    * <ul>
    *   <li>All APDUs resulting from prepared commands are grouped in a {@link CardRequest} and sent
    *       to the PO.
-   *   <li>The {@link PoSmartCard} object is updated with the result of the executed commands.
+   *   <li>The {@link CalypsoCard} object is updated with the result of the executed commands.
    *   <li>If a secure session is opened, except in the case where reloading or debit SV operations
    *       have been prepared, the invocation of this method does not generate communication with
    *       the SAM. The data necessary for the calculation of the terminal signature are kept to be
@@ -200,7 +200,7 @@ public interface PoTransactionService {
    *       CardRequest} SAM.
    *   <li>All previously prepared commands are sent to the PO along with the session closing
    *       command and possibly the ratification command within a single {@link CardRequest}.
-   *   <li>The responses received from the PO are integrated into PoSmartCard. <br>
+   *   <li>The responses received from the PO are integrated into CalypsoCard. <br>
    *       Note: the reception of the answers of this final {@link CardRequest} PO is tolerant to
    *       the non-reception of the answer to the ratification order.
    *   <li>The data received from the PO in response to the logout (PO session signature and
@@ -289,8 +289,8 @@ public interface PoTransactionService {
   /**
    * Schedules the execution of a <b>Select File</b> command based on the file's LID.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard} through the
-   * {@link PoSmartCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard} through the
+   * {@link CalypsoCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
    *
    * @param lid The LID of the EF to select.
    * @return The object instance.
@@ -302,8 +302,8 @@ public interface PoTransactionService {
    * Schedules the execution of a <b>Select File</b> command using a navigation control defined by
    * the ISO standard.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard} through the
-   * {@link PoSmartCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard} through the
+   * {@link CalypsoCard#getFileBySfi(byte)} and {@link ElementaryFile#getHeader()} methods.
    *
    * @param control A {@link SelectFileControl} enum entry.
    * @return The object instance.
@@ -315,9 +315,9 @@ public interface PoTransactionService {
    * Schedules the execution of a <b>Read Records</b> command to read a single record from the
    * indicated EF.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard}.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard}.
    *
-   * <p>See the method {@link PoSmartCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
+   * <p>See the method {@link CalypsoCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
    * {@link FileData} and their specialized methods according to the type of expected data: e.g.
    * {@link FileData#getContent(int)}.
    *
@@ -333,9 +333,9 @@ public interface PoTransactionService {
    * Schedules the execution of a <b>Read Records</b> command to read one or more records from the
    * indicated EF.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard}.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard}.
    *
-   * <p>See the method {@link PoSmartCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
+   * <p>See the method {@link CalypsoCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
    * {@link FileData} and their specialized methods according to the type of expected data: e.g.
    * {@link FileData#getContent()}.
    *
@@ -358,9 +358,9 @@ public interface PoTransactionService {
    * <p>The record will be read up to the counter location indicated in parameter.<br>
    * Thus all previous counters will also be read.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard}.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard}.
    *
-   * <p>See the method {@link PoSmartCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
+   * <p>See the method {@link CalypsoCard#getFileBySfi(byte)}, the objects {@link ElementaryFile},
    * {@link FileData} and their specialized methods according to the type of expected data: e.g.
    * {@link FileData#getAllCountersValue()} (int)}.
    *
@@ -378,7 +378,7 @@ public interface PoTransactionService {
    *
    * <p>A new record is added, the oldest record is deleted.
    *
-   * <p>Note: {@link PoSmartCard} is filled with the provided input data.
+   * <p>Note: {@link CalypsoCard} is filled with the provided input data.
    *
    * @param sfi The sfi to select.
    * @param recordData The new record data to write.
@@ -394,7 +394,7 @@ public interface PoTransactionService {
    *
    * <p>If the input data is shorter than the record size, only the first bytes will be overwritten.
    *
-   * <p>Note: {@link PoSmartCard} is filled with the provided input data.
+   * <p>Note: {@link CalypsoCard} is filled with the provided input data.
    *
    * @param sfi The sfi to select.
    * @param recordNumber The record number to update.
@@ -413,7 +413,7 @@ public interface PoTransactionService {
    *
    * <p>If the input data is shorter than the record size, only the first bytes will be overwritten.
    *
-   * <p>Note: {@link PoSmartCard} is filled with the provided input data.
+   * <p>Note: {@link CalypsoCard} is filled with the provided input data.
    *
    * @param sfi The sfi to select.
    * @param recordNumber The record number to write.
@@ -429,7 +429,7 @@ public interface PoTransactionService {
   /**
    * Schedules the execution of a <b>Increase command</b> command to increase the target counter.
    *
-   * <p>Note: {@link PoSmartCard} is filled with the provided input data.
+   * <p>Note: {@link CalypsoCard} is filled with the provided input data.
    *
    * @param counterNumber {@code >=} 01h: Counters file, number of the counter. 00h: Simulated.
    *     Counter file.
@@ -446,7 +446,7 @@ public interface PoTransactionService {
   /**
    * Schedules the execution of a <b>Decrease command</b> command to decrease the target counter.
    *
-   * <p>Note: {@link PoSmartCard} is filled with the provided input data.
+   * <p>Note: {@link CalypsoCard} is filled with the provided input data.
    *
    * @param counterNumber {@code >=} 01h: Counters file, number of the counter. 00h: Simulated.
    *     Counter file.
@@ -496,11 +496,11 @@ public interface PoTransactionService {
    * Schedules the execution of a <b>Verify Pin</b> command without PIN presentation in order to get
    * the attempt counter.
    *
-   * <p>The PIN status will made available in PoSmartCard after the execution of process command.
+   * <p>The PIN status will made available in CalypsoCard after the execution of process command.
    * <br>
    * Adds it to the list of commands to be sent with the next process command.
    *
-   * <p>See {@link PoSmartCard#isPinBlocked} and {@link PoSmartCard#getPinAttemptRemaining} methods.
+   * <p>See {@link CalypsoCard#isPinBlocked} and {@link CalypsoCard#getPinAttemptRemaining} methods.
    *
    * @return The object instance.
    * @throws CalypsoPoTransactionIllegalStateException If the PIN feature is not available for this
@@ -513,11 +513,11 @@ public interface PoTransactionService {
    * Schedules the execution of a <b>SV Get</b> command to prepare an SV operation or simply
    * retrieves the current SV status.
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard}.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard}.
    *
-   * <p>See the methods {@link PoSmartCard#getSvBalance()}, {@link PoSmartCard#getSvLoadLogRecord()}
-   * ()}, {@link PoSmartCard#getSvDebitLogLastRecord()}, {@link
-   * PoSmartCard#getSvDebitLogAllRecords()}.
+   * <p>See the methods {@link CalypsoCard#getSvBalance()}, {@link CalypsoCard#getSvLoadLogRecord()}
+   * ()}, {@link CalypsoCard#getSvDebitLogLastRecord()}, {@link
+   * CalypsoCard#getSvDebitLogAllRecords()}.
    *
    * @param svOperation Informs about the nature of the intended operation: debit or reload.
    * @param svAction The type of action: DO a debit or a positive reload, UNDO an undebit or a.
@@ -631,16 +631,16 @@ public interface PoTransactionService {
    *   <li>The file whose SFI is 0x15 contains 3 records containing the last three debit logs.
    * </ul>
    *
-   * <p>At the end of this reading operation, the data will be accessible in PoSmartCard in raw
+   * <p>At the end of this reading operation, the data will be accessible in CalypsoCard in raw
    * format via the standard commands for accessing read files or in the form of dedicated objects
-   * (see {@link PoSmartCard#getSvLoadLogRecord()} and {@link
-   * PoSmartCard#getSvDebitLogAllRecords()})
+   * (see {@link CalypsoCard#getSvLoadLogRecord()} and {@link
+   * CalypsoCard#getSvDebitLogAllRecords()})
    *
-   * <p>Once this command is processed, the result is available in {@link PoSmartCard}.
+   * <p>Once this command is processed, the result is available in {@link CalypsoCard}.
    *
-   * <p>See the methods {@link PoSmartCard#getSvBalance()}, {@link PoSmartCard#getSvLoadLogRecord()}
-   * ()}, {@link PoSmartCard#getSvDebitLogLastRecord()}, {@link
-   * PoSmartCard#getSvDebitLogAllRecords()}. *
+   * <p>See the methods {@link CalypsoCard#getSvBalance()}, {@link CalypsoCard#getSvLoadLogRecord()}
+   * ()}, {@link CalypsoCard#getSvDebitLogLastRecord()}, {@link
+   * CalypsoCard#getSvDebitLogAllRecords()}. *
    *
    * @return The Object instance.
    * @since 2.0

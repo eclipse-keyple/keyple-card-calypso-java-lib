@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.ElementaryFile;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
-import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.*;
 import org.eclipse.keyple.core.card.*;
@@ -65,8 +65,8 @@ class PoTransactionServiceAdapter implements PoTransactionService {
   private PoSecuritySetting poSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
-  /** The current PoSmartCard */
-  private final PoSmartCardAdapter calypsoPoSmartCard;
+  /** The current CalypsoCard */
+  private final CalypsoCardAdapter calypsoPoSmartCard;
   /** the type of the notified event. */
   private SessionState sessionState;
   /** The current secure session access level: PERSO, RELOAD, DEBIT */
@@ -98,31 +98,31 @@ class PoTransactionServiceAdapter implements PoTransactionService {
    * <p>Secure operations are enabled by the presence of {@link PoSecuritySetting}.
    *
    * @param poReader The reader through which the card communicates.
-   * @param poSmartCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial PO data provided by the selection process.
    * @param poSecuritySetting The security settings.
    * @since 2.0
    */
   public PoTransactionServiceAdapter(
-      Reader poReader, PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
+      Reader poReader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
 
-    this(poReader, poSmartCard);
+    this(poReader, calypsoCard);
 
     this.poSecuritySettings = poSecuritySetting;
 
-    samCommandProcessor = new SamCommandProcessor(poSmartCard, poSecuritySetting);
+    samCommandProcessor = new SamCommandProcessor(calypsoCard, poSecuritySetting);
   }
 
   /**
    * Creates an instance of {@link PoTransactionService} for non-secure operations.
    *
    * @param poReader The reader through which the card communicates.
-   * @param poSmartCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial PO data provided by the selection process.
    * @since 2.0
    */
-  public PoTransactionServiceAdapter(Reader poReader, PoSmartCard poSmartCard) {
+  public PoTransactionServiceAdapter(Reader poReader, CalypsoCard calypsoCard) {
     this.poReader = (ProxyReader) poReader;
 
-    this.calypsoPoSmartCard = (PoSmartCardAdapter) poSmartCard;
+    this.calypsoPoSmartCard = (CalypsoCardAdapter) calypsoCard;
 
     modificationsCounter = this.calypsoPoSmartCard.getModificationsCounter();
 
@@ -209,7 +209,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     checkCommandsResponsesSynchronization(poApduRequests.size(), poApduResponses.size());
 
     // Parse the response to Open Secure Session (the first item of poApduResponses)
-    // The updateCalypsoPo method fills the PoSmartCard object with the command data and
+    // The updateCalypsoPo method fills the CalypsoCard object with the command data and
     // return
     // the parser used for an internal usage here.
     AbstractPoOpenSessionParser poOpenSessionPars;
@@ -262,7 +262,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
     // Remove Open Secure Session response and create a new CardResponse
     poApduResponses.remove(0);
 
-    // update PoSmartCard with the received data
+    // update CalypsoCard with the received data
     // TODO check if this is not redundant with what is done 40 lines above
     try {
       CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, poCommands, poApduResponses);
@@ -1801,7 +1801,7 @@ class PoTransactionServiceAdapter implements PoTransactionService {
       throw new CalypsoPoTransactionIllegalStateException(
           "The currently selected application is not an SV application.");
     }
-    // reset SV data in PoSmartCard if any
+    // reset SV data in CalypsoCard if any
     calypsoPoSmartCard.setSvData(0, 0, null, null);
     prepareReadRecordFile(
         CalypsoPoUtils.SV_RELOAD_LOG_FILE_SFI, CalypsoPoUtils.SV_RELOAD_LOG_FILE_NB_REC);

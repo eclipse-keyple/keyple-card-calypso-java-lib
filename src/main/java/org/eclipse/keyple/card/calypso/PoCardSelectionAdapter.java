@@ -165,7 +165,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
           "Mismatch in the number of requests/responses");
     }
 
-    PoSmartCardAdapter calypsoPoSmartCard = new PoSmartCardAdapter(cardSelectionResponse);
+    CalypsoCardAdapter calypsoPoSmartCard = new CalypsoCardAdapter(cardSelectionResponse);
 
     if (!commandBuilders.isEmpty()) {
       try {

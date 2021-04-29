@@ -20,10 +20,10 @@ import org.eclipse.keyple.core.service.selection.spi.SmartCard;
  * This POJO concentrates all the information we know about the PO being processed: from the
  * selection stage to the end of the transaction.
  *
- * <p>An instance of PoSmartCard is obtained by casting the AbstractSmartCard object from the
- * selection process (e.g. (PoSmartCard)(cardSelectionsResult.getActiveSmartCard()))
+ * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
+ * selection process (e.g. (CalypsoCard)(cardSelectionsResult.getActiveSmartCard()))
  *
- * <p>The various information contained in PoSmartCard is accessible by getters and includes:
+ * <p>The various information contained in CalypsoCard is accessible by getters and includes:
  *
  * <ul>
  *   <li>The application identification fields (revision/version, class, DF name, serial number,
@@ -38,7 +38,7 @@ import org.eclipse.keyple.core.service.selection.spi.SmartCard;
  *
  * @since 2.0
  */
-public interface PoSmartCard extends SmartCard {
+public interface CalypsoCard extends SmartCard {
   /**
    * Gets the PO revision.
    *

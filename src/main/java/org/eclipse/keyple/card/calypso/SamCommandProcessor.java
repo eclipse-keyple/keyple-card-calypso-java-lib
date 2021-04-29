@@ -14,8 +14,8 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
-import org.eclipse.keyple.card.calypso.po.PoSmartCard;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
@@ -56,7 +56,7 @@ class SamCommandProcessor {
   private final ProxyReader samReader;
   private final PoSecuritySetting poSecuritySettings;
   private static final List<byte[]> poDigestDataCache = new ArrayList<byte[]>();
-  private final PoSmartCard poSmartCard;
+  private final CalypsoCard calypsoCard;
   private final byte[] samSerialNumber;
   private final SamRevision samRevision;
   private boolean sessionEncryption;
@@ -71,12 +71,12 @@ class SamCommandProcessor {
   /**
    * Constructor
    *
-   * @param poSmartCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial PO data provided by the selection process.
    * @param poSecuritySetting the security settings from the application layer.
    * @since 2.0
    */
-  SamCommandProcessor(PoSmartCard poSmartCard, PoSecuritySetting poSecuritySetting) {
-    this.poSmartCard = poSmartCard;
+  SamCommandProcessor(CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
+    this.calypsoCard = calypsoCard;
     this.poSecuritySettings = poSecuritySetting;
     String samProfileName = poSecuritySettings.getCardResourceProfileName();
     if (samProfileName != null) {
@@ -120,7 +120,7 @@ class SamCommandProcessor {
       // build the SAM Select Diversifier command to provide the SAM with the PO S/N
       AbstractApduCommandBuilder selectDiversifier =
           new SamSelectDiversifierBuilder(
-              samRevision, poSmartCard.getApplicationSerialNumberBytes());
+              samRevision, calypsoCard.getApplicationSerialNumberBytes());
 
       apduRequests.add(selectDiversifier.getApduRequest());
 
@@ -130,7 +130,7 @@ class SamCommandProcessor {
 
     // build the SAM Get Challenge command
     byte challengeLength =
-        poSmartCard.isConfidentialSessionModeSupported()
+        calypsoCard.isConfidentialSessionModeSupported()
             ? CHALLENGE_LENGTH_REV32
             : CHALLENGE_LENGTH_REV_INF_32;
 
@@ -236,14 +236,14 @@ class SamCommandProcessor {
     if (logger.isDebugEnabled()) {
       logger.debug(
           "initialize: POREVISION = {}, SAMREVISION = {}, SESSIONENCRYPTION = {}, VERIFICATIONMODE = {}",
-          poSmartCard.getRevision(),
+          calypsoCard.getRevision(),
           samRevision,
           sessionEncryption,
           verificationMode);
       logger.debug(
           "initialize: VERIFICATIONMODE = {}, REV32MODE = {} KEYRECNUMBER = {}",
           verificationMode,
-          poSmartCard.isConfidentialSessionModeSupported(),
+          calypsoCard.isConfidentialSessionModeSupported(),
           workKeyRecordNumber);
       logger.debug(
           "initialize: KIF = {}, KVC {}, DIGESTDATA = {}",
@@ -352,7 +352,7 @@ class SamCommandProcessor {
           new SamDigestInitBuilder(
               samRevision,
               verificationMode,
-              poSmartCard.isConfidentialSessionModeSupported(),
+              calypsoCard.isConfidentialSessionModeSupported(),
               workKeyRecordNumber,
               workKif,
               workKvc,
@@ -376,7 +376,7 @@ class SamCommandProcessor {
       samCommands.add(
           (new SamDigestCloseBuilder(
               samRevision,
-              poSmartCard.getRevision().equals(PoRevision.REV3_2)
+              calypsoCard.getRevision().equals(PoRevision.REV3_2)
                   ? SIGNATURE_LENGTH_REV32
                   : SIGNATURE_LENGTH_REV_INF_32)));
     }
@@ -544,7 +544,7 @@ class SamCommandProcessor {
       /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
-              samRevision, poSmartCard.getApplicationSerialNumberBytes()));
+              samRevision, calypsoCard.getApplicationSerialNumberBytes()));
       isDiversificationDone = true;
     }
 
@@ -618,7 +618,7 @@ class SamCommandProcessor {
       /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
-              samRevision, poSmartCard.getApplicationSerialNumberBytes()));
+              samRevision, calypsoCard.getApplicationSerialNumberBytes()));
       isDiversificationDone = true;
     }
 
