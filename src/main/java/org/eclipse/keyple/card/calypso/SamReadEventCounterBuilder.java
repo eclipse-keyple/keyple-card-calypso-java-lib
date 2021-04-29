@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -73,7 +74,8 @@ final class SamReadEventCounterBuilder
     }
 
     setApduRequest(
-        new ApduRequest(cla, command.getInstructionByte(), (byte) 0x00, p2, null, (byte) 0x00));
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), (byte) 0x00, p2, null, (byte) 0x00)));
   }
 
   /**

@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -49,7 +50,9 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
       throw new IllegalArgumentException("Unlock data should be 8 ou 16 bytes long!");
     }
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, unlockData, null));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, unlockData, null)));
   }
 
   /**

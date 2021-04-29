@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,12 +63,13 @@ final class PoOpenSession32Builder
 
     setApduRequest(
         new ApduRequest(
-            PoClass.ISO.getValue(),
-            PoCommand.getOpenSessionForRev(PoRevision.REV3_2).getInstructionByte(),
-            p1,
-            p2,
-            dataIn,
-            le));
+            ApduUtil.build(
+                PoClass.ISO.getValue(),
+                PoCommand.getOpenSessionForRev(PoRevision.REV3_2).getInstructionByte(),
+                p1,
+                p2,
+                dataIn,
+                le)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

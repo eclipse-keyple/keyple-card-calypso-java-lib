@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,9 @@ final class PoAppendRecordBuilder extends AbstractPoCommandBuilder<PoAppendRecor
     byte p1 = (byte) 0x00;
     byte p2 = (sfi == 0) ? (byte) 0x00 : (byte) (sfi * 8);
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, newRecordData, null));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, newRecordData, null)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI=%02X", sfi);

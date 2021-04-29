@@ -25,6 +25,8 @@ import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -34,6 +36,8 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  */
 class SamCardResourceProfileExtensionAdapter
     implements SamCardResourceProfileExtension, CardResourceProfileExtensionSpi {
+  private static final Logger logger =
+      LoggerFactory.getLogger(SamCardResourceProfileExtensionAdapter.class);
 
   private SamRevision samRevision;
   private String samSerialNumberRegex;
@@ -186,10 +190,17 @@ class SamCardResourceProfileExtensionAdapter
     }
 
     samSelectionService.prepareSelection(samCardSelection);
+    CardSelectionResult samCardSelectionResult = null;
+    try {
+      samCardSelectionResult = samSelectionService.processCardSelectionScenario((Reader) reader);
+    } catch (Exception e) {
+      logger.warn("An exception occurred while selecting the SAM: '{}'.", e.getMessage(), e);
+    }
 
-    CardSelectionResult samCardSelectionResult =
-        samSelectionService.processCardSelectionScenario((Reader) reader);
+    if (samCardSelectionResult != null && samCardSelectionResult.hasActiveSelection()) {
+      return (SmartCardSpi) samCardSelectionResult.getActiveSmartCard();
+    }
 
-    return (SmartCardSpi) samCardSelectionResult.getActiveSmartCard();
+    return null;
   }
 }

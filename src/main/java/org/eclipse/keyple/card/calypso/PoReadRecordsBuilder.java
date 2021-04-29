@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,13 +70,19 @@ final class PoReadRecordsBuilder extends AbstractPoCommandBuilder<PoReadRecordsP
     }
     byte le = (byte) expectedLength;
     setApduRequest(
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le));
+        new ApduRequest(
+            ApduUtil.build(poClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format(
-              "SFI=%02X, REC=%d, READMODE=%s, EXPECTEDLENGTH=%d",
-              sfi, firstRecordNumber, readMode, expectedLength);
+          "SFI: "
+              + Integer.toHexString(sfi)
+              + "h, REC: "
+              + firstRecordNumber
+              + ", READMODE: "
+              + readMode.name()
+              + ", EXPECTEDLENGTH: "
+              + expectedLength;
       this.addSubName(extraInfo);
     }
   }

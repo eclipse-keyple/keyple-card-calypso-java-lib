@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,8 @@ final class PoUpdateRecordBuilder extends AbstractPoCommandBuilder<PoUpdateRecor
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI=%02X, REC=%d", sfi, recordNumber);

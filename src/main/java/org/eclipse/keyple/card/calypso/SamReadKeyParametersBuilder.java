@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -58,7 +59,8 @@ final class SamReadKeyParametersBuilder
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif) {
@@ -77,7 +79,8 @@ final class SamReadKeyParametersBuilder
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif, byte kvc) {
@@ -97,7 +100,8 @@ final class SamReadKeyParametersBuilder
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
   public SamReadKeyParametersBuilder(
@@ -135,7 +139,8 @@ final class SamReadKeyParametersBuilder
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
   public SamReadKeyParametersBuilder(SamRevision revision, byte kif, NavControl navControl) {
@@ -168,7 +173,8 @@ final class SamReadKeyParametersBuilder
 
     setApduRequest(
         new ApduRequest(
-            cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00));
+            ApduUtil.build(
+                cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
   /**

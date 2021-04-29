@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
@@ -116,7 +117,9 @@ final class PoSvUndebitBuilder extends AbstractPoCommandBuilder<PoSvUndebitParse
         undebitComplementaryData, 10, dataIn, 15, undebitComplementaryData.length - 10);
 
     setApduRequest(
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null));
+        new ApduRequest(
+            ApduUtil.build(
+                poClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null)));
   }
 
   /**

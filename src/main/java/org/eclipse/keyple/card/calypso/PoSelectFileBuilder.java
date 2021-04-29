@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,8 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
     }
 
     setApduRequest(
-        new ApduRequest(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00));
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       this.addSubName("SELECTIONCONTROL" + selectFileControl);
@@ -96,12 +98,13 @@ final class PoSelectFileBuilder extends AbstractPoCommandBuilder<PoSelectFilePar
 
     setApduRequest(
         new ApduRequest(
-            poClass.getValue(),
-            command.getInstructionByte(),
-            p1,
-            (byte) 0x00,
-            selectionPath,
-            (byte) 0x00));
+            ApduUtil.build(
+                poClass.getValue(),
+                command.getInstructionByte(),
+                p1,
+                (byte) 0x00,
+                selectionPath,
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       this.addSubName("SELECTIONPATH=" + ByteArrayUtil.toHex(selectionPath));

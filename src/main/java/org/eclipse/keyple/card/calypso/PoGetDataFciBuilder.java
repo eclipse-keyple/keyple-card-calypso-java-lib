@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
@@ -38,12 +39,13 @@ final class PoGetDataFciBuilder extends AbstractPoCommandBuilder<PoGetDataFciPar
 
     setApduRequest(
         new ApduRequest(
-            poClass.getValue(),
-            command.getInstructionByte(),
-            (byte) 0x00,
-            (byte) 0x6F,
-            null,
-            (byte) 0x00));
+            ApduUtil.build(
+                poClass.getValue(),
+                command.getInstructionByte(),
+                (byte) 0x00,
+                (byte) 0x6F,
+                null,
+                (byte) 0x00)));
   }
 
   /**

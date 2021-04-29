@@ -40,7 +40,7 @@ public interface CalypsoCardExtension extends KeypleCardExtension {
 
   /**
    * Creates an instance of {@link SamCardResourceProfileExtension} to be provided to the {@link
-   * org.eclipse.keyple.core.service.CardResourceService}.
+   * org.eclipse.keyple.core.service.resource.CardResourceService}.
    *
    * @return A not null reference.
    * @since 2.0

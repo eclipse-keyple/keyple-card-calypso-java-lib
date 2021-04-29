@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -51,9 +52,12 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
       // the operation is not "abort"
       byte[] data = new byte[svPoSignature.length];
       System.arraycopy(svPoSignature, 0, data, 0, svPoSignature.length);
-      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
+      setApduRequest(
+          new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
     } else {
-      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
+      setApduRequest(
+          new ApduRequest(
+              ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     }
   }
 

@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -48,7 +49,8 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
       throw new IllegalArgumentException("Random value should be an 8 bytes long");
     }
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, random, null));
+    setApduRequest(
+        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, random, null)));
   }
 
   /**

@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,12 +66,13 @@ final class PoIncreaseBuilder extends AbstractPoCommandBuilder<PoIncreaseParser>
     /* this is a case4 command, we set Le = 0 */
     setApduRequest(
         new ApduRequest(
-            cla,
-            command.getInstructionByte(),
-            (byte) counterNumber,
-            p2,
-            incValueBuffer,
-            (byte) 0x00));
+            ApduUtil.build(
+                cla,
+                command.getInstructionByte(),
+                (byte) counterNumber,
+                p2,
+                incValueBuffer,
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =

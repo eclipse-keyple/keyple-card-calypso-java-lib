@@ -15,6 +15,7 @@ import org.eclipse.keyple.card.calypso.po.PoRevision;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,9 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
     byte p2 =
         svOperation == PoTransactionService.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     if (logger.isDebugEnabled()) {
       this.addSubName(String.format("OPERATION=%s", svOperation.toString()));
     }

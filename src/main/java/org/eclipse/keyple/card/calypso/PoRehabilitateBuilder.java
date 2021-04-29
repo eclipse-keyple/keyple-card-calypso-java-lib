@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
@@ -37,7 +38,8 @@ final class PoRehabilitateBuilder extends AbstractPoCommandBuilder<PoRehabilitat
     byte p2 = (byte) 0x00;
 
     setApduRequest(
-        new ApduRequest(poClass.getValue(), command.getInstructionByte(), p1, p2, null, null));
+        new ApduRequest(
+            ApduUtil.build(poClass.getValue(), command.getInstructionByte(), p1, p2, null, null)));
   }
 
   /**

@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -51,7 +52,8 @@ final class SamSvPrepareLoadBuilder extends AbstractSamCommandBuilder<SamSvPrepa
     System.arraycopy(
         svReloadCmdBuildData, 0, data, 4 + svGetData.length, svReloadCmdBuildData.length);
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
+    setApduRequest(
+        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
   }
 
   /**

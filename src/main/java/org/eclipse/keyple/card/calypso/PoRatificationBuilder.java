@@ -36,6 +36,6 @@ final class PoRatificationBuilder {
     byte[] ratificationApdu =
         new byte[] {poClass.getValue(), (byte) 0xB2, (byte) 0x00, (byte) 0x00, (byte) 0x00};
 
-    return new ApduRequest(ratificationApdu, false);
+    return new ApduRequest(ratificationApdu);
   }
 }
