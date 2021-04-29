@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.po.CardRevision;
-import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -31,7 +31,7 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
   /** The command. */
   private static final PoCommand command = PoCommand.SV_GET;
 
-  private final PoTransactionService.SvSettings.Operation svOperation;
+  private final CardTransactionService.SvSettings.Operation svOperation;
   private final byte[] header;
 
   /**
@@ -46,12 +46,14 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
   public PoSvGetBuilder(
       PoClass poClass,
       CardRevision cardRevision,
-      PoTransactionService.SvSettings.Operation svOperation) {
+      CardTransactionService.SvSettings.Operation svOperation) {
     super(command);
     byte cla = poClass.getValue();
     byte p1 = cardRevision == CardRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
     byte p2 =
-        svOperation == PoTransactionService.SvSettings.Operation.RELOAD ? (byte) 0x07 : (byte) 0x09;
+        svOperation == CardTransactionService.SvSettings.Operation.RELOAD
+            ? (byte) 0x07
+            : (byte) 0x09;
 
     setApduRequest(
         new ApduRequest(
@@ -74,7 +76,7 @@ final class PoSvGetBuilder extends AbstractPoCommandBuilder<PoSvGetParser> {
    * @return the current SvSettings.Operation enum value
    * @since 2.0
    */
-  public PoTransactionService.SvSettings.Operation getSvOperation() {
+  public CardTransactionService.SvSettings.Operation getSvOperation() {
     return svOperation;
   }
 

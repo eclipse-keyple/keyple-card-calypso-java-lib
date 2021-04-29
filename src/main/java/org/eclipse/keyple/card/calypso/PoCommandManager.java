@@ -14,14 +14,14 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoPoTransactionIllegalStateException;
-import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
  * Handles a list {@link AbstractPoCommandBuilder} updated by the "prepare" methods of
- * PoTransactionService.
+ * CardTransactionService.
  *
  * <p>Keeps builders between the time the commands are created and the time their responses are
  * parsed.
@@ -42,7 +42,7 @@ class PoCommandManager {
       new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
 
   private PoCommand svLastCommand;
-  private PoTransactionService.SvSettings.Operation svOperation;
+  private CardTransactionService.SvSettings.Operation svOperation;
   private boolean svOperationComplete = false;
 
   /**
@@ -68,8 +68,8 @@ class PoCommandManager {
    *
    * <p>Set up a mini state machine to manage the scheduling of Stored Value commands.
    *
-   * <p>The {@link PoTransactionService.SvSettings.Operation} and {@link
-   * PoTransactionService.SvSettings.Action} are also used to check the consistency of the SV
+   * <p>The {@link CardTransactionService.SvSettings.Operation} and {@link
+   * CardTransactionService.SvSettings.Action} are also used to check the consistency of the SV
    * process.
    *
    * <p>The svOperationPending flag is set when an SV operation (Reload/Debit/Undebit) command is
@@ -82,7 +82,7 @@ class PoCommandManager {
    */
   void addStoredValueCommand(
       AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder,
-      PoTransactionService.SvSettings.Operation svOperation) {
+      CardTransactionService.SvSettings.Operation svOperation) {
     // Check the logic of the SV command sequencing
     switch (commandBuilder.getCommandRef()) {
       case SV_GET:

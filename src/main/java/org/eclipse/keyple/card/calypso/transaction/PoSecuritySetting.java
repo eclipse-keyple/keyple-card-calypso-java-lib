@@ -32,9 +32,9 @@ public class PoSecuritySetting {
   private final boolean isMultipleSessionEnabled;
   private final boolean isRatificationMechanismEnabled;
   private final boolean isPinTransmissionEncryptionDisabled;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte>
+  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
+  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
+  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte>
       keyRecordNumberBySessionLevel;
   private final List<Byte> authorizedKvcList;
   private final byte pinCipheringKif;
@@ -117,7 +117,7 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getKif(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+  public Byte getKif(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
     return kifBySessionLevel.get(sessionAccessLevel);
   }
 
@@ -130,7 +130,7 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getKvc(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+  public Byte getKvc(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
     return kvcBySessionLevel.get(sessionAccessLevel);
   }
 
@@ -143,7 +143,7 @@ public class PoSecuritySetting {
    * @return null if no value has been set.
    * @since 2.0
    */
-  public Byte getKeyRecordNumber(PoTransactionService.SessionAccessLevel sessionAccessLevel) {
+  public Byte getKeyRecordNumber(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
     return keyRecordNumberBySessionLevel.get(sessionAccessLevel);
   }
 
@@ -211,7 +211,7 @@ public class PoSecuritySetting {
 
   /**
    * Creates an instance of {@link PoSecuritySetting} builder to setup the security options for the
-   * {@link PoTransactionService}.
+   * {@link CardTransactionService}.
    *
    * @return A builder instance.
    * @since 2.0
@@ -231,9 +231,9 @@ public class PoSecuritySetting {
     private boolean isMultipleSessionEnabled;
     private boolean isRatificationMechanismEnabled;
     private boolean isPinTransmissionEncryptionDisabled;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte>
+    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kifBySessionLevel;
+    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvcBySessionLevel;
+    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte>
         keyRecordNumberBySessionLevel;
     private List<Byte> authorizedKvcList;
     private byte pinCipheringKif;
@@ -243,7 +243,7 @@ public class PoSecuritySetting {
 
     /**
      * Creates an instance of {@link PoSecuritySetting} to setup the security options for the {@link
-     * PoTransactionService}.
+     * CardTransactionService}.
      *
      * <p>The default values the parameters are documented in their respective getters.
      */
@@ -253,14 +253,14 @@ public class PoSecuritySetting {
       this.isRatificationMechanismEnabled = false;
       this.isPinTransmissionEncryptionDisabled = false;
       this.kifBySessionLevel =
-          new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
-              PoTransactionService.SessionAccessLevel.class);
+          new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
+              CardTransactionService.SessionAccessLevel.class);
       this.kvcBySessionLevel =
-          new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
-              PoTransactionService.SessionAccessLevel.class);
+          new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
+              CardTransactionService.SessionAccessLevel.class);
       this.keyRecordNumberBySessionLevel =
-          new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
-              PoTransactionService.SessionAccessLevel.class);
+          new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
+              CardTransactionService.SessionAccessLevel.class);
       this.authorizedKvcList = new ArrayList<Byte>();
       this.pinCipheringKif = (byte) 0;
       this.pinCipheringKvc = (byte) 0;
@@ -335,7 +335,7 @@ public class PoSecuritySetting {
      * @since 2.0
      */
     public PoSecuritySettingBuilder assignKif(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte kif) {
+        CardTransactionService.SessionAccessLevel sessionAccessLevel, byte kif) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.kifBySessionLevel.put(sessionAccessLevel, kif);
       return this;
@@ -351,7 +351,7 @@ public class PoSecuritySetting {
      * @since 2.0
      */
     public PoSecuritySettingBuilder assignKvc(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte kvc) {
+        CardTransactionService.SessionAccessLevel sessionAccessLevel, byte kvc) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.kvcBySessionLevel.put(sessionAccessLevel, kvc);
       return this;
@@ -367,7 +367,7 @@ public class PoSecuritySetting {
      * @since 2.0
      */
     public PoSecuritySettingBuilder assignKeyRecordNumber(
-        PoTransactionService.SessionAccessLevel sessionAccessLevel, byte keyRecordNumber) {
+        CardTransactionService.SessionAccessLevel sessionAccessLevel, byte keyRecordNumber) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.keyRecordNumberBySessionLevel.put(sessionAccessLevel, keyRecordNumber);
       return this;

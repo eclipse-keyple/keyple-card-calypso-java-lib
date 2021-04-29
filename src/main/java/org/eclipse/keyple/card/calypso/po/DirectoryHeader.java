@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso.po;
 
 import java.util.NoSuchElementException;
-import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 
 /**
  * This POJO contains all metadata of a Calypso DF.
@@ -59,7 +59,7 @@ public interface DirectoryHeader {
    * @return true if the KIF for the provided level is available
    * @since 2.0
    */
-  boolean isKifAvailable(PoTransactionService.SessionAccessLevel level);
+  boolean isKifAvailable(CardTransactionService.SessionAccessLevel level);
 
   /**
    * Returns true if the KVC for the provided level is available.
@@ -68,7 +68,7 @@ public interface DirectoryHeader {
    * @return true if the KVC for the provided level is available
    * @since 2.0
    */
-  boolean isKvcAvailable(PoTransactionService.SessionAccessLevel level);
+  boolean isKvcAvailable(CardTransactionService.SessionAccessLevel level);
 
   /**
    * Gets the KIF associated to the provided session access level.
@@ -79,7 +79,7 @@ public interface DirectoryHeader {
    * @throws NoSuchElementException if KIF is not found.
    * @since 2.0
    */
-  byte getKif(PoTransactionService.SessionAccessLevel level);
+  byte getKif(CardTransactionService.SessionAccessLevel level);
 
   /**
    * Gets the KVC associated to the provided session access level.
@@ -90,5 +90,5 @@ public interface DirectoryHeader {
    * @throws NoSuchElementException if KVC is not found.
    * @since 2.0
    */
-  byte getKvc(PoTransactionService.SessionAccessLevel level);
+  byte getKvc(CardTransactionService.SessionAccessLevel level);
 }

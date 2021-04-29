@@ -41,7 +41,7 @@ import org.eclipse.keyple.core.card.CardRequest;
  *
  * @since 2.0
  */
-public interface PoTransactionService {
+public interface CardTransactionService {
   /**
    * Opens a Calypso Secure Session and then executes all previously prepared commands.
    *
@@ -57,10 +57,10 @@ public interface PoTransactionService {
    *
    * <p>Each of the steps in this sequence may or may not be preceded by the preparation of one or
    * more commands and ends with an update of the {@link CalypsoCard} object provided when
-   * PoTransactionService was created.
+   * CardTransactionService was created.
    *
    * <p>As a prerequisite for invoking this method, since the Calypso Secure Session involves the
-   * use of a SAM, the PoTransactionService must have been built in secure mode, i.e. the
+   * use of a SAM, the CardTransactionService must have been built in secure mode, i.e. the
    * constructor used must be the one expecting a reference to a valid {@link PoSecuritySetting}
    * object, otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
    *
@@ -130,7 +130,7 @@ public interface PoTransactionService {
    *     errors)
    * @since 2.0
    */
-  PoTransactionService processOpening(SessionAccessLevel sessionAccessLevel);
+  CardTransactionService processOpening(SessionAccessLevel sessionAccessLevel);
 
   /**
    * Process all previously prepared PO commands outside or inside a Secure Session.
@@ -157,7 +157,7 @@ public interface PoTransactionService {
    *     errors)
    * @since 2.0
    */
-  PoTransactionService processPoCommands();
+  CardTransactionService processPoCommands();
 
   /**
    * Terminates the Secure Session sequence started with {@link
@@ -235,10 +235,10 @@ public interface PoTransactionService {
    * default the transmission is encrypted).
    *
    * <p>If the execution is done out of session but an encrypted transmission is requested, then
-   * PoTransactionService must be constructed with {@link PoSecuritySetting}
+   * CardTransactionService must be constructed with {@link PoSecuritySetting}
    *
-   * <p>If PoTransactionService is constructed without {@link PoSecuritySetting} the transmission in
-   * done in plain.
+   * <p>If CardTransactionService is constructed without {@link PoSecuritySetting} the transmission
+   * in done in plain.
    *
    * <p>The PO channel is closed if prepareReleasePoChannel is called before this command.
    *
@@ -250,7 +250,7 @@ public interface PoTransactionService {
    *     PO or if commands have been prepared before invoking this process method.
    * @since 2.0
    */
-  PoTransactionService processVerifyPin(byte[] pin);
+  CardTransactionService processVerifyPin(byte[] pin);
 
   /**
    * Invokes {@link #processVerifyPin(byte[])} with a string converted into an array of bytes as
@@ -266,7 +266,7 @@ public interface PoTransactionService {
    * @see #processVerifyPin(byte[])
    * @since 2.0
    */
-  PoTransactionService processVerifyPin(String pin);
+  CardTransactionService processVerifyPin(String pin);
 
   /**
    * Requests the closing of the PO channel.
@@ -284,7 +284,7 @@ public interface PoTransactionService {
    * @return The object instance.
    * @since 2.0
    */
-  PoTransactionService prepareReleasePoChannel();
+  CardTransactionService prepareReleasePoChannel();
 
   /**
    * Schedules the execution of a <b>Select File</b> command based on the file's LID.
@@ -296,7 +296,7 @@ public interface PoTransactionService {
    * @return The object instance.
    * @since 2.0
    */
-  PoTransactionService prepareSelectFile(byte[] lid);
+  CardTransactionService prepareSelectFile(byte[] lid);
 
   /**
    * Schedules the execution of a <b>Select File</b> command using a navigation control defined by
@@ -309,7 +309,7 @@ public interface PoTransactionService {
    * @return The object instance.
    * @since 2.0
    */
-  PoTransactionService prepareSelectFile(SelectFileControl control);
+  CardTransactionService prepareSelectFile(SelectFileControl control);
 
   /**
    * Schedules the execution of a <b>Read Records</b> command to read a single record from the
@@ -327,7 +327,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If one of the provided argument is out of range
    * @since 2.0
    */
-  PoTransactionService prepareReadRecordFile(byte sfi, int recordNumber);
+  CardTransactionService prepareReadRecordFile(byte sfi, int recordNumber);
 
   /**
    * Schedules the execution of a <b>Read Records</b> command to read one or more records from the
@@ -348,7 +348,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If one of the provided argument is out of range
    * @since 2.0
    */
-  PoTransactionService prepareReadRecordFile(
+  CardTransactionService prepareReadRecordFile(
       byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize);
 
   /**
@@ -370,7 +370,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If one of the provided argument is out of range
    * @since 2.0
    */
-  PoTransactionService prepareReadCounterFile(byte sfi, int countersNumber);
+  CardTransactionService prepareReadCounterFile(byte sfi, int countersNumber);
 
   /**
    * Schedules the execution of a <b>Append Record</b> command to adds the data provided in the
@@ -386,7 +386,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0
    */
-  PoTransactionService prepareAppendRecord(byte sfi, byte[] recordData);
+  CardTransactionService prepareAppendRecord(byte sfi, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Update Record</b> command to overwrites the target file's
@@ -405,7 +405,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0
    */
-  PoTransactionService prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData);
+  CardTransactionService prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Write Record</b> command to updates the target file's record
@@ -424,7 +424,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0
    */
-  PoTransactionService prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData);
+  CardTransactionService prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData);
 
   /**
    * Schedules the execution of a <b>Increase command</b> command to increase the target counter.
@@ -441,7 +441,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0
    */
-  PoTransactionService prepareIncreaseCounter(byte sfi, int counterNumber, int incValue);
+  CardTransactionService prepareIncreaseCounter(byte sfi, int counterNumber, int incValue);
 
   /**
    * Schedules the execution of a <b>Decrease command</b> command to decrease the target counter.
@@ -458,7 +458,7 @@ public interface PoTransactionService {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0
    */
-  PoTransactionService prepareDecreaseCounter(byte sfi, int counterNumber, int decValue);
+  CardTransactionService prepareDecreaseCounter(byte sfi, int counterNumber, int decValue);
 
   /**
    * Schedules the execution of a command to set the value of the target counter.
@@ -490,7 +490,7 @@ public interface PoTransactionService {
    * @throws CalypsoPoTransactionIllegalStateException If the current counter value is unknown.
    * @since 2.0
    */
-  PoTransactionService prepareSetCounter(byte sfi, int counterNumber, int newValue);
+  CardTransactionService prepareSetCounter(byte sfi, int counterNumber, int newValue);
 
   /**
    * Schedules the execution of a <b>Verify Pin</b> command without PIN presentation in order to get
@@ -507,7 +507,7 @@ public interface PoTransactionService {
    *     PO.
    * @since 2.0
    */
-  PoTransactionService prepareCheckPinStatus();
+  CardTransactionService prepareCheckPinStatus();
 
   /**
    * Schedules the execution of a <b>SV Get</b> command to prepare an SV operation or simply
@@ -527,7 +527,7 @@ public interface PoTransactionService {
    *     PO.
    * @since 2.0
    */
-  PoTransactionService prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction);
+  CardTransactionService prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction);
 
   /**
    * Schedules the execution of a <b>SV Reload</b> command to increase the current SV balance and
@@ -549,7 +549,7 @@ public interface PoTransactionService {
    *     errors)
    * @since 2.0
    */
-  PoTransactionService prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
+  CardTransactionService prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
       throws CalypsoPoTransactionException;
 
   /**
@@ -570,7 +570,7 @@ public interface PoTransactionService {
    *     errors)
    * @since 2.0
    */
-  PoTransactionService prepareSvReload(int amount) throws CalypsoPoTransactionException;
+  CardTransactionService prepareSvReload(int amount) throws CalypsoPoTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
@@ -592,7 +592,7 @@ public interface PoTransactionService {
    * @return The object instance.
    * @since 2.0
    */
-  PoTransactionService prepareSvDebit(int amount, byte[] date, byte[] time);
+  CardTransactionService prepareSvDebit(int amount, byte[] date, byte[] time);
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
@@ -619,7 +619,7 @@ public interface PoTransactionService {
    * @return The Object instance.
    * @since 2.0
    */
-  PoTransactionService prepareSvDebit(int amount);
+  CardTransactionService prepareSvDebit(int amount);
 
   /**
    * Schedules the execution of <b>Read Records</b> commands to read all SV logs.
@@ -645,7 +645,7 @@ public interface PoTransactionService {
    * @return The Object instance.
    * @since 2.0
    */
-  PoTransactionService prepareSvReadAllLogs();
+  CardTransactionService prepareSvReadAllLogs();
 
   /**
    * Schedules the execution of a <b>Invalidate</b> command.
@@ -657,7 +657,7 @@ public interface PoTransactionService {
    * @return The Object instance.
    * @since 2.0
    */
-  PoTransactionService prepareInvalidate();
+  CardTransactionService prepareInvalidate();
 
   /**
    * Schedules the execution of a <b>Rehabilitate</b> command.
@@ -669,7 +669,7 @@ public interface PoTransactionService {
    * @throws CalypsoPoTransactionIllegalStateException If the PO is not invalidated.
    * @since 2.0
    */
-  PoTransactionService prepareRehabilitate();
+  CardTransactionService prepareRehabilitate();
 
   /**
    * The PO Transaction Access Level: personalization, loading or debiting.

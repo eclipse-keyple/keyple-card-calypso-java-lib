@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.transaction;
 
-/** Indicates an improper use of the {@link PoTransactionService} API. */
+/** Indicates an improper use of the {@link CardTransactionService} API. */
 public class CalypsoPoTransactionIllegalStateException extends CalypsoPoTransactionException {
 
   /** @param message the message to identify the exception context */

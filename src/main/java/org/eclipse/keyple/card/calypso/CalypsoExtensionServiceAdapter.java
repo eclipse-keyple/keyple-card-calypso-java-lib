@@ -14,8 +14,8 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.PoCardSelection;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
-import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
 import org.eclipse.keyple.core.card.CardApiProperties;
 import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
@@ -85,9 +85,9 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public PoCardSelection createPoCardSelection(
-      CardSelector poCardSelector, boolean acceptInvalidatedPo) {
-    return new PoCardSelectionAdapter(poCardSelector, acceptInvalidatedPo);
+  public PoCardSelection createCardSelection(
+      CardSelector cardSelector, boolean acceptInvalidatedPo) {
+    return new PoCardSelectionAdapter(cardSelector, acceptInvalidatedPo);
   }
 
   /**
@@ -96,7 +96,7 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public CalypsoSamResourceProfileExtension createSamCardResourceProfileExtension() {
+  public CalypsoSamResourceProfileExtension createSamResourceProfileExtension() {
     return new CalypsoSamResourceProfileExtensionAdapter();
   }
 
@@ -106,9 +106,9 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public PoTransactionService createPoSecuredTransaction(
+  public CardTransactionService createCardTransaction(
       Reader reader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
-    return new PoTransactionServiceAdapter(reader, calypsoCard, poSecuritySetting);
+    return new CardTransactionServiceAdapter(reader, calypsoCard, poSecuritySetting);
   }
 
   /**
@@ -117,7 +117,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public PoTransactionService createPoUnsecuredTransaction(Reader reader, CalypsoCard calypsoCard) {
-    return new PoTransactionServiceAdapter(reader, calypsoCard);
+  public CardTransactionService createCardTransactionWithoutSecurity(
+      Reader reader, CalypsoCard calypsoCard) {
+    return new CardTransactionServiceAdapter(reader, calypsoCard);
   }
 }
