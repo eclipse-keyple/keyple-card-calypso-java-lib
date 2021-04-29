@@ -61,14 +61,14 @@ public interface CardTransactionService {
    *
    * <p>As a prerequisite for invoking this method, since the Calypso Secure Session involves the
    * use of a SAM, the CardTransactionService must have been built in secure mode, i.e. the
-   * constructor used must be the one expecting a reference to a valid {@link PoSecuritySetting}
+   * constructor used must be the one expecting a reference to a valid {@link CardSecuritySetting}
    * object, otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
    *
    * <p>The secure session is opened with the {@link SessionAccessLevel} passed as an argument
    * depending on whether it is a personalization, reload or debit transaction profile..
    *
    * <p>The possible overflow of the internal session buffer of the PO is managed in two ways
-   * depending on the setting chosen in {@link PoSecuritySetting}.
+   * depending on the setting chosen in {@link CardSecuritySetting}.
    *
    * <ul>
    *   <li>If the session was opened with the default atomic mode and the previously prepared
@@ -110,9 +110,9 @@ public interface CardTransactionService {
    *       #processClosing}).
    *   <li>All data received in response to the open secure session command and the responses to the
    *       prepared commands are also stored for later calculation of the digest.
-   *   <li>If a list of authorized KVCs has been defined in {@link PoSecuritySetting} and the KVC of
-   *       the card does not belong to this list then a {@link CalypsoUnauthorizedKvcException} is
-   *       thrown.
+   *   <li>If a list of authorized KVCs has been defined in {@link CardSecuritySetting} and the KVC
+   *       of the card does not belong to this list then a {@link CalypsoUnauthorizedKvcException}
+   *       is thrown.
    * </ul>
    *
    * <p>All unexpected results (communication errors, data or security errors, etc. are notified to
@@ -123,7 +123,8 @@ public interface CardTransactionService {
    *
    * @param sessionAccessLevel An {@link SessionAccessLevel} enum entry.
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySetting} is available
+   * @throws CalypsoPoTransactionIllegalStateException if no {@link CardSecuritySetting} is
+   *     available
    * @throws CalypsoAtomicTransactionException if the PO session buffer were to overflow
    * @throws CalypsoUnauthorizedKvcException If the card KVC is not authorized
    * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
@@ -231,14 +232,14 @@ public interface CardTransactionService {
    * certain PO files.
    *
    * <p>This command can be performed both in and out of a secure session. The PIN code can be
-   * transmitted in plain text or encrypted according to the parameter set in PoSecuritySetting (by
-   * default the transmission is encrypted).
+   * transmitted in plain text or encrypted according to the parameter set in CardSecuritySetting
+   * (by default the transmission is encrypted).
    *
    * <p>If the execution is done out of session but an encrypted transmission is requested, then
-   * CardTransactionService must be constructed with {@link PoSecuritySetting}
+   * CardTransactionService must be constructed with {@link CardSecuritySetting}
    *
-   * <p>If CardTransactionService is constructed without {@link PoSecuritySetting} the transmission
-   * in done in plain.
+   * <p>If CardTransactionService is constructed without {@link CardSecuritySetting} the
+   * transmission in done in plain.
    *
    * <p>The PO channel is closed if prepareReleasePoChannel is called before this command.
    *

@@ -12,10 +12,10 @@
 package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.po.CalypsoCard;
-import org.eclipse.keyple.card.calypso.po.PoCardSelection;
+import org.eclipse.keyple.card.calypso.po.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
+import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.core.card.CardApiProperties;
 import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
@@ -85,9 +85,9 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public PoCardSelection createCardSelection(
+  public CalypsoCardSelection createCardSelection(
       CardSelector cardSelector, boolean acceptInvalidatedPo) {
-    return new PoCardSelectionAdapter(cardSelector, acceptInvalidatedPo);
+    return new CalypsoCardSelectionAdapter(cardSelector, acceptInvalidatedPo);
   }
 
   /**
@@ -107,8 +107,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    */
   @Override
   public CardTransactionService createCardTransaction(
-      Reader reader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
-    return new CardTransactionServiceAdapter(reader, calypsoCard, poSecuritySetting);
+      Reader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+    return new CardTransactionServiceAdapter(reader, calypsoCard, cardSecuritySetting);
   }
 
   /**

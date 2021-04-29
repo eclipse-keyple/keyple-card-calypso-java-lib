@@ -26,7 +26,7 @@ import org.eclipse.keyple.core.util.Assert;
  *
  * @since 2.0
  */
-public class PoSecuritySetting {
+public class CardSecuritySetting {
 
   private final String samCardResourceProfileName;
   private final boolean isMultipleSessionEnabled;
@@ -47,7 +47,7 @@ public class PoSecuritySetting {
    *
    * @param builder The {@link PoSecuritySettingBuilder}.
    */
-  private PoSecuritySetting(PoSecuritySettingBuilder builder) {
+  private CardSecuritySetting(PoSecuritySettingBuilder builder) {
     this.samCardResourceProfileName = builder.samCardResourceProfileName;
     this.isMultipleSessionEnabled = builder.isMultipleSessionEnabled;
     this.isRatificationMechanismEnabled = builder.isRatificationMechanismEnabled;
@@ -210,8 +210,8 @@ public class PoSecuritySetting {
   }
 
   /**
-   * Creates an instance of {@link PoSecuritySetting} builder to setup the security options for the
-   * {@link CardTransactionService}.
+   * Creates an instance of {@link CardSecuritySetting} builder to setup the security options for
+   * the {@link CardTransactionService}.
    *
    * @return A builder instance.
    * @since 2.0
@@ -221,7 +221,7 @@ public class PoSecuritySetting {
   }
 
   /**
-   * Builder of {@link PoSecuritySetting}.
+   * Builder of {@link CardSecuritySetting}.
    *
    * @since 2.0
    */
@@ -242,8 +242,8 @@ public class PoSecuritySetting {
     private boolean isSvNegativeBalanceAllowed;
 
     /**
-     * Creates an instance of {@link PoSecuritySetting} to setup the security options for the {@link
-     * CardTransactionService}.
+     * Creates an instance of {@link CardSecuritySetting} to setup the security options for the
+     * {@link CardTransactionService}.
      *
      * <p>The default values the parameters are documented in their respective getters.
      */
@@ -433,13 +433,13 @@ public class PoSecuritySetting {
     }
 
     /**
-     * Creates an instance of {@link PoSecuritySetting}.
+     * Creates an instance of {@link CardSecuritySetting}.
      *
      * @return A not null reference.
      * @since 2.0
      */
-    public PoSecuritySetting build() {
-      return new PoSecuritySetting(this);
+    public CardSecuritySetting build() {
+      return new CardSecuritySetting(this);
     }
   }
 }

@@ -15,7 +15,7 @@
         Service</strong>.<br>
         {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoCardSelection(CardSelector poCardSelector, boolean acceptInvalidatedPo)}<br>
         A selection case targets a specific PO defined by an instance of {@link org.eclipse.keyple.core.service.selection.CardSelector}
-        and possibly supplemented with commands to be executed after the selection (see methods of {@link org.eclipse.keyple.card.calypso.po.PoCardSelection}).
+        and possibly supplemented with commands to be executed after the selection (see methods of {@link org.eclipse.keyple.card.calypso.po.CalypsoCardSelection}).
     </li>
     <li>
         Transaction service to perform non-secure operations with a PO.<br>
@@ -23,8 +23,8 @@
     </li>
     <li>
         Transaction service to perform secure operations with a PO (<strong>Calypso Secure Session</strong>).<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard calypsoCard, PoSecuritySetting poSecuritySetting)}<br>
-        The {@link org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting} POJO is used to define the security elements of the transaction.
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createPoSecuredTransaction(org.eclipse.keyple.core.service.Reader reader, PoSmartCard calypsoCard, PoSecuritySetting cardSecuritySetting)}<br>
+        The {@link org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting} POJO is used to define the security elements of the transaction.
     </li>
 </ul>
 <p>The PO data collected at each step (selection, transaction) are stored in dedicated POJOs whose interfaces are

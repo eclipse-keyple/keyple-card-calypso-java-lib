@@ -19,8 +19,8 @@ import org.eclipse.keyple.card.calypso.po.CardRevision;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
+import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.resource.CardResource;
 import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
@@ -54,7 +54,7 @@ class SamCommandProcessor {
 
   private final CardResource samResource;
   private final ProxyReader samReader;
-  private final PoSecuritySetting poSecuritySettings;
+  private final CardSecuritySetting cardSecuritySettings;
   private static final List<byte[]> poDigestDataCache = new ArrayList<byte[]>();
   private final CalypsoCard calypsoCard;
   private final byte[] samSerialNumber;
@@ -72,17 +72,17 @@ class SamCommandProcessor {
    * Constructor
    *
    * @param calypsoCard The initial PO data provided by the selection process.
-   * @param poSecuritySetting the security settings from the application layer.
+   * @param cardSecuritySetting the security settings from the application layer.
    * @since 2.0
    */
-  SamCommandProcessor(CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
+  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
     this.calypsoCard = calypsoCard;
-    this.poSecuritySettings = poSecuritySetting;
-    String samProfileName = poSecuritySettings.getCardResourceProfileName();
+    this.cardSecuritySettings = cardSecuritySetting;
+    String samProfileName = cardSecuritySettings.getCardResourceProfileName();
     if (samProfileName != null) {
       samResource =
           CardResourceServiceProvider.getService()
-              .getCardResource(poSecuritySettings.getCardResourceProfileName());
+              .getCardResource(cardSecuritySettings.getCardResourceProfileName());
     } else {
       samResource = CardResourceServiceProvider.getService().getCardResource();
     }
@@ -180,7 +180,7 @@ class SamCommandProcessor {
    * Determine the work KIF from the value returned by the PO and the session access level.
    *
    * <p>If the value provided by the PO undetermined (FFh), the actual value of the work KIF is
-   * found in the PoSecuritySetting according to the session access level.
+   * found in the CardSecuritySetting according to the session access level.
    *
    * <p>If the value provided by the PO is not undetermined, the work KIF is set to this value.
    *
@@ -192,7 +192,7 @@ class SamCommandProcessor {
       byte poKif, CardTransactionService.SessionAccessLevel sessionAccessLevel) {
     byte kif;
     if (poKif == KIF_UNDEFINED) {
-      kif = poSecuritySettings.getKif(sessionAccessLevel);
+      kif = cardSecuritySettings.getKif(sessionAccessLevel);
     } else {
       kif = poKif;
     }
@@ -228,7 +228,7 @@ class SamCommandProcessor {
     this.verificationMode = verificationMode;
     // TODO check in which case this key number is needed
     // this.workKeyRecordNumber =
-    // poSecuritySettings.getSessionDefaultKeyRecordNumber(sessionAccessLevel);
+    // cardSecuritySettings.getSessionDefaultKeyRecordNumber(sessionAccessLevel);
     this.workKif = determineWorkKif(poKif, sessionAccessLevel);
     // TODO handle Rev 1.0 case where KVC is not available
     this.workKvc = poKVC;
@@ -536,8 +536,8 @@ class SamCommandProcessor {
       pinCipheringKvc = workKvc;
     } else {
       // no current work key is available (outside secure session)
-      pinCipheringKif = poSecuritySettings.getPinCipheringKif();
-      pinCipheringKvc = poSecuritySettings.getPinCipheringKvc();
+      pinCipheringKif = cardSecuritySettings.getPinCipheringKif();
+      pinCipheringKvc = cardSecuritySettings.getPinCipheringKvc();
     }
 
     if (!isDiversificationDone) {

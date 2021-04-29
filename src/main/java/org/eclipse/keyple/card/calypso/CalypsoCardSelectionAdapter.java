@@ -14,7 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.eclipse.keyple.card.calypso.po.PoCardSelection;
+import org.eclipse.keyple.card.calypso.po.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.po.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoPoAnomalyException;
@@ -28,13 +28,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link PoCardSelection}.
+ * Implementation of {@link CalypsoCardSelection}.
  *
  * @since 2.0
  */
-final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi {
+final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSelectionSpi {
 
-  private static final Logger logger = LoggerFactory.getLogger(PoCardSelectionAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(CalypsoCardSelectionAdapter.class);
 
   private static final int SW_PO_INVALIDATED = 0x6283;
 
@@ -44,13 +44,13 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
 
   /**
    * (package-private)<br>
-   * Creates an instance of {@link PoCardSelection}.
+   * Creates an instance of {@link CalypsoCardSelection}.
    *
    * @param poCardSelector A card selector.
    * @since 2.0
    * @throws IllegalArgumentException If poCardSelector is null.
    */
-  PoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedPo) {
+  CalypsoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedPo) {
 
     Assert.getInstance().notNull(poCardSelector, "poCardSelector");
 
@@ -80,7 +80,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public PoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
+  public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
     commandBuilders.add(CalypsoPoUtils.prepareReadRecordFile(poClass, sfi, recordNumber));
     return this;
   }
@@ -91,7 +91,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public PoCardSelection prepareSelectFile(byte[] lid) {
+  public CalypsoCardSelection prepareSelectFile(byte[] lid) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, lid));
     return this;
   }
@@ -102,7 +102,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public PoCardSelection prepareSelectFile(short lid) {
+  public CalypsoCardSelection prepareSelectFile(short lid) {
     byte[] bLid =
         new byte[] {
           (byte) ((lid >> 8) & 0xff), (byte) (lid & 0xff),
@@ -117,7 +117,7 @@ final class PoCardSelectionAdapter implements PoCardSelection, CardSelectionSpi 
    * @since 2.0
    */
   @Override
-  public PoCardSelection prepareSelectFile(SelectFileControl selectControl) {
+  public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
     commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, selectControl));
     return this;
   }

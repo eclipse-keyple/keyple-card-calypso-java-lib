@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.service.selection.spi.CardSelection;
  *
  * @since 2.0
  */
-public interface PoCardSelection extends CardSelection {
+public interface CalypsoCardSelection extends CardSelection {
 
   /**
    * Adds a command APDU to read a single record from the indicated EF.
@@ -30,7 +30,7 @@ public interface PoCardSelection extends CardSelection {
    * @throws IllegalArgumentException If one of the provided argument is out of range
    * @since 2.0
    */
-  PoCardSelection prepareReadRecordFile(byte sfi, int recordNumber);
+  CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber);
 
   /**
    * Adds a command APDU to select file with an LID provided as a 2-byte byte array.
@@ -40,7 +40,7 @@ public interface PoCardSelection extends CardSelection {
    * @throws IllegalArgumentException If the argument is not an array of 2 bytes
    * @since 2.0
    */
-  PoCardSelection prepareSelectFile(byte[] lid);
+  CalypsoCardSelection prepareSelectFile(byte[] lid);
 
   /**
    * Adds a command APDU to select file with an LID provided as a short.
@@ -49,7 +49,7 @@ public interface PoCardSelection extends CardSelection {
    * @return The object instance.
    * @since 2.0
    */
-  PoCardSelection prepareSelectFile(short lid);
+  CalypsoCardSelection prepareSelectFile(short lid);
 
   /**
    * Adds a command APDU to select file according to the provided {@link SelectFileControl} enum
@@ -59,5 +59,5 @@ public interface PoCardSelection extends CardSelection {
    * @return The object instance.
    * @since 2.0
    */
-  PoCardSelection prepareSelectFile(SelectFileControl selectControl);
+  CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl);
 }

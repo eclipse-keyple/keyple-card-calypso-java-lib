@@ -62,7 +62,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /** The reader for PO. */
   private final ProxyReader poReader;
   /** The PO security settings used to manage the secure session */
-  private PoSecuritySetting poSecuritySettings;
+  private CardSecuritySetting cardSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current CalypsoCard */
@@ -95,21 +95,21 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /**
    * Creates an instance of {@link CardTransactionService} for secure operations.
    *
-   * <p>Secure operations are enabled by the presence of {@link PoSecuritySetting}.
+   * <p>Secure operations are enabled by the presence of {@link CardSecuritySetting}.
    *
    * @param poReader The reader through which the card communicates.
    * @param calypsoCard The initial PO data provided by the selection process.
-   * @param poSecuritySetting The security settings.
+   * @param cardSecuritySetting The security settings.
    * @since 2.0
    */
   public CardTransactionServiceAdapter(
-      Reader poReader, CalypsoCard calypsoCard, PoSecuritySetting poSecuritySetting) {
+      Reader poReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
     this(poReader, calypsoCard);
 
-    this.poSecuritySettings = poSecuritySetting;
+    this.cardSecuritySettings = cardSecuritySetting;
 
-    samCommandProcessor = new SamCommandProcessor(calypsoCard, poSecuritySetting);
+    samCommandProcessor = new SamCommandProcessor(calypsoCard, cardSecuritySetting);
   }
 
   /**
@@ -138,7 +138,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    *
    * @param sessionAccessLevel access level of the session (personalization, load or debit).
    * @param poCommands the po commands inside session.
-   * @throws CalypsoPoTransactionIllegalStateException if no {@link PoSecuritySetting} is available
+   * @throws CalypsoPoTransactionIllegalStateException if no {@link CardSecuritySetting} is
+   *     available
    * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
    *     errors)
    */
@@ -149,7 +150,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // This method should be invoked only if no session was previously open
     checkSessionIsNotOpen();
 
-    if (poSecuritySettings == null) {
+    if (cardSecuritySettings == null) {
       throw new CalypsoPoTransactionIllegalStateException("No security settings are available.");
     }
 
@@ -240,7 +241,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           String.format("%02X", poKvc));
     }
 
-    if (!poSecuritySettings.isKvcAuthorized(poKvc)) {
+    if (!cardSecuritySettings.isKvcAuthorized(poKvc)) {
       throw new CalypsoUnauthorizedKvcException(
           String.format("Unauthorized KVC error: PO KVC = %02X", poKvc));
     }
@@ -864,7 +865,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
       // Finally, close the session as requested
       processAtomicClosing(
-          poAtomicCommands, poSecuritySettings.isRatificationMechanismEnabled(), channelControl);
+          poAtomicCommands, cardSecuritySettings.isRatificationMechanismEnabled(), channelControl);
 
       // sets the flag indicating that the commands have been executed
       poCommandManager.notifyCommandsProcessed();
@@ -931,7 +932,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           "No commands should have been prepared prior to a PIN submission.");
     }
 
-    if (poSecuritySettings != null && !poSecuritySettings.isPinTransmissionEncryptionDisabled()) {
+    if (cardSecuritySettings != null
+        && !cardSecuritySettings.isPinTransmissionEncryptionDisabled()) {
       poCommandManager.addRegularCommand(
           new PoGetChallengeBuilder(calypsoPoSmartCard.getPoClass()));
 
@@ -1195,7 +1197,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
               - APDU_HEADER_LENGTH);
       if (isSessionBufferOverflowed(neededSessionBufferSpace.get())) {
         // raise an exception if in atomic mode
-        if (!poSecuritySettings.isMultipleSessionEnabled()) {
+        if (!cardSecuritySettings.isMultipleSessionEnabled()) {
           throw new CalypsoAtomicTransactionException(
               "ATOMIC mode error! This command would overflow the PO modifications buffer: "
                   + builder.getName());
@@ -1590,7 +1592,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       throw new CalypsoPoTransactionIllegalStateException(
           "Stored Value is not available for this PO.");
     }
-    if (poSecuritySettings.isLoadAndDebitSvLogRequired()
+    if (cardSecuritySettings.isLoadAndDebitSvLogRequired()
         && (calypsoPoSmartCard.getRevision() != CardRevision.REV3_2)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 PO add two SvGet commands (for RELOAD then for DEBIT).
@@ -1684,7 +1686,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private void prepareSvDebitPriv(int amount, byte[] date, byte[] time)
       throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
-    if (!poSecuritySettings.isSvNegativeBalanceAllowed()
+    if (!cardSecuritySettings.isSvNegativeBalanceAllowed()
         && (calypsoPoSmartCard.getSvBalance() - amount) < 0) {
       throw new CalypsoPoTransactionIllegalStateException("Negative balances not allowed.");
     }
