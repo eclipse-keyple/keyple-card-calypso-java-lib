@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -9,27 +9,19 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.po;
+package org.eclipse.keyple.card.calypso.card;
 
 /**
- * All supported revisions of Calypso PO.
+ * Definitions governing the expected behavior of the selection command (see the specifics of this
+ * command in the ISO7816-4 standard and the Calypso specification)
  *
  * @since 2.0
  */
-public enum CardRevision {
-
-  /** Calypso Revision 1 (CLA 0x94) */
-  REV1_0,
-
-  /** Calypso Revision 2.4 (CLA 0x94) */
-  REV2_4,
-
-  /** Calypso Revision 3.1 (CLA 0x00) */
-  REV3_1,
-
-  /** Calypso Revision 3.1 CLAP (CLA 0x00, application type 0x90) */
-  REV3_1_CLAP,
-
-  /** Calypso Revision 3.2 (CLA 0x00) */
-  REV3_2
+public enum SelectFileControl {
+  /** The first EF of the current Calypso DF */
+  FIRST_EF,
+  /** The next EF of the current Calypso DF */
+  NEXT_EF,
+  /** The Calypso DF */
+  CURRENT_DF
 }

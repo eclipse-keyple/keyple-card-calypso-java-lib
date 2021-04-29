@@ -9,16 +9,16 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.po;
+package org.eclipse.keyple.card.calypso.card;
 
 /**
- * This POJO contains the data of a Stored Value debit log.
+ * This POJO contains the data of a Stored Value load log.
  *
  * @since 2.0
  */
-public interface SvDebitLogRecord {
+public interface SvLoadLogRecord {
   /**
-   * Gets the debit amount value
+   * Gets the load amount value
    *
    * @return An int
    * @since 2.0
@@ -34,36 +34,52 @@ public interface SvDebitLogRecord {
   int getBalance();
 
   /**
-   * Gets the debit time as an int
+   * Gets the load time as an int
    *
    * @return An int
    * @since 2.0
    */
-  int getDebitTime();
+  int getLoadTime();
 
   /**
-   * Gets the debit time as an array of bytes
+   * Gets the load time as an array of bytes
    *
    * @return A 2-byte byte array
    * @since 2.0
    */
-  byte[] getDebitTimeBytes();
+  byte[] getLoadTimeBytes();
 
   /**
-   * Gets the debit date as an int
+   * Gets the load date as an int
    *
    * @return An int
    * @since 2.0
    */
-  int getDebitDate();
+  int getLoadDate();
 
   /**
-   * Gets the debit date as an array of bytes
+   * Gets the load date as an array of bytes
    *
    * @return A 2-byte byte array
    * @since 2.0
    */
-  byte[] getDebitDateBytes();
+  byte[] getLoadDateBytes();
+
+  /**
+   * Gets the free bytes as a String
+   *
+   * @return A 2-character Ascii string
+   * @since 2.0
+   */
+  String getFreeByte();
+
+  /**
+   * Gets the free bytes as an array of bytes
+   *
+   * @return A 2-byte byte array
+   * @since 2.0
+   */
+  byte[] getFreeByteBytes();
 
   /**
    * Gets the KVC of the load key (as given in the last SV Reload)
@@ -74,7 +90,7 @@ public interface SvDebitLogRecord {
   byte getKvc();
 
   /**
-   * Gets the SAM ID as a long
+   * Gets the SAM ID value as a long
    *
    * @return A long
    * @since 2.0

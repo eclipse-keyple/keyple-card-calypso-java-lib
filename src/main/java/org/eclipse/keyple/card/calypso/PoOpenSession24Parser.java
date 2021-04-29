@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
-import org.eclipse.keyple.card.calypso.po.CardRevision;
+import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.core.card.ApduResponse;
 
 /**

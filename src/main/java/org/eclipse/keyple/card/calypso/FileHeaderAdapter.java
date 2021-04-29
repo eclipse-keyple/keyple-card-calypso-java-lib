@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
-import org.eclipse.keyple.card.calypso.po.FileHeader;
+import org.eclipse.keyple.card.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**

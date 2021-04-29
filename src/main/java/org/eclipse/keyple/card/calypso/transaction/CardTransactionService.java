@@ -11,10 +11,10 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.transaction;
 
-import org.eclipse.keyple.card.calypso.po.CalypsoCard;
-import org.eclipse.keyple.card.calypso.po.ElementaryFile;
-import org.eclipse.keyple.card.calypso.po.FileData;
-import org.eclipse.keyple.card.calypso.po.SelectFileControl;
+import org.eclipse.keyple.card.calypso.card.CalypsoCard;
+import org.eclipse.keyple.card.calypso.card.ElementaryFile;
+import org.eclipse.keyple.card.calypso.card.FileData;
+import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.core.card.CardRequest;
 
 /**

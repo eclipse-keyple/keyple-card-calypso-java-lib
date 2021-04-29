@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.po;
+package org.eclipse.keyple.card.calypso.card;
 
 import org.eclipse.keyple.core.service.selection.spi.CardSelection;
 

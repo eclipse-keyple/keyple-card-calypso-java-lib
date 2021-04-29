@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.po;
+package org.eclipse.keyple.card.calypso.card;
 
 import java.util.NoSuchElementException;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;

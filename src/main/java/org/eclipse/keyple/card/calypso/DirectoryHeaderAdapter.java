@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.EnumMap;
 import java.util.NoSuchElementException;
-import org.eclipse.keyple.card.calypso.po.DirectoryHeader;
+import org.eclipse.keyple.card.calypso.card.DirectoryHeader;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;

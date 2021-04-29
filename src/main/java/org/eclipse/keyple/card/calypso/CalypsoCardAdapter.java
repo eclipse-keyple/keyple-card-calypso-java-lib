@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.eclipse.keyple.card.calypso.card.*;
 import org.eclipse.keyple.card.calypso.po.*;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.card.AnswerToReset;

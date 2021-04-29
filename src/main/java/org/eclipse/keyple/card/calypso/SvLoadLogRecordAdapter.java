@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.SvLoadLogRecord;
+import org.eclipse.keyple.card.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
