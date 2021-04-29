@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamSvPrepareDebitBuilder
     extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.SV_PREPARE_DEBIT;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_DEBIT;
 
   /**
    * Instantiates a new SamSvPrepareDebitBuilder to prepare a debit transaction.

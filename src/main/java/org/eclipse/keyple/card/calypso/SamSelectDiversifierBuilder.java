@@ -26,7 +26,7 @@ final class SamSelectDiversifierBuilder
     extends AbstractSamCommandBuilder<SamSelectDiversifierParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.SELECT_DIVERSIFIER;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SELECT_DIVERSIFIER;
 
   /**
    * Instantiates a new SamSelectDiversifierBuilder.

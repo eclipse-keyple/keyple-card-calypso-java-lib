@@ -12,10 +12,10 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /**
- * Indicates that the "Stored Value" session is not authentic because the signature of the PO is
+ * Indicates that the "Stored Value" session is not authentic because the signature of the card is
  * incorrect.
  */
-public class CalypsoSvAuthenticationException extends CalypsoPoTransactionException {
+public class CalypsoSvAuthenticationException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoSvAuthenticationException(String message) {

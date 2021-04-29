@@ -86,8 +86,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    */
   @Override
   public CalypsoCardSelection createCardSelection(
-      CardSelector cardSelector, boolean acceptInvalidatedPo) {
-    return new CalypsoCardSelectionAdapter(cardSelector, acceptInvalidatedPo);
+      CardSelector cardSelector, boolean acceptInvalidatedCard) {
+    return new CalypsoCardSelectionAdapter(cardSelector, acceptInvalidatedCard);
   }
 
   /**

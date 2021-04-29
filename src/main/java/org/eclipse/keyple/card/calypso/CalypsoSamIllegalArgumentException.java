@@ -26,7 +26,7 @@ final class CalypsoSamIllegalArgumentException extends CalypsoSamCommandExceptio
    * @param command the Calypso SAM command.
    * @since 2.0
    */
-  CalypsoSamIllegalArgumentException(String message, SamCommand command) {
+  CalypsoSamIllegalArgumentException(String message, CalypsoSamCommand command) {
     super(message, command, null);
   }
 }

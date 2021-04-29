@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
 import org.eclipse.keyple.core.service.selection.spi.SmartCard;
 
 /**
- * This POJO concentrates all the information we know about the PO being processed: from the
+ * This POJO concentrates all the information we know about the card being processed: from the
  * selection stage to the end of the transaction.
  *
  * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
@@ -33,21 +33,21 @@ import org.eclipse.keyple.core.service.selection.spi.SmartCard;
  *   <li>The management information of the modification buffer
  *   <li>The invalidation status
  *   <li>The files, counters, SV data read or modified during the execution of the processes defined
- *       by the PO transaction service.
+ *       by the card transaction service.
  * </ul>
  *
  * @since 2.0
  */
 public interface CalypsoCard extends SmartCard {
   /**
-   * Gets the PO revision.
+   * Gets the card revision.
    *
-   * <p>The PO revision indicates the generation of the product presented.
+   * <p>The card revision indicates the generation of the product presented.
    *
    * <p>It will also have an impact on the internal construction of some commands to take into
    * account the specificities of the different POs.
    *
-   * @return an enum giving the identified PO revision
+   * @return an enum giving the identified card revision
    * @since 2.0
    */
   CardRevision getRevision();
@@ -79,7 +79,7 @@ public interface CalypsoCard extends SmartCard {
   /**
    * Gets the Calypso application serial number as an array of bytes.
    *
-   * <p>The serial number for the application, is unique ID for the PO. <br>
+   * <p>The serial number for the application, is unique ID for the card. <br>
    * The difference with getCalypsoSerialNumber is that the two possible bytes (MSB) of validity
    * date are here forced to zero.
    *
@@ -107,7 +107,7 @@ public interface CalypsoCard extends SmartCard {
   /**
    * Get the Answer To Reset as an HEX String.
    *
-   * <p>The Answer To Reset is sent by the PO is ISO7816-3 mode and in contactless mode for PC/SC
+   * <p>The Answer To Reset is sent by the card is ISO7816-3 mode and in contactless mode for PC/SC
    * readers.
    *
    * <p>When the ATR is obtained in contactless mode, it is in fact reconstructed by the reader from
@@ -160,21 +160,21 @@ public interface CalypsoCard extends SmartCard {
   boolean isDeselectRatificationSupported();
 
   /**
-   * Indicates whether the PO has the Calypso Stored Value feature.
+   * Indicates whether the card has the Calypso Stored Value feature.
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the PO has the Stored Value feature
+   * @return true if the card has the Stored Value feature
    * @since 2.0
    */
   boolean isSvFeatureAvailable();
 
   /**
-   * Indicates whether the PO has the Calypso PIN feature.
+   * Indicates whether the card has the Calypso PIN feature.
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the PO has the PIN feature
+   * @return true if the card has the PIN feature
    * @since 2.0
    */
   boolean isPinFeatureAvailable();
@@ -228,7 +228,7 @@ public interface CalypsoCard extends SmartCard {
   /**
    * Get the session modification byte from the startup info structure.
    *
-   * <p>Depending on the type of PO, the session modification byte indicates the maximum number of
+   * <p>Depending on the type of card, the session modification byte indicates the maximum number of
    * bytes that can be modified or the number of possible write commands in a session.
    *
    * @return the Session Modifications byte
@@ -237,19 +237,19 @@ public interface CalypsoCard extends SmartCard {
   byte getSessionModification();
 
   /**
-   * Tells if the PO has been invalidated or not.
+   * Tells if the card has been invalidated or not.
    *
-   * <p>An invalidated PO has 6283 as status word in response to the Select Application command.
+   * <p>An invalidated card has 6283 as status word in response to the Select Application command.
    *
-   * @return true if the PO has been invalidated.
+   * @return true if the card has been invalidated.
    * @since 2.0
    */
   boolean isDfInvalidated();
 
   /**
-   * Tells if the last session with this PO has been ratified or not.
+   * Tells if the last session with this card has been ratified or not.
    *
-   * @return true if the PO has been ratified.
+   * @return true if the card has been ratified.
    * @throws IllegalStateException if these methods is invoked when no session has been opened
    * @since 2.0
    */
@@ -292,7 +292,7 @@ public interface CalypsoCard extends SmartCard {
   SvDebitLogRecord getSvDebitLogLastRecord();
 
   /**
-   * Gets list of references to the {@link SvDebitLogRecord} read from the PO.
+   * Gets list of references to the {@link SvDebitLogRecord} read from the card.
    *
    * @return a list of SV debit log record objects or null if not available
    * @throws NoSuchElementException if requested log is not found.

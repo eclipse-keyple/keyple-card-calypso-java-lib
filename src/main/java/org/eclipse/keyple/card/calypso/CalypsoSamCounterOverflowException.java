@@ -28,7 +28,8 @@ final class CalypsoSamCounterOverflowException extends CalypsoSamCommandExceptio
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamCounterOverflowException(String message, SamCommand command, Integer statusCode) {
+  CalypsoSamCounterOverflowException(
+      String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

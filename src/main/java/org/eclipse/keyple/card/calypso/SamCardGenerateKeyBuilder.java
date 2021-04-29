@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardGenerateKeyParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.CARD_GENERATE_KEY;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_GENERATE_KEY;
 
   /**
    * Instantiates a new SamDigestUpdateBuilder and generate the ciphered data for a key ciphered by

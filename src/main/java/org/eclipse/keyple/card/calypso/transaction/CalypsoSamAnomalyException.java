@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso.transaction;
  * Indicates an anomaly in the SAM.<br>
  * This can occur if the SAM is not Calypso compliant.
  */
-public class CalypsoSamAnomalyException extends CalypsoPoTransactionException {
+public class CalypsoSamAnomalyException extends CalypsoCardTransactionException {
 
   /**
    * @param message message to identify the exception context.

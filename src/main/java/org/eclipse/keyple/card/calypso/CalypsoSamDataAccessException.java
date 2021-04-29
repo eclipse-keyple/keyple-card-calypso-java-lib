@@ -28,7 +28,7 @@ final class CalypsoSamDataAccessException extends CalypsoSamCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamDataAccessException(String message, SamCommand command, Integer statusCode) {
+  CalypsoSamDataAccessException(String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandomParser> {
 
   /** The command reference. */
-  private static final SamCommand command = SamCommand.GIVE_RANDOM;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.GIVE_RANDOM;
 
   /**
    * Instantiates a new SamDigestUpdateBuilder.

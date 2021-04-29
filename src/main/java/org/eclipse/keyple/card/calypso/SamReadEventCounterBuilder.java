@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamReadEventCounterBuilder
     extends AbstractSamCommandBuilder<SamReadEventCounterParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.READ_EVENT_COUNTER;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.READ_EVENT_COUNTER;
 
   public static final int MAX_COUNTER_NUMB = 26;
 

@@ -14,8 +14,8 @@ package org.eclipse.keyple.card.calypso;
 /**
  * (package-private)<br>
  * Indicates that the security input data provided is not valid.<br>
- * This can occur, for example, during the digest authenticate operation when the PO's signature is
- * incorrect.
+ * This can occur, for example, during the digest authenticate operation when the card's signature
+ * is incorrect.
  *
  * @since 2.0
  */
@@ -29,7 +29,7 @@ final class CalypsoSamSecurityDataException extends CalypsoSamCommandException {
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamSecurityDataException(String message, SamCommand command, Integer statusCode) {
+  CalypsoSamSecurityDataException(String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

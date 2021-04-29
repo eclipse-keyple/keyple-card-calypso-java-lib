@@ -12,11 +12,11 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /**
- * Indicates an inconsistency in the PO data.<br>
+ * Indicates an inconsistency in the card data.<br>
  * This can occur, for example, if data read in session is different from data read outside the
  * session.
  */
-public class CalypsoInconsistencyDataException extends CalypsoPoTransactionException {
+public class CalypsoInconsistencyDataException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoInconsistencyDataException(String message) {

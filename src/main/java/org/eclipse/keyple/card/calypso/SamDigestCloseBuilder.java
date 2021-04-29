@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestCloseParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.DIGEST_CLOSE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_CLOSE;
 
   /**
    * Instantiates a new SamDigestCloseBuilder .

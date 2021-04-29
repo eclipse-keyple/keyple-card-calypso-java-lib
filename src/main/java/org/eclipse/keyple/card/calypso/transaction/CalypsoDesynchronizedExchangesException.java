@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso.transaction;
  * Indicates a desynchronization of the APDU exchanges.<br>
  * This means that the number of APDU requests is different from the number of APDU responses.
  */
-public class CalypsoDesynchronizedExchangesException extends CalypsoPoTransactionException {
+public class CalypsoDesynchronizedExchangesException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoDesynchronizedExchangesException(String message) {

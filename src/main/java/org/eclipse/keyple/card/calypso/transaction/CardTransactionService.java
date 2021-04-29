@@ -18,7 +18,7 @@ import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.core.card.CardRequest;
 
 /**
- * Service providing the high-level API to manage transactions with a Calypso PO.
+ * Service providing the high-level API to manage transactions with a Calypso card.
  *
  * <p>Depending on the type of operations required, the presence of a SAM may be necessary.
  *
@@ -30,10 +30,10 @@ import org.eclipse.keyple.core.card.CardRequest;
  *
  * <ul>
  *   <li>A command preparation step during which the application invokes prefixed "prepare" methods
- *       that will add to an internal list of commands to be executed by the PO. The incoming data
- *       to the PO are placed in {@link CalypsoCard}.
+ *       that will add to an internal list of commands to be executed by the card. The incoming data
+ *       to the card are placed in {@link CalypsoCard}.
  *   <li>A processing step corresponding to the prefixed "process" methods, which will carry out the
- *       communications with the PO and if necessary the SAM. The outgoing data from the PO are
+ *       communications with the card and if necessary the SAM. The outgoing data from the card are
  *       placed in {@link CalypsoCard}.
  * </ul>
  *
@@ -49,9 +49,9 @@ public interface CardTransactionService {
    *
    * <ul>
    *   <li>{@link #processOpening(SessionAccessLevel)}
-   *   <li>[{@link #processPoCommands()}]
+   *   <li>[{@link #processCardCommands()}]
    *   <li>[...]
-   *   <li>[{@link #processPoCommands()}]
+   *   <li>[{@link #processCardCommands()}]
    *   <li>{@link #processClosing()}
    * </ul>
    *
@@ -62,18 +62,19 @@ public interface CardTransactionService {
    * <p>As a prerequisite for invoking this method, since the Calypso Secure Session involves the
    * use of a SAM, the CardTransactionService must have been built in secure mode, i.e. the
    * constructor used must be the one expecting a reference to a valid {@link CardSecuritySetting}
-   * object, otherwise a {@link CalypsoPoTransactionIllegalStateException} is raised.
+   * object, otherwise a {@link CalypsoCardTransactionIllegalStateException} is raised.
    *
    * <p>The secure session is opened with the {@link SessionAccessLevel} passed as an argument
    * depending on whether it is a personalization, reload or debit transaction profile..
    *
-   * <p>The possible overflow of the internal session buffer of the PO is managed in two ways
+   * <p>The possible overflow of the internal session buffer of the card is managed in two ways
    * depending on the setting chosen in {@link CardSecuritySetting}.
    *
    * <ul>
    *   <li>If the session was opened with the default atomic mode and the previously prepared
    *       commands will cause the buffer to be exceeded, then an {@link
-   *       CalypsoAtomicTransactionException} is raised and no transmission to the PO is made. <br>
+   *       CalypsoAtomicTransactionException} is raised and no transmission to the card is made.
+   *       <br>
    *   <li>If the session was opened with the multiple session mode and the buffer is to be exceeded
    *       then a split into several secure sessions is performed automatically. However, regardless
    *       of the number of intermediate sessions performed, a secure session is opened at the end
@@ -83,14 +84,14 @@ public interface CardTransactionService {
    * <p>Be aware that in the "MULTIPLE" case we lose the benefit of the atomicity of the secure
    * session.
    *
-   * <p><b>PO and SAM exchanges in detail</b>
+   * <p><b>Card and SAM exchanges in detail</b>
    *
-   * <p>When executing this method, communications with the PO and the SAM are (in that order) :
+   * <p>When executing this method, communications with the card and the SAM are (in that order) :
    *
    * <ul>
-   *   <li>Sending the card diversifier (Calypso PO serial number) to the SAM and receiving the
+   *   <li>Sending the card diversifier (Calypso card serial number) to the SAM and receiving the
    *       terminal challenge
-   *   <li>Grouped sending to the PO (in a {@link CardRequest}) of
+   *   <li>Grouped sending to the card (in a {@link CardRequest}) of
    *       <ul>
    *         <li>the open secure session command including the challenge terminal.
    *         <li>all previously prepared commands
@@ -99,7 +100,7 @@ public interface CardTransactionService {
    * </ul>
    *
    * For optimization purposes, if the first command prepared is the reading of a single record of a
-   * PO file then this one is replaced by a setting of the session opening command allowing the
+   * card file then this one is replaced by a setting of the session opening command allowing the
    * retrieval of this data in response to this command.
    *
    * <p><b>Other operations carried out</b>
@@ -118,47 +119,47 @@ public interface CardTransactionService {
    * <p>All unexpected results (communication errors, data or security errors, etc. are notified to
    * the calling application through dedicated exceptions.
    *
-   * <p><i>Note: to understand in detail how the secure session works please refer to the PO
+   * <p><i>Note: to understand in detail how the secure session works please refer to the card
    * specification documents.</i>
    *
    * @param sessionAccessLevel An {@link SessionAccessLevel} enum entry.
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException if no {@link CardSecuritySetting} is
+   * @throws CalypsoCardTransactionIllegalStateException if no {@link CardSecuritySetting} is
    *     available
-   * @throws CalypsoAtomicTransactionException if the PO session buffer were to overflow
+   * @throws CalypsoAtomicTransactionException if the card session buffer were to overflow
    * @throws CalypsoUnauthorizedKvcException If the card KVC is not authorized
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
   CardTransactionService processOpening(SessionAccessLevel sessionAccessLevel);
 
   /**
-   * Process all previously prepared PO commands outside or inside a Secure Session.
+   * Process all previously prepared card commands outside or inside a Secure Session.
    *
    * <ul>
    *   <li>All APDUs resulting from prepared commands are grouped in a {@link CardRequest} and sent
-   *       to the PO.
+   *       to the card.
    *   <li>The {@link CalypsoCard} object is updated with the result of the executed commands.
    *   <li>If a secure session is opened, except in the case where reloading or debit SV operations
    *       have been prepared, the invocation of this method does not generate communication with
    *       the SAM. The data necessary for the calculation of the terminal signature are kept to be
    *       sent to the SAM at the time of the invocation of {@link #processClosing()}.<br>
-   *       The PO channel is kept open.
-   *   <li>If no secure session is opened, the PO channel is closed depending on whether or not
-   *       prepareReleasePoChannel has been called.
-   *   <li>The PO session buffer overflows are managed in the same way as in {@link
+   *       The card channel is kept open.
+   *   <li>If no secure session is opened, the card channel is closed depending on whether or not
+   *       prepareReleaseCardChannel has been called.
+   *   <li>The card session buffer overflows are managed in the same way as in {@link
    *       #processOpening(SessionAccessLevel)}. For example, when the multiple session mode is
    *       enabled, the commands are separated in as many sessions as necessary to respect the
-   *       capacity of the PO buffer.
+   *       capacity of the card buffer.
    * </ul>
    *
    * @return The object instance.
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
-  CardTransactionService processPoCommands();
+  CardTransactionService processCardCommands();
 
   /**
    * Terminates the Secure Session sequence started with {@link
@@ -167,13 +168,13 @@ public interface CardTransactionService {
    * <p><b>Nominal case</b>
    *
    * <p>The previously prepared commands are integrated into the calculation of the session digest
-   * by the SAM before execution by the PO by anticipating their responses.
+   * by the SAM before execution by the card by anticipating their responses.
    *
    * <p>Thus, the session closing command containing the terminal signature is integrated into the
-   * same APDU group sent to the PO via a final {@link CardRequest}.
+   * same APDU group sent to the card via a final {@link CardRequest}.
    *
-   * <p>Upon reception of the {@link CardRequest} PO, the signature of the PO is verified with the
-   * SAM.
+   * <p>Upon reception of the {@link CardRequest} from the card, the signature of the card is
+   * verified with the SAM.
    *
    * <p>If the method terminates normally, it means that the secure session closing and all related
    * security checks have been successful; conversely, if one of these operations fails, an
@@ -190,25 +191,25 @@ public interface CardTransactionService {
    * communication is done in a contactless mode.
    *
    * <p>The logical channel is closed or left open depending on whether the {@link
-   * #prepareReleasePoChannel()} method has been called before or not.
+   * #prepareReleaseCardChannel()} method has been called before or not.
    *
-   * <p><b>PO and SAM exchanges in detail</b>
+   * <p><b>Card and SAM exchanges in detail</b>
    *
    * <ul>
-   *   <li>All the data exchanged with the PO so far, to which are added the last prepared orders
+   *   <li>All the data exchanged with the card so far, to which are added the last prepared orders
    *       and their anticipated answers, are sent to the SAM for the calculation of the session
    *       digest. The terminal signature calculation request is also integrated in the same {@link
    *       CardRequest} SAM.
-   *   <li>All previously prepared commands are sent to the PO along with the session closing
+   *   <li>All previously prepared commands are sent to the card along with the session closing
    *       command and possibly the ratification command within a single {@link CardRequest}.
-   *   <li>The responses received from the PO are integrated into CalypsoCard. <br>
-   *       Note: the reception of the answers of this final {@link CardRequest} PO is tolerant to
-   *       the non-reception of the answer to the ratification order.
-   *   <li>The data received from the PO in response to the logout (PO session signature and
+   *   <li>The responses received from the card are integrated into CalypsoCard. <br>
+   *       Note: the reception of the answers of this final {@link CardRequest} from the card is
+   *       tolerant to the non-reception of the answer to the ratification order.
+   *   <li>The data received from the card in response to the logout (card session signature and
    *       possibly SV signature) are sent to the SAM for verification.
    * </ul>
    *
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
@@ -217,11 +218,11 @@ public interface CardTransactionService {
   /**
    * Aborts a Secure Session.
    *
-   * <p>Send the appropriate command to the PO
+   * <p>Send the appropriate command to the card
    *
    * <p>Clean up internal data and status.
    *
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
@@ -229,7 +230,7 @@ public interface CardTransactionService {
 
   /**
    * Performs a PIN verification, in order to authenticate the card holder and/or unlock access to
-   * certain PO files.
+   * certain card files.
    *
    * <p>This command can be performed both in and out of a secure session. The PIN code can be
    * transmitted in plain text or encrypted according to the parameter set in CardSecuritySetting
@@ -241,14 +242,14 @@ public interface CardTransactionService {
    * <p>If CardTransactionService is constructed without {@link CardSecuritySetting} the
    * transmission in done in plain.
    *
-   * <p>The PO channel is closed if prepareReleasePoChannel is called before this command.
+   * <p>The card channel is closed if prepareReleaseCardChannel is called before this command.
    *
    * @param pin The PIN code value (4-byte long byte array).
    * @return The object instance.
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
-   * @throws CalypsoPoTransactionIllegalStateException If the PIN feature is not available for this
-   *     PO or if commands have been prepared before invoking this process method.
+   * @throws CalypsoCardTransactionIllegalStateException If the PIN feature is not available for
+   *     this card or if commands have been prepared before invoking this process method.
    * @since 2.0
    */
   CardTransactionService processVerifyPin(byte[] pin);
@@ -270,22 +271,22 @@ public interface CardTransactionService {
   CardTransactionService processVerifyPin(String pin);
 
   /**
-   * Requests the closing of the PO channel.
+   * Requests the closing of the card channel.
    *
    * <p>If this command is called before a "process" command (except for processOpening) then the
-   * last transmission to the PO will be associated with the indication CLOSE_AFTER in order to
-   * close the PO channel.
+   * last transmission to the card will be associated with the indication CLOSE_AFTER in order to
+   * close the card channel.
    *
    * <p>Note: this command must imperatively be called at the end of any transaction, whether it
    * ended normally or not.
    *
    * <p>In case the transaction was interrupted (exception), an additional invocation of
-   * processPoCommands must be made to effectively close the channel.
+   * processCardCommands must be made to effectively close the channel.
    *
    * @return The object instance.
    * @since 2.0
    */
-  CardTransactionService prepareReleasePoChannel();
+  CardTransactionService prepareReleaseCardChannel();
 
   /**
    * Schedules the execution of a <b>Select File</b> command based on the file's LID.
@@ -488,7 +489,7 @@ public interface CardTransactionService {
    * @return The object instance.
    * @throws IllegalArgumentException If the desired value is out of range or if the command is
    *     inconsistent
-   * @throws CalypsoPoTransactionIllegalStateException If the current counter value is unknown.
+   * @throws CalypsoCardTransactionIllegalStateException If the current counter value is unknown.
    * @since 2.0
    */
   CardTransactionService prepareSetCounter(byte sfi, int counterNumber, int newValue);
@@ -504,8 +505,8 @@ public interface CardTransactionService {
    * <p>See {@link CalypsoCard#isPinBlocked} and {@link CalypsoCard#getPinAttemptRemaining} methods.
    *
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException If the PIN feature is not available for this
-   *     PO.
+   * @throws CalypsoCardTransactionIllegalStateException If the PIN feature is not available for
+   *     this card.
    * @since 2.0
    */
   CardTransactionService prepareCheckPinStatus();
@@ -524,8 +525,8 @@ public interface CardTransactionService {
    * @param svAction The type of action: DO a debit or a positive reload, UNDO an undebit or a.
    *     negative reload
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException If the SV feature is not available for this
-   *     PO.
+   * @throws CalypsoCardTransactionIllegalStateException If the SV feature is not available for this
+   *     card.
    * @since 2.0
    */
   CardTransactionService prepareSvGet(SvSettings.Operation svOperation, SvSettings.Action svAction);
@@ -544,14 +545,14 @@ public interface CardTransactionService {
    * @param time 2-byte free value.
    * @param free 2-byte free value.
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException If the SV feature is not available for this
-   *     PO.
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionIllegalStateException If the SV feature is not available for this
+   *     card.
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
   CardTransactionService prepareSvReload(int amount, byte[] date, byte[] time, byte[] free)
-      throws CalypsoPoTransactionException;
+      throws CalypsoCardTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Reload</b> command to increase the current SV balance.
@@ -565,13 +566,13 @@ public interface CardTransactionService {
    * @param amount The value to be reloaded, positive integer in the range 0..8388607 for a DO.
    *     action, in the range 0..8388608 for an UNDO action.
    * @return The object instance.
-   * @throws CalypsoPoTransactionIllegalStateException If the SV feature is not available for this
-   *     PO.
-   * @throws CalypsoPoTransactionException If a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionIllegalStateException If the SV feature is not available for this
+   *     card.
+   * @throws CalypsoCardTransactionException If a functional error occurs (including card and SAM IO
    *     errors)
    * @since 2.0
    */
-  CardTransactionService prepareSvReload(int amount) throws CalypsoPoTransactionException;
+  CardTransactionService prepareSvReload(int amount) throws CalypsoCardTransactionException;
 
   /**
    * Schedules the execution of a <b>SV Debit</b> or <b>SV Undebit</b> command to increase the
@@ -652,9 +653,9 @@ public interface CardTransactionService {
    * Schedules the execution of a <b>Invalidate</b> command.
    *
    * <p>This command is usually executed within a secure session with the SESSION_LVL_DEBIT key
-   * (depends on the access rights given to this command in the file structure of the PO).
+   * (depends on the access rights given to this command in the file structure of the card).
    *
-   * @throws CalypsoPoTransactionIllegalStateException If the PO is already invalidated.
+   * @throws CalypsoCardTransactionIllegalStateException If the card is already invalidated.
    * @return The Object instance.
    * @since 2.0
    */
@@ -664,16 +665,16 @@ public interface CardTransactionService {
    * Schedules the execution of a <b>Rehabilitate</b> command.
    *
    * <p>This command is usually executed within a secure session with the SESSION_LVL_PERSO key
-   * (depends on the access rights given to this command in the file structure of the PO).
+   * (depends on the access rights given to this command in the file structure of the card).
    *
    * @return The Object instance.
-   * @throws CalypsoPoTransactionIllegalStateException If the PO is not invalidated.
+   * @throws CalypsoCardTransactionIllegalStateException If the card is not invalidated.
    * @since 2.0
    */
   CardTransactionService prepareRehabilitate();
 
   /**
-   * The PO Transaction Access Level: personalization, loading or debiting.
+   * The card Transaction Access Level: personalization, loading or debiting.
    *
    * @since 2.0
    */

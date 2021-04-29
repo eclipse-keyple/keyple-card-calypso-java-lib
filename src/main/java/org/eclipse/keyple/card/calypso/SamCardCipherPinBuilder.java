@@ -24,11 +24,11 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCipherPinParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.CARD_CIPHER_PIN;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_CIPHER_PIN;
 
   /**
    * Instantiates a new SamCardCipherPinBuilder and generate the ciphered data for a Verify PIN or
-   * Change PIN PO command.
+   * Change PIN card command.
    *
    * <p>In the case of a PIN verification, only the current PIN must be provided (newPin must be set
    * to null).

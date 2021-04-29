@@ -37,11 +37,11 @@ import org.slf4j.LoggerFactory;
 class CardTransactionServiceAdapter implements CardTransactionService {
 
   // prefix/suffix used to compose exception messages
-  private static final String PO_READER_COMMUNICATION_ERROR =
-      "A communication error with the PO reader occurred while ";
-  private static final String PO_COMMUNICATION_ERROR =
-      "A communication error with the PO occurred while ";
-  private static final String PO_COMMAND_ERROR = "A PO command error occurred while ";
+  private static final String CARD_READER_COMMUNICATION_ERROR =
+      "A communication error with the card reader occurred while ";
+  private static final String CARD_COMMUNICATION_ERROR =
+      "A communication error with the card occurred while ";
+  private static final String CARD_COMMAND_ERROR = "A card command error occurred while ";
   private static final String SAM_READER_COMMUNICATION_ERROR =
       "A communication error with the SAM reader occurred while ";
   private static final String SAM_COMMUNICATION_ERROR =
@@ -51,7 +51,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
-  // commands that modify the content of the PO in session have a cost on the session buffer equal
+  // commands that modify the content of the card in session have a cost on the session buffer equal
   // to the length of the outgoing data plus 6 bytes
   private static final int SESSION_BUFFER_CMD_ADDITIONAL_COST = 6;
 
@@ -59,32 +59,32 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
   private static final Logger logger = LoggerFactory.getLogger(CardTransactionServiceAdapter.class);
 
-  /** The reader for PO. */
+  /** The reader for the card. */
   private final ProxyReader poReader;
-  /** The PO security settings used to manage the secure session */
+  /** The card security settings used to manage the secure session */
   private CardSecuritySetting cardSecuritySettings;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current CalypsoCard */
-  private final CalypsoCardAdapter calypsoPoSmartCard;
+  private final CalypsoCardAdapter calypsoCard;
   /** the type of the notified event. */
   private SessionState sessionState;
   /** The current secure session access level: PERSO, RELOAD, DEBIT */
   private SessionAccessLevel currentSessionAccessLevel;
   /** modifications counter management */
   private int modificationsCounter;
-  /** The object for managing PO commands */
-  private final PoCommandManager poCommandManager;
+  /** The object for managing card commands */
+  private final CardCommandManager cardCommandManager;
   /** The current Store Value action */
   private SvSettings.Action svAction;
   /** The {@link ChannelControl} action */
   private ChannelControl channelControl;
 
   /**
-   * The PO Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
+   * The card Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
    */
   private enum SessionState {
-    /** Initial state of a PO transaction. The PO must have been previously selected. */
+    /** Initial state of a card transaction. The card must have been previously selected. */
     SESSION_UNINITIALIZED,
     /** The secure session is active. */
     SESSION_OPEN,
@@ -98,7 +98,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * <p>Secure operations are enabled by the presence of {@link CardSecuritySetting}.
    *
    * @param poReader The reader through which the card communicates.
-   * @param calypsoCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
    * @since 2.0
    */
@@ -116,19 +116,19 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Creates an instance of {@link CardTransactionService} for non-secure operations.
    *
    * @param poReader The reader through which the card communicates.
-   * @param calypsoCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial card data provided by the selection process.
    * @since 2.0
    */
   public CardTransactionServiceAdapter(Reader poReader, CalypsoCard calypsoCard) {
     this.poReader = (ProxyReader) poReader;
 
-    this.calypsoPoSmartCard = (CalypsoCardAdapter) calypsoCard;
+    this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
 
-    modificationsCounter = this.calypsoPoSmartCard.getModificationsCounter();
+    modificationsCounter = this.calypsoCard.getModificationsCounter();
 
     sessionState = SessionState.SESSION_UNINITIALIZED;
 
-    poCommandManager = new PoCommandManager();
+    cardCommandManager = new CardCommandManager();
 
     channelControl = ChannelControl.KEEP_OPEN;
   }
@@ -137,26 +137,26 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Open a single Secure Session.
    *
    * @param sessionAccessLevel access level of the session (personalization, load or debit).
-   * @param poCommands the po commands inside session.
-   * @throws CalypsoPoTransactionIllegalStateException if no {@link CardSecuritySetting} is
+   * @param cardCommands the card commands inside session.
+   * @throws CalypsoCardTransactionIllegalStateException if no {@link CardSecuritySetting} is
    *     available
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
   private void processAtomicOpening(
       SessionAccessLevel sessionAccessLevel,
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands) {
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {
 
     // This method should be invoked only if no session was previously open
     checkSessionIsNotOpen();
 
     if (cardSecuritySettings == null) {
-      throw new CalypsoPoTransactionIllegalStateException("No security settings are available.");
+      throw new CalypsoCardTransactionIllegalStateException("No security settings are available.");
     }
 
     byte[] sessionTerminalChallenge = getSessionTerminalChallenge();
 
-    // PO ApduRequest List to hold Open Secure Session and other optional commands
+    // card ApduRequest List to hold Open Secure Session and other optional commands
     List<ApduRequest> poApduRequests = new ArrayList<ApduRequest>();
 
     // The sfi and record number to be read when the open secure session command is executed.
@@ -169,39 +169,40 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     //
     // If so, then the command is withdrawn in favour of its equivalent executed at the same
     // time as the open secure session command.
-    if (poCommands != null && !poCommands.isEmpty()) {
-      AbstractPoCommandBuilder<? extends AbstractPoResponseParser> poCommand = poCommands.get(0);
-      if (poCommand.getCommandRef() == PoCommand.READ_RECORDS
-          && ((PoReadRecordsBuilder) poCommand).getReadMode()
-              == PoReadRecordsBuilder.ReadMode.ONE_RECORD) {
-        sfi = ((PoReadRecordsBuilder) poCommand).getSfi();
-        recordNumber = ((PoReadRecordsBuilder) poCommand).getFirstRecordNumber();
-        poCommands.remove(0);
+    if (cardCommands != null && !cardCommands.isEmpty()) {
+      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> cardCommand =
+          cardCommands.get(0);
+      if (cardCommand.getCommandRef() == CalypsoCardCommand.READ_RECORDS
+          && ((CardReadRecordsBuilder) cardCommand).getReadMode()
+              == CardReadRecordsBuilder.ReadMode.ONE_RECORD) {
+        sfi = ((CardReadRecordsBuilder) cardCommand).getSfi();
+        recordNumber = ((CardReadRecordsBuilder) cardCommand).getFirstRecordNumber();
+        cardCommands.remove(0);
       }
     }
 
-    // Build the PO Open Secure Session command
-    AbstractPoCommandBuilder<AbstractPoOpenSessionParser> openSessionCmdBuild =
-        AbstractPoOpenSessionBuilder.create(
-            calypsoPoSmartCard.getRevision(),
+    // Build the card Open Secure Session command
+    AbstractCardCommandBuilder<AbstractCardOpenSessionParser> openSessionCmdBuild =
+        AbstractCardOpenSessionBuilder.create(
+            calypsoCard.getRevision(),
             sessionAccessLevel.getSessionKey(),
             sessionTerminalChallenge,
             sfi,
             recordNumber);
 
-    // Add the resulting ApduRequest to the PO ApduRequest list
+    // Add the resulting ApduRequest to the card ApduRequest list
     poApduRequests.add(openSessionCmdBuild.getApduRequest());
 
-    // Add all optional commands to the PO ApduRequest list
-    if (poCommands != null) {
-      poApduRequests.addAll(getApduRequests(poCommands));
+    // Add all optional commands to the card ApduRequest list
+    if (cardCommands != null) {
+      poApduRequests.addAll(getApduRequests(cardCommands));
     }
 
-    // Create a CardRequest from the ApduRequest list, PO AID as Selector, keep channel open
+    // Create a CardRequest from the ApduRequest list, card AID as Selector, keep channel open
     CardRequest poCardRequest = new CardRequest(poApduRequests, false);
 
-    // Transmit the commands to the PO
-    CardResponse poCardResponse = safePoTransmit(poCardRequest, ChannelControl.KEEP_OPEN);
+    // Transmit the commands to the card
+    CardResponse poCardResponse = safeTransmit(poCardRequest, ChannelControl.KEEP_OPEN);
 
     // Retrieve and check the ApduResponses
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
@@ -210,32 +211,32 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     checkCommandsResponsesSynchronization(poApduRequests.size(), poApduResponses.size());
 
     // Parse the response to Open Secure Session (the first item of poApduResponses)
-    // The updateCalypsoPo method fills the CalypsoCard object with the command data and
+    // The updateCalypsoCard method fills the CalypsoCard object with the command data and
     // return
     // the parser used for an internal usage here.
-    AbstractPoOpenSessionParser poOpenSessionPars;
+    AbstractCardOpenSessionParser poOpenSessionPars;
     try {
       poOpenSessionPars =
-          (AbstractPoOpenSessionParser)
-              CalypsoPoUtils.updateCalypsoPo(
-                  calypsoPoSmartCard, openSessionCmdBuild, poApduResponses.get(0));
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
+          (AbstractCardOpenSessionParser)
+              CalypsoCardUtils.updateCalypsoCard(
+                  calypsoCard, openSessionCmdBuild, poApduResponses.get(0));
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
     }
-    // Build the Digest Init command from PO Open Session
+    // Build the Digest Init command from card Open Session
     // the session challenge is needed for the SAM digest computation
-    byte[] sessionCardChallenge = poOpenSessionPars.getPoChallenge();
+    byte[] sessionCardChallenge = poOpenSessionPars.getCardChallenge();
 
-    // The PO KIF
+    // The card KIF
     byte poKif = poOpenSessionPars.getSelectedKif();
 
-    // The PO KVC, may be null for PO Rev 1.0
+    // The card KVC, may be null for card Rev 1.0
     byte poKvc = poOpenSessionPars.getSelectedKvc();
 
     if (logger.isDebugEnabled()) {
       logger.debug(
-          "processAtomicOpening => opening: CARDCHALLENGE = {}, POKIF = {}, POKVC = {}",
+          "processAtomicOpening => opening: CARDCHALLENGE = {}, CARDKIF = {}, CARDKVC = {}",
           ByteArrayUtil.toHex(sessionCardChallenge),
           String.format("%02X", poKif),
           String.format("%02X", poKvc));
@@ -243,7 +244,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
     if (!cardSecuritySettings.isKvcAuthorized(poKvc)) {
       throw new CalypsoUnauthorizedKvcException(
-          String.format("Unauthorized KVC error: PO KVC = %02X", poKvc));
+          String.format("Unauthorized KVC error: card KVC = %02X", poKvc));
     }
 
     // Initialize the digest processor. It will store all digest operations (Digest Init, Digest
@@ -255,9 +256,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
     // we skip it and start the loop at index 1.
-    if ((poCommands != null) && !poCommands.isEmpty()) {
+    if ((cardCommands != null) && !cardCommands.isEmpty()) {
       // Add requests and responses to the digest processor
-      samCommandProcessor.pushPoExchangeDataList(poApduRequests, poApduResponses, 1);
+      samCommandProcessor.pushCardExchangedData(poApduRequests, poApduResponses, 1);
     }
 
     // Remove Open Secure Session response and create a new CardResponse
@@ -266,27 +267,27 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // update CalypsoCard with the received data
     // TODO check if this is not redundant with what is done 40 lines above
     try {
-      CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, poCommands, poApduResponses);
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
+      CalypsoCardUtils.updateCalypsoCard(calypsoCard, cardCommands, poApduResponses);
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
     }
 
     sessionState = SessionState.SESSION_OPEN;
   }
 
   /**
-   * Create an ApduRequest List from a AbstractPoCommandBuilder List.
+   * Create an ApduRequest List from a AbstractCardCommandBuilder List.
    *
-   * @param poCommands a list of PO commands.
+   * @param cardCommands a list of card commands.
    * @return the ApduRequest list
    */
   private List<ApduRequest> getApduRequests(
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands) {
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {
     List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
-    if (poCommands != null) {
-      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-          poCommands) {
+    if (cardCommands != null) {
+      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
+          cardCommands) {
         apduRequests.add(commandBuilder.getApduRequest());
       }
     }
@@ -294,37 +295,37 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   }
 
   /**
-   * Process PO commands in a Secure Session.
+   * Process card commands in a Secure Session.
    *
    * <ul>
-   *   <li>On the PO reader, generates a CardRequest with channelControl set to KEEP_OPEN, and
-   *       ApduRequests with the PO commands.
+   *   <li>On the card reader, generates a CardRequest with channelControl set to KEEP_OPEN, and
+   *       ApduRequests with the card commands.
    *   <li>In case the secure session is active, the "cache" of SAM commands is completed with the
    *       corresponding Digest Update commands.
-   *   <li>If a session is open and channelControl is set to CLOSE_AFTER, the current PO session is
-   *       aborted
-   *   <li>Returns the corresponding PO CardResponse.
+   *   <li>If a session is open and channelControl is set to CLOSE_AFTER, the current card session
+   *       is aborted
+   *   <li>Returns the corresponding card CardResponse.
    * </ul>
    *
-   * @param poCommands the po commands inside session.
-   * @param channelControl indicated if the card channel of the PO reader must be closed after the.
-   *     last command
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @param cardCommands the card commands inside session.
+   * @param channelControl indicated if the card channel of the card reader must be closed after
+   *     the. last command
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
-  private void processAtomicPoCommands(
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands,
+  private void processAtomicCardCommands(
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands,
       ChannelControl channelControl) {
 
-    // Get the PO ApduRequest List
-    List<ApduRequest> poApduRequests = getApduRequests(poCommands);
+    // Get the card ApduRequest List
+    List<ApduRequest> poApduRequests = getApduRequests(cardCommands);
 
-    // Create a CardRequest from the ApduRequest list, PO AID as Selector, manage the logical
+    // Create a CardRequest from the ApduRequest list, card AID as Selector, manage the logical
     // channel according to the channelControl
     CardRequest poCardRequest = new CardRequest(poApduRequests, false);
 
-    // Transmit the commands to the PO
-    CardResponse poCardResponse = safePoTransmit(poCardRequest, channelControl);
+    // Transmit the commands to the card
+    CardResponse poCardResponse = safeTransmit(poCardRequest, channelControl);
 
     // Retrieve and check the ApduResponses
     List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
@@ -335,15 +336,15 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // Add all commands data to the digest computation if this method is invoked within a Secure
     // Session.
     if (sessionState == SessionState.SESSION_OPEN) {
-      samCommandProcessor.pushPoExchangeDataList(poApduRequests, poApduResponses, 0);
+      samCommandProcessor.pushCardExchangedData(poApduRequests, poApduResponses, 0);
     }
 
     try {
-      CalypsoPoUtils.updateCalypsoPo(
-          calypsoPoSmartCard, poCommands, poCardResponse.getApduResponses());
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing responses to PO commands: " + e.getCommand(), e);
+      CalypsoCardUtils.updateCalypsoCard(
+          calypsoCard, cardCommands, poCardResponse.getApduResponses());
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR + "processing responses to card commands: " + e.getCommand(), e);
     }
   }
 
@@ -351,17 +352,17 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Close the Secure Session.
    *
    * <ul>
-   *   <li>The SAM cache is completed with the Digest Update commands related to the new PO commands
-   *       to be sent and their anticipated responses. A Digest Close command is also added to the
-   *       SAM command cache.
+   *   <li>The SAM cache is completed with the Digest Update commands related to the new card
+   *       commands to be sent and their anticipated responses. A Digest Close command is also added
+   *       to the SAM command cache.
    *   <li>On the SAM session reader side, a CardRequest is transmitted with SAM commands from the
    *       command cache. The SAM command cache is emptied.
    *   <li>The SAM certificate is retrieved from the Digest Close response. The terminal signature
    *       is identified.
-   *   <li>Then, on the PO reader, a CardRequest is transmitted with a {@link ChannelControl} set to
-   *       CLOSE_AFTER or KEEP_OPEN depending on whether or not prepareReleasePoChannel was invoked,
-   *       and apduRequests including the new PO commands to send in the session, a Close Session
-   *       command (defined with the SAM certificate), and optionally a ratificationCommand.
+   *   <li>Then, on the card reader, a CardRequest is transmitted with a {@link ChannelControl} set
+   *       to CLOSE_AFTER or KEEP_OPEN depending on whether or not prepareReleaseCardChannel was
+   *       invoked, and apduRequests including the new card commands to send in the session, a Close
+   *       Session command (defined with the SAM certificate), and optionally a ratificationCommand.
    *       <ul>
    *         <li>The management of ratification is conditioned by the mode of communication.
    *             <ul>
@@ -372,40 +373,41 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    *                   the Close Session command. Ratification is requested in the Close Session
    *                   command.
    *             </ul>
-   *         <li>Otherwise, the PO Close Secure Session command is defined to directly set the PO as
-   *             ratified.
+   *         <li>Otherwise, the card Close Secure Session command is defined to directly set the
+   *             card as ratified.
    *       </ul>
-   *   <li>The PO responses of the poModificationCommands are compared with the
-   *       poAnticipatedResponses. The PO signature is identified from the PO Close Session
+   *   <li>The card responses of the poModificationCommands are compared with the
+   *       poAnticipatedResponses. The card signature is identified from the card Close Session
    *       response.
-   *   <li>The PO certificate is recovered from the Close Session response. The card signature is
+   *   <li>The card certificate is recovered from the Close Session response. The card signature is
    *       identified.
    *   <li>Finally, on the SAM session reader, a Digest Authenticate is automatically operated in
-   *       order to verify the PO signature.
-   *   <li>Returns the corresponding PO CardResponse.
+   *       order to verify the card signature.
+   *   <li>Returns the corresponding card CardResponse.
    * </ul>
    *
    * The method is marked as deprecated because the advanced variant defined below must be used at
    * the application level.
    *
-   * @param poModificationCommands a list of commands that can modify the PO memory content.
-   * @param poAnticipatedResponses a list of anticipated PO responses to the modification commands.
+   * @param poModificationCommands a list of commands that can modify the card memory content.
+   * @param poAnticipatedResponses a list of anticipated card responses to the modification
+   *     commands.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
    *     ratification command must be sent.
-   * @param channelControl indicates if the card channel of the PO reader must be closed after the.
-   *     last command
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @param channelControl indicates if the card channel of the card reader must be closed after
+   *     the. last command
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
   private void processAtomicClosing(
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poModificationCommands,
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poModificationCommands,
       List<ApduResponse> poAnticipatedResponses,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
 
     checkSessionIsOpen();
 
-    // Get the PO ApduRequest List - for the first PO exchange
+    // Get the card ApduRequest List - for the first card exchange
     List<ApduRequest> poApduRequests = getApduRequests(poModificationCommands);
 
     // Compute "anticipated" Digest Update (for optional poModificationCommands)
@@ -413,7 +415,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       checkCommandsResponsesSynchronization(poApduRequests.size(), poAnticipatedResponses.size());
       // Add all commands data to the digest computation: commands and anticipated
       // responses.
-      samCommandProcessor.pushPoExchangeDataList(poApduRequests, poAnticipatedResponses, 0);
+      samCommandProcessor.pushCardExchangedData(poApduRequests, poAnticipatedResponses, 0);
     }
 
     // All SAM digest operations will now run at once.
@@ -422,28 +424,26 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
     boolean ratificationCommandResponseReceived;
 
-    // Build the PO Close Session command. The last one for this session
-    PoCloseSessionBuilder closeSessionCmdBuild =
-        new PoCloseSessionBuilder(
-            calypsoPoSmartCard.getPoClass(),
-            !isRatificationMechanismEnabled,
-            sessionTerminalSignature);
+    // Build the card Close Session command. The last one for this session
+    CardCloseSessionBuilder closeSessionCmdBuild =
+        new CardCloseSessionBuilder(
+            calypsoCard.getCardClass(), !isRatificationMechanismEnabled, sessionTerminalSignature);
 
     poApduRequests.add(closeSessionCmdBuild.getApduRequest());
 
     // Keep the position of the Close Session command in request list
     int closeCommandIndex = poApduRequests.size() - 1;
 
-    // Add the PO Ratification command if any
+    // Add the card Ratification command if any
     boolean ratificationCommandAdded;
     if (isRatificationMechanismEnabled && ((Reader) poReader).isContactless()) {
-      poApduRequests.add(PoRatificationBuilder.getApduRequest(calypsoPoSmartCard.getPoClass()));
+      poApduRequests.add(CardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
       ratificationCommandAdded = true;
     } else {
       ratificationCommandAdded = false;
     }
 
-    // Transfer PO commands
+    // Transfer card commands
     CardRequest poCardRequest = new CardRequest(poApduRequests, false);
 
     CardResponse poCardResponse;
@@ -454,7 +454,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       ratificationCommandResponseReceived = ratificationCommandAdded;
     } catch (CardCommunicationException e) {
       poCardResponse = e.getCardResponse();
-      // The current exception may have been caused by a communication issue with the PO
+      // The current exception may have been caused by a communication issue with the card
       // during the ratification command.
       //
       // In this case, we do not stop the process and consider the Secure Session close. We'll
@@ -464,12 +464,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       if (!ratificationCommandAdded
           || poCardResponse == null
           || poCardResponse.getApduResponses().size() != poApduRequests.size() - 1) {
-        throw new CalypsoPoIOException(PO_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+        throw new CalypsoCardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
       }
       // we received all responses except the response to the ratification command
       ratificationCommandResponseReceived = false;
     } catch (ReaderCommunicationException e) {
-      throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+      throw new CalypsoCardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (UnexpectedStatusCodeException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
@@ -479,25 +479,25 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
     try {
-      CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, poModificationCommands, poApduResponses);
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR
+      CalypsoCardUtils.updateCalypsoCard(calypsoCard, poModificationCommands, poApduResponses);
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR
               + "processing of responses preceding the close of the session: "
               + e.getCommand(),
           e);
     }
 
-    // Check the PO's response to Close Secure Session
-    PoCloseSessionParser poCloseSessionPars =
-        getPoCloseSessionParser(poApduResponses, closeSessionCmdBuild, closeCommandIndex);
+    // Check the card's response to Close Secure Session
+    CardCloseSessionParser poCloseSessionPars =
+        getCardCloseSessionParser(poApduResponses, closeSessionCmdBuild, closeCommandIndex);
 
-    // Check the PO signature
-    checkPoSignature(poCloseSessionPars.getSignatureLo());
+    // Check the card signature
+    checkCardSignature(poCloseSessionPars.getSignatureLo());
 
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
-    if (poCommandManager.isSvOperationCompleteOneTime()) {
+    if (cardCommandManager.isSvOperationCompleteOneTime()) {
       checkSvOperationStatus(poCloseSessionPars.getPostponedData());
     }
 
@@ -518,21 +518,21 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Advanced variant of processAtomicClosing in which the list of expected responses is determined
    * from previous reading operations.
    *
-   * @param poCommands a list of commands that can modify the PO memory content.
+   * @param cardCommands a list of commands that can modify the card memory content.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
    *     ratification command must be sent.
-   * @param channelControl indicates if the card channel of the PO reader must be closed after the.
-   *     last command
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @param channelControl indicates if the card channel of the card reader must be closed after
+   *     the. last command
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
   private void processAtomicClosing(
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands,
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
-    List<ApduResponse> poAnticipatedResponses = getAnticipatedResponses(poCommands);
+    List<ApduResponse> poAnticipatedResponses = getAnticipatedResponses(cardCommands);
     processAtomicClosing(
-        poCommands, poAnticipatedResponses, isRatificationMechanismEnabled, channelControl);
+        cardCommands, poAnticipatedResponses, isRatificationMechanismEnabled, channelControl);
   }
 
   /**
@@ -544,10 +544,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   private int getCounterValue(int sfi, int counter) {
     try {
-      ElementaryFile ef = calypsoPoSmartCard.getFileBySfi((byte) sfi);
+      ElementaryFile ef = calypsoCard.getFileBySfi((byte) sfi);
       return ef.getData().getContentAsCounterValue(counter);
     } catch (NoSuchElementException e) {
-      throw new CalypsoPoTransactionIllegalStateException(
+      throw new CalypsoCardTransactionIllegalStateException(
           "Anticipated response. Unable to determine anticipated value of counter "
               + counter
               + " in EF sfi "
@@ -581,31 +581,31 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * These commands are supposed to be "modifying commands" i.e.
    * Increase/Decrease/UpdateRecord/WriteRecord ou AppendRecord.
    *
-   * @param poCommands the list of PO commands sent.
+   * @param cardCommands the list of card commands sent.
    * @return the list of the anticipated responses.
-   * @throws CalypsoPoTransactionIllegalStateException if the anticipation process failed
+   * @throws CalypsoCardTransactionIllegalStateException if the anticipation process failed
    */
   private List<ApduResponse> getAnticipatedResponses(
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poCommands) {
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {
     List<ApduResponse> apduResponses = new ArrayList<ApduResponse>();
-    if (poCommands != null) {
-      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-          poCommands) {
-        if (commandBuilder.getCommandRef() == PoCommand.DECREASE) {
-          int sfi = ((PoDecreaseBuilder) commandBuilder).getSfi();
-          int counter = ((PoDecreaseBuilder) commandBuilder).getCounterNumber();
+    if (cardCommands != null) {
+      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
+          cardCommands) {
+        if (commandBuilder.getCommandRef() == CalypsoCardCommand.DECREASE) {
+          int sfi = ((CardDecreaseBuilder) commandBuilder).getSfi();
+          int counter = ((CardDecreaseBuilder) commandBuilder).getCounterNumber();
           int newCounterValue =
-              getCounterValue(sfi, counter) - ((PoDecreaseBuilder) commandBuilder).getDecValue();
+              getCounterValue(sfi, counter) - ((CardDecreaseBuilder) commandBuilder).getDecValue();
           apduResponses.add(createIncreaseDecreaseResponse(newCounterValue));
-        } else if (commandBuilder.getCommandRef() == PoCommand.INCREASE) {
-          int sfi = ((PoIncreaseBuilder) commandBuilder).getSfi();
-          int counter = ((PoIncreaseBuilder) commandBuilder).getCounterNumber();
+        } else if (commandBuilder.getCommandRef() == CalypsoCardCommand.INCREASE) {
+          int sfi = ((CardIncreaseBuilder) commandBuilder).getSfi();
+          int counter = ((CardIncreaseBuilder) commandBuilder).getCounterNumber();
           int newCounterValue =
-              getCounterValue(sfi, counter) + ((PoIncreaseBuilder) commandBuilder).getIncValue();
+              getCounterValue(sfi, counter) + ((CardIncreaseBuilder) commandBuilder).getIncValue();
           apduResponses.add(createIncreaseDecreaseResponse(newCounterValue));
-        } else if (commandBuilder.getCommandRef() == PoCommand.SV_RELOAD
-            || commandBuilder.getCommandRef() == PoCommand.SV_DEBIT
-            || commandBuilder.getCommandRef() == PoCommand.SV_UNDEBIT) {
+        } else if (commandBuilder.getCommandRef() == CalypsoCardCommand.SV_RELOAD
+            || commandBuilder.getCommandRef() == CalypsoCardCommand.SV_DEBIT
+            || commandBuilder.getCommandRef() == CalypsoCardCommand.SV_UNDEBIT) {
           apduResponses.add(RESPONSE_OK_POSTPONED);
         } else { // Append/Update/Write Record: response = 9000
           apduResponses.add(RESPONSE_OK);
@@ -625,15 +625,15 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     try {
       currentSessionAccessLevel = sessionAccessLevel;
 
-      // create a sublist of AbstractPoCommandBuilder to be sent atomically
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
-          new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
+      // create a sublist of AbstractCardCommandBuilder to be sent atomically
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poAtomicCommands =
+          new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
 
       AtomicInteger neededSessionBufferSpace = new AtomicInteger();
       AtomicBoolean overflow = new AtomicBoolean();
 
-      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-          poCommandManager.getPoCommandBuilders()) {
+      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
+          cardCommandManager.getCardCommandBuilders()) {
         // check if the command is a modifying one and get it status (overflow yes/no,
         // neededSessionBufferSpace)
         // if the command overflows the session buffer in atomic modification mode, an exception
@@ -646,18 +646,18 @@ class CardTransactionServiceAdapter implements CardTransactionService {
             // round.
             processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
             resetModificationsBufferCounter();
-            // Clear the list and add the command that did not fit in the PO modifications
+            // Clear the list and add the command that did not fit in the card modifications
             // buffer. We also update the usage counter without checking the result.
             poAtomicCommands.clear();
             poAtomicCommands.add(commandBuilder);
             // just update modifications buffer usage counter, ignore result (always false)
             isSessionBufferOverflowed(neededSessionBufferSpace.get());
           } else {
-            // The command fits in the PO modifications buffer, just add it to the list
+            // The command fits in the card modifications buffer, just add it to the list
             poAtomicCommands.add(commandBuilder);
           }
         } else {
-          // This command does not affect the PO modifications buffer
+          // This command does not affect the card modifications buffer
           poAtomicCommands.add(commandBuilder);
         }
       }
@@ -665,7 +665,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       processAtomicOpening(currentSessionAccessLevel, poAtomicCommands);
 
       // sets the flag indicating that the commands have been executed
-      poCommandManager.notifyCommandsProcessed();
+      cardCommandManager.notifyCommandsProcessed();
 
       return this;
     } catch (RuntimeException e) {
@@ -675,28 +675,28 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   }
 
   /**
-   * Process all prepared PO commands (outside a Secure Session).
+   * Process all prepared card commands (outside a Secure Session).
    *
    * <p>Note: commands prepared prior to the invocation of this method shall not require the use of
    * a SAM.
    *
-   * @param channelControl indicates if the card channel of the PO reader must be closed after the.
-   *     last command
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @param channelControl indicates if the card channel of the card reader must be closed after
+   *     the. last command
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
-  private void processPoCommandsOutOfSession(ChannelControl channelControl) {
+  private void processCardCommandsOutOfSession(ChannelControl channelControl) {
 
-    // PO commands sent outside a Secure Session. No modifications buffer limitation.
-    processAtomicPoCommands(poCommandManager.getPoCommandBuilders(), channelControl);
+    // card commands sent outside a Secure Session. No modifications buffer limitation.
+    processAtomicCardCommands(cardCommandManager.getCardCommandBuilders(), channelControl);
 
     // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
+    cardCommandManager.notifyCommandsProcessed();
 
-    // If an SV transaction was performed, we check the signature returned by the PO here
-    if (poCommandManager.isSvOperationCompleteOneTime()) {
+    // If an SV transaction was performed, we check the signature returned by the card here
+    if (cardCommandManager.isSvOperationCompleteOneTime()) {
       try {
-        samCommandProcessor.checkSvStatus(CalypsoPoUtils.getSvOperationSignature());
+        samCommandProcessor.checkSvStatus(CalypsoCardUtils.getSvOperationSignature());
       } catch (CalypsoSamSecurityDataException e) {
         throw new CalypsoSvAuthenticationException(
             "The checking of the SV operation by the SAM has failed.", e);
@@ -714,62 +714,62 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   }
 
   /**
-   * Process all prepared PO commands in a Secure Session.
+   * Process all prepared card commands in a Secure Session.
    *
    * <p>The multiple session mode is handled according to the session settings.
    *
-   * @throws CalypsoPoTransactionException if a functional error occurs (including PO and SAM IO
+   * @throws CalypsoCardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
-  private void processPoCommandsInSession() {
+  private void processCardCommandsInSession() {
 
-    // A session is open, we have to care about the PO modifications buffer
-    List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicBuilders =
-        new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
+    // A session is open, we have to care about the card modifications buffer
+    List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poAtomicBuilders =
+        new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
 
     AtomicInteger neededSessionBufferSpace = new AtomicInteger();
     AtomicBoolean overflow = new AtomicBoolean();
 
-    for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-        poCommandManager.getPoCommandBuilders()) {
+    for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
+        cardCommandManager.getCardCommandBuilders()) {
       // check if the command is a modifying one and get it status (overflow yes/no,
       // neededSessionBufferSpace)
       // if the command overflows the session buffer in atomic modification mode, an exception
       // is raised.
       if (checkModifyingCommand(commandBuilder, overflow, neededSessionBufferSpace)) {
         if (overflow.get()) {
-          // The current command would overflow the modifications buffer in the PO. We
+          // The current command would overflow the modifications buffer in the card. We
           // send the current commands and update the parsers. The parsers Iterator is
           // kept all along the process.
-          processAtomicPoCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
+          processAtomicCardCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
           // Close the session and reset the modifications buffer counters for the next
           // round
           processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
           resetModificationsBufferCounter();
           // We reopen a new session for the remaining commands to be sent
           processAtomicOpening(currentSessionAccessLevel, null);
-          // Clear the list and add the command that did not fit in the PO modifications
+          // Clear the list and add the command that did not fit in the card modifications
           // buffer. We also update the usage counter without checking the result.
           poAtomicBuilders.clear();
           poAtomicBuilders.add(commandBuilder);
           // just update modifications buffer usage counter, ignore result (always false)
           isSessionBufferOverflowed(neededSessionBufferSpace.get());
         } else {
-          // The command fits in the PO modifications buffer, just add it to the list
+          // The command fits in the card modifications buffer, just add it to the list
           poAtomicBuilders.add(commandBuilder);
         }
       } else {
-        // This command does not affect the PO modifications buffer
+        // This command does not affect the card modifications buffer
         poAtomicBuilders.add(commandBuilder);
       }
     }
 
     if (!poAtomicBuilders.isEmpty()) {
-      processAtomicPoCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
+      processAtomicCardCommands(poAtomicBuilders, ChannelControl.KEEP_OPEN);
     }
 
     // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
+    cardCommandManager.notifyCommandsProcessed();
   }
 
   /**
@@ -778,12 +778,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @since 2.0
    */
   @Override
-  public final CardTransactionService processPoCommands() {
+  public final CardTransactionService processCardCommands() {
     try {
       if (sessionState == SessionState.SESSION_OPEN) {
-        processPoCommandsInSession();
+        processCardCommandsInSession();
       } else {
-        processPoCommandsOutOfSession(channelControl);
+        processCardCommandsOutOfSession(channelControl);
       }
       return this;
     } catch (RuntimeException e) {
@@ -808,10 +808,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       AtomicInteger neededSessionBufferSpace = new AtomicInteger();
       AtomicBoolean overflow = new AtomicBoolean();
 
-      List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> poAtomicCommands =
-          new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
-      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
-          poCommandManager.getPoCommandBuilders()) {
+      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> poAtomicCommands =
+          new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
+      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
+          cardCommandManager.getCardCommandBuilders()) {
         // check if the command is a modifying one and get it status (overflow yes/no,
         // neededSessionBufferSpace)
         // if the command overflows the session buffer in atomic modification mode, an exception
@@ -824,10 +824,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
               processAtomicOpening(currentSessionAccessLevel, null);
             }
 
-            // If at least one non-modifying was prepared, we use processAtomicPoCommands
+            // If at least one non-modifying was prepared, we use processAtomicCardCommands
             // instead of processAtomicClosing to send the list
             if (atLeastOneReadCommand) {
-              processAtomicPoCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
+              processAtomicCardCommands(poAtomicCommands, ChannelControl.KEEP_OPEN);
               // Clear the list of commands sent
               poAtomicCommands.clear();
               processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
@@ -835,7 +835,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
               sessionPreviouslyClosed = true;
               atLeastOneReadCommand = false;
             } else {
-              // All commands in the list are 'modifying the PO'
+              // All commands in the list are 'modifying the card'
               processAtomicClosing(poAtomicCommands, false, ChannelControl.KEEP_OPEN);
               // Clear the list of commands sent
               poAtomicCommands.clear();
@@ -843,17 +843,17 @@ class CardTransactionServiceAdapter implements CardTransactionService {
               sessionPreviouslyClosed = true;
             }
 
-            // Add the command that did not fit in the PO modifications
+            // Add the command that did not fit in the card modifications
             // buffer. We also update the usage counter without checking the result.
             poAtomicCommands.add(commandBuilder);
             // just update modifications buffer usage counter, ignore result (always false)
             isSessionBufferOverflowed(neededSessionBufferSpace.get());
           } else {
-            // The command fits in the PO modifications buffer, just add it to the list
+            // The command fits in the card modifications buffer, just add it to the list
             poAtomicCommands.add(commandBuilder);
           }
         } else {
-          // This command does not affect the PO modifications buffer
+          // This command does not affect the card modifications buffer
           poAtomicCommands.add(commandBuilder);
           atLeastOneReadCommand = true;
         }
@@ -868,7 +868,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           poAtomicCommands, cardSecuritySettings.isRatificationMechanismEnabled(), channelControl);
 
       // sets the flag indicating that the commands have been executed
-      poCommandManager.notifyCommandsProcessed();
+      cardCommandManager.notifyCommandsProcessed();
     } finally {
       releaseSamResourceSilently();
     }
@@ -881,34 +881,34 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final void processCancel() {
-    // PO ApduRequest List to hold Close Secure Session command
+    // card ApduRequest List to hold Close Secure Session command
     List<ApduRequest> poApduRequests = new ArrayList<ApduRequest>();
 
-    // Build the PO Close Session command (in "abort" mode since no signature is provided).
-    PoCloseSessionBuilder closeSessionCmdBuild =
-        new PoCloseSessionBuilder(calypsoPoSmartCard.getPoClass());
+    // Build the card Close Session command (in "abort" mode since no signature is provided).
+    CardCloseSessionBuilder closeSessionCmdBuild =
+        new CardCloseSessionBuilder(calypsoCard.getCardClass());
 
     poApduRequests.add(closeSessionCmdBuild.getApduRequest());
 
-    // Transfer PO commands
+    // Transfer card commands
     CardRequest poCardRequest = new CardRequest(poApduRequests, false);
 
-    CardResponse poCardResponse = safePoTransmit(poCardRequest, channelControl);
+    CardResponse poCardResponse = safeTransmit(poCardRequest, channelControl);
 
     try {
       closeSessionCmdBuild
           .createResponseParser(poCardResponse.getApduResponses().get(0))
           .checkStatus();
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
     }
 
     // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
+    cardCommandManager.notifyCommandsProcessed();
 
     // session is now considered closed regardless the previous state or the result of the abort
-    // session command sent to the PO.
+    // session command sent to the card.
     sessionState = SessionState.SESSION_CLOSED;
   }
 
@@ -921,33 +921,33 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService processVerifyPin(byte[] pin) {
     Assert.getInstance()
         .notNull(pin, "pin")
-        .isEqual(pin.length, CalypsoPoUtils.PIN_LENGTH, "PIN length");
+        .isEqual(pin.length, CalypsoCardUtils.PIN_LENGTH, "PIN length");
 
-    if (!calypsoPoSmartCard.isPinFeatureAvailable()) {
-      throw new CalypsoPoTransactionIllegalStateException("PIN is not available for this PO.");
+    if (!calypsoCard.isPinFeatureAvailable()) {
+      throw new CalypsoCardTransactionIllegalStateException("PIN is not available for this card.");
     }
 
-    if (poCommandManager.hasCommands()) {
-      throw new CalypsoPoTransactionIllegalStateException(
+    if (cardCommandManager.hasCommands()) {
+      throw new CalypsoCardTransactionIllegalStateException(
           "No commands should have been prepared prior to a PIN submission.");
     }
 
     if (cardSecuritySettings != null
         && !cardSecuritySettings.isPinTransmissionEncryptionDisabled()) {
-      poCommandManager.addRegularCommand(
-          new PoGetChallengeBuilder(calypsoPoSmartCard.getPoClass()));
+      cardCommandManager.addRegularCommand(new CardGetChallengeBuilder(calypsoCard.getCardClass()));
 
-      // transmit and receive data with the PO
-      processAtomicPoCommands(poCommandManager.getPoCommandBuilders(), ChannelControl.KEEP_OPEN);
+      // transmit and receive data with the card
+      processAtomicCardCommands(
+          cardCommandManager.getCardCommandBuilders(), ChannelControl.KEEP_OPEN);
 
       // sets the flag indicating that the commands have been executed
-      poCommandManager.notifyCommandsProcessed();
+      cardCommandManager.notifyCommandsProcessed();
 
       // Get the encrypted PIN with the help of the SAM
       byte[] cipheredPin;
       try {
         cipheredPin =
-            samCommandProcessor.getCipheredPinData(CalypsoPoUtils.getPoChallenge(), pin, null);
+            samCommandProcessor.getCipheredPinData(CalypsoCardUtils.getCardChallenge(), pin, null);
       } catch (CalypsoSamCommandException e) {
         throw new CalypsoSamAnomalyException(
             SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
@@ -959,18 +959,18 @@ class CardTransactionServiceAdapter implements CardTransactionService {
         throw new CalypsoSamIOException(
             SAM_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
       }
-      poCommandManager.addRegularCommand(
-          new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass(), true, cipheredPin));
+      cardCommandManager.addRegularCommand(
+          new CardVerifyPinBuilder(calypsoCard.getCardClass(), true, cipheredPin));
     } else {
-      poCommandManager.addRegularCommand(
-          new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass(), false, pin));
+      cardCommandManager.addRegularCommand(
+          new CardVerifyPinBuilder(calypsoCard.getCardClass(), false, pin));
     }
 
-    // transmit and receive data with the PO
-    processAtomicPoCommands(poCommandManager.getPoCommandBuilders(), channelControl);
+    // transmit and receive data with the card
+    processAtomicCardCommands(cardCommandManager.getCardCommandBuilders(), channelControl);
 
     // sets the flag indicating that the commands have been executed
-    poCommandManager.notifyCommandsProcessed();
+    cardCommandManager.notifyCommandsProcessed();
 
     return this;
   }
@@ -987,13 +987,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     return this;
   }
 
-  private CardResponse safePoTransmit(CardRequest poCardRequest, ChannelControl channelControl) {
+  private CardResponse safeTransmit(CardRequest poCardRequest, ChannelControl channelControl) {
     try {
       return poReader.transmitCardRequest(poCardRequest, channelControl);
     } catch (ReaderCommunicationException e) {
-      throw new CalypsoPoIOException(PO_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+      throw new CalypsoCardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (CardCommunicationException e) {
-      throw new CalypsoPoIOException(PO_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+      throw new CalypsoCardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (UnexpectedStatusCodeException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
@@ -1047,43 +1047,43 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   }
 
   /**
-   * Ask the SAM to verify the signature of the PO, and raises exceptions if necessary.
+   * Ask the SAM to verify the signature of the card, and raises exceptions if necessary.
    *
-   * @param poSignature The PO signature.
-   * @throws CalypsoSessionAuthenticationException If the PO authentication failed.
+   * @param cardSignature The card signature.
+   * @throws CalypsoSessionAuthenticationException If the card authentication failed.
    * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
    * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
    */
-  private void checkPoSignature(byte[] poSignature) {
+  private void checkCardSignature(byte[] cardSignature) {
     try {
-      samCommandProcessor.authenticatePoSignature(poSignature);
+      samCommandProcessor.authenticateCardSignature(cardSignature);
     } catch (CalypsoSamSecurityDataException e) {
       throw new CalypsoSessionAuthenticationException(
-          "The authentication of the PO by the SAM has failed.", e);
+          "The authentication of the card by the SAM has failed.", e);
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
-          SAM_COMMAND_ERROR + "authenticating the PO signature: " + e.getCommand().getName(), e);
+          SAM_COMMAND_ERROR + "authenticating the card signature: " + e.getCommand().getName(), e);
     } catch (ReaderCommunicationException e) {
       throw new CalypsoSamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
+          SAM_READER_COMMUNICATION_ERROR + "authenticating the card signature.", e);
     } catch (CardCommunicationException e) {
       throw new CalypsoSamIOException(
-          SAM_COMMUNICATION_ERROR + "authenticating the PO signature.", e);
+          SAM_COMMUNICATION_ERROR + "authenticating the card signature.", e);
     }
   }
 
   /**
-   * Ask the SAM to verify the SV operation status from the PO postponed data, raises exceptions if
-   * needed.
+   * Ask the SAM to verify the SV operation status from the card postponed data, raises exceptions
+   * if needed.
    *
-   * @param poPostponedData The postponed data from the pO.
+   * @param cardPostponedData The postponed data from the card.
    * @throws CalypsoSvAuthenticationException If the SV verification failed.
    * @throws CalypsoSamAnomalyException If SAM returned an unexpected response.
    * @throws CalypsoSamIOException If the communication with the SAM or the SAM reader failed.
    */
-  private void checkSvOperationStatus(byte[] poPostponedData) {
+  private void checkSvOperationStatus(byte[] cardPostponedData) {
     try {
-      samCommandProcessor.checkSvStatus(poPostponedData);
+      samCommandProcessor.checkSvStatus(cardPostponedData);
     } catch (CalypsoSamSecurityDataException e) {
       throw new CalypsoSvAuthenticationException(
           "The checking of the SV operation by the SAM has failed.", e);
@@ -1101,27 +1101,27 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /**
    * Get the close session parser.
    *
-   * @param poApduResponses The responses received from the PO.
+   * @param poApduResponses The responses received from the card.
    * @param closeSessionCmdBuild The command builder.
    * @param closeCommandIndex The index of the close command within the request.
-   * @throws CalypsoPoCloseSecureSessionException If a security error occurs.
-   * @throws CalypsoPoAnomalyException If PO returned an unexpected response.
+   * @throws CalypsoCardCloseSecureSessionException If a security error occurs.
+   * @throws CalypsoCardAnomalyException If card returned an unexpected response.
    */
-  private PoCloseSessionParser getPoCloseSessionParser(
+  private CardCloseSessionParser getCardCloseSessionParser(
       List<ApduResponse> poApduResponses,
-      PoCloseSessionBuilder closeSessionCmdBuild,
+      CardCloseSessionBuilder closeSessionCmdBuild,
       int closeCommandIndex) {
-    PoCloseSessionParser poCloseSessionPars;
+    CardCloseSessionParser poCloseSessionPars;
     try {
       poCloseSessionPars =
-          (PoCloseSessionParser)
-              CalypsoPoUtils.updateCalypsoPo(
-                  calypsoPoSmartCard, closeSessionCmdBuild, poApduResponses.get(closeCommandIndex));
-    } catch (CalypsoPoSecurityDataException e) {
-      throw new CalypsoPoCloseSecureSessionException("Invalid PO session", e);
-    } catch (CalypsoPoCommandException e) {
-      throw new CalypsoPoAnomalyException(
-          PO_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
+          (CardCloseSessionParser)
+              CalypsoCardUtils.updateCalypsoCard(
+                  calypsoCard, closeSessionCmdBuild, poApduResponses.get(closeCommandIndex));
+    } catch (CalypsoCardSecurityDataException e) {
+      throw new CalypsoCardCloseSecureSessionException("Invalid card session", e);
+    } catch (CalypsoCardCommandException e) {
+      throw new CalypsoCardAnomalyException(
+          CARD_COMMAND_ERROR + "processing the response to close session: " + e.getCommand(), e);
     }
     return poCloseSessionPars;
   }
@@ -1129,11 +1129,11 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /**
    * Checks if a Secure Session is open, raises an exception if not
    *
-   * @throws CalypsoPoTransactionIllegalStateException if no session is open
+   * @throws CalypsoCardTransactionIllegalStateException if no session is open
    */
   private void checkSessionIsOpen() {
     if (sessionState != SessionState.SESSION_OPEN) {
-      throw new CalypsoPoTransactionIllegalStateException(
+      throw new CalypsoCardTransactionIllegalStateException(
           "Bad session state. Current: "
               + sessionState
               + ", expected: "
@@ -1144,11 +1144,11 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   /**
    * Checks if a Secure Session is not open, raises an exception if not
    *
-   * @throws CalypsoPoTransactionIllegalStateException if a session is open
+   * @throws CalypsoCardTransactionIllegalStateException if a session is open
    */
   private void checkSessionIsNotOpen() {
     if (sessionState == SessionState.SESSION_OPEN) {
-      throw new CalypsoPoTransactionIllegalStateException(
+      throw new CalypsoCardTransactionIllegalStateException(
           "Bad session state. Current: " + sessionState + ", expected: not open");
     }
   }
@@ -1181,16 +1181,16 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @param builder the command builder.
    * @param overflow flag set to true if the command overflowed the buffer.
    * @param neededSessionBufferSpace updated with the size of the buffer consumed by the command.
-   * @return true if the command modifies the content of the PO, false if not
+   * @return true if the command modifies the content of the card, false if not
    * @throws CalypsoAtomicTransactionException if the command overflows the buffer in ATOMIC
    *     modification mode
    */
   private boolean checkModifyingCommand(
-      AbstractPoCommandBuilder<? extends AbstractPoResponseParser> builder,
+      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> builder,
       AtomicBoolean overflow,
       AtomicInteger neededSessionBufferSpace) {
     if (builder.isSessionBufferUsed()) {
-      // This command affects the PO modifications buffer
+      // This command affects the card modifications buffer
       neededSessionBufferSpace.set(
           builder.getApduRequest().getBytes().length
               + SESSION_BUFFER_CMD_ADDITIONAL_COST
@@ -1199,7 +1199,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
         // raise an exception if in atomic mode
         if (!cardSecuritySettings.isMultipleSessionEnabled()) {
           throw new CalypsoAtomicTransactionException(
-              "ATOMIC mode error! This command would overflow the PO modifications buffer: "
+              "ATOMIC mode error! This command would overflow the card modifications buffer: "
                   + builder.getName());
         }
         overflow.set(true);
@@ -1223,7 +1223,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   private boolean isSessionBufferOverflowed(int sessionBufferSizeConsumed) {
     boolean isSessionBufferFull = false;
-    if (calypsoPoSmartCard.isModificationsCounterInBytes()) {
+    if (calypsoCard.isModificationsCounterInBytes()) {
       if (modificationsCounter - sessionBufferSizeConsumed >= 0) {
         modificationsCounter = modificationsCounter - sessionBufferSizeConsumed;
       } else {
@@ -1251,15 +1251,15 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     return isSessionBufferFull;
   }
 
-  /** Initialized the modifications buffer counter to its maximum value for the current PO */
+  /** Initialized the modifications buffer counter to its maximum value for the current card */
   private void resetModificationsBufferCounter() {
     if (logger.isTraceEnabled()) {
       logger.trace(
           "Modifications buffer counter reset: PREVIOUSVALUE = {}, NEWVALUE = {}",
           modificationsCounter,
-          calypsoPoSmartCard.getModificationsCounter());
+          calypsoCard.getModificationsCounter());
     }
-    modificationsCounter = calypsoPoSmartCard.getModificationsCounter();
+    modificationsCounter = calypsoCard.getModificationsCounter();
   }
 
   /**
@@ -1268,7 +1268,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @since 2.0
    */
   @Override
-  public final CardTransactionService prepareReleasePoChannel() {
+  public final CardTransactionService prepareReleaseCardChannel() {
     channelControl = ChannelControl.CLOSE_AFTER;
 
     return this;
@@ -1282,8 +1282,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   @Override
   public final CardTransactionService prepareSelectFile(byte[] lid) {
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        CalypsoPoUtils.prepareSelectFile(calypsoPoSmartCard.getPoClass(), lid));
+    cardCommandManager.addRegularCommand(
+        CalypsoCardUtils.prepareSelectFile(calypsoCard.getCardClass(), lid));
 
     return this;
   }
@@ -1296,8 +1296,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   @Override
   public final CardTransactionService prepareSelectFile(SelectFileControl control) {
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        CalypsoPoUtils.prepareSelectFile(calypsoPoSmartCard.getPoClass(), control));
+    cardCommandManager.addRegularCommand(
+        CalypsoCardUtils.prepareSelectFile(calypsoCard.getCardClass(), control));
 
     return this;
   }
@@ -1311,8 +1311,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareReadRecordFile(byte sfi, int recordNumber) {
     try {
       // create the builder and add it to the list of commands
-      poCommandManager.addRegularCommand(
-          CalypsoPoUtils.prepareReadRecordFile(calypsoPoSmartCard.getPoClass(), sfi, recordNumber));
+      cardCommandManager.addRegularCommand(
+          CalypsoCardUtils.prepareReadRecordFile(calypsoCard.getCardClass(), sfi, recordNumber));
 
       return this;
     } catch (RuntimeException e) {
@@ -1321,7 +1321,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     }
   }
 
-  /** */
+  /**
+   * (private)<br>
+   * Try to release the current SAM card resource.
+   */
   private void releaseSamResourceSilently() {
     try {
       if (samCommandProcessor != null) {
@@ -1342,32 +1345,32 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize) {
 
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi") //
         .isInRange(
             firstRecordNumber,
-            CalypsoPoUtils.NB_REC_MIN,
-            CalypsoPoUtils.NB_REC_MAX,
+            CalypsoCardUtils.NB_REC_MIN,
+            CalypsoCardUtils.NB_REC_MAX,
             "firstRecordNumber") //
         .isInRange(
             numberOfRecords,
-            CalypsoPoUtils.NB_REC_MIN,
-            CalypsoPoUtils.NB_REC_MAX - firstRecordNumber,
+            CalypsoCardUtils.NB_REC_MIN,
+            CalypsoCardUtils.NB_REC_MAX - firstRecordNumber,
             "numberOfRecords");
 
     if (numberOfRecords == 1) {
       // create the builder and add it to the list of commands
-      poCommandManager.addRegularCommand(
-          new PoReadRecordsBuilder(
-              calypsoPoSmartCard.getPoClass(),
+      cardCommandManager.addRegularCommand(
+          new CardReadRecordsBuilder(
+              calypsoCard.getCardClass(),
               sfi,
               firstRecordNumber,
-              PoReadRecordsBuilder.ReadMode.ONE_RECORD,
+              CardReadRecordsBuilder.ReadMode.ONE_RECORD,
               recordSize));
     } else {
       // Manages the reading of multiple records taking into account the transmission capacity
-      // of the PO and the response format (2 extra bytes)
+      // of the card and the response format (2 extra bytes)
       // Multiple APDUs can be generated depending on record size and transmission capacity.
-      int recordsPerApdu = calypsoPoSmartCard.getPayloadCapacity() / (recordSize + 2);
+      int recordsPerApdu = calypsoCard.getPayloadCapacity() / (recordSize + 2);
       int maxSizeDataPerApdu = recordsPerApdu * (recordSize + 2);
       int remainingRecords = numberOfRecords;
       int startRecordNumber = firstRecordNumber;
@@ -1382,12 +1385,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
           remainingRecords = 0;
         }
         // create the builder and add it to the list of commands
-        poCommandManager.addRegularCommand(
-            new PoReadRecordsBuilder(
-                calypsoPoSmartCard.getPoClass(),
+        cardCommandManager.addRegularCommand(
+            new CardReadRecordsBuilder(
+                calypsoCard.getCardClass(),
                 sfi,
                 startRecordNumber,
-                PoReadRecordsBuilder.ReadMode.MULTIPLE_RECORD,
+                CardReadRecordsBuilder.ReadMode.MULTIPLE_RECORD,
                 expectedLength));
       }
     }
@@ -1415,11 +1418,11 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   @Override
   public final CardTransactionService prepareAppendRecord(byte sfi, byte[] recordData) {
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi");
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi");
 
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        new PoAppendRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordData));
+    cardCommandManager.addRegularCommand(
+        new CardAppendRecordBuilder(calypsoCard.getCardClass(), sfi, recordData));
 
     return this;
   }
@@ -1433,13 +1436,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareUpdateRecord(
       byte sfi, int recordNumber, byte[] recordData) {
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi") //
         .isInRange(
-            recordNumber, CalypsoPoUtils.NB_REC_MIN, CalypsoPoUtils.NB_REC_MAX, "recordNumber");
+            recordNumber, CalypsoCardUtils.NB_REC_MIN, CalypsoCardUtils.NB_REC_MAX, "recordNumber");
 
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        new PoUpdateRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordNumber, recordData));
+    cardCommandManager.addRegularCommand(
+        new CardUpdateRecordBuilder(calypsoCard.getCardClass(), sfi, recordNumber, recordData));
 
     return this;
   }
@@ -1453,13 +1456,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareWriteRecord(
       byte sfi, int recordNumber, byte[] recordData) {
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi") //
         .isInRange(
-            recordNumber, CalypsoPoUtils.NB_REC_MIN, CalypsoPoUtils.NB_REC_MAX, "recordNumber");
+            recordNumber, CalypsoCardUtils.NB_REC_MIN, CalypsoCardUtils.NB_REC_MAX, "recordNumber");
 
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        new PoWriteRecordBuilder(calypsoPoSmartCard.getPoClass(), sfi, recordNumber, recordData));
+    cardCommandManager.addRegularCommand(
+        new CardWriteRecordBuilder(calypsoCard.getCardClass(), sfi, recordNumber, recordData));
 
     return this;
   }
@@ -1473,18 +1476,18 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareIncreaseCounter(
       byte sfi, int counterNumber, int incValue) {
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi") //
         .isInRange(
             counterNumber,
-            CalypsoPoUtils.NB_CNT_MIN,
-            CalypsoPoUtils.NB_CNT_MAX,
+            CalypsoCardUtils.NB_CNT_MIN,
+            CalypsoCardUtils.NB_CNT_MAX,
             "counterNumber") //
         .isInRange(
-            incValue, CalypsoPoUtils.CNT_VALUE_MIN, CalypsoPoUtils.CNT_VALUE_MAX, "incValue");
+            incValue, CalypsoCardUtils.CNT_VALUE_MIN, CalypsoCardUtils.CNT_VALUE_MAX, "incValue");
 
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        new PoIncreaseBuilder(calypsoPoSmartCard.getPoClass(), sfi, counterNumber, incValue));
+    cardCommandManager.addRegularCommand(
+        new CardIncreaseBuilder(calypsoCard.getCardClass(), sfi, counterNumber, incValue));
 
     return this;
   }
@@ -1498,18 +1501,18 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareDecreaseCounter(
       byte sfi, int counterNumber, int decValue) {
     Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoPoUtils.SFI_MIN, CalypsoPoUtils.SFI_MAX, "sfi") //
+        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi") //
         .isInRange(
             counterNumber,
-            CalypsoPoUtils.NB_CNT_MIN,
-            CalypsoPoUtils.NB_CNT_MAX,
+            CalypsoCardUtils.NB_CNT_MIN,
+            CalypsoCardUtils.NB_CNT_MAX,
             "counterNumber") //
         .isInRange(
-            decValue, CalypsoPoUtils.CNT_VALUE_MIN, CalypsoPoUtils.CNT_VALUE_MAX, "decValue");
+            decValue, CalypsoCardUtils.CNT_VALUE_MIN, CalypsoCardUtils.CNT_VALUE_MAX, "decValue");
 
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(
-        new PoDecreaseBuilder(calypsoPoSmartCard.getPoClass(), sfi, counterNumber, decValue));
+    cardCommandManager.addRegularCommand(
+        new CardDecreaseBuilder(calypsoCard.getCardClass(), sfi, counterNumber, decValue));
 
     return this;
   }
@@ -1525,12 +1528,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     try {
       delta =
           newValue
-              - calypsoPoSmartCard
-                  .getFileBySfi(sfi)
-                  .getData()
-                  .getContentAsCounterValue(counterNumber);
+              - calypsoCard.getFileBySfi(sfi).getData().getContentAsCounterValue(counterNumber);
     } catch (NoSuchElementException ex) {
-      throw new CalypsoPoTransactionIllegalStateException(
+      throw new CalypsoCardTransactionIllegalStateException(
           "The value for counter " + counterNumber + " in file " + sfi + " is not available");
     }
     if (delta > 0) {
@@ -1571,11 +1571,11 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final CardTransactionService prepareCheckPinStatus() {
-    if (!calypsoPoSmartCard.isPinFeatureAvailable()) {
-      throw new CalypsoPoTransactionIllegalStateException("PIN is not available for this PO.");
+    if (!calypsoCard.isPinFeatureAvailable()) {
+      throw new CalypsoCardTransactionIllegalStateException("PIN is not available for this card.");
     }
     // create the builder and add it to the list of commands
-    poCommandManager.addRegularCommand(new PoVerifyPinBuilder(calypsoPoSmartCard.getPoClass()));
+    cardCommandManager.addRegularCommand(new CardVerifyPinBuilder(calypsoCard.getCardClass()));
 
     return this;
   }
@@ -1588,26 +1588,24 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   @Override
   public final CardTransactionService prepareSvGet(
       SvSettings.Operation svOperation, SvSettings.Action svAction) {
-    if (!calypsoPoSmartCard.isSvFeatureAvailable()) {
-      throw new CalypsoPoTransactionIllegalStateException(
-          "Stored Value is not available for this PO.");
+    if (!calypsoCard.isSvFeatureAvailable()) {
+      throw new CalypsoCardTransactionIllegalStateException(
+          "Stored Value is not available for this card.");
     }
     if (cardSecuritySettings.isLoadAndDebitSvLogRequired()
-        && (calypsoPoSmartCard.getRevision() != CardRevision.REV3_2)) {
+        && (calypsoCard.getRevision() != CardRevision.REV3_2)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
-      // for a non rev3.2 PO add two SvGet commands (for RELOAD then for DEBIT).
+      // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
       SvSettings.Operation operation1 =
           SvSettings.Operation.RELOAD.equals(svOperation)
               ? SvSettings.Operation.DEBIT
               : SvSettings.Operation.RELOAD;
-      poCommandManager.addStoredValueCommand(
-          new PoSvGetBuilder(
-              calypsoPoSmartCard.getPoClass(), calypsoPoSmartCard.getRevision(), operation1),
+      cardCommandManager.addStoredValueCommand(
+          new CardSvGetBuilder(calypsoCard.getCardClass(), calypsoCard.getRevision(), operation1),
           operation1);
     }
-    poCommandManager.addStoredValueCommand(
-        new PoSvGetBuilder(
-            calypsoPoSmartCard.getPoClass(), calypsoPoSmartCard.getRevision(), svOperation),
+    cardCommandManager.addStoredValueCommand(
+        new CardSvGetBuilder(calypsoCard.getCardClass(), calypsoCard.getRevision(), svOperation),
         svOperation);
     this.svAction = svAction;
 
@@ -1623,12 +1621,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   public final CardTransactionService prepareSvReload(
       int amount, byte[] date, byte[] time, byte[] free) {
     // create the initial builder with the application data
-    PoSvReloadBuilder svReloadCmdBuild =
-        new PoSvReloadBuilder(
-            calypsoPoSmartCard.getPoClass(),
-            calypsoPoSmartCard.getRevision(),
+    CardSvReloadBuilder svReloadCmdBuild =
+        new CardSvReloadBuilder(
+            calypsoCard.getCardClass(),
+            calypsoCard.getRevision(),
             amount,
-            CalypsoPoUtils.getSvKvc(),
+            CalypsoCardUtils.getSvKvc(),
             date,
             time,
             free);
@@ -1638,7 +1636,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     try {
       svReloadComplementaryData =
           samCommandProcessor.getSvReloadComplementaryData(
-              svReloadCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
+              svReloadCmdBuild, CalypsoCardUtils.getSvGetHeader(), CalypsoCardUtils.getSvGetData());
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "preparing the SV reload command: " + e.getCommand().getName(), e);
@@ -1653,8 +1651,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     // finalize the SvReload command builder with the data provided by the SAM
     svReloadCmdBuild.finalizeBuilder(svReloadComplementaryData);
 
-    // create and keep the PoCommand
-    poCommandManager.addStoredValueCommand(svReloadCmdBuild, SvSettings.Operation.RELOAD);
+    // create and keep the CalypsoCardCommand
+    cardCommandManager.addStoredValueCommand(svReloadCmdBuild, SvSettings.Operation.RELOAD);
 
     return this;
   }
@@ -1687,17 +1685,17 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
     if (!cardSecuritySettings.isSvNegativeBalanceAllowed()
-        && (calypsoPoSmartCard.getSvBalance() - amount) < 0) {
-      throw new CalypsoPoTransactionIllegalStateException("Negative balances not allowed.");
+        && (calypsoCard.getSvBalance() - amount) < 0) {
+      throw new CalypsoCardTransactionIllegalStateException("Negative balances not allowed.");
     }
 
     // create the initial builder with the application data
-    PoSvDebitBuilder svDebitCmdBuild =
-        new PoSvDebitBuilder(
-            calypsoPoSmartCard.getPoClass(),
-            calypsoPoSmartCard.getRevision(),
+    CardSvDebitBuilder svDebitCmdBuild =
+        new CardSvDebitBuilder(
+            calypsoCard.getCardClass(),
+            calypsoCard.getRevision(),
             amount,
-            CalypsoPoUtils.getSvKvc(),
+            CalypsoCardUtils.getSvKvc(),
             date,
             time);
 
@@ -1705,13 +1703,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     byte[] svDebitComplementaryData;
     svDebitComplementaryData =
         samCommandProcessor.getSvDebitComplementaryData(
-            svDebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
+            svDebitCmdBuild, CalypsoCardUtils.getSvGetHeader(), CalypsoCardUtils.getSvGetData());
 
     // finalize the SvDebit command builder with the data provided by the SAM
     svDebitCmdBuild.finalizeBuilder(svDebitComplementaryData);
 
-    // create and keep the PoCommand
-    poCommandManager.addStoredValueCommand(svDebitCmdBuild, SvSettings.Operation.DEBIT);
+    // create and keep the CalypsoCardCommand
+    cardCommandManager.addStoredValueCommand(svDebitCmdBuild, SvSettings.Operation.DEBIT);
   }
 
   /**
@@ -1728,12 +1726,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
 
     // create the initial builder with the application data
-    PoSvUndebitBuilder svUndebitCmdBuild =
-        new PoSvUndebitBuilder(
-            calypsoPoSmartCard.getPoClass(),
-            calypsoPoSmartCard.getRevision(),
+    CardSvUndebitBuilder svUndebitCmdBuild =
+        new CardSvUndebitBuilder(
+            calypsoCard.getCardClass(),
+            calypsoCard.getRevision(),
             amount,
-            CalypsoPoUtils.getSvKvc(),
+            CalypsoCardUtils.getSvKvc(),
             date,
             time);
 
@@ -1741,13 +1739,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     byte[] svDebitComplementaryData;
     svDebitComplementaryData =
         samCommandProcessor.getSvUndebitComplementaryData(
-            svUndebitCmdBuild, CalypsoPoUtils.getSvGetHeader(), CalypsoPoUtils.getSvGetData());
+            svUndebitCmdBuild, CalypsoCardUtils.getSvGetHeader(), CalypsoCardUtils.getSvGetData());
 
     // finalize the SvUndebit command builder with the data provided by the SAM
     svUndebitCmdBuild.finalizeBuilder(svDebitComplementaryData);
 
-    // create and keep the PoCommand
-    poCommandManager.addStoredValueCommand(svUndebitCmdBuild, SvSettings.Operation.DEBIT);
+    // create and keep the CalypsoCardCommand
+    cardCommandManager.addStoredValueCommand(svUndebitCmdBuild, SvSettings.Operation.DEBIT);
   }
 
   /**
@@ -1798,20 +1796,19 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final CardTransactionService prepareSvReadAllLogs() {
-    if (calypsoPoSmartCard.getApplicationSubtype()
-        != CalypsoPoUtils.STORED_VALUE_FILE_STRUCTURE_ID) {
-      throw new CalypsoPoTransactionIllegalStateException(
+    if (calypsoCard.getApplicationSubtype() != CalypsoCardUtils.STORED_VALUE_FILE_STRUCTURE_ID) {
+      throw new CalypsoCardTransactionIllegalStateException(
           "The currently selected application is not an SV application.");
     }
     // reset SV data in CalypsoCard if any
-    calypsoPoSmartCard.setSvData(0, 0, null, null);
+    calypsoCard.setSvData(0, 0, null, null);
     prepareReadRecordFile(
-        CalypsoPoUtils.SV_RELOAD_LOG_FILE_SFI, CalypsoPoUtils.SV_RELOAD_LOG_FILE_NB_REC);
+        CalypsoCardUtils.SV_RELOAD_LOG_FILE_SFI, CalypsoCardUtils.SV_RELOAD_LOG_FILE_NB_REC);
     prepareReadRecordFile(
-        CalypsoPoUtils.SV_DEBIT_LOG_FILE_SFI,
+        CalypsoCardUtils.SV_DEBIT_LOG_FILE_SFI,
         1,
-        CalypsoPoUtils.SV_DEBIT_LOG_FILE_NB_REC,
-        CalypsoPoUtils.SV_LOG_FILE_REC_LENGTH);
+        CalypsoCardUtils.SV_DEBIT_LOG_FILE_NB_REC,
+        CalypsoCardUtils.SV_LOG_FILE_REC_LENGTH);
 
     return this;
   }
@@ -1823,10 +1820,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final CardTransactionService prepareInvalidate() {
-    if (calypsoPoSmartCard.isDfInvalidated()) {
-      throw new CalypsoPoTransactionIllegalStateException("This PO is already invalidated.");
+    if (calypsoCard.isDfInvalidated()) {
+      throw new CalypsoCardTransactionIllegalStateException("This card is already invalidated.");
     }
-    poCommandManager.addRegularCommand(new PoInvalidateBuilder(calypsoPoSmartCard.getPoClass()));
+    cardCommandManager.addRegularCommand(new CardInvalidateBuilder(calypsoCard.getCardClass()));
 
     return this;
   }
@@ -1838,10 +1835,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final CardTransactionService prepareRehabilitate() {
-    if (!calypsoPoSmartCard.isDfInvalidated()) {
-      throw new CalypsoPoTransactionIllegalStateException("This PO is not invalidated.");
+    if (!calypsoCard.isDfInvalidated()) {
+      throw new CalypsoCardTransactionIllegalStateException("This card is not invalidated.");
     }
-    poCommandManager.addRegularCommand(new PoRehabilitateBuilder(calypsoPoSmartCard.getPoClass()));
+    cardCommandManager.addRegularCommand(new CardRehabilitateBuilder(calypsoCard.getCardClass()));
 
     return this;
   }

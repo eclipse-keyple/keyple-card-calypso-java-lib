@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /** Indicates that the SAM is revoked. */
-public class CalypsoSamRevokedException extends CalypsoPoTransactionException {
+public class CalypsoSamRevokedException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoSamRevokedException(String message) {

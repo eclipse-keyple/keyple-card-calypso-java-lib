@@ -71,7 +71,7 @@ class SamCommandProcessor {
   /**
    * Constructor
    *
-   * @param calypsoCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting the security settings from the application layer.
    * @since 2.0
    */
@@ -101,8 +101,8 @@ class SamCommandProcessor {
    *
    * <p>If the key diversification is already done, the Select Diversifier command is omitted.
    *
-   * <p>The length of the challenge varies from one PO revision to another. This information can be
-   * found in the CardResource class field.
+   * <p>The length of the challenge varies from one card revision to another. This information can
+   * be found in the CardResource class field.
    *
    * @return the terminal challenge as an array of bytes
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
@@ -117,7 +117,7 @@ class SamCommandProcessor {
 
     // diversify only if this has not already been done.
     if (!isDiversificationDone) {
-      // build the SAM Select Diversifier command to provide the SAM with the PO S/N
+      // build the SAM Select Diversifier command to provide the SAM with the card S/N
       AbstractApduCommandBuilder selectDiversifier =
           new SamSelectDiversifierBuilder(
               samRevision, calypsoCard.getApplicationSerialNumberBytes());
@@ -177,14 +177,14 @@ class SamCommandProcessor {
   }
 
   /**
-   * Determine the work KIF from the value returned by the PO and the session access level.
+   * Determine the work KIF from the value returned by the card and the session access level.
    *
-   * <p>If the value provided by the PO undetermined (FFh), the actual value of the work KIF is
+   * <p>If the value provided by the card undetermined (FFh), the actual value of the work KIF is
    * found in the CardSecuritySetting according to the session access level.
    *
-   * <p>If the value provided by the PO is not undetermined, the work KIF is set to this value.
+   * <p>If the value provided by the card is not undetermined, the work KIF is set to this value.
    *
-   * @param poKif the KIF value from the PO.
+   * @param poKif the KIF value from the card.
    * @param sessionAccessLevel the session access level.
    * @return the work KIF value byte
    */
@@ -211,8 +211,8 @@ class SamCommandProcessor {
    *
    * @param sessionEncryption true if the session is encrypted.
    * @param verificationMode true if the verification mode is active.
-   * @param poKif the PO KIF.
-   * @param poKVC the PO KVC.
+   * @param poKif the card KIF.
+   * @param poKVC the card KVC.
    * @param digestData a first packet of data to digest.
    * @since 2.0
    */
@@ -263,15 +263,15 @@ class SamCommandProcessor {
   }
 
   /**
-   * Appends a full PO exchange (request and response) to the digest data cache.
+   * Appends a full card exchange (request and response) to the digest data cache.
    *
-   * @param request PO request.
-   * @param response PO response.
+   * @param request card request.
+   * @param response card response.
    * @since 2.0
    */
-  private void pushPoExchangeData(ApduRequest request, ApduResponse response) {
+  private void pushCardExchangedData(ApduRequest request, ApduResponse response) {
 
-    logger.trace("pushPoExchangeData: REQUEST = {}", request);
+    logger.trace("pushCardExchangedData: REQUEST = {}", request);
 
     // Add an ApduRequest to the digest computation: if the request is of case4 type, Le must be
     // excluded from the digest computation. In this cas, we remove here the last byte of the
@@ -283,27 +283,27 @@ class SamCommandProcessor {
       poDigestDataCache.add(request.getBytes());
     }
 
-    logger.trace("pushPoExchangeData: RESPONSE = {}", response);
+    logger.trace("pushCardExchangedData: RESPONSE = {}", response);
 
     // Add an ApduResponse to the digest computation
     poDigestDataCache.add(response.getBytes());
   }
 
   /**
-   * Appends a list full PO exchange (request and response) to the digest data cache.<br>
+   * Appends a list full card exchange (request and response) to the digest data cache.<br>
    * The startIndex argument makes it possible not to include the beginning of the list when
    * necessary.
    *
-   * @param requests PO request list.
-   * @param responses PO response list.
+   * @param requests card request list.
+   * @param responses card response list.
    * @param startIndex starting point in the list.
    * @since 2.0
    */
-  void pushPoExchangeDataList(
+  void pushCardExchangedData(
       List<ApduRequest> requests, List<ApduResponse> responses, int startIndex) {
     for (int i = startIndex; i < requests.size(); i++) {
       // Add requests and responses to the digest processor
-      pushPoExchangeData(requests.get(i), responses.get(i));
+      pushCardExchangedData(requests.get(i), responses.get(i));
     }
   }
 
@@ -346,8 +346,8 @@ class SamCommandProcessor {
     if (!isDigestInitDone) {
       // Build and append Digest Init command as first ApduRequest of the digest computation
       // process. The Digest Init command comes from the Open Secure Session response from the
-      // PO. Once added to the ApduRequest list, the data is remove from the cache to keep
-      // only couples of PO request/response
+      // card. Once added to the ApduRequest list, the data is remove from the cache to keep
+      // only couples of card request/response
       samCommands.add(
           new SamDigestInitBuilder(
               samRevision,
@@ -448,23 +448,23 @@ class SamCommandProcessor {
   }
 
   /**
-   * Authenticates the signature part from the PO
+   * Authenticates the signature part from the card
    *
-   * <p>Executes the Digest Authenticate command with the PO part of the signature.
+   * <p>Executes the Digest Authenticate command with the card part of the signature.
    *
-   * @param poSignatureLo the PO part of the signature.
+   * @param cardSignatureLo the card part of the signature.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
    * @throws CardCommunicationException if the communication with the SAM has failed.
    * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
-  void authenticatePoSignature(byte[] poSignatureLo)
+  void authenticateCardSignature(byte[] cardSignatureLo)
       throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
-    // Check the PO signature part with the SAM
+    // Check the card signature part with the SAM
     // Build and send SAM Digest Authenticate command
     SamDigestAuthenticateBuilder samDigestAuthenticateBuilder =
-        new SamDigestAuthenticateBuilder(samRevision, poSignatureLo);
+        new SamDigestAuthenticateBuilder(samRevision, cardSignatureLo);
 
     List<ApduRequest> samApduRequests = new ArrayList<ApduRequest>();
     samApduRequests.add(samDigestAuthenticateBuilder.getApduRequest());
@@ -514,7 +514,7 @@ class SamCommandProcessor {
   /**
    * Compute the PIN ciphered data for the encrypted PIN verification or PIN update commands
    *
-   * @param poChallenge the challenge from the PO.
+   * @param poChallenge the challenge from the card.
    * @param currentPin the current PIN value.
    * @param newPin the new PIN value (set to null if the operation is a PIN presentation).
    * @return the PIN ciphered data
@@ -541,7 +541,7 @@ class SamCommandProcessor {
     }
 
     if (!isDiversificationDone) {
-      /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
+      /* Build the SAM Select Diversifier command to provide the SAM with the card S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
               samRevision, calypsoCard.getApplicationSerialNumberBytes()));
@@ -589,7 +589,7 @@ class SamCommandProcessor {
   /**
    * Generic method to get the complementary data from SvPrepareLoad/Debit/Undebit commands
    *
-   * <p>Executes the SV Prepare SAM command to prepare the data needed to complete the PO SV
+   * <p>Executes the SV Prepare SAM command to prepare the data needed to complete the card SV
    * command.
    *
    * <p>This data comprises:
@@ -598,7 +598,7 @@ class SamCommandProcessor {
    *   <li>The SAM identifier (4 bytes)
    *   <li>The SAM challenge (3 bytes)
    *   <li>The SAM transaction number (3 bytes)
-   *   <li>The SAM part of the SV signature (5 or 10 bytes depending on PO mode)
+   *   <li>The SAM part of the SV signature (5 or 10 bytes depending on card mode)
    * </ul>
    *
    * @param samSvPrepareBuilder the prepare command builder (can be prepareSvReload/Debit/Undebit).
@@ -615,7 +615,7 @@ class SamCommandProcessor {
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
     if (!isDiversificationDone) {
-      /* Build the SAM Select Diversifier command to provide the SAM with the PO S/N */
+      /* Build the SAM Select Diversifier command to provide the SAM with the card S/N */
       samCommands.add(
           new SamSelectDiversifierBuilder(
               samRevision, calypsoCard.getApplicationSerialNumberBytes()));
@@ -673,12 +673,12 @@ class SamCommandProcessor {
    * <p>Use the data from the SvGet command and the partial data from the SvReload command for this
    * purpose.
    *
-   * <p>The returned data will be used to finalize the PO SvReload command.
+   * <p>The returned data will be used to finalize the card SvReload command.
    *
-   * @param poSvReloadBuilder the SvDebit builder providing the SvReload partial data.
+   * @param cardSvReloadBuilder the SvDebit builder providing the SvReload partial data.
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
-   * @return the complementary security data to finalize the SvReload PO command (sam ID + SV
+   * @return the complementary security data to finalize the SvReload card command (sam ID + SV
    *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
@@ -686,12 +686,12 @@ class SamCommandProcessor {
    * @since 2.0
    */
   byte[] getSvReloadComplementaryData(
-      PoSvReloadBuilder poSvReloadBuilder, byte[] svGetHeader, byte[] svGetData)
+      CardSvReloadBuilder cardSvReloadBuilder, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareLoadBuilder samSvPrepareLoadBuilder =
         new SamSvPrepareLoadBuilder(
-            samRevision, svGetHeader, svGetData, poSvReloadBuilder.getSvReloadData());
+            samRevision, svGetHeader, svGetData, cardSvReloadBuilder.getSvReloadData());
 
     return getSvComplementaryData(samSvPrepareLoadBuilder);
   }
@@ -702,24 +702,24 @@ class SamCommandProcessor {
    * <p>Use the data from the SvGet command and the partial data from the SvDebit command for this
    * purpose.
    *
-   * <p>The returned data will be used to finalize the PO SvDebit command.
+   * <p>The returned data will be used to finalize the card SvDebit command.
    *
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
-   * @return the complementary security data to finalize the SvDebit PO command (sam ID + SV prepare
-   *     load output)
+   * @return the complementary security data to finalize the SvDebit card command (sam ID + SV
+   *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
    * @throws CardCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getSvDebitComplementaryData(
-      PoSvDebitBuilder poSvDebitBuilder, byte[] svGetHeader, byte[] svGetData)
+      CardSvDebitBuilder cardSvDebitBuilder, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareDebitBuilder samSvPrepareDebitBuilder =
         new SamSvPrepareDebitBuilder(
-            samRevision, svGetHeader, svGetData, poSvDebitBuilder.getSvDebitData());
+            samRevision, svGetHeader, svGetData, cardSvDebitBuilder.getSvDebitData());
 
     return getSvComplementaryData(samSvPrepareDebitBuilder);
   }
@@ -730,11 +730,11 @@ class SamCommandProcessor {
    * <p>Use the data from the SvGet command and the partial data from the SvUndebit command for this
    * purpose.
    *
-   * <p>The returned data will be used to finalize the PO SvUndebit command.
+   * <p>The returned data will be used to finalize the card SvUndebit command.
    *
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
-   * @return the complementary security data to finalize the SvUndebit PO command (sam ID + SV
+   * @return the complementary security data to finalize the SvUndebit card command (sam ID + SV
    *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
@@ -742,12 +742,12 @@ class SamCommandProcessor {
    * @since 2.0
    */
   public byte[] getSvUndebitComplementaryData(
-      PoSvUndebitBuilder poSvUndebitBuilder, byte[] svGetHeader, byte[] svGetData)
+      CardSvUndebitBuilder cardSvUndebitBuilder, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareUndebitBuilder samSvPrepareUndebitBuilder =
         new SamSvPrepareUndebitBuilder(
-            samRevision, svGetHeader, svGetData, poSvUndebitBuilder.getSvUndebitData());
+            samRevision, svGetHeader, svGetData, cardSvUndebitBuilder.getSvUndebitData());
 
     return getSvComplementaryData(samSvPrepareUndebitBuilder);
   }
@@ -755,7 +755,7 @@ class SamCommandProcessor {
   /**
    * Checks the status of the last SV operation
    *
-   * <p>The PO signature is compared by the SAM with the one it has computed on its side.
+   * <p>The card signature is compared by the SAM with the one it has computed on its side.
    *
    * @param svOperationResponseData the data of the SV operation performed.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status

@@ -31,12 +31,13 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
    * Creates an instance of {@link CalypsoCardSelection} that can be supplemented later with
    * specific commands.
    *
-   * @param cardSelector A PO card selector.
-   * @param acceptInvalidatedPo true if invalidated PO must be accepted, false if not.
+   * @param cardSelector A Calypso card selector.
+   * @param acceptInvalidatedCard true if invalidated card must be accepted, false if not.
    * @return A not null reference.
    * @since 2.0
    */
-  CalypsoCardSelection createCardSelection(CardSelector cardSelector, boolean acceptInvalidatedPo);
+  CalypsoCardSelection createCardSelection(
+      CardSelector cardSelector, boolean acceptInvalidatedCard);
 
   /**
    * Creates an instance of {@link CalypsoSamResourceProfileExtension} to be provided to the {@link
@@ -48,14 +49,14 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
   CalypsoSamResourceProfileExtension createSamResourceProfileExtension();
 
   /**
-   * Creates a PO transaction service to handle operations secured with a SAM.
+   * Creates a card transaction service to handle operations secured with a SAM.
    *
-   * <p>The reader and the PO's initial data are those from the selection.<br>
-   * The provided {@link CardSecuritySetting} must match the specific needs of the PO (SAM card
+   * <p>The reader and the card's initial data are those from the selection.<br>
+   * The provided {@link CardSecuritySetting} must match the specific needs of the card (SAM card
    * resource profile and other optional settings).
    *
    * @param reader The reader through which the card communicates.
-   * @param calypsoCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
    * @return A not null reference.
    * @since 2.0
@@ -64,10 +65,10 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
       Reader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting);
 
   /**
-   * Creates a PO transaction service to handle non secured operations.
+   * Creates a card transaction service to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
-   * @param calypsoCard The initial PO data provided by the selection process.
+   * @param calypsoCard The initial card data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */

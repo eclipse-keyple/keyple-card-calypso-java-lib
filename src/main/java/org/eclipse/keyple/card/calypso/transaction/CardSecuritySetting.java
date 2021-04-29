@@ -45,9 +45,9 @@ public class CardSecuritySetting {
   /**
    * (private)
    *
-   * @param builder The {@link PoSecuritySettingBuilder}.
+   * @param builder The {@link CardSecuritySettingBuilder}.
    */
-  private CardSecuritySetting(PoSecuritySettingBuilder builder) {
+  private CardSecuritySetting(CardSecuritySettingBuilder builder) {
     this.samCardResourceProfileName = builder.samCardResourceProfileName;
     this.isMultipleSessionEnabled = builder.isMultipleSessionEnabled;
     this.isRatificationMechanismEnabled = builder.isRatificationMechanismEnabled;
@@ -216,8 +216,8 @@ public class CardSecuritySetting {
    * @return A builder instance.
    * @since 2.0
    */
-  public static PoSecuritySettingBuilder builder() {
-    return new PoSecuritySettingBuilder();
+  public static CardSecuritySettingBuilder builder() {
+    return new CardSecuritySettingBuilder();
   }
 
   /**
@@ -225,7 +225,7 @@ public class CardSecuritySetting {
    *
    * @since 2.0
    */
-  public static class PoSecuritySettingBuilder {
+  public static class CardSecuritySettingBuilder {
 
     private String samCardResourceProfileName;
     private boolean isMultipleSessionEnabled;
@@ -247,7 +247,7 @@ public class CardSecuritySetting {
      *
      * <p>The default values the parameters are documented in their respective getters.
      */
-    private PoSecuritySettingBuilder() {
+    private CardSecuritySettingBuilder() {
       // set default values for all optional parameters
       this.isMultipleSessionEnabled = false;
       this.isRatificationMechanismEnabled = false;
@@ -281,7 +281,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @throws IllegalArgumentException If the profile name is null or empty.
      */
-    public PoSecuritySettingBuilder setSamCardResourceProfileName(
+    public CardSecuritySettingBuilder setSamCardResourceProfileName(
         String samCardResourceProfileName) {
       Assert.getInstance().notEmpty(samCardResourceProfileName, "samCardResourceProfileName");
       this.samCardResourceProfileName = samCardResourceProfileName;
@@ -295,7 +295,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder enableMultipleSession() {
+    public CardSecuritySettingBuilder enableMultipleSession() {
       this.isMultipleSessionEnabled = true;
       return this;
     }
@@ -309,7 +309,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder enableRatificationMechanism() {
+    public CardSecuritySettingBuilder enableRatificationMechanism() {
       this.isRatificationMechanismEnabled = true;
       return this;
     }
@@ -320,7 +320,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder disablePinEncryption() {
+    public CardSecuritySettingBuilder disablePinEncryption() {
       this.isPinTransmissionEncryptionDisabled = true;
       return this;
     }
@@ -334,7 +334,7 @@ public class CardSecuritySetting {
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignKif(
+    public CardSecuritySettingBuilder assignKif(
         CardTransactionService.SessionAccessLevel sessionAccessLevel, byte kif) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.kifBySessionLevel.put(sessionAccessLevel, kif);
@@ -350,7 +350,7 @@ public class CardSecuritySetting {
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignKvc(
+    public CardSecuritySettingBuilder assignKvc(
         CardTransactionService.SessionAccessLevel sessionAccessLevel, byte kvc) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.kvcBySessionLevel.put(sessionAccessLevel, kvc);
@@ -366,7 +366,7 @@ public class CardSecuritySetting {
      * @throws IllegalArgumentException If sessionAccessLevel is null.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder assignKeyRecordNumber(
+    public CardSecuritySettingBuilder assignKeyRecordNumber(
         CardTransactionService.SessionAccessLevel sessionAccessLevel, byte keyRecordNumber) {
       Assert.getInstance().notNull(sessionAccessLevel, "sessionAccessLevel");
       this.keyRecordNumberBySessionLevel.put(sessionAccessLevel, keyRecordNumber);
@@ -381,7 +381,8 @@ public class CardSecuritySetting {
      * @throws IllegalArgumentException If sessionAuthorizedKvcList is null or empty.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder sessionAuthorizedKvcList(List<Byte> sessionAuthorizedKvcList) {
+    public CardSecuritySettingBuilder sessionAuthorizedKvcList(
+        List<Byte> sessionAuthorizedKvcList) {
       Assert.getInstance().notEmpty(sessionAuthorizedKvcList, "sessionAuthorizedKvcList");
       this.authorizedKvcList = sessionAuthorizedKvcList;
       return this;
@@ -397,7 +398,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder pinCipheringKey(byte kif, byte kvc) {
+    public CardSecuritySettingBuilder pinCipheringKey(byte kif, byte kvc) {
       this.pinCipheringKif = kif;
       this.pinCipheringKvc = kvc;
       return this;
@@ -412,7 +413,7 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder isLoadAndDebitSvLogRequired(
+    public CardSecuritySettingBuilder isLoadAndDebitSvLogRequired(
         boolean isLoadAndDebitSvLogRequired) {
       this.isLoadAndDebitSvLogRequired = isLoadAndDebitSvLogRequired;
       return this;
@@ -427,7 +428,8 @@ public class CardSecuritySetting {
      * @return The object instance.
      * @since 2.0
      */
-    public PoSecuritySettingBuilder isSvNegativeBalanceAllowed(boolean isSvNegativeBalanceAllowed) {
+    public CardSecuritySettingBuilder isSvNegativeBalanceAllowed(
+        boolean isSvNegativeBalanceAllowed) {
       this.isSvNegativeBalanceAllowed = isSvNegativeBalanceAllowed;
       return this;
     }

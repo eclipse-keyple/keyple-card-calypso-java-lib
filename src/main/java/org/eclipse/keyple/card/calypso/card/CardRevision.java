@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso.card;
 
 /**
- * All supported revisions of Calypso PO.
+ * All supported revisions of Calypso card.
  *
  * @since 2.0
  */

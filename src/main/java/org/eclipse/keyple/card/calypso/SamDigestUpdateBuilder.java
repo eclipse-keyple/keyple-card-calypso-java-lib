@@ -26,14 +26,14 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamDigestUpdateBuilder extends AbstractSamCommandBuilder<SamDigestUpdateParser> {
 
   /** The command reference. */
-  private static final SamCommand command = SamCommand.DIGEST_UPDATE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE;
 
   /**
    * Instantiates a new SamDigestUpdateBuilder.
    *
    * @param revision of the SAM.
    * @param encryptedSession the encrypted session flag, true if encrypted.
-   * @param digestData all bytes from command sent by the PO or response from the command.
+   * @param digestData all bytes from command sent by the card or response from the command.
    * @throws IllegalArgumentException - if the digest data is null or has a length &gt; 255
    * @since 2.0
    */

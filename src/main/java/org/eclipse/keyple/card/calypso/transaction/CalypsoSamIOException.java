@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /** Indicates a communication error with the SAM (e.g timeout, network,...). */
-public class CalypsoSamIOException extends CalypsoPoTransactionException {
+public class CalypsoSamIOException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoSamIOException(String message) {

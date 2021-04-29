@@ -14,7 +14,7 @@ package org.eclipse.keyple.card.calypso.card;
 import org.eclipse.keyple.core.service.selection.spi.CardSelection;
 
 /**
- * PO specific {@link CardSelection} providing means to define commands to execute during the
+ * Card specific {@link CardSelection} providing means to define commands to execute during the
  * selection phase.
  *
  * @since 2.0

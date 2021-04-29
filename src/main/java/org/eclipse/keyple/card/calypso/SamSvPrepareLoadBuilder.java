@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class SamSvPrepareLoadBuilder extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.SV_PREPARE_LOAD;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_LOAD;
 
   /**
    * Instantiates a new SamSvPrepareLoadBuilder to prepare a load transaction.

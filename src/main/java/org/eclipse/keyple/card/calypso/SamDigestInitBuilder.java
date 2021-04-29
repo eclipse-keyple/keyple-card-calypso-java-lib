@@ -25,7 +25,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInitParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.DIGEST_INIT;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_INIT;
 
   /**
    * Instantiates a new SamDigestInitBuilder.
@@ -34,9 +34,9 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
    * @param verificationMode the verification mode.
    * @param confidentialSessionMode the confidential session mode (rev 3.2).
    * @param workKeyRecordNumber the work key record number.
-   * @param workKif from the AbstractPoOpenSessionBuilder response.
-   * @param workKvc from the AbstractPoOpenSessionBuilder response.
-   * @param digestData all data out from the AbstractPoOpenSessionBuilder response.
+   * @param workKif from the AbstractCardOpenSessionBuilder response.
+   * @param workKvc from the AbstractCardOpenSessionBuilder response.
+   * @param digestData all data out from the AbstractCardOpenSessionBuilder response.
    * @throws IllegalArgumentException - if the work key record number
    * @throws IllegalArgumentException - if the digest data is null
    * @throws IllegalArgumentException - if the request is inconsistent

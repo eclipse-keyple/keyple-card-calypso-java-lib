@@ -26,7 +26,7 @@ final class SamDigestUpdateMultipleBuilder
     extends AbstractSamCommandBuilder<SamDigestUpdateMultipleParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.DIGEST_UPDATE_MULTIPLE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE_MULTIPLE;
 
   /**
    * Instantiates a new SamDigestUpdateMultipleBuilder.

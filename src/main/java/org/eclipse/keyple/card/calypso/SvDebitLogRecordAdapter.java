@@ -29,7 +29,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    * Constructor
    *
    * @param poResponse the Sv Get or Read Record (SV Load log file) response data.
-   * @param offset the debit log offset in the response (may change from a PO to another).
+   * @param offset the debit log offset in the response (may change from a card to another).
    */
   public SvDebitLogRecordAdapter(byte[] poResponse, int offset) {
     this.poResponse = poResponse;

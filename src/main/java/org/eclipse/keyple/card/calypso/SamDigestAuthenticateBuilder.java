@@ -26,7 +26,7 @@ final class SamDigestAuthenticateBuilder
     extends AbstractSamCommandBuilder<SamDigestAuthenticateParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.DIGEST_AUTHENTICATE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_AUTHENTICATE;
 
   /**
    * Instantiates a new SamDigestAuthenticateBuilder .

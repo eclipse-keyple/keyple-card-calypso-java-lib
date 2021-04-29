@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.keyple.card.calypso.card.*;
-import org.eclipse.keyple.card.calypso.po.*;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.card.AnswerToReset;
 import org.eclipse.keyple.core.card.ApduResponse;
@@ -24,7 +23,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * This POJO concentrates all the information we know about the PO being processed: from the
+ * This POJO concentrates all the information we know about the card being processed: from the
  * selection stage to the end of the transaction.
  *
  * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
@@ -54,14 +53,14 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private final boolean isPinFeatureAvailable;
   private final boolean isPublicAuthenticationSupported;
   private final boolean isDfInvalidated;
-  private final PoClass poClass;
+  private final CalypsoCardClass calypsoCardClass;
   private final byte[] calypsoSerialNumber;
   private final byte[] startupInfo;
   private final CardRevision revision;
   private final byte[] dfName;
-  private static final int PO_REV1_ATR_LENGTH = 20;
-  private static final int REV1_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
-  private static final int REV2_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 6;
+  private static final int CARD_REV1_ATR_LENGTH = 20;
+  private static final int REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
+  private static final int REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 6;
   private static final int SI_BUFFER_SIZE_INDICATOR = 0;
   private static final int SI_PLATFORM = 1;
   private static final int SI_APPLICATION_TYPE = 2;
@@ -130,15 +129,15 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     if (hasFci()) {
 
-      /* Parse PO FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo */
-      PoGetDataFciParser poGetDataFciParser =
-          new PoGetDataFciParser(cardSelectionResponse.getSelectionStatus().getFci(), null);
+      /* Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo */
+      CardGetDataFciParser cardGetDataFciParser =
+          new CardGetDataFciParser(cardSelectionResponse.getSelectionStatus().getFci(), null);
 
       // 4 fields extracted by the low level parser
-      dfName = poGetDataFciParser.getDfName();
-      calypsoSerialNumber = poGetDataFciParser.getApplicationSerialNumber();
-      startupInfo = poGetDataFciParser.getDiscretionaryData();
-      isDfInvalidated = poGetDataFciParser.isDfInvalidated();
+      dfName = cardGetDataFciParser.getDfName();
+      calypsoSerialNumber = cardGetDataFciParser.getApplicationSerialNumber();
+      startupInfo = cardGetDataFciParser.getDiscretionaryData();
+      isDfInvalidated = cardGetDataFciParser.isDfInvalidated();
 
       byte applicationType = getApplicationType();
       revision = determineRevision(applicationType);
@@ -150,7 +149,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (revision == CardRevision.REV2_4) {
         /* old cards have their modification counter in number of commands */
         modificationCounterIsInBytes = false;
-        modificationsCounterMax = REV2_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
+        modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
       } else {
         modificationsCounterMax = bufferSizeValue;
       }
@@ -163,12 +162,12 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
           (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
     } else {
       /*
-       * FCI is not provided: we consider it is Calypso PO rev 1, it's serial number is
+       * FCI is not provided: we consider it is Calypso card rev 1, it's serial number is
        * provided in the ATR
        */
       byte[] atr = getAtrBytes();
       /* basic check: we expect to be here following a selection based on the ATR */
-      if (atr.length != PO_REV1_ATR_LENGTH) {
+      if (atr.length != CARD_REV1_ATR_LENGTH) {
         throw new IllegalStateException(
             "Unexpected ATR length: " + ByteArrayUtil.toHex(getAtrBytes()));
       }
@@ -182,7 +181,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
        * the array is initialized with 0 (cf. default value for primitive types)
        */
       System.arraycopy(atr, 12, calypsoSerialNumber, 4, 4);
-      modificationsCounterMax = REV1_PO_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
+      modificationsCounterMax = REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
 
       startupInfo = new byte[7];
       // create buffer size indicator
@@ -200,9 +199,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
     /* Rev1 and Rev2 expects the legacy class byte while Rev3 expects the ISO class byte */
     if (revision == CardRevision.REV1_0 || revision == CardRevision.REV2_4) {
-      poClass = PoClass.LEGACY;
+      calypsoCardClass = CalypsoCardClass.LEGACY;
     } else {
-      poClass = PoClass.ISO;
+      calypsoCardClass = CalypsoCardClass.ISO;
     }
   }
 
@@ -255,7 +254,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * Resolve the PO revision from the application type byte
+   * Resolve the card revision from the application type byte
    *
    * <ul>
    *   <li>if <code>%1-------</code>&nbsp;&nbsp;&rarr;&nbsp;&nbsp;CLAP&nbsp;&nbsp;&rarr;&nbsp;&
@@ -316,7 +315,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * MSB.
    *
    * <p>The serial number to be used as diversifier for key derivation.<br>
-   * This is the complete number returned by the PO in its response to the Select command.
+   * This is the complete number returned by the card in its response to the Select command.
    *
    * @return a byte array containing the Calypso Serial Number (8 bytes)
    * @since 2.0
@@ -377,13 +376,13 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * Gets the maximum length of data that an APDU in this PO can carry.
+   * Gets the maximum length of data that an APDU in this card can carry.
    *
    * @return An int
    * @since 2.0
    */
   protected final int getPayloadCapacity() {
-    // TODO make this value dependent on the type of PO identified
+    // TODO make this value dependent on the type of card identified
     return 250;
   }
 
@@ -391,7 +390,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Tells if the change counter allowed in session is established in number of operations or number
    * of bytes modified.
    *
-   * <p>This varies depending on the revision of the PO.
+   * <p>This varies depending on the revision of the card.
    *
    * @return true if the counter is number of bytes
    * @since 2.0
@@ -618,7 +617,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public final SvLoadLogRecord getSvLoadLogRecord() {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
-      byte[] logRecord = getFileBySfi(CalypsoPoUtils.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
+      byte[] logRecord =
+          getFileBySfi(CalypsoCardUtils.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
       svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
     }
     return svLoadLogRecord;
@@ -648,7 +648,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public final List<SvDebitLogRecord> getSvDebitLogAllRecords() {
     // get the logs from the file data
     SortedMap<Integer, byte[]> logRecords =
-        getFileBySfi(CalypsoPoUtils.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
+        getFileBySfi(CalypsoCardUtils.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
     List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
     for (Map.Entry<Integer, byte[]> entry : logRecords.entrySet()) {
       svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));
@@ -667,16 +667,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * The PO class is the ISO7816 class to be used with the current PO.
+   * The card class is the ISO7816 class to be used with the current card.
    *
-   * <p>It determined from the PO revision
+   * <p>It determined from the card revision
    *
    * <p>Two classes are possible: LEGACY and ISO.
    *
-   * @return the PO class determined from the PO revision
+   * @return the card class determined from the card revision
    */
-  protected final PoClass getPoClass() {
-    return poClass;
+  protected final CalypsoCardClass getCardClass() {
+    return calypsoCardClass;
   }
 
   /**
@@ -889,7 +889,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * (package-private)<br>
    * Make a backup of the Elementary Files.<br>
-   * This method should be used before starting a PO secure session.
+   * This method should be used before starting a card secure session.
    */
   final void backupFiles() {
     copyMapFiles(efBySfi, efBySfiBackup);
@@ -899,8 +899,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * (package-private)<br>
    * Restore the last backup of Elementary Files.<br>
-   * This method should be used when SW of the PO close secure session command is unsuccessful or if
-   * secure session is aborted.
+   * This method should be used when SW of the card close secure session command is unsuccessful or
+   * if secure session is aborted.
    */
   final void restoreFiles() {
     copyMapFiles(efBySfiBackup, efBySfi);

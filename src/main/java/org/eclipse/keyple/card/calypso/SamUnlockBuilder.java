@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.UNLOCK;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.UNLOCK;
 
   /**
    * CalypsoSamCardSelectorBuilder constructor

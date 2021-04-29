@@ -16,8 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
+import org.eclipse.keyple.card.calypso.transaction.CalypsoCardAnomalyException;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoPoAnomalyException;
 import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
@@ -36,11 +36,12 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoCardSelectionAdapter.class);
 
-  private static final int SW_PO_INVALIDATED = 0x6283;
+  private static final int SW_CARD_INVALIDATED = 0x6283;
 
-  private final List<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>> commandBuilders;
+  private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
+      commandBuilders;
   private final CardSelector poCardSelector;
-  private final PoClass poClass;
+  private final CalypsoCardClass calypsoCardClass;
 
   /**
    * (package-private)<br>
@@ -50,27 +51,27 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0
    * @throws IllegalArgumentException If poCardSelector is null.
    */
-  CalypsoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedPo) {
+  CalypsoCardSelectionAdapter(CardSelector poCardSelector, boolean acceptInvalidatedCard) {
 
     Assert.getInstance().notNull(poCardSelector, "poCardSelector");
 
     this.poCardSelector = poCardSelector;
 
-    if (acceptInvalidatedPo) {
-      this.poCardSelector.addSuccessfulStatusCode(SW_PO_INVALIDATED);
+    if (acceptInvalidatedCard) {
+      this.poCardSelector.addSuccessfulStatusCode(SW_CARD_INVALIDATED);
     }
 
     this.commandBuilders =
-        new ArrayList<AbstractPoCommandBuilder<? extends AbstractPoResponseParser>>();
-    // deduces the class of the PO according to the type of selection
+        new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
+    // deduces the class of the card according to the type of selection
     if (poCardSelector.getAid() == null) {
-      poClass = PoClass.LEGACY;
+      calypsoCardClass = CalypsoCardClass.LEGACY;
     } else {
-      poClass = PoClass.ISO;
+      calypsoCardClass = CalypsoCardClass.ISO;
     }
 
     if (logger.isTraceEnabled()) {
-      logger.trace("Calypso {} selector", poClass);
+      logger.trace("Calypso {} selector", calypsoCardClass);
     }
   }
 
@@ -81,7 +82,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
-    commandBuilders.add(CalypsoPoUtils.prepareReadRecordFile(poClass, sfi, recordNumber));
+    commandBuilders.add(
+        CalypsoCardUtils.prepareReadRecordFile(calypsoCardClass, sfi, recordNumber));
     return this;
   }
 
@@ -92,7 +94,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
-    commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, lid));
+    commandBuilders.add(CalypsoCardUtils.prepareSelectFile(calypsoCardClass, lid));
     return this;
   }
 
@@ -118,7 +120,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
-    commandBuilders.add(CalypsoPoUtils.prepareSelectFile(poClass, selectControl));
+    commandBuilders.add(CalypsoCardUtils.prepareSelectFile(calypsoCardClass, selectControl));
     return this;
   }
 
@@ -131,7 +133,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   public CardSelectionRequest getCardSelectionRequest() {
     List<ApduRequest> cardSelectionApduRequests = new ArrayList<ApduRequest>();
     if (!commandBuilders.isEmpty()) {
-      for (AbstractPoCommandBuilder<? extends AbstractPoResponseParser> commandBuilder :
+      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
           commandBuilders) {
         cardSelectionApduRequests.add(commandBuilder.getApduRequest());
       }
@@ -165,18 +167,18 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
           "Mismatch in the number of requests/responses");
     }
 
-    CalypsoCardAdapter calypsoPoSmartCard = new CalypsoCardAdapter(cardSelectionResponse);
+    CalypsoCardAdapter calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
 
     if (!commandBuilders.isEmpty()) {
       try {
-        CalypsoPoUtils.updateCalypsoPo(calypsoPoSmartCard, commandBuilders, apduResponses);
-      } catch (CalypsoPoCommandException e) {
-        throw new CalypsoPoAnomalyException(
+        CalypsoCardUtils.updateCalypsoCard(calypsoCard, commandBuilders, apduResponses);
+      } catch (CalypsoCardCommandException e) {
+        throw new CalypsoCardAnomalyException(
             "An error occurred while parsing the card selection request responses", e);
       }
     }
 
-    return calypsoPoSmartCard;
+    return calypsoCard;
   }
 
   /**

@@ -24,7 +24,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.WRITE_KEY;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.WRITE_KEY;
 
   /**
    * CalypsoSamCardSelectorBuilder constructor
