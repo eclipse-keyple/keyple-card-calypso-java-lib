@@ -95,7 +95,7 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
       }
     }
 
-    return new SamSmartCardAdapter(cardSelectionResponse);
+    return new CalypsoSamAdapter(cardSelectionResponse);
   }
 
   /**

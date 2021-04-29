@@ -16,8 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import org.eclipse.keyple.card.calypso.po.CalypsoCard;
 import org.eclipse.keyple.card.calypso.po.CardRevision;
+import org.eclipse.keyple.card.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.card.calypso.sam.SamSmartCard;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.card.calypso.transaction.PoSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
@@ -86,9 +86,9 @@ class SamCommandProcessor {
     } else {
       samResource = CardResourceServiceProvider.getService().getCardResource();
     }
-    SamSmartCard samSmartCard = (SamSmartCard) samResource.getSmartCard();
-    samRevision = samSmartCard.getSamRevision();
-    samSerialNumber = samSmartCard.getSerialNumber();
+    CalypsoSam calypsoSam = (CalypsoSam) samResource.getSmartCard();
+    samRevision = calypsoSam.getSamRevision();
+    samSerialNumber = calypsoSam.getSerialNumber();
     samReader = (ProxyReader) samResource.getReader();
   }
 
