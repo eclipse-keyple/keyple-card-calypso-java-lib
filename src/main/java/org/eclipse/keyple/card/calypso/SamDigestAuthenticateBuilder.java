@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -25,7 +26,7 @@ final class SamDigestAuthenticateBuilder
     extends AbstractSamCommandBuilder<SamDigestAuthenticateParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.DIGEST_AUTHENTICATE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_AUTHENTICATE;
 
   /**
    * Instantiates a new SamDigestAuthenticateBuilder .
@@ -51,7 +52,9 @@ final class SamDigestAuthenticateBuilder
     byte p1 = 0x00;
     byte p2 = (byte) 0x00;
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, signature, null));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, signature, null)));
   }
 
   /**

@@ -12,10 +12,10 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /**
- * Indicates that the PO has correctly closed the secure session, but the support is not authentic
- * because the signature of the PO is incorrect.
+ * Indicates that the card has correctly closed the secure session, but the support is not authentic
+ * because the signature of the card is incorrect.
  */
-public class CalypsoSessionAuthenticationException extends CalypsoPoTransactionException {
+public class CalypsoSessionAuthenticationException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoSessionAuthenticationException(String message) {

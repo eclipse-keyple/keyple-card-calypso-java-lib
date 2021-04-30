@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -25,14 +26,14 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamDigestUpdateBuilder extends AbstractSamCommandBuilder<SamDigestUpdateParser> {
 
   /** The command reference. */
-  private static final SamCommand command = SamCommand.DIGEST_UPDATE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE;
 
   /**
    * Instantiates a new SamDigestUpdateBuilder.
    *
    * @param revision of the SAM.
    * @param encryptedSession the encrypted session flag, true if encrypted.
-   * @param digestData all bytes from command sent by the PO or response from the command.
+   * @param digestData all bytes from command sent by the card or response from the command.
    * @throws IllegalArgumentException - if the digest data is null or has a length &gt; 255
    * @since 2.0
    */
@@ -49,7 +50,9 @@ final class SamDigestUpdateBuilder extends AbstractSamCommandBuilder<SamDigestUp
       throw new IllegalArgumentException("Digest data null or too long!");
     }
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, digestData, null));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, digestData, null)));
   }
 
   /**

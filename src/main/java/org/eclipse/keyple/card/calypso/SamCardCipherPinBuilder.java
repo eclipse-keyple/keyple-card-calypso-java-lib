@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -23,11 +24,11 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCipherPinParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.CARD_CIPHER_PIN;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_CIPHER_PIN;
 
   /**
    * Instantiates a new SamCardCipherPinBuilder and generate the ciphered data for a Verify PIN or
-   * Change PIN PO command.
+   * Change PIN card command.
    *
    * <p>In the case of a PIN verification, only the current PIN must be provided (newPin must be set
    * to null).
@@ -84,7 +85,8 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
 
     System.arraycopy(currentPin, 0, data, 2, 4);
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
+    setApduRequest(
+        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
   }
 
   /**

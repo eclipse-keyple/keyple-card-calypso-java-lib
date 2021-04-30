@@ -27,7 +27,8 @@ final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandExceptio
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamAccessForbiddenException(String message, SamCommand command, Integer statusCode) {
+  CalypsoSamAccessForbiddenException(
+      String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

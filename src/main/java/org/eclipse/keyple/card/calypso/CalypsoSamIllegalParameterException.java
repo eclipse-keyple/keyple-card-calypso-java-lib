@@ -27,7 +27,8 @@ final class CalypsoSamIllegalParameterException extends CalypsoSamCommandExcepti
    * @param statusCode the status code.
    * @since 2.0
    */
-  CalypsoSamIllegalParameterException(String message, SamCommand command, Integer statusCode) {
+  CalypsoSamIllegalParameterException(
+      String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

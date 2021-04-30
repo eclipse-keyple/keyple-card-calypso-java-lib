@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0
  */
-abstract class CalypsoSamCommandException extends CalypsoCardCommandException {
+abstract class CalypsoSamCommandException extends CalypsoApduCommandException {
 
   /**
    * @param message the message to identify the exception context.
@@ -25,7 +25,8 @@ abstract class CalypsoSamCommandException extends CalypsoCardCommandException {
    * @param statusCode the status code (optional).
    * @since 2.0
    */
-  protected CalypsoSamCommandException(String message, SamCommand command, Integer statusCode) {
+  protected CalypsoSamCommandException(
+      String message, CalypsoSamCommand command, Integer statusCode) {
     super(message, command, statusCode);
   }
 }

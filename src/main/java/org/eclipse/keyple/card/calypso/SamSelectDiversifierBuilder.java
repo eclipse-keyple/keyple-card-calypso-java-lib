@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -25,7 +26,7 @@ final class SamSelectDiversifierBuilder
     extends AbstractSamCommandBuilder<SamSelectDiversifierParser> {
 
   /** The command. */
-  private static final SamCommand command = SamCommand.SELECT_DIVERSIFIER;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SELECT_DIVERSIFIER;
 
   /**
    * Instantiates a new SamSelectDiversifierBuilder.
@@ -48,7 +49,9 @@ final class SamSelectDiversifierBuilder
     byte p1 = 0x00;
     byte p2 = 0x00;
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, diversifier, null));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, diversifier, null)));
   }
 
   /**

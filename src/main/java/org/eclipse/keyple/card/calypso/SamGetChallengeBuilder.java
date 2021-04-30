@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -24,7 +25,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChallengeParser> {
 
   /** The command reference. */
-  private static final SamCommand command = SamCommand.GET_CHALLENGE;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.GET_CHALLENGE;
 
   /**
    * Instantiates a new SamGetChallengeBuilder.
@@ -48,7 +49,9 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
     byte p2 = 0x00;
 
     setApduRequest(
-        new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength));
+        new ApduRequest(
+            ApduUtil.build(
+                cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength)));
   }
 
   /**

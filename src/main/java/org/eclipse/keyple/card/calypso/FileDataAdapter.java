@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
-import org.eclipse.keyple.card.calypso.po.FileData;
+import org.eclipse.keyple.card.calypso.card.FileData;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;

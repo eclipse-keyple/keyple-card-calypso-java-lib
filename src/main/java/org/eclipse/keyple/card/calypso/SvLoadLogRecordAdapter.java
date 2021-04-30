@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.po.SvLoadLogRecord;
+import org.eclipse.keyple.card.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
@@ -23,17 +23,17 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  */
 class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   final int offset;
-  final byte[] poResponse;
+  final byte[] cardResponse;
 
   /**
    * Constructor
    *
-   * @param poResponse the Sv Get or Read Record (SV Debit log file) response data.
-   * @param offset the load log offset in the response (may change from a PO to another).
+   * @param cardResponse the Sv Get or Read Record (SV Debit log file) response data.
+   * @param offset the load log offset in the response (may change from a card to another).
    * @since 2.0
    */
-  public SvLoadLogRecordAdapter(byte[] poResponse, int offset) {
-    this.poResponse = poResponse;
+  public SvLoadLogRecordAdapter(byte[] cardResponse, int offset) {
+    this.cardResponse = cardResponse;
     this.offset = offset;
   }
 
@@ -44,7 +44,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getAmount() {
-    return ByteArrayUtil.threeBytesSignedToInt(poResponse, offset + 8);
+    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 8);
   }
 
   /**
@@ -54,7 +54,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getBalance() {
-    return ByteArrayUtil.threeBytesSignedToInt(poResponse, offset + 5);
+    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 5);
   }
 
   /**
@@ -75,8 +75,8 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getLoadTimeBytes() {
     final byte[] time = new byte[2];
-    time[0] = poResponse[offset + 11];
-    time[1] = poResponse[offset + 12];
+    time[0] = cardResponse[offset + 11];
+    time[1] = cardResponse[offset + 12];
     return time;
   }
 
@@ -98,8 +98,8 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getLoadDateBytes() {
     final byte[] date = new byte[2];
-    date[0] = poResponse[offset + 0];
-    date[1] = poResponse[offset + 1];
+    date[0] = cardResponse[offset + 0];
+    date[1] = cardResponse[offset + 1];
     return date;
   }
 
@@ -121,8 +121,8 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getFreeByteBytes() {
     final byte[] free = new byte[2];
-    free[0] = poResponse[offset + 2];
-    free[1] = poResponse[offset + 4];
+    free[0] = cardResponse[offset + 2];
+    free[1] = cardResponse[offset + 4];
     return free;
   }
 
@@ -133,7 +133,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public byte getKvc() {
-    return poResponse[offset + 3];
+    return cardResponse[offset + 3];
   }
 
   /**
@@ -154,7 +154,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getSamIdBytes() {
     byte[] samId = new byte[4];
-    System.arraycopy(poResponse, offset + 13, samId, 0, 4);
+    System.arraycopy(cardResponse, offset + 13, samId, 0, 4);
     return samId;
   }
 
@@ -176,8 +176,8 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getSvTNumBytes() {
     final byte[] tnNum = new byte[2];
-    tnNum[0] = poResponse[offset + 20];
-    tnNum[1] = poResponse[offset + 21];
+    tnNum[0] = cardResponse[offset + 20];
+    tnNum[1] = cardResponse[offset + 21];
     return tnNum;
   }
 
@@ -199,7 +199,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   @Override
   public byte[] getSamTNumBytes() {
     byte[] samTNum = new byte[3];
-    System.arraycopy(poResponse, offset + 17, samTNum, 0, 3);
+    System.arraycopy(cardResponse, offset + 17, samTNum, 0, 3);
     return samTNum;
   }
 

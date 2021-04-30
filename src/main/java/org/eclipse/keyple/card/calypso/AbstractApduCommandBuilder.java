@@ -67,7 +67,11 @@ abstract class AbstractApduCommandBuilder {
    */
   public final void addSubName(String subName) {
     if (subName.length() != 0) {
-      this.name = this.name + " - " + subName;
+      if (this.name != null) {
+        this.name = this.name + " - " + subName;
+      } else {
+        this.name = subName;
+      }
       if (apduRequest != null) {
         this.apduRequest.setName(this.name);
       }

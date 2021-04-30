@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.EnumMap;
 import java.util.NoSuchElementException;
-import org.eclipse.keyple.card.calypso.po.DirectoryHeader;
-import org.eclipse.keyple.card.calypso.transaction.PoTransactionService;
+import org.eclipse.keyple.card.calypso.card.DirectoryHeader;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
@@ -30,8 +30,8 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   private final byte[] accessConditions;
   private final byte[] keyIndexes;
   private final byte dfStatus;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kif;
-  private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvc;
+  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kif;
+  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvc;
   private static final String LEVEL_STR = "level";
 
   /** Private constructor */
@@ -56,12 +56,12 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     private byte[] accessConditions;
     private byte[] keyIndexes;
     private byte dfStatus;
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kif =
-        new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
-            PoTransactionService.SessionAccessLevel.class);
-    private final EnumMap<PoTransactionService.SessionAccessLevel, Byte> kvc =
-        new EnumMap<PoTransactionService.SessionAccessLevel, Byte>(
-            PoTransactionService.SessionAccessLevel.class);
+    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kif =
+        new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
+            CardTransactionService.SessionAccessLevel.class);
+    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvc =
+        new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
+            CardTransactionService.SessionAccessLevel.class);
 
     /** Private constructor */
     private DirectoryHeaderBuilder() {}
@@ -127,7 +127,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @return the builder instance
      * @since 2.0
      */
-    DirectoryHeaderBuilder kif(PoTransactionService.SessionAccessLevel level, byte kif) {
+    DirectoryHeaderBuilder kif(CardTransactionService.SessionAccessLevel level, byte kif) {
       this.kif.put(level, kif);
       return this;
     }
@@ -141,7 +141,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @return the builder instance
      * @since 2.0
      */
-    DirectoryHeaderBuilder kvc(PoTransactionService.SessionAccessLevel level, byte kvc) {
+    DirectoryHeaderBuilder kvc(CardTransactionService.SessionAccessLevel level, byte kvc) {
       this.kvc.put(level, kvc);
       return this;
     }
@@ -179,19 +179,19 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   @Override
-  public boolean isKifAvailable(PoTransactionService.SessionAccessLevel level) {
+  public boolean isKifAvailable(CardTransactionService.SessionAccessLevel level) {
     Assert.getInstance().notNull(level, LEVEL_STR);
     return kif.get(level) != null;
   }
 
   @Override
-  public boolean isKvcAvailable(PoTransactionService.SessionAccessLevel level) {
+  public boolean isKvcAvailable(CardTransactionService.SessionAccessLevel level) {
     Assert.getInstance().notNull(level, LEVEL_STR);
     return kvc.get(level) != null;
   }
 
   @Override
-  public byte getKif(PoTransactionService.SessionAccessLevel level) {
+  public byte getKif(CardTransactionService.SessionAccessLevel level) {
 
     Assert.getInstance().notNull(level, LEVEL_STR);
 
@@ -203,7 +203,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   @Override
-  public byte getKvc(PoTransactionService.SessionAccessLevel level) {
+  public byte getKvc(CardTransactionService.SessionAccessLevel level) {
 
     Assert.getInstance().notNull(level, LEVEL_STR);
 

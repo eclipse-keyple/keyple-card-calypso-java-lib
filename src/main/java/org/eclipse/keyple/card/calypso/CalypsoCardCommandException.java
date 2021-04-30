@@ -12,47 +12,21 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * This exception is the parent abstract class of all Keyple card APDU commands exceptions.
+ * (package-private)<br>
+ * Parent abstract class of all Calypso card APDU commands exceptions.
  *
  * @since 2.0
  */
-abstract class CalypsoCardCommandException extends Exception {
-
-  private final CardCommand command;
-
-  private final Integer statusCode;
+abstract class CalypsoCardCommandException extends CalypsoApduCommandException {
 
   /**
-   * Constructor allowing to set the error message and the reference to the command
-   *
-   * @param message the message to identify the exception context (Should not be null).
-   * @param command the command.
-   * @param statusCode the status code.
+   * @param message the message to identify the exception context.
+   * @param command the Calypso card command.
+   * @param statusCode the status code (optional).
    * @since 2.0
    */
-  protected CalypsoCardCommandException(String message, CardCommand command, Integer statusCode) {
-    super(message);
-    this.command = command;
-    this.statusCode = statusCode;
-  }
-
-  /**
-   * Gets the command
-   *
-   * @return A not null reference.
-   * @since 2.0
-   */
-  public CardCommand getCommand() {
-    return command;
-  }
-
-  /**
-   * Gets the status code
-   *
-   * @return A nullable reference
-   * @since 2.0
-   */
-  public Integer getStatusCode() {
-    return statusCode;
+  protected CalypsoCardCommandException(
+      String message, CalypsoCardCommand command, Integer statusCode) {
+    super(message, command, statusCode);
   }
 }

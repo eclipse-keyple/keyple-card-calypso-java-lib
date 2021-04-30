@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -23,20 +24,20 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamResponseParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.SV_CHECK;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_CHECK;
 
   /**
    * Instantiates a new SamSvCheckBuilder to authenticate a card SV transaction.
    *
    * @param revision of the SAM.
-   * @param svPoSignature null if the operation is to abort the SV transaction, a 3 or 6-byte array.
-   *     containing the PO signature from SV Debit, SV Load or SV Undebit.
+   * @param svCardSignature null if the operation is to abort the SV transaction, a 3 or 6-byte
+   *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
    * @since 2.0
    */
-  public SamSvCheckBuilder(SamRevision revision, byte[] svPoSignature) {
+  public SamSvCheckBuilder(SamRevision revision, byte[] svCardSignature) {
     super(command);
-    if (svPoSignature != null && (svPoSignature.length != 3 && svPoSignature.length != 6)) {
-      throw new IllegalArgumentException("Invalid svPoSignature.");
+    if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
+      throw new IllegalArgumentException("Invalid svCardSignature.");
     }
 
     if (revision != null) {
@@ -47,13 +48,16 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
-    if (svPoSignature != null) {
+    if (svCardSignature != null) {
       // the operation is not "abort"
-      byte[] data = new byte[svPoSignature.length];
-      System.arraycopy(svPoSignature, 0, data, 0, svPoSignature.length);
-      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
+      byte[] data = new byte[svCardSignature.length];
+      System.arraycopy(svCardSignature, 0, data, 0, svCardSignature.length);
+      setApduRequest(
+          new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
     } else {
-      setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
+      setApduRequest(
+          new ApduRequest(
+              ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     }
   }
 

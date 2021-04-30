@@ -20,6 +20,8 @@ import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
 import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -28,7 +30,7 @@ import org.eclipse.keyple.core.util.Assert;
  * @since 2.0
  */
 class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
-
+  private static final Logger logger = LoggerFactory.getLogger(SamCardSelectionAdapter.class);
   private final CardSelector samCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
       commandBuilders;
@@ -61,9 +63,12 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
         commandBuilders) {
       cardSelectionApduRequests.add(commandBuilder.getApduRequest());
     }
-    // TODO check the boolean use in every creation of CardRequest
-    return new CardSelectionRequest(
-        samCardSelector, new CardRequest(cardSelectionApduRequests, false));
+    if (!cardSelectionApduRequests.isEmpty()) {
+      return new CardSelectionRequest(
+          samCardSelector, new CardRequest(cardSelectionApduRequests, false));
+    } else {
+      return new CardSelectionRequest(samCardSelector, null);
+    }
   }
 
   /**
@@ -86,11 +91,11 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
         commandBuilders.get(0).createResponseParser(apduResponses.get(0)).checkStatus();
       } catch (CalypsoSamCommandException e) {
         // TODO check what to do here!
-        e.printStackTrace();
+        logger.error("An exception occurred while parse the SAM responses: {}", e.getMessage());
       }
     }
 
-    return new SamSmartCardAdapter(cardSelectionResponse);
+    return new CalypsoSamAdapter(cardSelectionResponse);
   }
 
   /**

@@ -45,8 +45,8 @@ abstract class AbstractApduResponseParser {
   protected final ApduResponse response;
 
   /**
-   * Parsers are usually created by their associated builder. The SamSmartCard field maintains a
-   * link between the builder and the parser in order to allow the parser to access the builder
+   * Parsers are usually created by their associated builder. The CalypsoSam field maintains a link
+   * between the builder and the parser in order to allow the parser to access the builder
    * parameters that were used to create the command (e.g. SFI, registration number, etc.).
    *
    * @since 2.0
@@ -89,8 +89,8 @@ abstract class AbstractApduResponseParser {
    * @return A not null value
    * @since 2.0
    */
-  protected CalypsoCardCommandException buildCommandException(
-      Class<? extends CalypsoCardCommandException> exceptionClass,
+  protected CalypsoApduCommandException buildCommandException(
+      Class<? extends CalypsoApduCommandException> exceptionClass,
       String message,
       CardCommand commandRef,
       Integer statusCode) {
@@ -137,10 +137,10 @@ abstract class AbstractApduResponseParser {
    * This method check the status code.<br>
    * If status code is not referenced, then status is considered unsuccessful.
    *
-   * @throws CalypsoCardCommandException if status is not successful.
+   * @throws CalypsoApduCommandException if status is not successful.
    * @since 2.0
    */
-  public void checkStatus() throws CalypsoCardCommandException {
+  public void checkStatus() throws CalypsoApduCommandException {
 
     StatusProperties props = getStatusCodeProperties();
     if (props != null && props.isSuccessful()) {
@@ -149,7 +149,7 @@ abstract class AbstractApduResponseParser {
     // Status code is not referenced, or not successful.
 
     // exception class
-    Class<? extends CalypsoCardCommandException> exceptionClass =
+    Class<? extends CalypsoApduCommandException> exceptionClass =
         props != null ? props.getExceptionClass() : null;
 
     // message
@@ -198,7 +198,7 @@ abstract class AbstractApduResponseParser {
 
     private final boolean successful;
 
-    private final Class<? extends CalypsoCardCommandException> exceptionClass;
+    private final Class<? extends CalypsoApduCommandException> exceptionClass;
 
     /**
      * Creates a successful status.
@@ -221,7 +221,7 @@ abstract class AbstractApduResponseParser {
      * @since 2.0
      */
     public StatusProperties(
-        String information, Class<? extends CalypsoCardCommandException> exceptionClass) {
+        String information, Class<? extends CalypsoApduCommandException> exceptionClass) {
       this.information = information;
       this.successful = exceptionClass == null;
       this.exceptionClass = exceptionClass;
@@ -253,7 +253,7 @@ abstract class AbstractApduResponseParser {
      * @return A nullable reference
      * @since 2.0
      */
-    public Class<? extends CalypsoCardCommandException> getExceptionClass() {
+    public Class<? extends CalypsoApduCommandException> getExceptionClass() {
       return exceptionClass;
     }
   }

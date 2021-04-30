@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -24,7 +25,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
 final class SamSvPrepareUndebitBuilder
     extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.SV_PREPARE_UNDEBIT;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_UNDEBIT;
 
   /**
    * Instantiates a new SamSvPrepareUndebitBuilder to prepare a transaction to cancel a previous
@@ -57,7 +58,8 @@ final class SamSvPrepareUndebitBuilder
         4 + svGetData.length,
         svUndebitCmdBuildDebitCmdBuildData.length);
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, data, null));
+    setApduRequest(
+        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
   }
 
   /**

@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.card.ApduRequest;
 import org.eclipse.keyple.core.card.ApduResponse;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private) <br>
@@ -23,7 +24,7 @@ import org.eclipse.keyple.core.card.ApduResponse;
  */
 final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeilingsParser> {
   /** The command reference. */
-  private static final SamCommand command = SamCommand.READ_CEILINGS;
+  private static final CalypsoSamCommand command = CalypsoSamCommand.READ_CEILINGS;
 
   public static final int MAX_CEILING_NUMB = 26;
 
@@ -76,7 +77,9 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
       p2 = (byte) (0xB8);
     }
 
-    setApduRequest(new ApduRequest(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00));
+    setApduRequest(
+        new ApduRequest(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
   }
 
   /**

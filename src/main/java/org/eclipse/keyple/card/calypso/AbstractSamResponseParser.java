@@ -75,14 +75,14 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
    * @since 2.0
    */
   @Override
-  protected final CalypsoCardCommandException buildCommandException(
-      Class<? extends CalypsoCardCommandException> exceptionClass,
+  protected final CalypsoApduCommandException buildCommandException(
+      Class<? extends CalypsoApduCommandException> exceptionClass,
       String message,
       CardCommand commandRef,
       Integer statusCode) {
 
-    CalypsoCardCommandException e;
-    SamCommand command = (SamCommand) commandRef;
+    CalypsoApduCommandException e;
+    CalypsoSamCommand command = (CalypsoSamCommand) commandRef;
     if (exceptionClass == CalypsoSamAccessForbiddenException.class) {
       e = new CalypsoSamAccessForbiddenException(message, command, statusCode);
     } else if (exceptionClass == CalypsoSamCounterOverflowException.class) {
@@ -112,7 +112,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
   public void checkStatus() throws CalypsoSamCommandException {
     try {
       super.checkStatus();
-    } catch (CalypsoCardCommandException e) {
+    } catch (CalypsoApduCommandException e) {
       throw (CalypsoSamCommandException) e;
     }
   }

@@ -12,11 +12,11 @@
 package org.eclipse.keyple.card.calypso.transaction;
 
 /**
- * Indicates that the PO has correctly closed the secure session, but that it is impossible to check
- * the authenticity of the support because the SAM is no more available (timeout, network
+ * Indicates that the card has correctly closed the secure session, but that it is impossible to
+ * check the authenticity of the support because the SAM is no more available (timeout, network
  * problem,...).
  */
-public class CalypsoAuthenticationNotVerifiedException extends CalypsoPoTransactionException {
+public class CalypsoAuthenticationNotVerifiedException extends CalypsoCardTransactionException {
 
   /** @param message the message to identify the exception context */
   public CalypsoAuthenticationNotVerifiedException(String message) {
