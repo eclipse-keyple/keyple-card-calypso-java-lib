@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso.transaction;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import org.eclipse.keyple.core.service.resource.CardResourceService;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
@@ -271,10 +270,8 @@ public class CardSecuritySetting {
     /**
      * Set the card resource profile name.
      *
-     * <p>It is not mandatory to define a name here as long as card resource service is used with
-     * the method {@link CardResourceService#getCardResource()} which returns the first available
-     * resource.<br>
-     * This case corresponds to the use of the card resource service in its minimal configuration.
+     * <p>This case corresponds to the use of the card resource service in its minimal
+     * configuration.
      *
      * @param samCardResourceProfileName The name of the SAM card resource associated with these
      *     parameters.
