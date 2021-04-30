@@ -78,14 +78,9 @@ class SamCommandProcessor {
   SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
     this.calypsoCard = calypsoCard;
     this.cardSecuritySettings = cardSecuritySetting;
-    String samProfileName = cardSecuritySettings.getCardResourceProfileName();
-    if (samProfileName != null) {
-      samResource =
-          CardResourceServiceProvider.getService()
-              .getCardResource(cardSecuritySettings.getCardResourceProfileName());
-    } else {
-      samResource = CardResourceServiceProvider.getService().getCardResource();
-    }
+    samResource =
+        CardResourceServiceProvider.getService()
+            .getCardResource(cardSecuritySettings.getCardResourceProfileName());
     CalypsoSam calypsoSam = (CalypsoSam) samResource.getSmartCard();
     samRevision = calypsoSam.getSamRevision();
     samSerialNumber = calypsoSam.getSerialNumber();
