@@ -66,6 +66,8 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
   /**
    * Instantiates a new CardCloseSessionParser from the response.
    *
+   * <p>Checks the card response length; the admissible lengths are 0, 4 or 8 bytes.
+   *
    * @param response from CardCloseSessionBuilder.
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
@@ -80,8 +82,12 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
       signatureLo = Arrays.copyOfRange(responseData, 0, 4);
       postponedData = new byte[0];
     } else {
-      throw new IllegalArgumentException(
-          "Unexpected length in response to CloseSecureSession command: " + responseData.length);
+      if (responseData.length != 0) {
+        throw new IllegalArgumentException(
+            "Unexpected length in response to CloseSecureSession command: " + responseData.length);
+      }
+      signatureLo = new byte[0];
+      postponedData = new byte[0];
     }
   }
 
