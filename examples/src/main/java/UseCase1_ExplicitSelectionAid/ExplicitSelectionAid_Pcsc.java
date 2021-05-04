@@ -1,0 +1,124 @@
+/* **************************************************************************************
+ * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ *
+ * See the NOTICE file(s) distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ************************************************************************************** */
+package UseCase1_ExplicitSelectionAid;
+
+import static common.ConfigurationUtils.getCardReader;
+
+import common.CalypsoDef;
+import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
+import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
+import org.eclipse.keyple.card.calypso.card.CalypsoCard;
+import org.eclipse.keyple.core.service.*;
+import org.eclipse.keyple.core.service.selection.CardSelectionResult;
+import org.eclipse.keyple.core.service.selection.CardSelectionService;
+import org.eclipse.keyple.core.service.selection.CardSelector;
+import org.eclipse.keyple.core.util.protocol.ContactlessCardCommonProtocol;
+import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
+import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactlessProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ *
+ * <h1>Use Case ‘Calypso 1’ – Explicit Selection Aid (PC/SC)</h1>
+ *
+ * <p>We demonstrate here the direct selection of a Calypso card inserted in a reader. No
+ * observation of the reader is implemented in this example, so the card must be present in the
+ * reader before the program is launched.
+ *
+ * <h2>Scenario:</h2>
+ *
+ * <ul>
+ *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
+ *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
+ *       an AID-based application selection scenario, including reading a file record.
+ *   <li>Output the collected data (FCI, ATR and file record content).
+ * </ul>
+ *
+ * All results are logged with slf4j.
+ *
+ * <p>Any unexpected behavior will result in a runtime exceptions.
+ *
+ * @since 2.0
+ */
+public class ExplicitSelectionAid_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(ExplicitSelectionAid_Pcsc.class);
+
+  public static void main(String[] args) {
+
+    // Get the instance of the SmartCardService (singleton pattern)
+    SmartCardService smartCardService = SmartCardServiceProvider.getService();
+
+    // Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
+    // return.
+    Plugin plugin = smartCardService.registerPlugin(PcscPluginFactoryBuilder.builder().build());
+
+    Reader cardReader = getCardReader(plugin, ".*ASK.*");
+
+    cardReader.activateProtocol(
+        PcscSupportedContactlessProtocol.ISO_14443_4.name(),
+        ContactlessCardCommonProtocol.ISO_14443_4.name());
+
+    // Get the Calypso card extension service
+    CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
+
+    // Verify that the extension's API level is consistent with the current service.
+    smartCardService.checkCardExtension(cardExtension);
+
+    logger.info(
+        "=============== UseCase Calypso #1: AID based explicit selection ==================");
+
+    // Check if a card is present in the reader
+    if (!cardReader.isCardPresent()) {
+      throw new IllegalStateException("No card is present in the reader.");
+    }
+
+    logger.info("= #### Select application with AID = '{}'.", CalypsoDef.AID);
+
+    // Get the core card selection service.
+    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+
+    // Create a card selection using the Calypso card extension.
+    // Prepare the selection by adding the created Calypso card selection to the card selection
+    // scenario.
+    selectionService.prepareSelection(
+        cardExtension
+            .createCardSelection(
+                CardSelector.builder().filterByDfName(CalypsoDef.AID).build(), true)
+            .prepareReadRecordFile(
+                CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER, CalypsoDef.RECORD_NUMBER_1));
+
+    // Actual card communication: run the selection scenario.
+    CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
+
+    // Check the selection result.
+    if (!selectionResult.hasActiveSelection()) {
+      throw new IllegalStateException(
+          "The selection of the application '" + CalypsoDef.AID + "' failed.");
+    }
+
+    // Get the SmartCard resulting of the selection.
+    CalypsoCard calypsoCard = (CalypsoCard) selectionResult.getActiveSmartCard();
+
+    logger.info("= SmartCard = {}", calypsoCard);
+
+    logger.info(
+        "File SFI {}h, rec 1: FILE_CONTENT = {}",
+        String.format("%02X", CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER),
+        calypsoCard.getFileBySfi(CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER));
+
+    logger.info("= #### End of the Calypso card processing.");
+
+    System.exit(0);
+  }
+}
