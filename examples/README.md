@@ -12,7 +12,7 @@ API. We use a PCSC plugin for real smart cards, and a Stub Plugin to simulates C
 * PIN verification.
 * Stored Value debit and reload.
 
-Multiple launchers can be run independently
+Each launcher can be used independently.
 
 * Use Case ‘Calypso 1’ – Explicit Selection (
   Aid) : [UseCase1_ExplicitSelectionAid](https://github.com/eclipse/keyple-java-card-calypso/tree/main/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid)
