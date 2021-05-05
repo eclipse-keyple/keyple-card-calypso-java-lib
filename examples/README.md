@@ -15,7 +15,7 @@ API. We use a PCSC plugin for real smart cards, and a Stub Plugin to simulates C
 Multiple launchers can be run independently
 
 * Use Case ‘Calypso 1’ – Explicit Selection (
-  Aid) : [UseCase1_ExplicitSelectionAid](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid)
+  Aid) : [UseCase1_ExplicitSelectionAid](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid)
     * Check if a card is in the reader, attempt to select a ISO 14443-4 Calypso card defined by its AID and read a file
       record following the selection (simple plain read, not involving a Calypso SAM).
     * _Explicit Selection_ means that the terminal application starts the card processing after the card presence has
@@ -24,7 +24,7 @@ Multiple launchers can be run independently
         * For PC/SC plugin: [`ExplicitSelectionAid_Pcsc.java`]
         * For Stub plugin: [`ExplicitSelectionAid_Stub.java`]
 * Use Case ‘Calypso 2’ – Scheduled
-  Selection [UseCase2_ScheduledSelection](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection)
+  Selection [UseCase2_ScheduledSelection](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection)
     * Schedule a default selection of ISO 14443-4 Calypso card with a file record reading and set it to an observable
       reader, on card detection in case the Calypso selection is successful, notify the terminal application with the
       card data.
@@ -33,7 +33,7 @@ Multiple launchers can be run independently
         * For PC/SC plugin: [`ScheduledSelection_Pcsc.java`]
         * For Stub plugin: [`ScheduledSelection_Stub.java`]
 * Use Case ‘Calypso 3’ – Selection of Calypso card Revision 1 (no
-  AID) : [org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection)
+  AID) : [UseCase3_Rev1Selection](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection)
     * Check if a card is in the reader, select a Calypso card Rev1 identified by its communication protocol, operate a
       simple Calypso card transaction (simple plain read, not involving a Calypso SAM).
     * _Explicit Selection_ means that the terminal application starts the card processing after the card presence has
@@ -42,24 +42,24 @@ Multiple launchers can be run independently
         * For PC/SC plugin: [`Rev1Selection_Pcsc.java`]
         * For Stub plugin: [`Rev1Selection_Stub.java`]
 * Use case 'Calypso 4' - Card Authentication (certified reading of a file
-  record):  [org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication)
+  record):  [UseCase4_CardAuthentication](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication)
     * Set up a card transaction using the Card Resource Service to process a basic Calypso Secure Session.
     * Real mode with PC/SC readers [`CardAuthentication_Pcsc.java`]
     * Simulation mode  (Stub Secure Elements included) [`CardAuthentication_Stub.java`]
 
 * Use case 'Calypso 5' - Multiple Session: illustrates the multiple session generation mechanism for managing the
   sending of modifying commands that exceed the capacity of the session
-  buffer. [org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession)
+  buffer. [UseCase5_MultipleSession](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession)
     * Real mode with PC/SC readers [`MultipleSession_Pcsc.java`]
 
 * Use case 'Calypso 6' - PIN management: presentation of the PIN, attempts counter
-  reading. [org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin)
+  reading. [UseCase6_VerifyPin](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin)
     * Real mode with PC/SC readers [`VerifyPin_Pcsc.java`]
 
 * Use case 'Calypso 7' - Stored Value reloading (out of Secure Session)
-  . [org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload)
+  . [UseCase7_StoredValue_SimpleReload](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload)
     * Real mode with PC/SC readers [`StoredValue_SimpleReload_Pcsc.java`]
 
 * Use case 'Calypso 8' - Stored Value debit within a Secure Session.
-  . [org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession)
+  . [UseCase8_StoredValue_DebitInSession](/examples/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession)
     * Real mode with PC/SC readers [`StoredValue_DebitInSession_Pcsc.java`]
