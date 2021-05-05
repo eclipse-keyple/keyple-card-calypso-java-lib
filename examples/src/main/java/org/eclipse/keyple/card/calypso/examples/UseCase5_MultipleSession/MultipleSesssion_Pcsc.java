@@ -9,22 +9,23 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package UseCase6_VerifyPin;
+package org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession;
 
-import static common.ConfigurationUtils.getCardReader;
-import static common.ConfigurationUtils.setupCardResourceService;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
-import common.CalypsoDef;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoCardTransactionException;
+import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
+import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.selection.CardSelector;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +33,10 @@ import org.slf4j.LoggerFactory;
 /**
  *
  *
- * <h1>Use Case ‘Calypso 6’ – Calypso Card Verify PIN (PC/SC)</h1>
+ * <h1>Use Case ‘Calypso 5’ – Multiple sessions (PC/SC)</h1>
  *
- * <p>Here we demonstrate the various operations around the PIN code checking.
+ * <p>Here we demonstrate a simple way to bypass the card modification buffer limitation by using
+ * the multiple session mode.
  *
  * <h2>Scenario:</h2>
  *
@@ -43,19 +45,10 @@ import org.slf4j.LoggerFactory;
  *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario.
- *   <li>Creates a {@link CardTransactionService} without security.
- *   <li>Verify the PIN code in plain mode with the correct code, display the remaining attempts
- *       counter.
  *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
- *   <li>Verify the PIN code in session in encrypted mode with the code, display the remaining
- *       attempts counter.
- *   <li>Verify the PIN code in session in encrypted mode with a bad code, display the remaining
- *       attempts counter.
- *   <li>Cancel the card transaction, re-open a new one.
- *   <li>Verify the PIN code in session in encrypted mode with the code, display the remaining
- *       attempts counter.
- *   <li>Close the card transaction.
+ *   <li>Prepares and executes a number of modification commands that exceeds the number of commands
+ *       allowed by the card's modification buffer size.
  * </ul>
  *
  * All results are logged with slf4j.
@@ -64,8 +57,8 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class VerifyPin_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(VerifyPin_Pcsc.class);
+public class MultipleSesssion_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(MultipleSesssion_Pcsc.class);
 
   public static void main(String[] args) {
 
@@ -84,20 +77,21 @@ public class VerifyPin_Pcsc {
 
     // Get and setup the card reader
     // We suppose here, we use a ASK LoGO contactless PC/SC reader as card reader.
-    Reader cardReader = getCardReader(plugin, ".*ASK.*");
+    Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
     // Configure the card resource service to provide an adequate SAM for future secure operations.
     // We suppose here, we use a Identive contact PC/SC reader as card reader.
-    setupCardResourceService(plugin, ".*Identive.*", CalypsoDef.SAM_PROFILE_NAME);
+    setupCardResourceService(
+        plugin, ConfigurationUtil.SAM_READER_NAME_REGEX, CalypsoConstants.SAM_PROFILE_NAME);
 
-    logger.info("=============== UseCase Calypso #5: Calypso card Verify PIN ==================");
+    logger.info("=============== UseCase Calypso #5: multiple sessions ==================");
 
     // Check if a card is present in the reader
     if (!cardReader.isCardPresent()) {
       throw new IllegalStateException("No card is present in the reader.");
     }
 
-    logger.info("= #### Select application with AID = '{}'.", CalypsoDef.AID);
+    logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
     // Get the core card selection service.
     CardSelectionService selectionService = CardSelectionServiceFactory.getService();
@@ -107,7 +101,7 @@ public class VerifyPin_Pcsc {
     // scenario.
     selectionService.prepareSelection(
         cardExtension.createCardSelection(
-            CardSelector.builder().filterByDfName(CalypsoDef.AID).build(), true));
+            CardSelector.builder().filterByDfName(CalypsoConstants.AID).build(), true));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
@@ -115,7 +109,7 @@ public class VerifyPin_Pcsc {
     // Check the selection result.
     if (!selectionResult.hasActiveSelection()) {
       throw new IllegalStateException(
-          "The selection of the application " + CalypsoDef.AID + " failed.");
+          "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
 
     // Get the SmartCard resulting of the selection.
@@ -123,59 +117,46 @@ public class VerifyPin_Pcsc {
 
     logger.info("= SmartCard = {}", calypsoCard);
 
-    // Create the card transaction service in secure mode.
-    CardTransactionService cardTransaction =
-        cardExtension.createCardTransactionWithoutSecurity(cardReader, calypsoCard);
-
-    ////////////////////////////
-    // Verification of the PIN (correct) out of a secure session in plain mode
-    cardTransaction.processVerifyPin(CalypsoDef.PIN_OK);
-    logger.info("Remaining attempts #1: {}", calypsoCard.getPinAttemptRemaining());
-
     // Create security settings that reference the same SAM profile requested from the card resource
-    // service, specifying the key ciphering key parameters.
+    // service and enable the multiple session mode.
     CardSecuritySetting cardSecuritySetting =
         CardSecuritySetting.builder()
-            .setSamCardResourceProfileName(CalypsoDef.SAM_PROFILE_NAME)
-            .pinCipheringKey(CalypsoDef.PIN_CIPHERING_KEY_KIF, CalypsoDef.PIN_CIPHERING_KEY_KVC)
+            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
+            .enableMultipleSession()
             .build();
 
-    // create a secured card transaction
-    cardTransaction =
+    // Performs file reads using the card transaction service in non-secure mode.
+    CardTransactionService cardTransaction =
         cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    ////////////////////////////
-    // Verification of the PIN (correct) out of a secure session in encrypted mode
-    cardTransaction.processVerifyPin(CalypsoDef.PIN_OK);
-    // log the current counter value (should be 3)
-    logger.info("Remaining attempts #2: {}", calypsoCard.getPinAttemptRemaining());
-
-    ////////////////////////////
-    // Verification of the PIN (incorrect) inside a secure session
     cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
-    try {
-      cardTransaction.processVerifyPin(CalypsoDef.PIN_KO);
-    } catch (CalypsoCardTransactionException ex) {
-      logger.error("PIN Exception: {}", ex.getMessage());
+
+    // Compute the number of append records (29 bytes) commands that will overflow the card
+    // modifications buffer. Each append records will consume 35 (29 + 6) bytes in the
+    // buffer.
+    //
+    // We'll send one more command to demonstrate the MULTIPLE mode
+    int modificationsBufferSize = 430; // note: not all Calypso card have this buffer size
+
+    int nbCommands = (modificationsBufferSize / 35) + 1;
+
+    logger.info(
+        "==== Send {} Append Record commands. Modifications buffer capacity = {} bytes i.e. {} 29-byte commands ====",
+        nbCommands,
+        modificationsBufferSize,
+        modificationsBufferSize / 35);
+
+    for (int i = 0; i < nbCommands; i++) {
+
+      cardTransaction.prepareAppendRecord(
+          CalypsoConstants.SFI_EVENT_LOG,
+          ByteArrayUtil.fromHex(CalypsoConstants.EVENT_LOG_DATA_FILL));
     }
-    cardTransaction.processCancel();
-    // log the current counter value (should be 2)
-    logger.error("Remaining attempts #3: {}", calypsoCard.getPinAttemptRemaining());
 
-    ////////////////////////////
-    // Verification of the PIN (correct) inside a secure session with reading of the counter
-    //////////////////////////// before
-    cardTransaction.prepareCheckPinStatus();
-    cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
-    // log the current counter value (should be 2)
-    logger.info("Remaining attempts #4: {}", calypsoCard.getPinAttemptRemaining());
-    cardTransaction.processVerifyPin(CalypsoDef.PIN_OK);
-    cardTransaction.prepareReleaseCardChannel();
-    cardTransaction.processClosing();
-    // log the current counter value (should be 3)
-    logger.info("Remaining attempts #5: {}", calypsoCard.getPinAttemptRemaining());
+    cardTransaction.prepareReleaseCardChannel().processClosing();
 
-    logger.info("The Secure Session ended successfully, the PIN has been verified.");
+    logger.info(
+        "The secure session has ended successfully, all data has been written to the card's memory.");
 
     logger.info("= #### End of the Calypso card processing.");
 

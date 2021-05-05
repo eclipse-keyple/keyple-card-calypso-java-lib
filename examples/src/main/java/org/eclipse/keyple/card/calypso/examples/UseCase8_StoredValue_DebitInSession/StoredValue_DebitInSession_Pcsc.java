@@ -9,15 +9,16 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package UseCase8_StoredValue_DebitInSession;
+package org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession;
 
-import static common.ConfigurationUtils.getCardReader;
-import static common.ConfigurationUtils.setupCardResourceService;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
-import common.CalypsoDef;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
+import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
+import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
@@ -74,11 +75,12 @@ public class StoredValue_DebitInSession_Pcsc {
 
     // Get and setup the card reader
     // We suppose here, we use a ASK LoGO contactless PC/SC reader as card reader.
-    Reader cardReader = getCardReader(plugin, ".*ASK.*");
+    Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
     // Configure the card resource service to provide an adequate SAM for future secure operations.
     // We suppose here, we use a Identive contact PC/SC reader as card reader.
-    setupCardResourceService(plugin, ".*Identive.*", CalypsoDef.SAM_PROFILE_NAME);
+    setupCardResourceService(
+        plugin, ConfigurationUtil.SAM_READER_NAME_REGEX, CalypsoConstants.SAM_PROFILE_NAME);
 
     logger.info("=============== UseCase Calypso #8: Stored Value debit ==================");
 
@@ -87,7 +89,7 @@ public class StoredValue_DebitInSession_Pcsc {
       throw new IllegalStateException("No card is present in the reader.");
     }
 
-    logger.info("= #### Select application with AID = '{}'.", CalypsoDef.AID);
+    logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
     // Get the core card selection service.
     CardSelectionService selectionService = CardSelectionServiceFactory.getService();
@@ -97,7 +99,7 @@ public class StoredValue_DebitInSession_Pcsc {
     // scenario.
     selectionService.prepareSelection(
         cardExtension.createCardSelection(
-            CardSelector.builder().filterByDfName(CalypsoDef.AID).build(), true));
+            CardSelector.builder().filterByDfName(CalypsoConstants.AID).build(), true));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
@@ -105,7 +107,7 @@ public class StoredValue_DebitInSession_Pcsc {
     // Check the selection result.
     if (!selectionResult.hasActiveSelection()) {
       throw new IllegalStateException(
-          "The selection of the application " + CalypsoDef.AID + " failed.");
+          "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
 
     // Get the SmartCard resulting of the selection.
@@ -117,7 +119,7 @@ public class StoredValue_DebitInSession_Pcsc {
     // service.
     CardSecuritySetting cardSecuritySetting =
         CardSecuritySetting.builder()
-            .setSamCardResourceProfileName(CalypsoDef.SAM_PROFILE_NAME)
+            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
             .isLoadAndDebitSvLogRequired(true)
             .build();
 

@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package common;
+package org.eclipse.keyple.card.calypso.examples.common;
 
 /**
  * Helper class to provide specific constants to manipulate Calypso cards from the Keyple demo kit.
@@ -22,13 +22,13 @@ package common;
  *   <li>Security settings
  * </ul>
  */
-public final class CalypsoDef {
+public final class CalypsoConstants {
 
   /**
    * (private)<br>
    * Constructor.
    */
-  private CalypsoDef() {}
+  private CalypsoConstants() {}
 
   // Application
   /** AID: Keyple test kit profile 1, Application 2 */

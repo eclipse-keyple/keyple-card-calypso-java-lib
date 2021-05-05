@@ -9,14 +9,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package UseCase2_ScheduledSelection;
+package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
-import static common.ConfigurationUtils.getCardReader;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
-import common.CalypsoDef;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
+import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
+import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.selection.CardSelector;
@@ -73,7 +74,7 @@ public class ScheduledSelection_Pcsc {
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
 
-    Reader cardReader = getCardReader(plugin, ".*ASK.*");
+    Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
     // Activate the ISO14443 card protocol.
     cardReader.activateProtocol(
@@ -81,7 +82,7 @@ public class ScheduledSelection_Pcsc {
         ContactlessCardCommonProtocol.ISO_14443_4.name());
 
     logger.info("=============== UseCase Generic #2: scheduled selection ==================");
-    logger.info("= #### Select application with AID = '{}'.", CalypsoDef.AID);
+    logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
     // Get the core card selection service.
     CardSelectionService selectionService = CardSelectionServiceFactory.getService();
@@ -93,11 +94,11 @@ public class ScheduledSelection_Pcsc {
             .createCardSelection(
                 CardSelector.builder()
                     .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
-                    .filterByDfName(CalypsoDef.AID)
+                    .filterByDfName(CalypsoConstants.AID)
                     .build(),
                 true)
             .prepareReadRecordFile(
-                CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER, CalypsoDef.RECORD_NUMBER_1);
+                CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1);
 
     // Prepare the selection by adding the created Calypso selection to the card selection scenario.
     selectionService.prepareSelection(cardSelection);

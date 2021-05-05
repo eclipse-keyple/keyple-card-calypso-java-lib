@@ -1,1 +1,1 @@
-rootProject.name = "calypso.examples"
+rootProject.name = "keyple-java-card-calypso-examples"

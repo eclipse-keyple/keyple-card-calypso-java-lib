@@ -1,63 +1,65 @@
-Getting Started - Generic Local Example
+Getting Started - Calypso Local Examples
 ---
 
-Those examples make use of the Keyple Core library. They demonstrate how to observe insertion/removal of smart card or Readers.
+Those examples make use of the Keyple Calypso Extension library. They demonstrate the main features of the library's
+API. We use a PCSC plugin for real smart cards, and a Stub Plugin to simulates Calypso smart card.
 
-**These examples involve several packages**
+**The purpose of these packages is to demonstrate the use of the Calypso Extension library:**
 
-- Resources common to all Keyple Core demonstration examples
+* Single or dual reader configuration (Card and SAM).
+* Explicit and scheduled application selection.
+* Calypso Card Secure Session in atomic and multiple mode.
+* PIN verification.
+* Stored Value debit and reload.
 
-      `org.eclipse.keyple.example.generic.standalone.common`
-      
-- Local platform launchers
+Multiple launchers can be run independently
 
-      `org.eclipse.keyple.example.generic.standalone.*`
-      
-**The purpose of these examples is to demonstrate the use of the Core library**
+* Use Case ‘Calypso 1’ – Explicit Selection (
+  Aid) : [UseCase1_ExplicitSelectionAid](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid)
+    * Check if a card is in the reader, attempt to select a ISO 14443-4 Calypso card defined by its AID and read a file
+      record following the selection (simple plain read, not involving a Calypso SAM).
+    * _Explicit Selection_ means that the terminal application starts the card processing after the card presence has
+      been checked.
+    * Implementations:
+        * For PC/SC plugin: [`ExplicitSelectionAid_Pcsc.java`]
+        * For Stub plugin: [`ExplicitSelectionAid_Stub.java`]
+* Use Case ‘Calypso 2’ – Scheduled
+  Selection [UseCase2_ScheduledSelection](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection)
+    * Schedule a default selection of ISO 14443-4 Calypso card with a file record reading and set it to an observable
+      reader, on card detection in case the Calypso selection is successful, notify the terminal application with the
+      card data.
+    * _Scheduled Selection_ means that the card selection process is automatically started when the card is detected.
+    * Implementations:
+        * For PC/SC plugin: [`ScheduledSelection_Pcsc.java`]
+        * For Stub plugin: [`ScheduledSelection_Stub.java`]
+* Use Case ‘Calypso 3’ – Selection of Calypso card Revision 1 (no
+  AID) : [org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection)
+    * Check if a card is in the reader, select a Calypso card Rev1 identified by its communication protocol, operate a
+      simple Calypso card transaction (simple plain read, not involving a Calypso SAM).
+    * _Explicit Selection_ means that the terminal application starts the card processing after the card presence has
+      been checked.
+    * Implementations:
+        * For PC/SC plugin: [`Rev1Selection_Pcsc.java`]
+        * For Stub plugin: [`Rev1Selection_Stub.java`]
+* Use case 'Calypso 4' - Card Authentication (certified reading of a file
+  record):  [org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication)
+    * Set up a card transaction using the Card Resource Service to process a basic Calypso Secure Session.
+    * Real mode with PC/SC readers [`CardAuthentication_Pcsc.java`]
+    * Simulation mode  (Stub Secure Elements included) [`CardAuthentication_Stub.java`]
 
-  * Reader management:
-    * Observability of plugins to manage the insertion / removal of readers
-    * Observability of readers to manage the insertion / removal of secure elements
-  * SeRequest/SeResponse building
-  * Card technology identification (protocol based filtering)
-  * Application selection (AID or ATR based)
-  * Two basic scenarios
-    * Plugins and readers monitoring
-    * Card selection
+* Use case 'Calypso 5' - Multiple Session: illustrates the multiple session generation mechanism for managing the
+  sending of modifying commands that exceed the capacity of the session
+  buffer. [org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession)
+    * Real mode with PC/SC readers [`MultipleSession_Pcsc.java`]
 
-* Five launchers working out of the box on a java platform
+* Use case 'Calypso 6' - PIN management: presentation of the PIN, attempts counter
+  reading. [org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin)
+    * Real mode with PC/SC readers [`VerifyPin_Pcsc.java`]
 
-  * Plugin and reader observability [`Demo_ObservableReaderNotification`]
-    * Real mode with PC/SC readers (Secure Elements required [Calypso and/or others]) [`Main_ObservableReaderNotification_Pcsc.java`]
-    * Simulation mode (virtual Secure Elements included) [`Main_ObservableReaderNotification_Stub.java`]
-  * Card type detection through the use of the protocol flag mechanism [`Demo_CardProtocolDetection`] 
-    * Real mode with PC/SC readers (Secure Elements required [Calypso and/or others]) [`Main_CardProtocolDetection_Pcsc.java`]
-    * Simulation mode (virtual Secure Elements included) [`Main_CardProtocolDetection_Stub.java`]
-  * Use case multiple select: illustrates the possibility of selecting multiple SE applications using the same AID prefix and P2 standard values to select the first or next occurrence. [`UseCase4_SequentialMultiSelection`]
-  
-Available packages in details:
---
-  - `org.eclipse.keyple.example.generic.standalone.common`
+* Use case 'Calypso 7' - Stored Value reloading (out of Secure Session)
+  . [org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload)
+    * Real mode with PC/SC readers [`StoredValue_SimpleReload_Pcsc.java`]
 
-|File|Description|
-|:---|---|
-|`StubMifareClassic.java`|Mifare Classic stub SE|
-|`StubMifareDesfire.java`|Mifare Desfire stub SE|
-|`StubMifareUL.java`|Mifare Ultralight stub SE|
-|`StubSe1.java`|Generic stub SE 1|
-|`StubSe2.java`|Generic stub SE 2|
-|`GenericCardSelectionRequest.java`|This class provides a generic card selection request.|
-|`PcscReaderUtils.java`|This class provides utilities for Pcsc configuration processing|
-
-  - `org.eclipse.keyple.example.generic.standalone.*`
-
-|File|Description|
-|:---|---|
-|`Demo_CardProtocolDetection.Main_CardProtocolDetection_Pcsc.java`|Main class for the protocol detection example (PC/SC)|
-|`Demo_CardProtocolDetection.Main_CardrotocolDetection_Stub.java`|Main class for the protocol detection example (stub)|
-|`Demo_ObservableReaderNotification.Main_ObservableReaderNotification_Pcsc.java`|Main class for the plugin/reader observability example (PC/SC)|
-|`Demo_ObservableReaderNotification.Main_ObservableReaderNotification_Stub.java`|Main class for the plugin/reader observability example (stub)|
-|`UseCase1_ExplicitSelectionAid.Main_ExplicitSelectionAid.java`|Operate an explicit Selection Aid (PC/SC)|
-|`UseCase2_DefaultSelectionNotification.Main_DefaultSelectionNotification_Pcsc.java`|Configure a default Selection Notification (PC/SC)|
-|`UseCase3_SequentialMultiSelection.Main_SequentialMultiSelection_Pcsc.java`|Illustrates the use of the select next mechanism|
-|`UseCase4_GroupedMultiSelection.Main_GroupedMultiSelection_Pcsc.java`|Illustrates the use of the select next mechanism|
+* Use case 'Calypso 8' - Stored Value debit within a Secure Session.
+  . [org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession](/src/main/java/org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession)
+    * Real mode with PC/SC readers [`StoredValue_DebitInSession_Pcsc.java`]

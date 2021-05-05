@@ -9,12 +9,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package UseCase2_ScheduledSelection;
+package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
 import static org.eclipse.keyple.core.service.ReaderEvent.EventType.CARD_INSERTED;
 
-import common.CalypsoDef;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
+import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.core.service.*;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.spi.ReaderObservationExceptionHandlerSpi;
@@ -68,8 +68,8 @@ class CardReaderObserver implements ReaderObserverSpi, ReaderObservationExceptio
         logger.info("Data read during the scheduled selection process:");
         logger.info(
             "File {}h, rec 1: FILE_CONTENT = {}",
-            String.format("%02X", CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER),
-            calypsoCard.getFileBySfi(CalypsoDef.SFI_ENVIRONMENT_AND_HOLDER));
+            String.format("%02X", CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER),
+            calypsoCard.getFileBySfi(CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER));
 
         logger.info("= #### End of the card processing.");
 

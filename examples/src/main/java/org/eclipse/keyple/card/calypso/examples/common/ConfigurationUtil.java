@@ -9,9 +9,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package common;
+package org.eclipse.keyple.card.calypso.examples.common;
 
-import java.util.Map;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
@@ -29,8 +28,14 @@ import org.slf4j.LoggerFactory;
  * Utility class providing methods for configuring readers and the card resource service used across
  * several examples.
  */
-public class ConfigurationUtils {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigurationUtils.class);
+public class ConfigurationUtil {
+  private static final Logger logger = LoggerFactory.getLogger(ConfigurationUtil.class);
+
+  // Common reader identifiers
+  // These two regular expressions can be modified to fit the names of the readers used to run these
+  // examples.
+  public static final String CARD_READER_NAME_REGEX = ".*ASK LoGO.*|.*Contactless.*";
+  public static final String SAM_READER_NAME_REGEX = ".*Identive.*|.*HID.*";
 
   /**
    * Retrieves the first available reader in the provided plugin whose name matches the provided
@@ -42,9 +47,9 @@ public class ConfigurationUtils {
    * @throws IllegalStateException If the reader is not found.
    */
   public static Reader getCardReader(Plugin plugin, String readerNameRegex) {
-    for (Map.Entry<String, Reader> entry : plugin.getReaders().entrySet()) {
-      if (entry.getKey().matches(readerNameRegex)) {
-        Reader reader = entry.getValue();
+    for (String readerName : plugin.getReaderNames()) {
+      if (readerName.matches(readerNameRegex)) {
+        Reader reader = plugin.getReader(readerName);
         // Configure the reader with parameters suitable for contactless operations.
         reader
             .getExtension(PcscReader.class)
