@@ -9,46 +9,48 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection;
+package org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
+import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
+import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.selection.CardSelector;
-import org.eclipse.keyple.core.util.protocol.ContactlessCardCommonProtocol;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
-import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactlessProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
  *
- * <h1>Use Case ‘Calypso 3 – Selection a Calypso card Revision 1 (BPRIME protocol) (PC/SC)</h1>
+ * <h1>Use Case ‘Calypso 4’ – Calypso Card authentication (PC/SC)</h1>
  *
- * <p>We demonstrate here the direct selection of a Calypso card Revision 1 (Innovatron / B Prime
- * protocol) inserted in a reader. No observation of the reader is implemented in this example, so
- * the card must be present in the reader before the program is launched.
+ * <p>We demonstrate here the authentication of a Calypso card using a Secure Session in which a
+ * file from the card is read. The read is certified by verifying the signature of the card by a
+ * Calypso SAM.
  *
- * <p>No AID is used here, the reading of the card data is done without any prior card selection
- * command as defined in the ISO standard.
- *
- * <p>The card selection (in the Keyple sensein the Keyple sense, i.e. retained to continue
- * processing) is based on the protocol defined in the {@link CardSelector}.
+ * <p>Two readers are required for this example: a contactless reader for the Calypso Card, a
+ * contact reader for the Calypso SAM.
  *
  * <h2>Scenario:</h2>
  *
  * <ul>
- *   <li>Check if a ISO B Prime (Innovatron protocol) card is in the reader.
- *   <li>Send 2 additional APDUs to the card (one following the selection step, one after the
- *       selection, within a card transaction [without security here]).
+ *   <li>Sets up the card resource service to provide a Calypso SAM (C1).
+ *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
+ *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
+ *       an AID-based application selection scenario.
+ *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
+ *       SAM profile defined in the card resource service.
+ *   <li>Read a file record in Secure Session.
  * </ul>
  *
  * All results are logged with slf4j.
@@ -57,8 +59,8 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class Rev1Selection_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(Rev1Selection_Pcsc.class);
+public class Main_CardAuthentication_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(Main_CardAuthentication_Pcsc.class);
 
   public static void main(String[] args) {
 
@@ -69,52 +71,48 @@ public class Rev1Selection_Pcsc {
     // return.
     Plugin plugin = smartCardService.registerPlugin(PcscPluginFactoryBuilder.builder().build());
 
-    Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
-
-    cardReader.activateProtocol(
-        PcscSupportedContactlessProtocol.INNOVATRON_B_PRIME_CARD.name(),
-        ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name());
-
     // Get the Calypso card extension service
     CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
 
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
 
-    logger.info("=============== UseCase Calypso #3: selection of a rev1 card ==================");
-    logger.info("= Card Reader  NAME = {}", cardReader.getName());
+    // Get and setup the card reader
+    // We suppose here, we use a ASK LoGO contactless PC/SC reader as card reader.
+    Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
+
+    // Configure the card resource service to provide an adequate SAM for future secure operations.
+    // We suppose here, we use a Identive contact PC/SC reader as card reader.
+    setupCardResourceService(
+        plugin, ConfigurationUtil.SAM_READER_NAME_REGEX, CalypsoConstants.SAM_PROFILE_NAME);
+
+    logger.info(
+        "=============== UseCase Calypso #4: Calypso card authentication ==================");
 
     // Check if a card is present in the reader
     if (!cardReader.isCardPresent()) {
       throw new IllegalStateException("No card is present in the reader.");
     }
 
-    logger.info("= #### Select the card by its INNOVATRON protocol (no AID).");
+    logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
     // Get the core card selection service.
     CardSelectionService selectionService = CardSelectionServiceFactory.getService();
 
     // Create a card selection using the Calypso card extension.
     // Prepare the selection by adding the created Calypso card selection to the card selection
-    // scenario. No AID is defined, only the card protocol will be used to define the selection
-    // case.
+    // scenario.
     selectionService.prepareSelection(
-        cardExtension
-            .createCardSelection(
-                CardSelector.builder()
-                    .filterByCardProtocol(
-                        ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name())
-                    .build(),
-                true)
-            .prepareReadRecordFile(
-                CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1));
+        cardExtension.createCardSelection(
+            CardSelector.builder().filterByDfName(CalypsoConstants.AID).build(), true));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
     if (!selectionResult.hasActiveSelection()) {
-      throw new IllegalStateException("The selection of the B Prime card failed.");
+      throw new IllegalStateException(
+          "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
 
     // Get the SmartCard resulting of the selection.
@@ -122,22 +120,28 @@ public class Rev1Selection_Pcsc {
 
     logger.info("= SmartCard = {}", calypsoCard);
 
+    // Create security settings that reference the same SAM profile requested from the card resource
+    // service.
+    CardSecuritySetting cardSecuritySetting =
+        CardSecuritySetting.builder()
+            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
+            .build();
+
     // Performs file reads using the card transaction service in non-secure mode.
-
     cardExtension
-        .createCardTransactionWithoutSecurity(cardReader, calypsoCard)
-        .prepareReadRecordFile(CalypsoConstants.SFI_EVENT_LOG, 1)
+        .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+        .prepareReadRecordFile(
+            CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1)
+        .processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT)
         .prepareReleaseCardChannel()
-        .processCardCommands();
+        .processClosing();
 
+    logger.info(
+        "The Secure Session ended successfully, the card is authenticated and the data read are certified.");
     logger.info(
         "File {}h, rec 1: FILE_CONTENT = {}",
         String.format("%02X", CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER),
         calypsoCard.getFileBySfi(CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER));
-    logger.info(
-        "File {}h, rec 1: FILE_CONTENT = {}",
-        String.format("%02X", CalypsoConstants.SFI_EVENT_LOG),
-        calypsoCard.getFileBySfi(CalypsoConstants.SFI_EVENT_LOG));
 
     logger.info("= #### End of the Calypso card processing.");
 

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  * <h1>Use Case ‘Calypso 6’ – Calypso Card Verify PIN (PC/SC)</h1>
  *
- * <p>Here we demonstrate the various operations around the PIN code checking.
+ * <p>We demonstrate here the various operations around the PIN code checking.
  *
  * <h2>Scenario:</h2>
  *
@@ -65,8 +65,8 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class VerifyPin_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(VerifyPin_Pcsc.class);
+public class Main_VerifyPin_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(Main_VerifyPin_Pcsc.class);
 
   public static void main(String[] args) {
 

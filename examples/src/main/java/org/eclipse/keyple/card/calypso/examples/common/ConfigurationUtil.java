@@ -38,6 +38,12 @@ public class ConfigurationUtil {
   public static final String SAM_READER_NAME_REGEX = ".*Identive.*|.*HID.*";
 
   /**
+   * (private)<br>
+   * Constructor.
+   */
+  private ConfigurationUtil() {}
+
+  /**
    * Retrieves the first available reader in the provided plugin whose name matches the provided
    * regular expression.
    *

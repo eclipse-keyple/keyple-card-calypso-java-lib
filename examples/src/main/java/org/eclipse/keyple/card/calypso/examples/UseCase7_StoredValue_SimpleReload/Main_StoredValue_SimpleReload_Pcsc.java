@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.examples.UseCase4_CardAuthentication;
+package org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleReload;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
@@ -32,14 +32,9 @@ import org.slf4j.LoggerFactory;
 /**
  *
  *
- * <h1>Use Case ‘Calypso 4’ – Calypso Card authentication (PC/SC)</h1>
+ * <h1>Use Case ‘Calypso 7’ – Calypso Card Stored Value reloading (PC/SC)</h1>
  *
- * <p>Here we demonstrate the authentication of a Calypso card using a Secure Session in which a
- * file from the card is read. The read is certified by verifying the signature of the card by a
- * Calypso SAM.
- *
- * <p>Two readers are required for this example: a contactless reader for the Calypso Card, a
- * contact reader for the Calypso SAM.
+ * <p>We demonstrate here the reloading of the Stored Value counter of a Calypso card.
  *
  * <h2>Scenario:</h2>
  *
@@ -50,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *       an AID-based application selection scenario.
  *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
- *   <li>Read a file record in Secure Session.
+ *   <li>Displays the Stored Value status, reloads the Store Value without opening a Secure Session.
  * </ul>
  *
  * All results are logged with slf4j.
@@ -59,8 +54,9 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class CardAuthentication_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(CardAuthentication_Pcsc.class);
+public class Main_StoredValue_SimpleReload_Pcsc {
+  private static final Logger logger =
+      LoggerFactory.getLogger(Main_StoredValue_SimpleReload_Pcsc.class);
 
   public static void main(String[] args) {
 
@@ -86,8 +82,7 @@ public class CardAuthentication_Pcsc {
     setupCardResourceService(
         plugin, ConfigurationUtil.SAM_READER_NAME_REGEX, CalypsoConstants.SAM_PROFILE_NAME);
 
-    logger.info(
-        "=============== UseCase Calypso #4: Calypso card authentication ==================");
+    logger.info("=============== UseCase Calypso #7: Stored Value reloading ==================");
 
     // Check if a card is present in the reader
     if (!cardReader.isCardPresent()) {
@@ -128,20 +123,31 @@ public class CardAuthentication_Pcsc {
             .build();
 
     // Performs file reads using the card transaction service in non-secure mode.
-    cardExtension
-        .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-        .prepareReadRecordFile(
-            CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1)
-        .processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT)
-        .prepareReleaseCardChannel()
-        .processClosing();
+    // Prepare the command to retrieve the SV status with the two debit and reload logs.
+    CardTransactionService cardTransaction =
+        cardExtension
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+            .prepareSvGet(
+                CardTransactionService.SvSettings.Operation.RELOAD,
+                CardTransactionService.SvSettings.Action.DO)
+            .processCardCommands();
+
+    // Display the current SV status
+    logger.info("Current SV status (SV Get for RELOAD):");
+    logger.info(". Balance = {}", calypsoCard.getSvBalance());
+    logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
+
+    logger.info(". Debit log record = {}", calypsoCard.getSvLoadLogRecord());
+
+    // Reload with 2 units
+    cardTransaction.prepareSvReload(2);
+
+    // Execute the command and close the communication after
+    cardTransaction.prepareReleaseCardChannel();
+    cardTransaction.processCardCommands();
 
     logger.info(
-        "The Secure Session ended successfully, the card is authenticated and the data read are certified.");
-    logger.info(
-        "File {}h, rec 1: FILE_CONTENT = {}",
-        String.format("%02X", CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER),
-        calypsoCard.getFileBySfi(CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER));
+        "The Secure Session ended successfully, the stored value has been reloaded by 2 units.");
 
     logger.info("= #### End of the Calypso card processing.");
 

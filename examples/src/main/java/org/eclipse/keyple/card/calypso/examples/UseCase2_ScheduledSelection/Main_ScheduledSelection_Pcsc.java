@@ -55,8 +55,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Any unexpected behavior will result in runtime exceptions.
  */
-public class ScheduledSelection_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(ScheduledSelection_Pcsc.class);
+public class Main_ScheduledSelection_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(Main_ScheduledSelection_Pcsc.class);
 
   public static void main(String[] args) throws InterruptedException {
 

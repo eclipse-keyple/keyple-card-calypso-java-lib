@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession;
+package org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSession;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
@@ -25,7 +25,6 @@ import org.eclipse.keyple.core.service.*;
 import org.eclipse.keyple.core.service.selection.CardSelectionResult;
 import org.eclipse.keyple.core.service.selection.CardSelectionService;
 import org.eclipse.keyple.core.service.selection.CardSelector;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +32,9 @@ import org.slf4j.LoggerFactory;
 /**
  *
  *
- * <h1>Use Case ‘Calypso 5’ – Multiple sessions (PC/SC)</h1>
+ * <h1>Use Case ‘Calypso 4’ – Calypso Card authentication (PC/SC)</h1>
  *
- * <p>Here we demonstrate a simple way to bypass the card modification buffer limitation by using
- * the multiple session mode.
+ * <p>We demonstrate here the debit of the Stored Value counter of a Calypso card.
  *
  * <h2>Scenario:</h2>
  *
@@ -47,8 +45,7 @@ import org.slf4j.LoggerFactory;
  *       an AID-based application selection scenario.
  *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
- *   <li>Prepares and executes a number of modification commands that exceeds the number of commands
- *       allowed by the card's modification buffer size.
+ *   <li>Displays the Stored Value status, debits the Store Value within a Secure Session.
  * </ul>
  *
  * All results are logged with slf4j.
@@ -57,8 +54,9 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class MultipleSesssion_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(MultipleSesssion_Pcsc.class);
+public class Main_StoredValue_DebitInSession_Pcsc {
+  private static final Logger logger =
+      LoggerFactory.getLogger(Main_StoredValue_DebitInSession_Pcsc.class);
 
   public static void main(String[] args) {
 
@@ -84,7 +82,7 @@ public class MultipleSesssion_Pcsc {
     setupCardResourceService(
         plugin, ConfigurationUtil.SAM_READER_NAME_REGEX, CalypsoConstants.SAM_PROFILE_NAME);
 
-    logger.info("=============== UseCase Calypso #5: multiple sessions ==================");
+    logger.info("=============== UseCase Calypso #8: Stored Value debit ==================");
 
     // Check if a card is present in the reader
     if (!cardReader.isCardPresent()) {
@@ -118,45 +116,36 @@ public class MultipleSesssion_Pcsc {
     logger.info("= SmartCard = {}", calypsoCard);
 
     // Create security settings that reference the same SAM profile requested from the card resource
-    // service and enable the multiple session mode.
+    // service.
     CardSecuritySetting cardSecuritySetting =
         CardSecuritySetting.builder()
             .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
-            .enableMultipleSession()
+            .isLoadAndDebitSvLogRequired(true)
             .build();
 
     // Performs file reads using the card transaction service in non-secure mode.
     CardTransactionService cardTransaction =
-        cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+        cardExtension
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+            .prepareSvGet(
+                CardTransactionService.SvSettings.Operation.DEBIT,
+                CardTransactionService.SvSettings.Action.DO)
+            .processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
 
-    cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
+    // Display the current SV status
+    logger.info("Current SV status (SV Get for DEBIT):");
+    logger.info(". Balance = {}", calypsoCard.getSvBalance());
+    logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
 
-    // Compute the number of append records (29 bytes) commands that will overflow the card
-    // modifications buffer. Each append records will consume 35 (29 + 6) bytes in the
-    // buffer.
-    //
-    // We'll send one more command to demonstrate the MULTIPLE mode
-    int modificationsBufferSize = 430; // note: not all Calypso card have this buffer size
+    // Display the load and debit records.
+    logger.info(". Load log record = {}", calypsoCard.getSvLoadLogRecord());
+    logger.info(". Debit log record = {}", calypsoCard.getSvDebitLogLastRecord());
 
-    int nbCommands = (modificationsBufferSize / 35) + 1;
-
-    logger.info(
-        "==== Send {} Append Record commands. Modifications buffer capacity = {} bytes i.e. {} 29-byte commands ====",
-        nbCommands,
-        modificationsBufferSize,
-        modificationsBufferSize / 35);
-
-    for (int i = 0; i < nbCommands; i++) {
-
-      cardTransaction.prepareAppendRecord(
-          CalypsoConstants.SFI_EVENT_LOG,
-          ByteArrayUtil.fromHex(CalypsoConstants.EVENT_LOG_DATA_FILL));
-    }
-
-    cardTransaction.prepareReleaseCardChannel().processClosing();
+    // Prepare an SV Debit of 2 units
+    cardTransaction.prepareSvDebit(2).prepareReleaseCardChannel().processClosing();
 
     logger.info(
-        "The secure session has ended successfully, all data has been written to the card's memory.");
+        "The Secure Session ended successfully, the stored value has been debited by 2 units.");
 
     logger.info("= #### End of the Calypso card processing.");
 
