@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keyple.card.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (package-private)<br>
@@ -211,6 +210,24 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public String toString() {
-    return JsonUtil.toJson(this);
+    return "{\"amount\":"
+        + getAmount()
+        + ", \"balance\":"
+        + getBalance()
+        + ", \"debitDate\":"
+        + getLoadDate()
+        + ", \"loadTime\":"
+        + getLoadDate()
+        + ", \"freeBytes\": \""
+        + ByteArrayUtil.toHex(getFreeByteBytes())
+        + "\", \"kvc\":"
+        + getKvc()
+        + ", \"samId\": \""
+        + ByteArrayUtil.toHex(getSamIdBytes())
+        + "\", \"svTransactionNumber\":"
+        + getSvTNum()
+        + ", \"svSamTransactionNumber\":"
+        + getSamTNum()
+        + "}";
   }
 }
