@@ -14,14 +14,15 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardResponseApi;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
+import org.calypsonet.terminal.card.spi.*;
+import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoCardAnomalyException;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.core.card.*;
-import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
-import org.eclipse.keyple.core.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     this.cardSelector = cardSelector;
 
     if (acceptInvalidatedCard) {
-      this.cardSelector.addSuccessfulStatusCode(SW_CARD_INVALIDATED);
+      this.cardSelector.addSuccessfulStatusWord(SW_CARD_INVALIDATED);
     }
 
     this.commandBuilders =
@@ -130,17 +131,17 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0
    */
   @Override
-  public CardSelectionRequest getCardSelectionRequest() {
-    List<ApduRequest> cardSelectionApduRequests = new ArrayList<ApduRequest>();
+  public CardSelectionRequestSpi getCardSelectionRequest() {
+    List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
     if (!commandBuilders.isEmpty()) {
       for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
           commandBuilders) {
         cardSelectionApduRequests.add(commandBuilder.getApduRequest());
       }
-      return new CardSelectionRequest(
-          cardSelector, new CardRequest(cardSelectionApduRequests, false));
+      return new CardSelectionRequestAdapter(
+          (CardSelectorSpi) cardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
     } else {
-      return new CardSelectionRequest(cardSelector, null);
+      return new CardSelectionRequestAdapter((CardSelectorSpi) cardSelector, null);
     }
   }
 
@@ -151,10 +152,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   // TODO check how to handle exceptions in this method
-  public SmartCardSpi parse(CardSelectionResponse cardSelectionResponse) {
-    CardResponse cardResponse = cardSelectionResponse.getCardResponse();
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) {
+    CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
 
-    List<ApduResponse> apduResponses;
+    List<ApduResponseApi> apduResponses;
 
     if (cardResponse != null) {
       apduResponses = cardResponse.getApduResponses();

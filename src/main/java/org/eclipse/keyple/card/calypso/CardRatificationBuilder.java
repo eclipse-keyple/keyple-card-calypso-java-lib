@@ -11,11 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-
 /**
  * (package-private)<br>
- * Provides the ApduRequest dedicated to the ratification command.
+ * Provides the ApduRequestAdapter dedicated to the ratification command.
  *
  * <p>i.e. the command sent after closing the secure session to handle the ratification mechanism.
  * <br>
@@ -29,15 +27,15 @@ final class CardRatificationBuilder {
 
   /**
    * @param calypsoCardClass the card class.
-   * @return the ApduRequest ratification command according to the card class provided
+   * @return the ApduRequestAdapter ratification command according to the card class provided
    * @since 2.0
    */
-  public static ApduRequest getApduRequest(CalypsoCardClass calypsoCardClass) {
+  public static ApduRequestAdapter getApduRequest(CalypsoCardClass calypsoCardClass) {
     byte[] ratificationApdu =
         new byte[] {
           calypsoCardClass.getValue(), (byte) 0xB2, (byte) 0x00, (byte) 0x00, (byte) 0x00
         };
 
-    return new ApduRequest(ratificationApdu);
+    return new ApduRequestAdapter(ratificationApdu);
   }
 }

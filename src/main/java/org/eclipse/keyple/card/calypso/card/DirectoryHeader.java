@@ -23,7 +23,7 @@ public interface DirectoryHeader {
   /**
    * Gets the associated LID.
    *
-   * @return the LID
+   * @return The LID
    * @since 2.0
    */
   short getLid();
@@ -31,7 +31,7 @@ public interface DirectoryHeader {
   /**
    * Gets a reference to access conditions.
    *
-   * @return a not empty byte array
+   * @return A not empty byte array
    * @since 2.0
    */
   byte[] getAccessConditions();
@@ -39,7 +39,7 @@ public interface DirectoryHeader {
   /**
    * Gets a reference to keys indexes.
    *
-   * @return a not empty byte array
+   * @return A not empty byte array
    * @since 2.0
    */
   byte[] getKeyIndexes();
@@ -47,7 +47,7 @@ public interface DirectoryHeader {
   /**
    * Gets the DF status.
    *
-   * @return the DF status byte
+   * @return The DF status byte
    * @since 2.0
    */
   byte getDfStatus();
@@ -56,7 +56,7 @@ public interface DirectoryHeader {
    * Returns true if the KIF for the provided level is available.
    *
    * @param level the session access level (should be not null).
-   * @return true if the KIF for the provided level is available
+   * @return True if the KIF for the provided level is available
    * @since 2.0
    */
   boolean isKifAvailable(CardTransactionService.SessionAccessLevel level);
@@ -65,7 +65,7 @@ public interface DirectoryHeader {
    * Returns true if the KVC for the provided level is available.
    *
    * @param level the session access level (should be not null).
-   * @return true if the KVC for the provided level is available
+   * @return True if the KVC for the provided level is available
    * @since 2.0
    */
   boolean isKvcAvailable(CardTransactionService.SessionAccessLevel level);
@@ -74,7 +74,7 @@ public interface DirectoryHeader {
    * Gets the KIF associated to the provided session access level.
    *
    * @param level the session access level (should be not null).
-   * @return a not null value
+   * @return A not null value
    * @throws IllegalArgumentException if level is null.
    * @throws NoSuchElementException if KIF is not found.
    * @since 2.0
@@ -85,7 +85,7 @@ public interface DirectoryHeader {
    * Gets the KVC associated to the provided session access level.
    *
    * @param level the session access level (should be not null).
-   * @return a not null value
+   * @return A not null value
    * @throws IllegalArgumentException if level is null.
    * @throws NoSuchElementException if KVC is not found.
    * @since 2.0

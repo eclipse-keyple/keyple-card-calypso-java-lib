@@ -113,7 +113,7 @@ public class CardSecuritySetting {
    * <p>TODO check what default values should be used here.
    *
    * @param sessionAccessLevel The session level.
-   * @return null if no value has been set.
+   * @return Null if no value has been set.
    * @since 2.0
    */
   public Byte getKif(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
@@ -126,7 +126,7 @@ public class CardSecuritySetting {
    * <p>TODO check what default values should be used here.
    *
    * @param sessionAccessLevel The session level.
-   * @return null if no value has been set.
+   * @return Null if no value has been set.
    * @since 2.0
    */
   public Byte getKvc(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
@@ -139,7 +139,7 @@ public class CardSecuritySetting {
    * <p>TODO check what default values should be used here.
    *
    * @param sessionAccessLevel The session level.
-   * @return null if no value has been set.
+   * @return Null if no value has been set.
    * @since 2.0
    */
   public Byte getKeyRecordNumber(CardTransactionService.SessionAccessLevel sessionAccessLevel) {
@@ -153,7 +153,7 @@ public class CardSecuritySetting {
    * regardless of the value provided.
    *
    * @param kvc The KVC value to be check.
-   * @return true if the kvc is authorized or if no authorization list has been defined.
+   * @return True if the kvc is authorized or if no authorization list has been defined.
    * @since 2.0
    */
   public boolean isKvcAuthorized(byte kvc) {
@@ -189,7 +189,7 @@ public class CardSecuritySetting {
    *
    * <p>The default value is false.
    *
-   * @return true if both logs are required, false if not.
+   * @return True if both logs are required, false if not.
    * @since 2.0
    */
   public boolean isLoadAndDebitSvLogRequired() {
@@ -201,7 +201,7 @@ public class CardSecuritySetting {
    *
    * <p>The default value is false.
    *
-   * @return true if negative balances are allowed, false if not.
+   * @return True if negative balances are allowed, false if not.
    * @since 2.0
    */
   public boolean isSvNegativeBalanceAllowed() {

@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -98,7 +98,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
    * @since 2.0
    */
   AbstractCardOpenSessionParser(
-      ApduResponse response,
+      ApduResponseApi response,
       AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> builder,
       CardRevision revision) {
     super(response, builder);
@@ -108,7 +108,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     }
   }
 
-  public AbstractCardOpenSessionParser create(ApduResponse response, CardRevision revision) {
+  public AbstractCardOpenSessionParser create(ApduResponseApi response, CardRevision revision) {
     switch (revision) {
       case REV1_0:
         return new CardOpenSession10Parser(response, (CardOpenSession10Builder) builder);
@@ -258,7 +258,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     /**
      * Checks if is previous session ratified.
      *
-     * @return the boolean
+     * @return The boolean
      * @since 2.0
      */
     public boolean isPreviousSessionRatified() {

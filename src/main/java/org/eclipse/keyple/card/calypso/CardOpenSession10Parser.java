@@ -12,8 +12,8 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
  * (package-private)<br>
@@ -30,7 +30,7 @@ final class CardOpenSession10Parser extends AbstractCardOpenSessionParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardOpenSession10Parser(ApduResponse response, CardOpenSession10Builder builder) {
+  public CardOpenSession10Parser(ApduResponseApi response, CardOpenSession10Builder builder) {
     super(response, builder, CardRevision.REV1_0);
   }
 

@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
@@ -59,7 +58,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
     byte le = 0;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
                 command.getInstructionByte(),
@@ -79,7 +78,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
   public CardCloseSessionBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
                 command.getInstructionByte(),
@@ -95,7 +94,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * @since 2.0
    */
   @Override
-  public CardCloseSessionParser createResponseParser(ApduResponse apduResponse) {
+  public CardCloseSessionParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardCloseSessionParser(apduResponse, this);
   }
 
@@ -104,7 +103,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    *
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
-   * @return false
+   * @return False
    * @since 2.0
    */
   @Override

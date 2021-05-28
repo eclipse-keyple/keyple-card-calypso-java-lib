@@ -25,11 +25,11 @@ final class CalypsoCardDataOutOfBoundsException extends CalypsoCardCommandExcept
    *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @since 2.0
    */
   CalypsoCardDataOutOfBoundsException(
-      String message, CalypsoCardCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+      String message, CalypsoCardCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

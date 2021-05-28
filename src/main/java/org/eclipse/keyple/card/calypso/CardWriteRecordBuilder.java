@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
     byte p2 = (sfi == 0) ? (byte) 0x04 : (byte) ((byte) (sfi * 8) + 4);
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null)));
 
@@ -71,7 +70,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
    * @since 2.0
    */
   @Override
-  public CardWriteRecordParser createResponseParser(ApduResponse apduResponse) {
+  public CardWriteRecordParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardWriteRecordParser(apduResponse, this);
   }
 
@@ -80,7 +79,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override

@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
 
     /* this is a case4 command, we set Le = 0 */
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla,
                 command.getInstructionByte(),
@@ -89,7 +88,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
    * @since 2.0
    */
   @Override
-  public CardDecreaseParser createResponseParser(ApduResponse apduResponse) {
+  public CardDecreaseParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardDecreaseParser(apduResponse, this);
   }
 
@@ -98,7 +97,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override

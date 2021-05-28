@@ -11,17 +11,16 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.CardApiProperties;
+import org.calypsonet.terminal.reader.ReaderApiProperties;
+import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.core.card.CardApiProperties;
-import org.eclipse.keyple.core.card.spi.CardExtensionSpi;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
 import org.eclipse.keyple.core.service.Reader;
-import org.eclipse.keyple.core.service.ServiceApiProperties;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 
 /**
  * (package-private)<br>
@@ -29,7 +28,7 @@ import org.eclipse.keyple.core.service.selection.CardSelector;
  *
  * @since 2.0
  */
-final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, CardExtensionSpi {
+final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService {
 
   /** singleton instance of CalypsoExtensionServiceAdapter */
   private static final CalypsoExtensionServiceAdapter uniqueInstance =
@@ -55,8 +54,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public String getCardApiVersion() {
-    return CardApiProperties.VERSION;
+  public String getReaderApiVersion() {
+    return ReaderApiProperties.VERSION;
   }
 
   /**
@@ -65,8 +64,8 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService, C
    * @since 2.0
    */
   @Override
-  public String getServiceApiVersion() {
-    return ServiceApiProperties.VERSION;
+  public String getCardApiVersion() {
+    return CardApiProperties.VERSION;
   }
 
   /**

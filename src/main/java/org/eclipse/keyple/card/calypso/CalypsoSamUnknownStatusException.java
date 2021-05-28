@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 /**
  * (package-private)<br>
- * Indicates that the status code is not referenced.
+ * Indicates that the status word is not referenced.
  *
  * @since 2.0
  */
@@ -24,10 +24,10 @@ final class CalypsoSamUnknownStatusException extends CalypsoSamCommandException 
    *
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @since 2.0
    */
-  CalypsoSamUnknownStatusException(String message, CalypsoSamCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+  CalypsoSamUnknownStatusException(String message, CalypsoSamCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

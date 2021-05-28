@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * Parses the Read ceilings response.
@@ -55,14 +55,14 @@ final class SamReadCeilingsParser extends AbstractSamResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public SamReadCeilingsParser(ApduResponse response, SamReadCeilingsBuilder builder) {
+  public SamReadCeilingsParser(ApduResponseApi response, SamReadCeilingsBuilder builder) {
     super(response, builder);
   }
 
   /**
    * Gets the key parameters.
    *
-   * @return the ceilings data (Value or Record)
+   * @return The ceilings data (Value or Record)
    * @since 2.0
    */
   public byte[] getCeilingsData() {

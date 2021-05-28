@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * Parses the Digest update multiple response.
@@ -59,7 +59,7 @@ final class SamDigestUpdateMultipleParser extends AbstractSamResponseParser {
    * @since 2.0
    */
   public SamDigestUpdateMultipleParser(
-      ApduResponse response, SamDigestUpdateMultipleBuilder builder) {
+      ApduResponseApi response, SamDigestUpdateMultipleBuilder builder) {
     super(response, builder);
   }
 }

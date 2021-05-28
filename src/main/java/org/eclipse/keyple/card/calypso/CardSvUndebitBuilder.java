@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -122,7 +121,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
         undebitComplementaryData, 10, dataIn, 15, undebitComplementaryData.length - 10);
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null)));
   }
@@ -130,7 +129,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
   /**
    * Gets the SV Debit part of the data to include in the SAM SV Prepare Debit command
    *
-   * @return a byte array containing the SV undebit data
+   * @return A byte array containing the SV undebit data
    * @since 2.0
    */
   public byte[] getSvUndebitData() {
@@ -146,7 +145,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
 
   /** {@inheritDoc} 9çào */
   @Override
-  public CardSvUndebitParser createResponseParser(ApduResponse apduResponse) {
+  public CardSvUndebitParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardSvUndebitParser(apduResponse, this);
   }
 
@@ -155,7 +154,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override

@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-
 /**
  * (package-private)<br>
  * Generic APDU command builder.
@@ -42,7 +40,7 @@ abstract class AbstractApduCommandBuilder {
   private String name;
 
   /** The byte array APDU request. */
-  private ApduRequest apduRequest;
+  private ApduRequestAdapter apduRequest;
 
   /**
    * (protected)<br>
@@ -100,21 +98,21 @@ abstract class AbstractApduCommandBuilder {
 
   /**
    * (package-private)<br>
-   * Sets the command {@link ApduRequest}.
+   * Sets the command {@link ApduRequestAdapter}.
    *
    * @param apduRequest The APDU request.
    */
-  void setApduRequest(ApduRequest apduRequest) {
+  void setApduRequest(ApduRequestAdapter apduRequest) {
     this.apduRequest = apduRequest;
   }
 
   /**
-   * Gets the {@link ApduRequest}.
+   * Gets the {@link ApduRequestAdapter}.
    *
    * @return A not null reference.
    * @since 2.0
    */
-  public final ApduRequest getApduRequest() {
+  public final ApduRequestAdapter getApduRequest() {
     return apduRequest;
   }
 }

@@ -29,9 +29,11 @@ repositories {
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
+    implementation("org.eclipse.keyple:keyple-java-reader-api:1.0-SNAPSHOT")
+    implementation("org.eclipse.keyple:keyple-java-card-api:1.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-commons-api:2.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-card-api:2.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-service:2.0.0-SNAPSHOT")
+    implementation("org.eclipse.keyple:keyple-java-service-resource:2.0.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-plugin-pcsc:2.0.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-utils:2.0.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-card-calypso:2.0.0-SNAPSHOT")

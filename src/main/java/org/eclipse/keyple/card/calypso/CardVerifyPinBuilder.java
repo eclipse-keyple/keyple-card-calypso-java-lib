@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,8 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
     byte p2 = (byte) 0x00;
 
     setApduRequest(
-        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, pin, null)));
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, pin, null)));
 
     readCounterOnly = false;
   }
@@ -78,7 +78,8 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
     byte p2 = (byte) 0x00;
 
     setApduRequest(
-        new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, null)));
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, null)));
     if (logger.isDebugEnabled()) {
       this.addSubName("Read presentation counter");
     }
@@ -91,7 +92,7 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
    * @since 2.0
    */
   @Override
-  public CardVerifyPinParser createResponseParser(ApduResponse apduResponse) {
+  public CardVerifyPinParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardVerifyPinParser(apduResponse, this);
   }
 
@@ -112,7 +113,7 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
   /**
    * Indicates if the command is used to read the attempt counter only
    *
-   * @return true if the command is used to read the attempt counter
+   * @return True if the command is used to read the attempt counter
    */
   public boolean isReadCounterOnly() {
     return readCounterOnly;

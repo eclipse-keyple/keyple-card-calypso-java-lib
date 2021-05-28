@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
@@ -18,7 +19,6 @@ import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.Reader;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 
 /**
  * Card extension dedicated to the management of Calypso cards.

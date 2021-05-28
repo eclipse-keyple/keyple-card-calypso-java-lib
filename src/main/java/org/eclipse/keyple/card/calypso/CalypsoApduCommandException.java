@@ -20,20 +20,20 @@ abstract class CalypsoApduCommandException extends Exception {
 
   private final CardCommand command;
 
-  private final Integer statusCode;
+  private final Integer statusWord;
 
   /**
    * Constructor allowing to set the error message and the reference to the command
    *
    * @param message the message to identify the exception context (Should not be null).
    * @param command the command.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @since 2.0
    */
-  protected CalypsoApduCommandException(String message, CardCommand command, Integer statusCode) {
+  protected CalypsoApduCommandException(String message, CardCommand command, Integer statusWord) {
     super(message);
     this.command = command;
-    this.statusCode = statusCode;
+    this.statusWord = statusWord;
   }
 
   /**
@@ -47,12 +47,12 @@ abstract class CalypsoApduCommandException extends Exception {
   }
 
   /**
-   * Gets the status code
+   * Gets the status word
    *
    * @return A nullable reference
    * @since 2.0
    */
-  public Integer getStatusCode() {
-    return statusCode;
+  public Integer getStatusWord() {
+    return statusWord;
   }
 }

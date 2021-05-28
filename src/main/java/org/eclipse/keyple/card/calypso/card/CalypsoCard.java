@@ -14,7 +14,7 @@ package org.eclipse.keyple.card.calypso.card;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import org.eclipse.keyple.core.service.selection.spi.SmartCard;
+import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 
 /**
  * This POJO concentrates all the information we know about the card being processed: from the
@@ -121,7 +121,7 @@ public interface CalypsoCard extends SmartCard {
    * @throws IllegalStateException if the ATR is not available (see {@code hasAtr()} method)
    * @since 2.0
    */
-  String getAtr();
+  String getPowerOnDataString();
 
   /**
    * The platform identification byte is the reference of the chip
@@ -144,7 +144,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the Confidential Session Mode is supported
+   * @return True if the Confidential Session Mode is supported
    * @since 2.0
    */
   boolean isConfidentialSessionModeSupported();
@@ -154,7 +154,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the ratification command is required
+   * @return True if the ratification command is required
    * @since 2.0
    */
   boolean isDeselectRatificationSupported();
@@ -164,7 +164,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the card has the Stored Value feature
+   * @return True if the card has the Stored Value feature
    * @since 2.0
    */
   boolean isSvFeatureAvailable();
@@ -174,7 +174,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the card has the PIN feature
+   * @return True if the card has the PIN feature
    * @since 2.0
    */
   boolean isPinFeatureAvailable();
@@ -184,7 +184,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>This boolean is interpreted from the Application Type byte
    *
-   * @return true if the Public Authentication is supported
+   * @return True if the Public Authentication is supported
    * @since 2.0
    */
   boolean isPublicAuthenticationSupported();
@@ -241,7 +241,7 @@ public interface CalypsoCard extends SmartCard {
    *
    * <p>An invalidated card has 6283 as status word in response to the Select Application command.
    *
-   * @return true if the card has been invalidated.
+   * @return True if the card has been invalidated.
    * @since 2.0
    */
   boolean isDfInvalidated();
@@ -249,7 +249,7 @@ public interface CalypsoCard extends SmartCard {
   /**
    * Tells if the last session with this card has been ratified or not.
    *
-   * @return true if the card has been ratified.
+   * @return True if the card has been ratified.
    * @throws IllegalStateException if these methods is invoked when no session has been opened
    * @since 2.0
    */
@@ -303,7 +303,7 @@ public interface CalypsoCard extends SmartCard {
   /**
    * Gets the DF metadata.
    *
-   * @return null if is not set.
+   * @return Null if is not set.
    * @since 2.0
    */
   DirectoryHeader getDirectoryHeader();
@@ -346,7 +346,7 @@ public interface CalypsoCard extends SmartCard {
    * Indicates if the PIN is blocked. The maximum number of incorrect PIN submissions has been
    * reached.
    *
-   * @return true if the PIN status is blocked
+   * @return True if the PIN status is blocked
    * @throws IllegalStateException if the PIN has not been checked
    * @since 2.0
    */

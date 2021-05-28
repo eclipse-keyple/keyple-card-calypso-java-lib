@@ -22,11 +22,11 @@ abstract class CalypsoCardCommandException extends CalypsoApduCommandException {
   /**
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusCode the status code (optional).
+   * @param statusWord the status word (optional).
    * @since 2.0
    */
   protected CalypsoCardCommandException(
-      String message, CalypsoCardCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+      String message, CalypsoCardCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

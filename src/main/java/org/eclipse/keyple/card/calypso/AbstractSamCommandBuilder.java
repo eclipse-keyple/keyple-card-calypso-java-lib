@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
  * (package-private)<br>
@@ -35,7 +35,7 @@ abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
    * @param apduResponse the response data from the the card.
    * @return an {@link AbstractApduResponseParser}
    */
-  public abstract T createResponseParser(ApduResponse apduResponse);
+  public abstract T createResponseParser(ApduResponseApi apduResponse);
 
   /**
    * {@inheritDoc}

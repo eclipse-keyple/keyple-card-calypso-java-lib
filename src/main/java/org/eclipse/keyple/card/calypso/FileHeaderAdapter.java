@@ -69,7 +69,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the LID.
      *
      * @param lid the LID.
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder lid(short lid) {
@@ -82,7 +82,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the number of records.
      *
      * @param recordsNumber the number of records (should be {@code >=} 1).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder recordsNumber(int recordsNumber) {
@@ -95,7 +95,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the size of a record.
      *
      * @param recordSize the size of a record (should be {@code >=} 1).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder recordSize(int recordSize) {
@@ -108,7 +108,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the file type.
      *
      * @param type the file type (should be not null).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder type(FileType type) {
@@ -121,7 +121,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets a reference to the provided access conditions byte array.
      *
      * @param accessConditions the access conditions (should be not null and 4 bytes length).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder accessConditions(byte[] accessConditions) {
@@ -134,7 +134,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets a reference to the provided key indexes byte array.
      *
      * @param keyIndexes the key indexes (should be not null and 4 bytes length).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder keyIndexes(byte[] keyIndexes) {
@@ -147,7 +147,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the DF status.
      *
      * @param dfStatus the DF status (byte).
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder dfStatus(byte dfStatus) {
@@ -160,7 +160,7 @@ class FileHeaderAdapter implements FileHeader {
      * Sets the shared reference.
      *
      * @param sharedReference the shared reference.
-     * @return the builder instance
+     * @return The builder instance
      * @since 2.0
      */
     FileHeaderBuilder sharedReference(short sharedReference) {
@@ -172,7 +172,7 @@ class FileHeaderAdapter implements FileHeader {
      * (package-private)<br>
      * Build a new {@code FileHeader}.
      *
-     * @return a new instance
+     * @return A new instance
      * @since 2.0
      */
     FileHeader build() {
@@ -274,7 +274,7 @@ class FileHeaderAdapter implements FileHeader {
    * (package-private)<br>
    * Gets a new builder.
    *
-   * @return a new builder instance
+   * @return A new builder instance
    * @since 2.0
    */
   static FileHeaderBuilder builder() {
@@ -304,7 +304,7 @@ class FileHeaderAdapter implements FileHeader {
    * Comparison is based on field "lid".
    *
    * @param o the object to compare.
-   * @return the comparison evaluation
+   * @return The comparison evaluation
    * @since 2.0
    */
   @Override
@@ -320,7 +320,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * Comparison is based on field "lid".
    *
-   * @return the hashcode
+   * @return The hashcode
    * @since 2.0
    */
   @Override

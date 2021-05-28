@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.card;
 
-import org.eclipse.keyple.core.service.selection.spi.CardSelection;
+import org.calypsonet.terminal.reader.selection.spi.CardSelection;
 
 /**
  * Card specific {@link CardSelection} providing means to define commands to execute during the

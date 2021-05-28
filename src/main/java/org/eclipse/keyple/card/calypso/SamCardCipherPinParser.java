@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * Parses the Card Cipher Pin response.
@@ -62,14 +62,14 @@ final class SamCardCipherPinParser extends AbstractSamResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public SamCardCipherPinParser(ApduResponse response, SamCardCipherPinBuilder builder) {
+  public SamCardCipherPinParser(ApduResponseApi response, SamCardCipherPinBuilder builder) {
     super(response, builder);
   }
 
   /**
    * Gets the 8 bytes of ciphered data.
    *
-   * @return the ciphered data byte array
+   * @return The ciphered data byte array
    * @since 2.0
    */
   public byte[] getCipheredData() {

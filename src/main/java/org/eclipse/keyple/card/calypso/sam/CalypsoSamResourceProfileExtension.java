@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.sam;
 
-import org.eclipse.keyple.core.common.KeypleCardResourceProfileExtension;
+import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtensionSpi;
 
 /**
  * Specific SAM Calypso Card Resource Profile Extension to target and prepare a Calypso SAM within
@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.common.KeypleCardResourceProfileExtension;
  *
  * @since 2.0
  */
-public interface CalypsoSamResourceProfileExtension extends KeypleCardResourceProfileExtension {
+public interface CalypsoSamResourceProfileExtension extends CardResourceProfileExtensionSpi {
 
   /**
    * Sets a filter to target all SAM having the provided specific {@link SamRevision}.

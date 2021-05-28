@@ -12,8 +12,8 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduResponse;
 
 /**
  * (package-private)<br>
@@ -29,7 +29,7 @@ final class CardOpenSession32Parser extends AbstractCardOpenSessionParser {
    * @param response from CardOpenSession32Parser.
    * @param builder the reference to the builder that created this parser.
    */
-  public CardOpenSession32Parser(ApduResponse response, CardOpenSession32Builder builder) {
+  public CardOpenSession32Parser(ApduResponseApi response, CardOpenSession32Builder builder) {
     super(response, builder, CardRevision.REV3_2);
   }
 
@@ -37,7 +37,7 @@ final class CardOpenSession32Parser extends AbstractCardOpenSessionParser {
    * Method to get a Secure Session from the response in revision 3.2 mode.
    *
    * @param apduResponseData the apdu response data.
-   * @return a SecureSession
+   * @return A SecureSession
    * @since 2.0
    */
   SecureSession toSecureSession(byte[] apduResponseData) {

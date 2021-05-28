@@ -13,15 +13,15 @@ package org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
+import org.calypsonet.terminal.reader.selection.CardSelectionResult;
+import org.calypsonet.terminal.reader.selection.CardSelectionService;
+import org.eclipse.keyple.card.calypso.CalypsoCardSelectorAdapter;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
-import org.eclipse.keyple.core.service.selection.CardSelectionResult;
-import org.eclipse.keyple.core.service.selection.CardSelectionService;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.protocol.ContactlessCardCommonProtocol;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactlessProtocol;
@@ -41,7 +41,8 @@ import org.slf4j.LoggerFactory;
  * command as defined in the ISO standard.
  *
  * <p>The card selection (in the Keyple sensein the Keyple sense, i.e. retained to continue
- * processing) is based on the protocol defined in the {@link CardSelector}.
+ * processing) is based on the protocol defined in the {@link
+ * org.calypsonet.terminal.reader.selection.spi.CardSelector}.
  *
  * <h2>Scenario:</h2>
  *
@@ -101,7 +102,7 @@ public class Main_Rev1Selection_Pcsc {
     selectionService.prepareSelection(
         cardExtension
             .createCardSelection(
-                CardSelector.builder()
+                CalypsoCardSelectorAdapter.builder()
                     .filterByCardProtocol(
                         ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name())
                     .build(),

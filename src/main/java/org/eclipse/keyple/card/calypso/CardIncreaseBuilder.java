@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +65,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
 
     /* this is a case4 command, we set Le = 0 */
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla,
                 command.getInstructionByte(),
@@ -88,7 +87,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
    * @since 2.0
    */
   @Override
-  public CardIncreaseParser createResponseParser(ApduResponse apduResponse) {
+  public CardIncreaseParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardIncreaseParser(apduResponse, this);
   }
 
@@ -97,7 +96,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override
@@ -105,17 +104,17 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
     return true;
   }
 
-  /** @return the SFI of the accessed file */
+  /** @return The SFI of the accessed file */
   public int getSfi() {
     return sfi;
   }
 
-  /** @return the counter number */
+  /** @return The counter number */
   public int getCounterNumber() {
     return counterNumber;
   }
 
-  /** @return the increment value */
+  /** @return The increment value */
   public int getIncValue() {
     return incValue;
   }

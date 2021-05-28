@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -85,14 +85,14 @@ final class CardDecreaseParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardDecreaseParser(ApduResponse response, CardDecreaseBuilder builder) {
+  public CardDecreaseParser(ApduResponseApi response, CardDecreaseBuilder builder) {
     super(response, builder);
   }
 
   /**
    * Returns the new counter value as an int between 0
    *
-   * @return the new value
+   * @return The new value
    * @since 2.0
    */
   public int getNewValue() {

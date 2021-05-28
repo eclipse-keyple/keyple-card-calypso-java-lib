@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ final class CardOpenSession10Builder
     byte le = 0;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.LEGACY.getValue(),
                 CalypsoCardCommand.getOpenSessionForRev(CardRevision.REV1_0).getInstructionByte(),
@@ -85,7 +84,7 @@ final class CardOpenSession10Builder
    * @since 2.0
    */
   @Override
-  public CardOpenSession10Parser createResponseParser(ApduResponse apduResponse) {
+  public CardOpenSession10Parser createResponseParser(ApduResponseApi apduResponse) {
     return new CardOpenSession10Parser(apduResponse, this);
   }
 
@@ -94,7 +93,7 @@ final class CardOpenSession10Builder
    *
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
-   * @return false
+   * @return False
    * @since 2.0
    */
   @Override

@@ -20,7 +20,7 @@ public interface ElementaryFile {
   /**
    * Gets the associated SFI.
    *
-   * @return the SFI
+   * @return The SFI
    * @since 2.0
    */
   byte getSfi();
@@ -28,7 +28,7 @@ public interface ElementaryFile {
   /**
    * Gets the file header.
    *
-   * @return a header reference or null if header is not yet set.
+   * @return A header reference or null if header is not yet set.
    * @since 2.0
    */
   FileHeader getHeader();
@@ -36,7 +36,7 @@ public interface ElementaryFile {
   /**
    * Gets the file data.
    *
-   * @return a not null data reference.
+   * @return A not null data reference.
    * @since 2.0
    */
   FileData getData();

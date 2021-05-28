@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * Parses the Digest close response.
@@ -51,14 +51,14 @@ final class SamDigestCloseParser extends AbstractSamResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public SamDigestCloseParser(ApduResponse response, SamDigestCloseBuilder builder) {
+  public SamDigestCloseParser(ApduResponseApi response, SamDigestCloseBuilder builder) {
     super(response, builder);
   }
 
   /**
    * Gets the sam signature.
    *
-   * @return the sam half session signature
+   * @return The sam half session signature
    * @since 2.0
    */
   public byte[] getSignature() {

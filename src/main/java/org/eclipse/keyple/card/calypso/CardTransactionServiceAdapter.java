@@ -12,16 +12,19 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.calypsonet.terminal.card.*;
+import org.calypsonet.terminal.card.spi.ApduRequestSpi;
+import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.card.calypso.card.ElementaryFile;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.*;
-import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -60,7 +63,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private static final Logger logger = LoggerFactory.getLogger(CardTransactionServiceAdapter.class);
 
   /** The reader for the card. */
-  private final ProxyReader cardReader;
+  private final ProxyReaderApi cardReader;
   /** The card security settings used to manage the secure session */
   private CardSecuritySetting cardSecuritySettings;
   /** The SAM commands processor */
@@ -120,7 +123,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @since 2.0
    */
   public CardTransactionServiceAdapter(Reader cardReader, CalypsoCard calypsoCard) {
-    this.cardReader = (ProxyReader) cardReader;
+    this.cardReader = (ProxyReaderApi) cardReader;
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
 
@@ -156,8 +159,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
     byte[] sessionTerminalChallenge = getSessionTerminalChallenge();
 
-    // card ApduRequest List to hold Open Secure Session and other optional commands
-    List<ApduRequest> cardApduRequests = new ArrayList<ApduRequest>();
+    // card ApduRequestAdapter List to hold Open Secure Session and other optional commands
+    List<ApduRequestSpi> cardApduRequests = new ArrayList<ApduRequestSpi>();
 
     // The sfi and record number to be read when the open secure session command is executed.
     // The default value is 0 (no record to read) but we will optimize the exchanges if a read
@@ -190,22 +193,23 @@ class CardTransactionServiceAdapter implements CardTransactionService {
             sfi,
             recordNumber);
 
-    // Add the resulting ApduRequest to the card ApduRequest list
+    // Add the resulting ApduRequestAdapter to the card ApduRequestAdapter list
     cardApduRequests.add(openSessionCmdBuild.getApduRequest());
 
-    // Add all optional commands to the card ApduRequest list
+    // Add all optional commands to the card ApduRequestAdapter list
     if (cardCommands != null) {
       cardApduRequests.addAll(getApduRequests(cardCommands));
     }
 
-    // Create a CardRequest from the ApduRequest list, card AID as Selector, keep channel open
-    CardRequest cardRequest = new CardRequest(cardApduRequests, false);
+    // Create a CardRequest from the ApduRequestAdapter list, card AID as Selector, keep channel
+    // open
+    CardRequestSpi cardRequest = new CardRequestAdapter(cardApduRequests, false);
 
     // Transmit the commands to the card
-    CardResponse poCardResponse = safeTransmit(cardRequest, ChannelControl.KEEP_OPEN);
+    CardResponseApi poCardResponse = safeTransmit(cardRequest, ChannelControl.KEEP_OPEN);
 
     // Retrieve and check the ApduResponses
-    List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
+    List<ApduResponseApi> poApduResponses = poCardResponse.getApduResponses();
 
     // Do some basic checks
     checkCommandsResponsesSynchronization(cardApduRequests.size(), poApduResponses.size());
@@ -277,14 +281,14 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   }
 
   /**
-   * Create an ApduRequest List from a AbstractCardCommandBuilder List.
+   * Create an ApduRequestAdapter List from a AbstractCardCommandBuilder List.
    *
    * @param cardCommands a list of card commands.
-   * @return the ApduRequest list
+   * @return The ApduRequestAdapter list
    */
-  private List<ApduRequest> getApduRequests(
+  private List<ApduRequestSpi> getApduRequests(
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {
-    List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (cardCommands != null) {
       for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
           cardCommands) {
@@ -317,18 +321,19 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands,
       ChannelControl channelControl) {
 
-    // Get the card ApduRequest List
-    List<ApduRequest> apduRequests = getApduRequests(cardCommands);
+    // Get the card ApduRequestAdapter List
+    List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
 
-    // Create a CardRequest from the ApduRequest list, card AID as Selector, manage the logical
+    // Create a CardRequest from the ApduRequestAdapter list, card AID as Selector, manage the
+    // logical
     // channel according to the channelControl
-    CardRequest cardRequest = new CardRequest(apduRequests, false);
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
 
     // Transmit the commands to the card
-    CardResponse poCardResponse = safeTransmit(cardRequest, channelControl);
+    CardResponseApi poCardResponse = safeTransmit(cardRequest, channelControl);
 
     // Retrieve and check the ApduResponses
-    List<ApduResponse> poApduResponses = poCardResponse.getApduResponses();
+    List<ApduResponseApi> poApduResponses = poCardResponse.getApduResponses();
 
     // Do some basic checks
     checkCommandsResponsesSynchronization(apduRequests.size(), poApduResponses.size());
@@ -402,14 +407,14 @@ class CardTransactionServiceAdapter implements CardTransactionService {
   private void processAtomicClosing(
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
           cardModificationCommands,
-      List<ApduResponse> poAnticipatedResponses,
+      List<ApduResponseApi> poAnticipatedResponses,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
 
     checkSessionIsOpen();
 
-    // Get the card ApduRequest List - for the first card exchange
-    List<ApduRequest> apduRequests = getApduRequests(cardModificationCommands);
+    // Get the card ApduRequestAdapter List - for the first card exchange
+    List<ApduRequestSpi> apduRequests = getApduRequests(cardModificationCommands);
 
     // Compute "anticipated" Digest Update (for optional poModificationCommands)
     if ((cardModificationCommands != null) && !apduRequests.isEmpty()) {
@@ -445,15 +450,15 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     }
 
     // Transfer card commands
-    CardRequest cardRequest = new CardRequest(apduRequests, false);
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
 
-    CardResponse poCardResponse;
+    CardResponseApi poCardResponse;
     try {
       poCardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
       // if the ratification command was added and no error occurred then the response has been
       // received
       ratificationCommandResponseReceived = ratificationCommandAdded;
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       poCardResponse = e.getCardResponse();
       // The current exception may have been caused by a communication issue with the card
       // during the ratification command.
@@ -469,13 +474,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       }
       // we received all responses except the response to the ratification command
       ratificationCommandResponseReceived = false;
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoCardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    List<ApduResponse> apduResponses = poCardResponse.getApduResponses();
+    List<ApduResponseApi> apduResponses = poCardResponse.getApduResponses();
 
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
@@ -531,7 +536,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
-    List<ApduResponse> poAnticipatedResponses = getAnticipatedResponses(cardCommands);
+    List<ApduResponseApi> poAnticipatedResponses = getAnticipatedResponses(cardCommands);
     processAtomicClosing(
         cardCommands, poAnticipatedResponses, isRatificationMechanismEnabled, channelControl);
   }
@@ -541,7 +546,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    *
    * @param sfi the SFI of the EF containing the counter.
    * @param counter the number of the counter.
-   * @return the value of the counter
+   * @return The value of the counter
    */
   private int getCounterValue(int sfi, int counter) {
     try {
@@ -560,9 +565,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Create an anticipated response to an Increase/Decrease command
    *
    * @param newCounterValue the anticipated counter value.
-   * @return an {@link ApduResponse} containing the expected bytes
+   * @return An {@link ApduResponseApi} containing the expected bytes
    */
-  private ApduResponse createIncreaseDecreaseResponse(int newCounterValue) {
+  private ApduResponseApi createIncreaseDecreaseResponse(int newCounterValue) {
     // response = NNNNNN9000
     byte[] response = new byte[5];
     response[0] = (byte) ((newCounterValue & 0x00FF0000) >> 16);
@@ -570,12 +575,13 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     response[2] = (byte) (newCounterValue & 0x000000FF);
     response[3] = (byte) 0x90;
     response[4] = (byte) 0x00;
-    return new ApduResponse(response);
+    return new ApduResponseAdapter(response);
   }
 
-  static final ApduResponse RESPONSE_OK = new ApduResponse(new byte[] {(byte) 0x90, (byte) 0x00});
-  static final ApduResponse RESPONSE_OK_POSTPONED =
-      new ApduResponse(new byte[] {(byte) 0x62, (byte) 0x00});
+  static final ApduResponseApi RESPONSE_OK =
+      new ApduResponseAdapter(new byte[] {(byte) 0x90, (byte) 0x00});
+  static final ApduResponseApi RESPONSE_OK_POSTPONED =
+      new ApduResponseAdapter(new byte[] {(byte) 0x62, (byte) 0x00});
 
   /**
    * Get the anticipated response to the command sent in processClosing.<br>
@@ -583,12 +589,12 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * Increase/Decrease/UpdateRecord/WriteRecord ou AppendRecord.
    *
    * @param cardCommands the list of card commands sent.
-   * @return the list of the anticipated responses.
+   * @return The list of the anticipated responses.
    * @throws CalypsoCardTransactionIllegalStateException if the anticipation process failed
    */
-  private List<ApduResponse> getAnticipatedResponses(
+  private List<ApduResponseApi> getAnticipatedResponses(
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {
-    List<ApduResponse> apduResponses = new ArrayList<ApduResponse>();
+    List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
     if (cardCommands != null) {
       for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
           cardCommands) {
@@ -704,10 +710,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       } catch (CalypsoSamCommandException e) {
         throw new CalypsoSamAnomalyException(
             SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
-      } catch (ReaderCommunicationException e) {
+      } catch (ReaderBrokenCommunicationException e) {
         throw new CalypsoSvAuthenticationException(
             SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
-      } catch (CardCommunicationException e) {
+      } catch (CardBrokenCommunicationException e) {
         throw new CalypsoSvAuthenticationException(
             SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
       }
@@ -884,8 +890,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    */
   @Override
   public final void processCancel() {
-    // card ApduRequest List to hold Close Secure Session command
-    List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
+    // card ApduRequestAdapter List to hold Close Secure Session command
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
 
     // Build the card Close Session command (in "abort" mode since no signature is provided).
     CardCloseSessionBuilder closeSessionCmdBuild =
@@ -894,9 +900,9 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     apduRequests.add(closeSessionCmdBuild.getApduRequest());
 
     // Transfer card commands
-    CardRequest cardRequest = new CardRequest(apduRequests, false);
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
 
-    CardResponse cardResponse = safeTransmit(cardRequest, channelControl);
+    CardResponseApi cardResponse = safeTransmit(cardRequest, channelControl);
 
     try {
       closeSessionCmdBuild
@@ -955,10 +961,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
         throw new CalypsoSamAnomalyException(
             SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
             e);
-      } catch (ReaderCommunicationException e) {
+      } catch (ReaderBrokenCommunicationException e) {
         throw new CalypsoSamIOException(
             SAM_READER_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
-      } catch (CardCommunicationException e) {
+      } catch (CardBrokenCommunicationException e) {
         throw new CalypsoSamIOException(
             SAM_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
       }
@@ -990,14 +996,14 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     return this;
   }
 
-  private CardResponse safeTransmit(CardRequest cardRequest, ChannelControl channelControl) {
+  private CardResponseApi safeTransmit(CardRequestSpi cardRequest, ChannelControl channelControl) {
     try {
       return cardReader.transmitCardRequest(cardRequest, channelControl);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoCardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoCardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
   }
@@ -1016,10 +1022,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "getting the terminal challenge: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + "getting the terminal challenge.", e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + "getting terminal challenge.", e);
     }
     return sessionTerminalChallenge;
@@ -1039,10 +1045,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "getting the terminal signature: " + e.getCommand().getName(), e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_COMMUNICATION_ERROR + "getting the terminal signature.", e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + "getting the terminal signature.", e);
     }
@@ -1066,10 +1072,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "authenticating the card signature: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + "authenticating the card signature.", e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_COMMUNICATION_ERROR + "authenticating the card signature.", e);
     }
@@ -1093,10 +1099,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "checking the SV operation: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(SAM_COMMUNICATION_ERROR + CHECKING_THE_SV_OPERATION, e);
     }
   }
@@ -1111,7 +1117,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @throws CalypsoCardAnomalyException If card returned an unexpected response.
    */
   private CardCloseSessionParser getCardCloseSessionParser(
-      List<ApduResponse> poApduResponses,
+      List<ApduResponseApi> poApduResponses,
       CardCloseSessionBuilder closeSessionCmdBuild,
       int closeCommandIndex) {
     CardCloseSessionParser poCloseSessionPars;
@@ -1184,7 +1190,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @param builder the command builder.
    * @param overflow flag set to true if the command overflowed the buffer.
    * @param neededSessionBufferSpace updated with the size of the buffer consumed by the command.
-   * @return true if the command modifies the content of the card, false if not
+   * @return True if the command modifies the content of the card, false if not
    * @throws CalypsoAtomicTransactionException if the command overflows the buffer in ATOMIC
    *     modification mode
    */
@@ -1222,7 +1228,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * unchanged.
    *
    * @param sessionBufferSizeConsumed session buffer requirement.
-   * @return true or false
+   * @return True or false
    */
   private boolean isSessionBufferOverflowed(int sessionBufferSizeConsumed) {
     boolean isSessionBufferFull = false;
@@ -1643,10 +1649,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     } catch (CalypsoSamCommandException e) {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "preparing the SV reload command: " + e.getCommand().getName(), e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
     }
@@ -1685,7 +1691,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @param time 2-byte free value.
    */
   private void prepareSvDebitPriv(int amount, byte[] date, byte[] time)
-      throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
+      throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
+          CalypsoSamCommandException {
 
     if (!cardSecuritySettings.isSvNegativeBalanceAllowed()
         && (calypsoCard.getSvBalance() - amount) < 0) {
@@ -1726,7 +1733,8 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @param time 2-byte free value.
    */
   private void prepareSvUndebitPriv(int amount, byte[] date, byte[] time)
-      throws CardCommunicationException, ReaderCommunicationException, CalypsoSamCommandException {
+      throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
+          CalypsoSamCommandException {
 
     // create the initial builder with the application data
     CardSvUndebitBuilder svUndebitCmdBuild =
@@ -1768,10 +1776,10 @@ class CardTransactionServiceAdapter implements CardTransactionService {
       throw new CalypsoSamAnomalyException(
           SAM_COMMAND_ERROR + "preparing the SV debit/undebit command: " + e.getCommand().getName(),
           e);
-    } catch (ReaderCommunicationException e) {
+    } catch (ReaderBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_READER_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
-    } catch (CardCommunicationException e) {
+    } catch (CardBrokenCommunicationException e) {
       throw new CalypsoSamIOException(
           SAM_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
     }
@@ -1844,5 +1852,40 @@ class CardTransactionServiceAdapter implements CardTransactionService {
     cardCommandManager.addRegularCommand(new CardRehabilitateBuilder(calypsoCard.getCardClass()));
 
     return this;
+  }
+
+  /**
+   * (private)<br>
+   * Adapter of {@link ApduResponseApi} used to create anticipated card responses.
+   */
+  private static class ApduResponseAdapter implements ApduResponseApi {
+
+    private final byte[] bytes;
+    private final int statusWord;
+
+    /** Constructor */
+    public ApduResponseAdapter(byte[] bytes) {
+      this.bytes = bytes;
+      statusWord =
+          ((bytes[bytes.length - 2] & 0x000000FF) << 8) + (bytes[bytes.length - 1] & 0x000000FF);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public byte[] getBytes() {
+      return bytes;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public byte[] getDataOut() {
+      return Arrays.copyOfRange(this.bytes, 0, this.bytes.length - 2);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getStatusWord() {
+      return statusWord;
+    }
   }
 }

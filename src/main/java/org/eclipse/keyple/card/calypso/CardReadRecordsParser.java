@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -74,7 +74,7 @@ final class CardReadRecordsParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardReadRecordsParser(ApduResponse apduResponse, CardReadRecordsBuilder builder) {
+  public CardReadRecordsParser(ApduResponseApi apduResponse, CardReadRecordsBuilder builder) {
     super(apduResponse, builder);
   }
 

@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.sam;
 
-import org.eclipse.keyple.core.service.selection.spi.SmartCard;
+import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 
 /**
  * This POJO concentrates all the information we know about the SAM currently selected.

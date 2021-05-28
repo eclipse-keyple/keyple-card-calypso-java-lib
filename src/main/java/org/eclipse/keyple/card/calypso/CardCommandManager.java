@@ -132,7 +132,7 @@ class CardCommandManager {
   /**
    * (package-private)<br>
    *
-   * @return the current AbstractCardCommandBuilder list
+   * @return The current AbstractCardCommandBuilder list
    */
   List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> getCardCommandBuilders() {
     return cardCommands;
@@ -141,7 +141,7 @@ class CardCommandManager {
   /**
    * (package-private)<br>
    *
-   * @return true if the {@link CardCommandManager} has commands
+   * @return True if the {@link CardCommandManager} has commands
    */
   boolean hasCommands() {
     return !cardCommands.isEmpty();
@@ -154,7 +154,7 @@ class CardCommandManager {
    * been executed. It is a single-use method, as the flag is systematically reset to false after it
    * is called.
    *
-   * @return true if a reload or debit command has been requested
+   * @return True if a reload or debit command has been requested
    */
   boolean isSvOperationCompleteOneTime() {
     boolean flag = svOperationComplete;

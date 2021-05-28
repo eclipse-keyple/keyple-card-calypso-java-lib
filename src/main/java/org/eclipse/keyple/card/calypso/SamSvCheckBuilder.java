@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -53,10 +52,11 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
       byte[] data = new byte[svCardSignature.length];
       System.arraycopy(svCardSignature, 0, data, 0, svCardSignature.length);
       setApduRequest(
-          new ApduRequest(ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+          new ApduRequestAdapter(
+              ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
     } else {
       setApduRequest(
-          new ApduRequest(
+          new ApduRequestAdapter(
               ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     }
   }
@@ -67,7 +67,7 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
    * @since 2.0
    */
   @Override
-  public SamSvCheckParser createResponseParser(ApduResponse apduResponse) {
+  public SamSvCheckParser createResponseParser(ApduResponseApi apduResponse) {
     return new SamSvCheckParser(apduResponse, this);
   }
 }

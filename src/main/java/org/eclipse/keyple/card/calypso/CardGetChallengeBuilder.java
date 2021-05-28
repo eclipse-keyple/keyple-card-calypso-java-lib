@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -39,7 +38,7 @@ final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetCh
     byte le = (byte) 0x08;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
   }
@@ -50,7 +49,7 @@ final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetCh
    * @since 2.0
    */
   @Override
-  public CardGetChallengeRespPars createResponseParser(ApduResponse apduResponse) {
+  public CardGetChallengeRespPars createResponseParser(ApduResponseApi apduResponse) {
     return new CardGetChallengeRespPars(apduResponse, this);
   }
 

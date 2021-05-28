@@ -88,7 +88,7 @@ public interface FileHeader {
   /**
    * Returns true if EF is a shared file.
    *
-   * @return true if the EF is a shared file
+   * @return True if the EF is a shared file
    * @since 2.0
    */
   boolean isShared();
@@ -96,7 +96,7 @@ public interface FileHeader {
   /**
    * Gets the shared reference of a shared file.
    *
-   * @return null if file is not shared
+   * @return Null if file is not shared
    * @since 2.0
    */
   Short getSharedReference();
