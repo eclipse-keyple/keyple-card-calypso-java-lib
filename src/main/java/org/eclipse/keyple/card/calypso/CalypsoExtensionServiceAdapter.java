@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.card.CardApiProperties;
+import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.ReaderApiProperties;
 import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
@@ -20,7 +21,6 @@ import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
-import org.eclipse.keyple.core.service.Reader;
 
 /**
  * (package-private)<br>
@@ -106,7 +106,7 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService {
    */
   @Override
   public CardTransactionService createCardTransaction(
-      Reader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+      CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
     return new CardTransactionServiceAdapter(reader, calypsoCard, cardSecuritySetting);
   }
 
@@ -117,7 +117,7 @@ final class CalypsoExtensionServiceAdapter implements CalypsoExtensionService {
    */
   @Override
   public CardTransactionService createCardTransactionWithoutSecurity(
-      Reader reader, CalypsoCard calypsoCard) {
+      CardReader reader, CalypsoCard calypsoCard) {
     return new CardTransactionServiceAdapter(reader, calypsoCard);
   }
 }

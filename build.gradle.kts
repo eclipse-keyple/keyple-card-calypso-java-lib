@@ -32,7 +32,6 @@ dependencies {
     implementation("org.eclipse.keyple:keyple-java-reader-api:1.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-card-api:1.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-commons-api:2.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-service:2.0.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-service-resource:2.0.0-SNAPSHOT")
     implementation("org.eclipse.keyple:keyple-java-utils:2.0.0-SNAPSHOT")
     implementation("org.slf4j:slf4j-api:1.7.25")

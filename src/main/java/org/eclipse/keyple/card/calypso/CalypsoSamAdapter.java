@@ -59,7 +59,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       this.fciBytes = null;
     }
 
-    // in the case of a SAM, the power-up data corresponds to the ATR of the card.
+    // in the case of a SAM, the power-on data corresponds to the ATR of the card.
     this.powerOnData = cardSelectionResponse.getSelectionStatus().getPowerOnData();
     if (this.powerOnData == null) {
       throw new IllegalStateException("ATR should not be empty.");

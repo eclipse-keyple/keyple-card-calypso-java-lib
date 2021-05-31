@@ -19,11 +19,11 @@
     </li>
     <li>
         Transaction service to perform non-secure operations with a card.<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransactionWithoutSecurity(org.eclipse.keyple.core.service.Reader reader, CalypsoCard calypsoCard)}
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransactionWithoutSecurity(CardReader reader, CalypsoCard calypsoCard)}
     </li>
     <li>
         Transaction service to perform secure operations with a card (<strong>Calypso Secure Session</strong>).<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransaction(org.eclipse.keyple.core.service.Reader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting)}<br>
+        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransaction(CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting)}<br>
         The {@link org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting} POJO is used to define the security elements of the transaction.
     </li>
 </ul>

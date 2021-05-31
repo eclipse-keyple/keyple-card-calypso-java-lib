@@ -20,12 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.calypsonet.terminal.card.spi.CardRequestSpi;
+import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.card.calypso.card.ElementaryFile;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.card.calypso.transaction.*;
-import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
@@ -106,7 +106,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @since 2.0
    */
   public CardTransactionServiceAdapter(
-      Reader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+      CardReader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
     this(cardReader, calypsoCard);
 
@@ -122,7 +122,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
    * @param calypsoCard The initial card data provided by the selection process.
    * @since 2.0
    */
-  public CardTransactionServiceAdapter(Reader cardReader, CalypsoCard calypsoCard) {
+  public CardTransactionServiceAdapter(CardReader cardReader, CalypsoCard calypsoCard) {
     this.cardReader = (ProxyReaderApi) cardReader;
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
@@ -442,7 +442,7 @@ class CardTransactionServiceAdapter implements CardTransactionService {
 
     // Add the card Ratification command if any
     boolean ratificationCommandAdded;
-    if (isRatificationMechanismEnabled && ((Reader) cardReader).isContactless()) {
+    if (isRatificationMechanismEnabled && ((CardReader) cardReader).isContactless()) {
       apduRequests.add(CardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
       ratificationCommandAdded = true;
     } else {

@@ -13,16 +13,13 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import org.calypsonet.terminal.card.ProxyReaderApi;
-import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.calypsonet.terminal.reader.selection.spi.CardSelector;
+import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
-import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtensionSpi;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -170,9 +167,9 @@ class CalypsoSamResourceProfileExtensionAdapter
    * @since 2.0
    */
   @Override
-  public SmartCardSpi matches(ProxyReaderApi reader) {
+  public SmartCard matches(CardReader reader, CardSelectionService samSelectionService) {
 
-    if (!((Reader) reader).isCardPresent()) {
+    if (!reader.isCardPresent()) {
       return null;
     }
 
@@ -180,8 +177,6 @@ class CalypsoSamResourceProfileExtensionAdapter
         CalypsoCardSelectorAdapter.builder()
             .filterByPowerOnData(buildAtrRegex(samRevision, samSerialNumberRegex))
             .build();
-
-    CardSelectionService samSelectionService = CardSelectionServiceFactory.getService();
 
     SamCardSelection samCardSelection = new SamCardSelectionAdapter(samCardSelector);
 
@@ -193,14 +188,13 @@ class CalypsoSamResourceProfileExtensionAdapter
     samSelectionService.prepareSelection(samCardSelection);
     CardSelectionResult samCardSelectionResult = null;
     try {
-      samCardSelectionResult =
-          samSelectionService.processCardSelectionScenario((CardReader) reader);
+      samCardSelectionResult = samSelectionService.processCardSelectionScenario(reader);
     } catch (Exception e) {
       logger.warn("An exception occurred while selecting the SAM: '{}'.", e.getMessage(), e);
     }
 
     if (samCardSelectionResult != null && samCardSelectionResult.hasActiveSelection()) {
-      return (SmartCardSpi) samCardSelectionResult.getActiveSmartCard();
+      return samCardSelectionResult.getActiveSmartCard();
     }
 
     return null;

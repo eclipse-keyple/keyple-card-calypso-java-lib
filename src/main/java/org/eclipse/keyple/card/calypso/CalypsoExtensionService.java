@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
@@ -18,7 +19,6 @@ import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
-import org.eclipse.keyple.core.service.Reader;
 
 /**
  * Card extension dedicated to the management of Calypso cards.
@@ -62,7 +62,7 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
    * @since 2.0
    */
   CardTransactionService createCardTransaction(
-      Reader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting);
+      CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting);
 
   /**
    * Creates a card transaction service to handle non secured operations.
@@ -73,5 +73,5 @@ public interface CalypsoExtensionService extends KeypleCardExtension {
    * @since 2.0
    */
   CardTransactionService createCardTransactionWithoutSecurity(
-      Reader reader, CalypsoCard calypsoCard);
+      CardReader reader, CalypsoCard calypsoCard);
 }
