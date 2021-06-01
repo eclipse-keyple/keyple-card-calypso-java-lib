@@ -29,11 +29,11 @@ repositories {
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
-    implementation("org.eclipse.keyple:keyple-java-reader-api:1.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-card-api:1.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-commons-api:2.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-service-resource:2.0.0-SNAPSHOT")
-    implementation("org.eclipse.keyple:keyple-java-utils:2.0.0-SNAPSHOT")
+    implementation("org.eclipse.keyple:keyple-java-reader-api:1.0-SNAPSHOT") { isChanging = true }
+    implementation("org.eclipse.keyple:keyple-java-card-api:1.0-SNAPSHOT") { isChanging = true }
+    implementation("org.eclipse.keyple:keyple-java-commons-api:2.0-SNAPSHOT") { isChanging = true }
+    implementation("org.eclipse.keyple:keyple-java-service-resource:2.0.0-SNAPSHOT") { isChanging = true }
+    implementation("org.eclipse.keyple:keyple-java-utils:2.0.0-SNAPSHOT") { isChanging = true }
     implementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.assertj:assertj-core:3.15.0")

@@ -14,9 +14,7 @@ package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
-import org.eclipse.keyple.card.calypso.CalypsoCardSelectorAdapter;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
@@ -69,7 +67,7 @@ public class Main_ScheduledSelection_Pcsc {
         smartCardService.registerPlugin(PcscPluginFactoryBuilder.builder().build());
 
     // Get the generic card extension service
-    CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
+    CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();
 
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
@@ -92,10 +90,10 @@ public class Main_ScheduledSelection_Pcsc {
     CalypsoCardSelection cardSelection =
         cardExtension
             .createCardSelection(
-                CalypsoCardSelectorAdapter.builder()
+                CalypsoExtensionService.getInstance()
+                    .createCardSelector()
                     .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
-                    .filterByDfName(CalypsoConstants.AID)
-                    .build(),
+                    .filterByDfName(CalypsoConstants.AID),
                 true)
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1);

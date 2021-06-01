@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.examples.common;
 
-import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
+import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.service.Plugin;
@@ -86,7 +86,7 @@ public class ConfigurationUtil {
 
     // Create a card resource extension expecting a SAM "C1".
     CalypsoSamResourceProfileExtension samCardResourceExtension =
-        CalypsoExtensionServiceProvider.getService()
+        CalypsoExtensionService.getInstance()
             .createSamResourceProfileExtension()
             .setSamRevision(SamRevision.C1);
 

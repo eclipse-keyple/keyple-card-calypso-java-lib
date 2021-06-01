@@ -15,9 +15,7 @@ import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.
 
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
-import org.eclipse.keyple.card.calypso.CalypsoCardSelectorAdapter;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
@@ -77,7 +75,7 @@ public class Main_Rev1Selection_Pcsc {
         ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name());
 
     // Get the Calypso card extension service
-    CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
+    CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();
 
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
@@ -102,10 +100,10 @@ public class Main_Rev1Selection_Pcsc {
     selectionService.prepareSelection(
         cardExtension
             .createCardSelection(
-                CalypsoCardSelectorAdapter.builder()
+                CalypsoExtensionService.getInstance()
+                    .createCardSelector()
                     .filterByCardProtocol(
-                        ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name())
-                    .build(),
+                        ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name()),
                 true)
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1));

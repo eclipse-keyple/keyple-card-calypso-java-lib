@@ -174,9 +174,9 @@ class CalypsoSamResourceProfileExtensionAdapter
     }
 
     CardSelector samCardSelector =
-        CalypsoCardSelectorAdapter.builder()
-            .filterByPowerOnData(buildAtrRegex(samRevision, samSerialNumberRegex))
-            .build();
+        CalypsoExtensionService.getInstance()
+            .createCardSelector()
+            .filterByPowerOnData(buildAtrRegex(samRevision, samSerialNumberRegex));
 
     SamCardSelection samCardSelection = new SamCardSelectionAdapter(samCardSelector);
 

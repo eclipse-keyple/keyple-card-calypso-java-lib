@@ -16,9 +16,7 @@ import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.
 
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
-import org.eclipse.keyple.card.calypso.CalypsoCardSelectorAdapter;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
@@ -72,7 +70,7 @@ public class Main_CardAuthentication_Pcsc {
     Plugin plugin = smartCardService.registerPlugin(PcscPluginFactoryBuilder.builder().build());
 
     // Get the Calypso card extension service
-    CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
+    CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();
 
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
@@ -104,7 +102,9 @@ public class Main_CardAuthentication_Pcsc {
     // scenario.
     selectionService.prepareSelection(
         cardExtension.createCardSelection(
-            CalypsoCardSelectorAdapter.builder().filterByDfName(CalypsoConstants.AID).build(),
+            CalypsoExtensionService.getInstance()
+                .createCardSelector()
+                .filterByDfName(CalypsoConstants.AID),
             true));
 
     // Actual card communication: run the selection scenario.
