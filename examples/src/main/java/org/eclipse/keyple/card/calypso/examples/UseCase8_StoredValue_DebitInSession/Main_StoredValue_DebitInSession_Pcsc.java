@@ -14,17 +14,15 @@ package org.eclipse.keyple.card.calypso.examples.UseCase8_StoredValue_DebitInSes
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
+import org.calypsonet.terminal.reader.selection.CardSelectionResult;
+import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.CalypsoExtensionServiceProvider;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
-import org.eclipse.keyple.core.service.selection.CardSelectionResult;
-import org.eclipse.keyple.core.service.selection.CardSelectionService;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +66,7 @@ public class Main_StoredValue_DebitInSession_Pcsc {
     Plugin plugin = smartCardService.registerPlugin(PcscPluginFactoryBuilder.builder().build());
 
     // Get the Calypso card extension service
-    CalypsoExtensionService cardExtension = CalypsoExtensionServiceProvider.getService();
+    CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();
 
     // Verify that the extension's API level is consistent with the current service.
     smartCardService.checkCardExtension(cardExtension);
@@ -99,7 +97,10 @@ public class Main_StoredValue_DebitInSession_Pcsc {
     // scenario.
     selectionService.prepareSelection(
         cardExtension.createCardSelection(
-            CardSelector.builder().filterByDfName(CalypsoConstants.AID).build(), true));
+            CalypsoExtensionService.getInstance()
+                .createCardSelector()
+                .filterByDfName(CalypsoConstants.AID),
+            true));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);

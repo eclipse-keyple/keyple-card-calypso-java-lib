@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * Parses the Select diversifier response.
@@ -53,7 +53,7 @@ final class SamSelectDiversifierParser extends AbstractSamResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public SamSelectDiversifierParser(ApduResponse response, SamSelectDiversifierBuilder builder) {
+  public SamSelectDiversifierParser(ApduResponseApi response, SamSelectDiversifierBuilder builder) {
     super(response, builder);
   }
 }

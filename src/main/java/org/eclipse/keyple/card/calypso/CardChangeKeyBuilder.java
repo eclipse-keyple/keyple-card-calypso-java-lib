@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -44,7 +43,7 @@ final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKe
     byte p2 = keyIndex;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, cryptogram, null)));
   }
 
@@ -54,7 +53,7 @@ final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKe
    * @since 2.0
    */
   @Override
-  public CardChangeKeyParser createResponseParser(ApduResponse apduResponse) {
+  public CardChangeKeyParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardChangeKeyParser(apduResponse, this);
   }
 

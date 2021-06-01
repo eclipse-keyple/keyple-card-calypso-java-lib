@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ final class CardOpenSession31Builder
     byte le = 0;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.ISO.getValue(),
                 CalypsoCardCommand.getOpenSessionForRev(CardRevision.REV3_1).getInstructionByte(),
@@ -80,7 +79,7 @@ final class CardOpenSession31Builder
    * @since 2.0
    */
   @Override
-  public CardOpenSession31Parser createResponseParser(ApduResponse apduResponse) {
+  public CardOpenSession31Parser createResponseParser(ApduResponseApi apduResponse) {
     return new CardOpenSession31Parser(apduResponse, this);
   }
 

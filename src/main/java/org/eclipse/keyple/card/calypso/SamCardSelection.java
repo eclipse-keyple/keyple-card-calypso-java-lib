@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.reader.selection.spi.CardSelection;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.service.selection.spi.CardSelection;
 
 /**
  * (package-private)<br>

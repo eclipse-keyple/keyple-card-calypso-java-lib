@@ -22,7 +22,7 @@ interface CardCommand {
   /**
    * Gets command's name.
    *
-   * @return a String
+   * @return A String
    * @since 2.0
    */
   String getName();
@@ -30,7 +30,7 @@ interface CardCommand {
   /**
    * Gets Instruction Byte (INS)
    *
-   * @return a byte.
+   * @return A byte.
    * @since 2.0
    */
   byte getInstructionByte();

@@ -13,12 +13,12 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
+import org.calypsonet.terminal.card.spi.*;
+import org.calypsonet.terminal.reader.selection.spi.CardSelector;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
-import org.eclipse.keyple.core.card.*;
-import org.eclipse.keyple.core.card.spi.CardSelectionSpi;
-import org.eclipse.keyple.core.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.service.selection.CardSelector;
 import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,17 +57,18 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
    * @since 2.0
    */
   @Override
-  public CardSelectionRequest getCardSelectionRequest() {
-    List<ApduRequest> cardSelectionApduRequests = new ArrayList<ApduRequest>();
+  public CardSelectionRequestSpi getCardSelectionRequest() {
+    List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
     for (AbstractSamCommandBuilder<? extends AbstractSamResponseParser> commandBuilder :
         commandBuilders) {
       cardSelectionApduRequests.add(commandBuilder.getApduRequest());
     }
     if (!cardSelectionApduRequests.isEmpty()) {
-      return new CardSelectionRequest(
-          samCardSelector, new CardRequest(cardSelectionApduRequests, false));
+      return new CardSelectionRequestAdapter(
+          (CardSelectorSpi) samCardSelector,
+          new CardRequestAdapter(cardSelectionApduRequests, false));
     } else {
-      return new CardSelectionRequest(samCardSelector, null);
+      return new CardSelectionRequestAdapter((CardSelectorSpi) samCardSelector, null);
     }
   }
 
@@ -77,11 +78,12 @@ class SamCardSelectionAdapter implements SamCardSelection, CardSelectionSpi {
    * @since 2.0
    */
   @Override
-  public SmartCardSpi parse(CardSelectionResponse cardSelectionResponse) {
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) {
 
     if (commandBuilders.size() == 1) {
       // an unlock command has been requested
-      List<ApduResponse> apduResponses = cardSelectionResponse.getCardResponse().getApduResponses();
+      List<ApduResponseApi> apduResponses =
+          cardSelectionResponse.getCardResponse().getApduResponses();
       if (apduResponses == null) {
         throw new CalypsoDesynchronizedExchangesException(
             "Mismatch in the number of requests/responses");

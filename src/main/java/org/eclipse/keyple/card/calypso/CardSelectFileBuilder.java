@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
@@ -72,7 +71,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
     }
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
@@ -98,7 +97,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
     byte p1 = (byte) (calypsoCardClass == CalypsoCardClass.LEGACY ? 0x08 : 0x09);
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
                 command.getInstructionByte(),
@@ -118,7 +117,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    * @since 2.0
    */
   @Override
-  public CardSelectFileParser createResponseParser(ApduResponse apduResponse) {
+  public CardSelectFileParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardSelectFileParser(apduResponse, this);
   }
 
@@ -128,7 +127,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    * <p>This command doesn't modify the contents of the card and therefore doesn't uses the session
    * buffer.
    *
-   * @return false
+   * @return False
    * @since 2.0
    */
   @Override
@@ -139,7 +138,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
   /**
    * The selection path can be null if the chosen constructor targets the current EF
    *
-   * @return the selection path or null
+   * @return The selection path or null
    * @since 2.0
    */
   public byte[] getPath() {
@@ -149,7 +148,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
   /**
    * The file selection control can be null if the chosen constructor targets an explicit path
    *
-   * @return the select file control or null
+   * @return The select file control or null
    * @since 2.0
    */
   public SelectFileControl getSelectFileControl() {

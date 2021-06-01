@@ -11,10 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
             : (byte) 0x09;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     if (logger.isDebugEnabled()) {
       this.addSubName(String.format("OPERATION=%s", svOperation.toString()));
@@ -73,7 +72,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
   /**
    * Gets the request SV operation (used to check the SV command sequence)
    *
-   * @return the current SvSettings.Operation enum value
+   * @return The current SvSettings.Operation enum value
    * @since 2.0
    */
   public CardTransactionService.SvSettings.Operation getSvOperation() {
@@ -86,7 +85,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * @since 2.0
    */
   @Override
-  public CardSvGetParser createResponseParser(ApduResponse apduResponse) {
+  public CardSvGetParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardSvGetParser(header, apduResponse, this);
   }
 
@@ -96,7 +95,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * <p>This command doesn't modify the contents of the card and therefore doesn't uses the session
    * buffer.
    *
-   * @return false
+   * @return False
    * @since 2.0
    */
   @Override

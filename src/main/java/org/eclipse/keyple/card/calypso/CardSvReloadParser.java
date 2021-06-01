@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -87,7 +87,7 @@ final class CardSvReloadParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardSvReloadParser(ApduResponse response, CardSvReloadBuilder builder) {
+  public CardSvReloadParser(ApduResponseApi response, CardSvReloadBuilder builder) {
     super(response, builder);
     /* the permitted lengths are 0 (in session), 3 (not 3.2) or 6 (3.2) */
     if (response.getDataOut().length != 0
@@ -102,7 +102,7 @@ final class CardSvReloadParser extends AbstractCardResponseParser {
    * The signature can be empty here in the case of a secure session where the transmission of the
    * signature is postponed until the end of the session.
    *
-   * @return a byte array containing the signature
+   * @return A byte array containing the signature
    * @since 2.0
    */
   public byte[] getSignatureLo() {

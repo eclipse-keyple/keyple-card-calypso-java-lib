@@ -13,12 +13,11 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
+import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.AnswerToReset;
-import org.eclipse.keyple.core.card.ApduResponse;
-import org.eclipse.keyple.core.card.CardSelectionResponse;
-import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private static final Logger logger = LoggerFactory.getLogger(CalypsoSamAdapter.class);
 
   private final byte[] fciBytes;
-  private final byte[] atrBytes;
+  private final byte[] powerOnData;
   private final SamRevision samRevision;
   private final byte[] serialNumber = new byte[4];
   private final byte platform;
@@ -51,26 +50,22 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @param cardSelectionResponse the response to the selection command.
    * @since 2.0
    */
-  CalypsoSamAdapter(CardSelectionResponse cardSelectionResponse) {
+  CalypsoSamAdapter(CardSelectionResponseApi cardSelectionResponse) {
 
-    ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
+    ApduResponseApi fci = cardSelectionResponse.getSelectionStatus().getFci();
     if (fci != null) {
       this.fciBytes = fci.getBytes();
     } else {
       this.fciBytes = null;
     }
 
-    AnswerToReset answerToReset = cardSelectionResponse.getSelectionStatus().getAtr();
-    if (answerToReset != null) {
-      this.atrBytes = answerToReset.getBytes();
-    } else {
-      this.atrBytes = null;
-    }
-    String atrString =
-        ByteArrayUtil.toHex(cardSelectionResponse.getSelectionStatus().getAtr().getBytes());
-    if (atrString.isEmpty()) {
+    // in the case of a SAM, the power-on data corresponds to the ATR of the card.
+    this.powerOnData = cardSelectionResponse.getSelectionStatus().getPowerOnData();
+    if (this.powerOnData == null) {
       throw new IllegalStateException("ATR should not be empty.");
     }
+
+    String atrString = ByteArrayUtil.toHex(this.powerOnData);
     /* extract the historical bytes from T3 to T12 */
     String extractRegex = "3B(.{6}|.{10})805A(.{20})829000";
     Pattern pattern = Pattern.compile(extractRegex); // NOSONAR: hex strings here, regex is safe
@@ -141,8 +136,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean hasAtr() {
-    return this.atrBytes != null && this.atrBytes.length > 0;
+  public boolean hasPowerOnData() {
+    return this.powerOnData != null && this.powerOnData.length > 0;
   }
 
   /**
@@ -165,9 +160,9 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public byte[] getAtrBytes() {
-    if (this.hasAtr()) {
-      return this.atrBytes;
+  public byte[] getPowerOnData() {
+    if (this.hasPowerOnData()) {
+      return this.powerOnData;
     } else {
       throw new IllegalStateException("No ATR is available in this AbstractSmartCard");
     }

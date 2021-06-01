@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -28,7 +28,7 @@ final class CardGetChallengeRespPars extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardGetChallengeRespPars(ApduResponse response, CardGetChallengeBuilder builder) {
+  public CardGetChallengeRespPars(ApduResponseApi response, CardGetChallengeBuilder builder) {
     super(response, builder);
   }
 

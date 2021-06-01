@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -96,7 +96,7 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardSvUndebitParser(ApduResponse response, CardSvUndebitBuilder builder) {
+  public CardSvUndebitParser(ApduResponseApi response, CardSvUndebitBuilder builder) {
     super(response, builder);
     /* the permitted lengths are 0 (in session), 3 (not 3.2) or 6 (3.2) */
     if (response.getDataOut().length != 0

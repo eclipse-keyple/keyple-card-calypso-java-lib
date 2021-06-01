@@ -13,16 +13,14 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.calypsonet.terminal.reader.CardReader;
+import org.calypsonet.terminal.reader.selection.CardSelectionResult;
+import org.calypsonet.terminal.reader.selection.CardSelectionService;
+import org.calypsonet.terminal.reader.selection.spi.CardSelector;
+import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ProxyReader;
-import org.eclipse.keyple.core.card.spi.CardResourceProfileExtensionSpi;
-import org.eclipse.keyple.core.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.service.CardSelectionServiceFactory;
-import org.eclipse.keyple.core.service.Reader;
-import org.eclipse.keyple.core.service.selection.CardSelectionResult;
-import org.eclipse.keyple.core.service.selection.CardSelectionService;
-import org.eclipse.keyple.core.service.selection.CardSelector;
+import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtensionSpi;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
@@ -169,18 +167,16 @@ class CalypsoSamResourceProfileExtensionAdapter
    * @since 2.0
    */
   @Override
-  public SmartCardSpi matches(ProxyReader reader) {
+  public SmartCard matches(CardReader reader, CardSelectionService samSelectionService) {
 
-    if (!((Reader) reader).isCardPresent()) {
+    if (!reader.isCardPresent()) {
       return null;
     }
 
     CardSelector samCardSelector =
-        CardSelector.builder()
-            .filterByAtr(buildAtrRegex(samRevision, samSerialNumberRegex))
-            .build();
-
-    CardSelectionService samSelectionService = CardSelectionServiceFactory.getService();
+        CalypsoExtensionService.getInstance()
+            .createCardSelector()
+            .filterByPowerOnData(buildAtrRegex(samRevision, samSerialNumberRegex));
 
     SamCardSelection samCardSelection = new SamCardSelectionAdapter(samCardSelector);
 
@@ -192,13 +188,13 @@ class CalypsoSamResourceProfileExtensionAdapter
     samSelectionService.prepareSelection(samCardSelection);
     CardSelectionResult samCardSelectionResult = null;
     try {
-      samCardSelectionResult = samSelectionService.processCardSelectionScenario((Reader) reader);
+      samCardSelectionResult = samSelectionService.processCardSelectionScenario(reader);
     } catch (Exception e) {
       logger.warn("An exception occurred while selecting the SAM: '{}'.", e.getMessage(), e);
     }
 
     if (samCardSelectionResult != null && samCardSelectionResult.hasActiveSelection()) {
-      return (SmartCardSpi) samCardSelectionResult.getActiveSmartCard();
+      return samCardSelectionResult.getActiveSmartCard();
     }
 
     return null;

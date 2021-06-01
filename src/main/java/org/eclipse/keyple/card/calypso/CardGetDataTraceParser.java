@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -48,14 +48,14 @@ final class CardGetDataTraceParser extends AbstractCardResponseParser {
   }
 
   /**
-   * Instantiates a new CardGetDataTraceParser from the ApduResponse to a selection application
+   * Instantiates a new CardGetDataTraceParser from the ApduResponseApi to a selection application
    * command.
    *
    * @param response the Traceability Data response from Get Data APDU command.
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardGetDataTraceParser(ApduResponse response, CardGetDataTraceBuilder builder) {
+  public CardGetDataTraceParser(ApduResponseApi response, CardGetDataTraceBuilder builder) {
     super(response, builder);
   }
 

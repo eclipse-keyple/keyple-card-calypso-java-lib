@@ -11,19 +11,22 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
-import static org.eclipse.keyple.core.service.ReaderEvent.EventType.CARD_INSERTED;
+import static org.calypsonet.terminal.reader.CardReaderEvent.EventType.CARD_INSERTED;
+import static org.calypsonet.terminal.reader.CardReaderEvent.EventType.CARD_MATCHED;
 
+import org.calypsonet.terminal.reader.CardReaderEvent;
+import org.calypsonet.terminal.reader.selection.CardSelectionService;
+import org.calypsonet.terminal.reader.spi.CardReaderObservationExceptionHandlerSpi;
+import org.calypsonet.terminal.reader.spi.CardReaderObserverSpi;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.core.service.*;
-import org.eclipse.keyple.core.service.selection.CardSelectionService;
-import org.eclipse.keyple.core.service.spi.ReaderObservationExceptionHandlerSpi;
-import org.eclipse.keyple.core.service.spi.ReaderObserverSpi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A reader Observer handles card event such as CARD_INSERTED, CARD_MATCHED, CARD_REMOVED */
-class CardReaderObserver implements ReaderObserverSpi, ReaderObservationExceptionHandlerSpi {
+class CardReaderObserver
+    implements CardReaderObserverSpi, CardReaderObservationExceptionHandlerSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CardReaderObserver.class);
   private final Reader reader;
@@ -35,7 +38,7 @@ class CardReaderObserver implements ReaderObserverSpi, ReaderObservationExceptio
    *
    * <p>Note: the reader is provided here for convenience but could also be retrieved from the
    * {@link SmartCardService} with its name and that of the plugin both present in the {@link
-   * ReaderEvent}.
+   * CardReaderEvent}.
    *
    * @param reader The card reader.
    * @param selectionService The card selection service.
@@ -51,7 +54,7 @@ class CardReaderObserver implements ReaderObserverSpi, ReaderObservationExceptio
    * @since 2.0
    */
   @Override
-  public void onReaderEvent(ReaderEvent event) {
+  public void onReaderEvent(CardReaderEvent event) {
     switch (event.getEventType()) {
       case CARD_MATCHED:
         // the selection has one target, get the result at index 0
@@ -87,8 +90,7 @@ class CardReaderObserver implements ReaderObserverSpi, ReaderObservationExceptio
         break;
     }
 
-    if (event.getEventType() == CARD_INSERTED
-        || event.getEventType() == ReaderEvent.EventType.CARD_MATCHED) {
+    if (event.getEventType() == CARD_INSERTED || event.getEventType() == CARD_MATCHED) {
 
       // Informs the underlying layer of the end of the card processing, in order to manage the
       // removal sequence.

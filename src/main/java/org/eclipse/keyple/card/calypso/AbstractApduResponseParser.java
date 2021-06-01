@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -38,11 +38,11 @@ abstract class AbstractApduResponseParser {
   }
 
   /**
-   * the {@link ApduResponse} containing response.
+   * the {@link ApduResponseApi} containing response.
    *
    * @since 2.0
    */
-  protected final ApduResponse response;
+  protected final ApduResponseApi response;
 
   /**
    * Parsers are usually created by their associated builder. The CalypsoSam field maintains a link
@@ -57,12 +57,13 @@ abstract class AbstractApduResponseParser {
    * (protected)<br>
    * The generic abstract constructor to build a parser of the APDU response.
    *
-   * @param response {@link ApduResponse} response to parse (should not be null).
+   * @param response {@link ApduResponseApi} response to parse (should not be null).
    * @param builder {@link AbstractApduCommandBuilder} the reference of the builder that created
    *     the. parser
    * @since 2.0
    */
-  protected AbstractApduResponseParser(ApduResponse response, AbstractApduCommandBuilder builder) {
+  protected AbstractApduResponseParser(
+      ApduResponseApi response, AbstractApduCommandBuilder builder) {
     this.response = response;
     this.builder = builder;
   }
@@ -85,7 +86,7 @@ abstract class AbstractApduResponseParser {
    * @param exceptionClass the exception class.
    * @param message the message.
    * @param commandRef {@link CardCommand} the command reference.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @return A not null value
    * @since 2.0
    */
@@ -93,17 +94,17 @@ abstract class AbstractApduResponseParser {
       Class<? extends CalypsoApduCommandException> exceptionClass,
       String message,
       CardCommand commandRef,
-      Integer statusCode) {
-    return new CardCommandUnknownStatusException(message, commandRef, statusCode);
+      Integer statusWord) {
+    return new CardCommandUnknownStatusException(message, commandRef, statusWord);
   }
 
   /**
-   * Gets {@link ApduResponse}
+   * Gets {@link ApduResponseApi}
    *
    * @return A not null reference
    * @since 2.0
    */
-  public final ApduResponse getApduResponse() {
+  public final ApduResponseApi getApduResponse() {
     return response;
   }
 
@@ -117,8 +118,8 @@ abstract class AbstractApduResponseParser {
     return builder;
   }
 
-  private StatusProperties getStatusCodeProperties() {
-    return getStatusTable().get(response.getStatusCode());
+  private StatusProperties getStatusWordProperties() {
+    return getStatusTable().get(response.getStatusWord());
   }
 
   /**
@@ -129,24 +130,24 @@ abstract class AbstractApduResponseParser {
    * @since 2.0
    */
   public boolean isSuccessful() {
-    StatusProperties props = getStatusCodeProperties();
+    StatusProperties props = getStatusWordProperties();
     return props != null && props.isSuccessful();
   }
 
   /**
-   * This method check the status code.<br>
-   * If status code is not referenced, then status is considered unsuccessful.
+   * This method check the status word.<br>
+   * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CalypsoApduCommandException if status is not successful.
    * @since 2.0
    */
   public void checkStatus() throws CalypsoApduCommandException {
 
-    StatusProperties props = getStatusCodeProperties();
+    StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
       return;
     }
-    // Status code is not referenced, or not successful.
+    // status word is not referenced, or not successful.
 
     // exception class
     Class<? extends CalypsoApduCommandException> exceptionClass =
@@ -158,18 +159,18 @@ abstract class AbstractApduResponseParser {
     // command reference
     CardCommand commandRef = getCommandRef();
 
-    // status code
-    Integer statusCode = response.getStatusCode();
+    // status word
+    Integer statusWord = response.getStatusWord();
 
     // Throw the exception
-    throw buildCommandException(exceptionClass, message, commandRef, statusCode);
+    throw buildCommandException(exceptionClass, message, commandRef, statusWord);
   }
 
   /**
    * Gets the associated command reference.<br>
    * By default, the command reference is retrieved from the associated builder.
    *
-   * @return a nullable command reference
+   * @return A nullable command reference
    * @since 2.0
    */
   protected CardCommand getCommandRef() {
@@ -177,18 +178,18 @@ abstract class AbstractApduResponseParser {
   }
 
   /**
-   * Gets he ASCII message from the statusTable for the current status code.
+   * Gets he ASCII message from the statusTable for the current status word.
    *
    * @return A nullable value
    * @since 2.0
    */
   public final String getStatusInformation() {
-    StatusProperties props = getStatusCodeProperties();
+    StatusProperties props = getStatusWordProperties();
     return props != null ? props.getInformation() : null;
   }
 
   /**
-   * This internal class provides Status code properties
+   * This internal class provides status word properties
    *
    * @since 2.0
    */
@@ -240,7 +241,7 @@ abstract class AbstractApduResponseParser {
     /**
      * Gets successful indicator
      *
-     * @return the successful indicator
+     * @return The successful indicator
      * @since 2.0
      */
     public boolean isSuccessful() {

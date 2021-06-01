@@ -15,7 +15,7 @@ import static org.eclipse.keyple.core.util.bertlv.Tag.TagType.PRIMITIVE;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.bertlv.TLV;
 import org.eclipse.keyple.core.util.bertlv.Tag;
@@ -65,13 +65,13 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardSelectFileParser(ApduResponse response, CardSelectFileBuilder builder) {
+  public CardSelectFileParser(ApduResponseApi response, CardSelectFileBuilder builder) {
     super(response, builder);
     proprietaryInformation = null;
   }
 
   /**
-   * @return the content of the proprietary information tag present in the response to the Select
+   * @return The content of the proprietary information tag present in the response to the Select
    *     File command
    * @since 2.0
    */

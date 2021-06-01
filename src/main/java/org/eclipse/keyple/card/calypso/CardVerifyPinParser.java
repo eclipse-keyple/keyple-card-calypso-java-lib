@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -72,19 +72,19 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardVerifyPinParser(ApduResponse response, CardVerifyPinBuilder builder) {
+  public CardVerifyPinParser(ApduResponseApi response, CardVerifyPinBuilder builder) {
     super(response, builder);
   }
 
   /**
    * Determine the value of the attempt counter from the status word
    *
-   * @return the remaining attempt counter value (0, 1, 2 or 3)
+   * @return The remaining attempt counter value (0, 1, 2 or 3)
    * @since 2.0
    */
   public int getRemainingAttemptCounter() {
     int attemptCounter;
-    switch (response.getStatusCode()) {
+    switch (response.getStatusWord()) {
       case 0x6983:
         attemptCounter = 0;
         break;
@@ -99,7 +99,7 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
         break;
       default:
         throw new IllegalStateException(
-            "Incorrect status word: " + String.format("0x%04X", response.getStatusCode()));
+            "Incorrect status word: " + String.format("0x%04X", response.getStatusWord()));
     }
     return attemptCounter;
   }

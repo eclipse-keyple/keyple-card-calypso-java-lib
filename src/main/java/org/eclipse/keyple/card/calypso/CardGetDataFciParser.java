@@ -16,7 +16,7 @@ import static org.eclipse.keyple.core.util.bertlv.Tag.TagType.PRIMITIVE;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.bertlv.TLV;
 import org.eclipse.keyple.core.util.bertlv.Tag;
@@ -97,7 +97,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
   private byte[] discretionaryData = null;
 
   /**
-   * Instantiates a new CardGetDataFciParser from the ApduResponse to a selection application
+   * Instantiates a new CardGetDataFciParser from the ApduResponseApi to a selection application
    * command.
    *
    * <p>The expected FCI structure of a Calypso card follows this scheme: <code>
@@ -109,7 +109,8 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    *                T=53 L=7 (P)  Discretionary Data (Startup Information)
    * </code>
    *
-   * <p>The ApduResponse provided in argument is parsed according to the above expected structure.
+   * <p>The ApduResponseApi provided in argument is parsed according to the above expected
+   * structure.
    *
    * <p>DF Name, Application Serial Number and Startup Information are extracted.
    *
@@ -124,12 +125,12 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * @param builder the reference to the builder that created this parser.
    * @since 2.0
    */
-  public CardGetDataFciParser(ApduResponse response, CardGetDataFciBuilder builder) {
+  public CardGetDataFciParser(ApduResponseApi response, CardGetDataFciBuilder builder) {
     super(response, builder);
     TLV tlv;
 
     /* check the command status to determine if the DF has been invalidated */
-    if (response.getStatusCode() == 0x6283) {
+    if (response.getStatusWord() == 0x6283) {
       logger.debug(
           "The response to the select application command status word indicates that the DF has been invalidated.");
       isDfInvalidated = true;

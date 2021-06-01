@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -118,7 +117,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     System.arraycopy(debitComplementaryData, 10, dataIn, 15, debitComplementaryData.length - 10);
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null)));
   }
@@ -146,7 +145,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * @since 2.0
    */
   @Override
-  public CardSvDebitParser createResponseParser(ApduResponse apduResponse) {
+  public CardSvDebitParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardSvDebitParser(apduResponse, this);
   }
 
@@ -155,7 +154,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override

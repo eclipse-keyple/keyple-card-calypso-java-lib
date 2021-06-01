@@ -25,11 +25,11 @@ final class CalypsoSamCounterOverflowException extends CalypsoSamCommandExceptio
    *
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @since 2.0
    */
   CalypsoSamCounterOverflowException(
-      String message, CalypsoSamCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+      String message, CalypsoSamCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

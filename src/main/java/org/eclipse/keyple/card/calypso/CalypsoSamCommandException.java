@@ -22,11 +22,11 @@ abstract class CalypsoSamCommandException extends CalypsoApduCommandException {
   /**
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
-   * @param statusCode the status code (optional).
+   * @param statusWord the status word (optional).
    * @since 2.0
    */
   protected CalypsoSamCommandException(
-      String message, CalypsoSamCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+      String message, CalypsoSamCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

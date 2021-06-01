@@ -15,7 +15,6 @@ import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.ElementaryFile;
 import org.eclipse.keyple.card.calypso.card.FileData;
 import org.eclipse.keyple.card.calypso.card.SelectFileControl;
-import org.eclipse.keyple.core.card.CardRequest;
 
 /**
  * Service providing the high-level API to manage transactions with a Calypso card.
@@ -91,7 +90,8 @@ public interface CardTransactionService {
    * <ul>
    *   <li>Sending the card diversifier (Calypso card serial number) to the SAM and receiving the
    *       terminal challenge
-   *   <li>Grouped sending to the card (in a {@link CardRequest}) of
+   *   <li>Grouped sending to the card (in a {@link
+   *       org.calypsonet.terminal.card.spi.CardRequestSpi}) of
    *       <ul>
    *         <li>the open secure session command including the challenge terminal.
    *         <li>all previously prepared commands
@@ -138,8 +138,8 @@ public interface CardTransactionService {
    * Process all previously prepared card commands outside or inside a Secure Session.
    *
    * <ul>
-   *   <li>All APDUs resulting from prepared commands are grouped in a {@link CardRequest} and sent
-   *       to the card.
+   *   <li>All APDUs resulting from prepared commands are grouped in a {@link
+   *       org.calypsonet.terminal.card.spi.CardRequestSpi} and sent to the card.
    *   <li>The {@link CalypsoCard} object is updated with the result of the executed commands.
    *   <li>If a secure session is opened, except in the case where reloading or debit SV operations
    *       have been prepared, the invocation of this method does not generate communication with
@@ -171,10 +171,11 @@ public interface CardTransactionService {
    * by the SAM before execution by the card by anticipating their responses.
    *
    * <p>Thus, the session closing command containing the terminal signature is integrated into the
-   * same APDU group sent to the card via a final {@link CardRequest}.
+   * same APDU group sent to the card via a final {@link
+   * org.calypsonet.terminal.card.spi.CardRequestSpi}.
    *
-   * <p>Upon reception of the {@link CardRequest} from the card, the signature of the card is
-   * verified with the SAM.
+   * <p>Upon reception of the {@link org.calypsonet.terminal.card.spi.CardRequestSpi} from the card,
+   * the signature of the card is verified with the SAM.
    *
    * <p>If the method terminates normally, it means that the secure session closing and all related
    * security checks have been successful; conversely, if one of these operations fails, an
@@ -199,12 +200,14 @@ public interface CardTransactionService {
    *   <li>All the data exchanged with the card so far, to which are added the last prepared orders
    *       and their anticipated answers, are sent to the SAM for the calculation of the session
    *       digest. The terminal signature calculation request is also integrated in the same {@link
-   *       CardRequest} SAM.
+   *       org.calypsonet.terminal.card.spi.CardRequestSpi} SAM.
    *   <li>All previously prepared commands are sent to the card along with the session closing
-   *       command and possibly the ratification command within a single {@link CardRequest}.
+   *       command and possibly the ratification command within a single {@link
+   *       org.calypsonet.terminal.card.spi.CardRequestSpi}.
    *   <li>The responses received from the card are integrated into CalypsoCard. <br>
-   *       Note: the reception of the answers of this final {@link CardRequest} from the card is
-   *       tolerant to the non-reception of the answer to the ratification order.
+   *       Note: the reception of the answers of this final {@link
+   *       org.calypsonet.terminal.card.spi.CardRequestSpi} from the card is tolerant to the
+   *       non-reception of the answer to the ratification order.
    *   <li>The data received from the card in response to the logout (card session signature and
    *       possibly SV signature) are sent to the SAM for verification.
    * </ul>

@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -38,7 +37,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
     byte p2 = (byte) 0x00;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, null)));
   }
@@ -49,7 +48,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
    * @since 2.0
    */
   @Override
-  public CardInvalidateParser createResponseParser(ApduResponse apduResponse) {
+  public CardInvalidateParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardInvalidateParser(apduResponse, this);
   }
 
@@ -58,7 +57,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override

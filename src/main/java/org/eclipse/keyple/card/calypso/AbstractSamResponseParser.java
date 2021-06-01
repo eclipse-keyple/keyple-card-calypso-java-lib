@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private) <br>
@@ -54,7 +54,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
    * @param builder the reference of the builder that created the parser.
    */
   protected AbstractSamResponseParser(
-      ApduResponse response,
+      ApduResponseApi response,
       AbstractSamCommandBuilder<? extends AbstractSamResponseParser> builder) {
     super(response, builder);
   }
@@ -79,26 +79,26 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
       Class<? extends CalypsoApduCommandException> exceptionClass,
       String message,
       CardCommand commandRef,
-      Integer statusCode) {
+      Integer statusWord) {
 
     CalypsoApduCommandException e;
     CalypsoSamCommand command = (CalypsoSamCommand) commandRef;
     if (exceptionClass == CalypsoSamAccessForbiddenException.class) {
-      e = new CalypsoSamAccessForbiddenException(message, command, statusCode);
+      e = new CalypsoSamAccessForbiddenException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamCounterOverflowException.class) {
-      e = new CalypsoSamCounterOverflowException(message, command, statusCode);
+      e = new CalypsoSamCounterOverflowException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamDataAccessException.class) {
-      e = new CalypsoSamDataAccessException(message, command, statusCode);
+      e = new CalypsoSamDataAccessException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamIllegalArgumentException.class) {
       e = new CalypsoSamIllegalArgumentException(message, command);
     } else if (exceptionClass == CalypsoSamIllegalParameterException.class) {
-      e = new CalypsoSamIllegalParameterException(message, command, statusCode);
+      e = new CalypsoSamIllegalParameterException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamIncorrectInputDataException.class) {
-      e = new CalypsoSamIncorrectInputDataException(message, command, statusCode);
+      e = new CalypsoSamIncorrectInputDataException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamSecurityDataException.class) {
-      e = new CalypsoSamSecurityDataException(message, command, statusCode);
+      e = new CalypsoSamSecurityDataException(message, command, statusWord);
     } else {
-      e = new CalypsoSamUnknownStatusException(message, command, statusCode);
+      e = new CalypsoSamUnknownStatusException(message, command, statusWord);
     }
     return e;
   }

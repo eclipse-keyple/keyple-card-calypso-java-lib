@@ -13,12 +13,11 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
+import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.card.calypso.card.*;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.core.card.AnswerToReset;
-import org.eclipse.keyple.core.card.ApduResponse;
-import org.eclipse.keyple.core.card.CardSelectionResponse;
-import org.eclipse.keyple.core.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
@@ -46,7 +45,6 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  */
 final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private final byte[] fciBytes;
-  private final byte[] atrBytes;
   private final boolean isConfidentialSessionModeSupported;
   private final boolean isDeselectRatificationSupported;
   private final boolean isSvFeatureAvailable;
@@ -86,6 +84,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       };
 
   private final int modificationsCounterMax;
+  private final byte[] powerOnData;
   private boolean modificationCounterIsInBytes = true;
   private DirectoryHeader directoryHeader;
   private final Map<Byte, ElementaryFile> efBySfi = new ConcurrentHashMap<Byte, ElementaryFile>();
@@ -108,21 +107,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param cardSelectionResponse the response to the selection application command.
    * @since 2.0
    */
-  CalypsoCardAdapter(CardSelectionResponse cardSelectionResponse) {
+  CalypsoCardAdapter(CardSelectionResponseApi cardSelectionResponse) {
 
-    ApduResponse fci = cardSelectionResponse.getSelectionStatus().getFci();
+    ApduResponseApi fci = cardSelectionResponse.getSelectionStatus().getFci();
     if (fci != null) {
       this.fciBytes = fci.getBytes();
     } else {
       this.fciBytes = null;
     }
 
-    AnswerToReset answerToReset = cardSelectionResponse.getSelectionStatus().getAtr();
-    if (answerToReset != null) {
-      this.atrBytes = answerToReset.getBytes();
-    } else {
-      this.atrBytes = null;
-    }
+    powerOnData = cardSelectionResponse.getSelectionStatus().getPowerOnData();
 
     int bufferSizeIndicator;
     int bufferSizeValue;
@@ -165,11 +159,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
        * FCI is not provided: we consider it is Calypso card rev 1, it's serial number is
        * provided in the ATR
        */
-      byte[] atr = getAtrBytes();
+      byte[] atr = getPowerOnData();
       /* basic check: we expect to be here following a selection based on the ATR */
       if (atr.length != CARD_REV1_ATR_LENGTH) {
         throw new IllegalStateException(
-            "Unexpected ATR length: " + ByteArrayUtil.toHex(getAtrBytes()));
+            "Unexpected ATR length: " + ByteArrayUtil.toHex(getPowerOnData()));
       }
 
       revision = CardRevision.REV1_0;
@@ -221,8 +215,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean hasAtr() {
-    return this.atrBytes != null && this.atrBytes.length > 0;
+  public boolean hasPowerOnData() {
+    return this.powerOnData != null && this.powerOnData.length > 0;
   }
 
   /**
@@ -245,9 +239,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public byte[] getAtrBytes() {
-    if (this.hasAtr()) {
-      return this.atrBytes;
+  public byte[] getPowerOnData() {
+    if (this.hasPowerOnData()) {
+      return this.powerOnData;
     } else {
       throw new IllegalStateException("No ATR is available in this AbstractSmartCard");
     }
@@ -265,7 +259,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * </ul>
    *
    * @param applicationType the application type (field of startup info).
-   * @return the {@link CardRevision}
+   * @return The {@link CardRevision}
    */
   private CardRevision determineRevision(byte applicationType) {
     if (((applicationType & 0xFF) & (1 << 7)) != 0) {
@@ -317,7 +311,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * <p>The serial number to be used as diversifier for key derivation.<br>
    * This is the complete number returned by the card in its response to the Select command.
    *
-   * @return a byte array containing the Calypso Serial Number (8 bytes)
+   * @return A byte array containing the Calypso Serial Number (8 bytes)
    * @since 2.0
    */
   protected final byte[] getCalypsoSerialNumber() {
@@ -371,8 +365,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final String getAtr() {
-    return ByteArrayUtil.toHex(getAtrBytes());
+  public final String getPowerOnDataString() {
+    return ByteArrayUtil.toHex(powerOnData);
   }
 
   /**
@@ -392,7 +386,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * <p>This varies depending on the revision of the card.
    *
-   * @return true if the counter is number of bytes
+   * @return True if the counter is number of bytes
    * @since 2.0
    */
   protected final boolean isModificationsCounterInBytes() {
@@ -405,7 +399,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * <p>This number can be a number of operations or a number of commands (see
    * isModificationsCounterInBytes)
    *
-   * @return the maximum number of modifications allowed
+   * @return The maximum number of modifications allowed
    * @since 2.0
    */
   protected final int getModificationsCounter() {

@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -28,7 +28,8 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
    * @param builder the reference of the builder that created the parser.
    * @since 2.0
    */
-  protected AbstractCardResponseParser(ApduResponse response, AbstractCardCommandBuilder builder) {
+  protected AbstractCardResponseParser(
+      ApduResponseApi response, AbstractCardCommandBuilder builder) {
     super(response, builder);
   }
 
@@ -52,32 +53,32 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
       Class<? extends CalypsoApduCommandException> exceptionClass,
       String message,
       CardCommand commandRef,
-      Integer statusCode) {
+      Integer statusWord) {
 
     CalypsoApduCommandException e;
     CalypsoCardCommand command = (CalypsoCardCommand) commandRef;
     if (exceptionClass == CalypsoCardAccessForbiddenException.class) {
-      e = new CalypsoCardAccessForbiddenException(message, command, statusCode);
+      e = new CalypsoCardAccessForbiddenException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardDataAccessException.class) {
-      e = new CalypsoCardDataAccessException(message, command, statusCode);
+      e = new CalypsoCardDataAccessException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardDataOutOfBoundsException.class) {
-      e = new CalypsoCardDataOutOfBoundsException(message, command, statusCode);
+      e = new CalypsoCardDataOutOfBoundsException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardIllegalArgumentException.class) {
       e = new CalypsoCardIllegalArgumentException(message, command);
     } else if (exceptionClass == CalypsoCardIllegalParameterException.class) {
-      e = new CalypsoCardIllegalParameterException(message, command, statusCode);
+      e = new CalypsoCardIllegalParameterException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardPinException.class) {
-      e = new CalypsoCardPinException(message, command, statusCode);
+      e = new CalypsoCardPinException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardSecurityContextException.class) {
-      e = new CalypsoCardSecurityContextException(message, command, statusCode);
+      e = new CalypsoCardSecurityContextException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardSecurityDataException.class) {
-      e = new CalypsoCardSecurityDataException(message, command, statusCode);
+      e = new CalypsoCardSecurityDataException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardSessionBufferOverflowException.class) {
-      e = new CalypsoCardSessionBufferOverflowException(message, command, statusCode);
+      e = new CalypsoCardSessionBufferOverflowException(message, command, statusWord);
     } else if (exceptionClass == CalypsoCardTerminatedException.class) {
-      e = new CalypsoCardTerminatedException(message, command, statusCode);
+      e = new CalypsoCardTerminatedException(message, command, statusWord);
     } else {
-      e = new CalypsoCardUnknownStatusException(message, command, statusCode);
+      e = new CalypsoCardUnknownStatusException(message, command, statusWord);
     }
     return e;
   }

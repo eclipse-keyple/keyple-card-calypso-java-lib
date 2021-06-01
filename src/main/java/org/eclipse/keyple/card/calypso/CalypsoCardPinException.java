@@ -25,10 +25,10 @@ final class CalypsoCardPinException extends CalypsoCardCommandException {
    *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusCode the status code.
+   * @param statusWord the status word.
    * @since 2.0
    */
-  CalypsoCardPinException(String message, CalypsoCardCommand command, Integer statusCode) {
-    super(message, command, statusCode);
+  CalypsoCardPinException(String message, CalypsoCardCommand command, Integer statusWord) {
+    super(message, command, statusWord);
   }
 }

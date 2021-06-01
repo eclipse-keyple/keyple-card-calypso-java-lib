@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +73,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
     }
     byte le = (byte) expectedLength;
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
 
@@ -98,7 +97,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
    * @since 2.0
    */
   @Override
-  public CardReadRecordsParser createResponseParser(ApduResponse apduResponse) {
+  public CardReadRecordsParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardReadRecordsParser(apduResponse, this);
   }
 

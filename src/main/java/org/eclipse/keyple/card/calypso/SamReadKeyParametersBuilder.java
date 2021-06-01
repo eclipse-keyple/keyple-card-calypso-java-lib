@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -58,7 +57,7 @@ final class SamReadKeyParametersBuilder
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
@@ -78,7 +77,7 @@ final class SamReadKeyParametersBuilder
     sourceKeyId[0] = kif;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
@@ -99,7 +98,7 @@ final class SamReadKeyParametersBuilder
     sourceKeyId[1] = kvc;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
@@ -138,7 +137,7 @@ final class SamReadKeyParametersBuilder
     }
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
@@ -172,7 +171,7 @@ final class SamReadKeyParametersBuilder
     sourceKeyId[0] = kif;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
@@ -183,7 +182,7 @@ final class SamReadKeyParametersBuilder
    * @since 2.0
    */
   @Override
-  public SamReadKeyParametersParser createResponseParser(ApduResponse apduResponse) {
+  public SamReadKeyParametersParser createResponseParser(ApduResponseApi apduResponse) {
     return new SamReadKeyParametersParser(apduResponse, this);
   }
 }

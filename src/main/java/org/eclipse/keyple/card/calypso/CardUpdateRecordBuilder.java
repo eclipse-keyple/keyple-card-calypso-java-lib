@@ -11,8 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
     byte p2 = (sfi == 0) ? (byte) 0x04 : (byte) ((byte) (sfi * 8) + 4);
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null)));
 
@@ -73,7 +72,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
    * @since 2.0
    */
   @Override
-  public CardUpdateRecordParser createResponseParser(ApduResponse apduResponse) {
+  public CardUpdateRecordParser createResponseParser(ApduResponseApi apduResponse) {
     return new CardUpdateRecordParser(apduResponse, this);
   }
 
@@ -82,7 +81,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
    *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
-   * @return true
+   * @return True
    * @since 2.0
    */
   @Override
@@ -91,7 +90,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
   }
 
   /**
-   * @return the SFI of the accessed file
+   * @return The SFI of the accessed file
    * @since 2.0
    */
   public int getSfi() {
@@ -99,7 +98,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
   }
 
   /**
-   * @return the number of the accessed record
+   * @return The number of the accessed record
    * @since 2.0
    */
   public int getRecordNumber() {
@@ -107,7 +106,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
   }
 
   /**
-   * @return the data sent to the card
+   * @return The data sent to the card
    * @since 2.0
    */
   public byte[] getData() {

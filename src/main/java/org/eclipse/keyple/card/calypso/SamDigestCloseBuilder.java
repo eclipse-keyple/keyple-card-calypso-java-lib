@@ -11,9 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.sam.SamRevision;
-import org.eclipse.keyple.core.card.ApduRequest;
-import org.eclipse.keyple.core.card.ApduResponse;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -50,7 +49,7 @@ final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestClo
     byte p2 = (byte) 0x00;
 
     setApduRequest(
-        new ApduRequest(
+        new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength)));
   }
@@ -61,7 +60,7 @@ final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestClo
    * @since 2.0
    */
   @Override
-  public SamDigestCloseParser createResponseParser(ApduResponse apduResponse) {
+  public SamDigestCloseParser createResponseParser(ApduResponseApi apduResponse) {
     return new SamDigestCloseParser(apduResponse, this);
   }
 }

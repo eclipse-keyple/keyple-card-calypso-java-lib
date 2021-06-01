@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.core.card.ApduResponse;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
@@ -36,9 +36,9 @@ abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
    * Create the response parser matching the builder
    *
    * @param apduResponse the response data from the the card.
-   * @return an {@link AbstractCardResponseParser}
+   * @return An {@link AbstractCardResponseParser}
    */
-  public abstract T createResponseParser(ApduResponse apduResponse);
+  public abstract T createResponseParser(ApduResponseApi apduResponse);
 
   /**
    * {@inheritDoc}
@@ -55,7 +55,7 @@ abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
    *
    * <p>Allows the management of the overflow of this buffer.
    *
-   * @return true if this command uses the session buffer
+   * @return True if this command uses the session buffer
    * @since 2.0
    */
   public abstract boolean isSessionBufferUsed();

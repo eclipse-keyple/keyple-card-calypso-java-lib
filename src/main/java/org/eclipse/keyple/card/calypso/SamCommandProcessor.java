@@ -14,6 +14,9 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.calypsonet.terminal.card.*;
+import org.calypsonet.terminal.card.spi.ApduRequestSpi;
+import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.card.calypso.sam.CalypsoSam;
@@ -21,7 +24,6 @@ import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
 import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
-import org.eclipse.keyple.core.card.*;
 import org.eclipse.keyple.core.service.resource.CardResource;
 import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -53,7 +55,7 @@ class SamCommandProcessor {
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
   private final CardResource samResource;
-  private final ProxyReader samReader;
+  private final ProxyReaderApi samReader;
   private final CardSecuritySetting cardSecuritySettings;
   private static final List<byte[]> cardDigestDataCache = new ArrayList<byte[]>();
   private final CalypsoCard calypsoCard;
@@ -84,7 +86,7 @@ class SamCommandProcessor {
     CalypsoSam calypsoSam = (CalypsoSam) samResource.getSmartCard();
     samRevision = calypsoSam.getSamRevision();
     samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReader) samResource.getReader();
+    samReader = (ProxyReaderApi) samResource.getReader();
   }
 
   /**
@@ -101,14 +103,15 @@ class SamCommandProcessor {
    *
    * @return the terminal challenge as an array of bytes
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   byte[] getSessionTerminalChallenge()
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
-    List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
 
     // diversify only if this has not already been done.
     if (!isDiversificationDone) {
@@ -134,17 +137,17 @@ class SamCommandProcessor {
 
     apduRequests.add(samGetChallengeBuilder.getApduRequest());
 
-    // Transmit the CardRequest to the SAM and get back the CardResponse (list of ApduResponse)
-    CardResponse samCardResponse;
+    // Transmit the CardRequest to the SAM and get back the CardResponse (list of ApduResponseApi)
+    CardResponseApi samCardResponse;
     try {
       samCardResponse =
           samReader.transmitCardRequest(
-              new CardRequest(apduRequests, false), ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+              new CardRequestAdapter(apduRequests, false), ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
+    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
     byte[] sessionTerminalChallenge;
 
     int numberOfSamCmd = apduRequests.size();
@@ -250,7 +253,7 @@ class SamCommandProcessor {
     // Clear data cache
     cardDigestDataCache.clear();
 
-    // Build Digest Init command as first ApduRequest of the digest computation process
+    // Build Digest Init command as first ApduRequestAdapter of the digest computation process
     cardDigestDataCache.add(digestData);
 
     isDigestInitDone = false;
@@ -264,11 +267,12 @@ class SamCommandProcessor {
    * @param response card response.
    * @since 2.0
    */
-  private void pushCardExchangedData(ApduRequest request, ApduResponse response) {
+  private void pushCardExchangedData(ApduRequestSpi request, ApduResponseApi response) {
 
     logger.trace("pushCardExchangedData: REQUEST = {}", request);
 
-    // Add an ApduRequest to the digest computation: if the request is of case4 type, Le must be
+    // Add an ApduRequestAdapter to the digest computation: if the request is of case4 type, Le must
+    // be
     // excluded from the digest computation. In this cas, we remove here the last byte of the
     // command buffer.
     if (ApduUtil.isCase4(request.getBytes())) {
@@ -280,7 +284,7 @@ class SamCommandProcessor {
 
     logger.trace("pushCardExchangedData: RESPONSE = {}", response);
 
-    // Add an ApduResponse to the digest computation
+    // Add an ApduResponseApi to the digest computation
     cardDigestDataCache.add(response.getBytes());
   }
 
@@ -295,7 +299,7 @@ class SamCommandProcessor {
    * @since 2.0
    */
   void pushCardExchangedData(
-      List<ApduRequest> requests, List<ApduResponse> responses, int startIndex) {
+      List<ApduRequestSpi> requests, List<ApduResponseApi> responses, int startIndex) {
     for (int i = startIndex; i < requests.size(); i++) {
       // Add requests and responses to the digest processor
       pushCardExchangedData(requests.get(i), responses.get(i));
@@ -339,9 +343,9 @@ class SamCommandProcessor {
     }
 
     if (!isDigestInitDone) {
-      // Build and append Digest Init command as first ApduRequest of the digest computation
+      // Build and append Digest Init command as first ApduRequestAdapter of the digest computation
       // process. The Digest Init command comes from the Open Secure Session response from the
-      // card. Once added to the ApduRequest list, the data is remove from the cache to keep
+      // card. Once added to the ApduRequestAdapter list, the data is remove from the cache to keep
       // only couples of card request/response
       samCommands.add(
           new SamDigestInitBuilder(
@@ -387,31 +391,32 @@ class SamCommandProcessor {
    *
    * @return the terminal signature
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   byte[] getTerminalSignature()
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
 
     // All remaining SAM digest operations will now run at once.
     // Get the SAM Digest request including Digest Close from the cache manager
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         getPendingSamCommands(true);
 
-    CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
+    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
 
     // Transmit CardRequest and get CardResponse
-    CardResponse samCardResponse;
+    CardResponseApi samCardResponse;
 
     try {
       samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
+    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
 
     if (samApduResponses.size() != samCommands.size()) {
       throw new CalypsoDesynchronizedExchangesException(
@@ -449,32 +454,33 @@ class SamCommandProcessor {
    *
    * @param cardSignatureLo the card part of the signature.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws CalypsoDesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0
    */
   void authenticateCardSignature(byte[] cardSignatureLo)
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
     // Check the card signature part with the SAM
     // Build and send SAM Digest Authenticate command
     SamDigestAuthenticateBuilder samDigestAuthenticateBuilder =
         new SamDigestAuthenticateBuilder(samRevision, cardSignatureLo);
 
-    List<ApduRequest> samApduRequests = new ArrayList<ApduRequest>();
+    List<ApduRequestSpi> samApduRequests = new ArrayList<ApduRequestSpi>();
     samApduRequests.add(samDigestAuthenticateBuilder.getApduRequest());
 
-    CardRequest samCardRequest = new CardRequest(samApduRequests, false);
+    CardRequestSpi samCardRequest = new CardRequestAdapter(samApduRequests, false);
 
-    CardResponse samCardResponse;
+    CardResponseApi samCardResponse;
     try {
       samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
     // Get transaction result parsing the response
-    List<ApduResponse> samApduResponses = samCardResponse.getApduResponses();
+    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
 
     if (samApduResponses == null || samApduResponses.isEmpty()) {
       throw new CalypsoDesynchronizedExchangesException(
@@ -488,15 +494,15 @@ class SamCommandProcessor {
   }
 
   /**
-   * Create an ApduRequest List from a AbstractSamCommandBuilder List.
+   * Create an ApduRequestAdapter List from a AbstractSamCommandBuilder List.
    *
    * @param samCommands a list of SAM commands.
-   * @return the ApduRequest list
+   * @return the ApduRequestAdapter list
    * @since 2.0
    */
-  private List<ApduRequest> getApduRequests(
+  private List<ApduRequestSpi> getApduRequests(
       List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands) {
-    List<ApduRequest> apduRequests = new ArrayList<ApduRequest>();
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (samCommands != null) {
       for (AbstractSamCommandBuilder<? extends AbstractSamResponseParser> commandBuilder :
           samCommands) {
@@ -514,12 +520,13 @@ class SamCommandProcessor {
    * @param newPin the new PIN value (set to null if the operation is a PIN presentation).
    * @return the PIN ciphered data
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getCipheredPinData(byte[] poChallenge, byte[] currentPin, byte[] newPin)
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
     byte pinCipheringKif;
@@ -544,7 +551,7 @@ class SamCommandProcessor {
     }
 
     if (isDigesterInitialized) {
-      /* Get the pending SAM ApduRequest and add it to the current ApduRequest list */
+      /* Get the pending SAM ApduRequestAdapter and add it to the current ApduRequestAdapter list */
       samCommands.addAll(getPendingSamCommands(false));
     }
 
@@ -559,17 +566,17 @@ class SamCommandProcessor {
     samCommands.add(samCardCipherPinBuilder);
 
     // build a SAM CardRequest
-    CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
+    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
 
     // execute the command
-    CardResponse samCardResponse;
+    CardResponseApi samCardResponse;
     try {
       samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    ApduResponse cardCipherPinResponse =
+    ApduResponseApi cardCipherPinResponse =
         samCardResponse.getApduResponses().get(cardCipherPinCmdIndex);
 
     // create a parser
@@ -599,13 +606,14 @@ class SamCommandProcessor {
    * @param samSvPrepareBuilder the prepare command builder (can be prepareSvReload/Debit/Undebit).
    * @return a byte array containing the complementary data
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   private byte[] getSvComplementaryData(
       AbstractSamCommandBuilder<? extends AbstractSamResponseParser> samSvPrepareBuilder)
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
@@ -618,7 +626,7 @@ class SamCommandProcessor {
     }
 
     if (isDigesterInitialized) {
-      /* Get the pending SAM ApduRequest and add it to the current ApduRequest list */
+      /* Get the pending SAM ApduRequestAdapter and add it to the current ApduRequestAdapter list */
       samCommands.addAll(getPendingSamCommands(false));
     }
 
@@ -627,17 +635,17 @@ class SamCommandProcessor {
     samCommands.add(samSvPrepareBuilder);
 
     // build a SAM CardRequest
-    CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
+    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
 
     // execute the command
-    CardResponse samCardResponse;
+    CardResponseApi samCardResponse;
     try {
       samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    ApduResponse svPrepareResponse =
+    ApduResponseApi svPrepareResponse =
         samCardResponse.getApduResponses().get(svPrepareOperationCmdIndex);
 
     // create a parser
@@ -676,13 +684,14 @@ class SamCommandProcessor {
    * @return the complementary security data to finalize the SvReload card command (sam ID + SV
    *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getSvReloadComplementaryData(
       CardSvReloadBuilder cardSvReloadBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
+      throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareLoadBuilder samSvPrepareLoadBuilder =
         new SamSvPrepareLoadBuilder(
@@ -704,13 +713,14 @@ class SamCommandProcessor {
    * @return the complementary security data to finalize the SvDebit card command (sam ID + SV
    *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   byte[] getSvDebitComplementaryData(
       CardSvDebitBuilder cardSvDebitBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
+      throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareDebitBuilder samSvPrepareDebitBuilder =
         new SamSvPrepareDebitBuilder(
@@ -732,13 +742,14 @@ class SamCommandProcessor {
    * @return the complementary security data to finalize the SvUndebit card command (sam ID + SV
    *     prepare load output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   public byte[] getSvUndebitComplementaryData(
       CardSvUndebitBuilder cardSvUndebitBuilder, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException, ReaderCommunicationException, CardCommunicationException {
+      throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
     // get the complementary data from the SAM
     SamSvPrepareUndebitBuilder samSvPrepareUndebitBuilder =
         new SamSvPrepareUndebitBuilder(
@@ -754,12 +765,13 @@ class SamCommandProcessor {
    *
    * @param svOperationResponseData the data of the SV operation performed.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardCommunicationException if the communication with the SAM has failed.
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0
    */
   void checkSvStatus(byte[] svOperationResponseData)
-      throws CalypsoSamCommandException, CardCommunicationException, ReaderCommunicationException {
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
     List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
 
@@ -768,17 +780,17 @@ class SamCommandProcessor {
     samCommands.add(samSvCheckBuilder);
 
     // build a SAM CardRequest
-    CardRequest samCardRequest = new CardRequest(getApduRequests(samCommands), false);
+    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
 
     // execute the command
-    CardResponse samCardResponse;
+    CardResponseApi samCardResponse;
     try {
       samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusCodeException e) {
+    } catch (UnexpectedStatusWordException e) {
       throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
-    ApduResponse svCheckResponse = samCardResponse.getApduResponses().get(0);
+    ApduResponseApi svCheckResponse = samCardResponse.getApduResponses().get(0);
 
     // create a parser
     SamSvCheckParser samSvCheckParser = samSvCheckBuilder.createResponseParser(svCheckResponse);
