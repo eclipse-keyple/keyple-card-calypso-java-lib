@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -57,28 +57,28 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
 
     CalypsoApduCommandException e;
     CalypsoCardCommand command = (CalypsoCardCommand) commandRef;
-    if (exceptionClass == CalypsoCardAccessForbiddenException.class) {
-      e = new CalypsoCardAccessForbiddenException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardDataAccessException.class) {
-      e = new CalypsoCardDataAccessException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardDataOutOfBoundsException.class) {
-      e = new CalypsoCardDataOutOfBoundsException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardIllegalArgumentException.class) {
-      e = new CalypsoCardIllegalArgumentException(message, command);
-    } else if (exceptionClass == CalypsoCardIllegalParameterException.class) {
-      e = new CalypsoCardIllegalParameterException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardPinException.class) {
-      e = new CalypsoCardPinException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardSecurityContextException.class) {
-      e = new CalypsoCardSecurityContextException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardSecurityDataException.class) {
-      e = new CalypsoCardSecurityDataException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardSessionBufferOverflowException.class) {
-      e = new CalypsoCardSessionBufferOverflowException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoCardTerminatedException.class) {
-      e = new CalypsoCardTerminatedException(message, command, statusWord);
+    if (exceptionClass == CardAccessForbiddenException.class) {
+      e = new CardAccessForbiddenException(message, command, statusWord);
+    } else if (exceptionClass == CardDataAccessException.class) {
+      e = new CardDataAccessException(message, command, statusWord);
+    } else if (exceptionClass == CardDataOutOfBoundsException.class) {
+      e = new CardDataOutOfBoundsException(message, command, statusWord);
+    } else if (exceptionClass == CardIllegalArgumentException.class) {
+      e = new CardIllegalArgumentException(message, command);
+    } else if (exceptionClass == CardIllegalParameterException.class) {
+      e = new CardIllegalParameterException(message, command, statusWord);
+    } else if (exceptionClass == CardPinException.class) {
+      e = new CardPinException(message, command, statusWord);
+    } else if (exceptionClass == CardSecurityContextException.class) {
+      e = new CardSecurityContextException(message, command, statusWord);
+    } else if (exceptionClass == CardSecurityDataException.class) {
+      e = new CardSecurityDataException(message, command, statusWord);
+    } else if (exceptionClass == CardSessionBufferOverflowException.class) {
+      e = new CardSessionBufferOverflowException(message, command, statusWord);
+    } else if (exceptionClass == CardTerminatedException.class) {
+      e = new CardTerminatedException(message, command, statusWord);
     } else {
-      e = new CalypsoCardUnknownStatusException(message, command, statusWord);
+      e = new CardUnknownStatusException(message, command, statusWord);
     }
     return e;
   }
@@ -89,11 +89,11 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
    * @since 2.0
    */
   @Override
-  public void checkStatus() throws CalypsoCardCommandException {
+  public void checkStatus() throws CardCommandException {
     try {
       super.checkStatus();
     } catch (CalypsoApduCommandException e) {
-      throw (CalypsoCardCommandException) e;
+      throw (CardCommandException) e;
     }
   }
 }

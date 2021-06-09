@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -31,20 +31,17 @@ final class CardRehabilitateParser extends AbstractCardResponseParser {
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CalypsoCardSessionBufferOverflowException.class));
-    m.put(
-        0x6700,
-        new StatusProperties("Lc value not supported.", CalypsoCardDataAccessException.class));
+            "Too many modifications in session.", CardSessionBufferOverflowException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (no session, wrong key).",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (DF context is invalid).",
-            CalypsoCardAccessForbiddenException.class));
+            "Access forbidden (DF context is invalid).", CardAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
 

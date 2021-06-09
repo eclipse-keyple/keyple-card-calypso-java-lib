@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -18,7 +18,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0
  */
-final class CalypsoCardIllegalArgumentException extends CalypsoCardCommandException {
+final class CardIllegalArgumentException extends CardCommandException {
 
   /**
    * (package-private)<br>
@@ -27,7 +27,7 @@ final class CalypsoCardIllegalArgumentException extends CalypsoCardCommandExcept
    * @param command the Calypso card command.
    * @since 2.0
    */
-  CalypsoCardIllegalArgumentException(String message, CalypsoCardCommand command) {
+  CardIllegalArgumentException(String message, CalypsoCardCommand command) {
     super(message, command, null);
   }
 }

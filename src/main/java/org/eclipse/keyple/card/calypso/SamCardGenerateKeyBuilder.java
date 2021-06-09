@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -32,7 +32,7 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
    * <p>If bot KIF and KVC of the ciphering are equal to 0, the source key is ciphered with the null
    * key.
    *
-   * @param samRevision The SAM samRevision.
+   * @param samProductType The SAM samProductType.
    * @param cipheringKif The KIF of the ciphering key.
    * @param cipheringKvc The KVC of the ciphering key.
    * @param sourceKif The KIF of the source key.
@@ -40,17 +40,17 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
    * @since 2.0
    */
   public SamCardGenerateKeyBuilder(
-      SamRevision samRevision,
+      CalypsoSam.ProductType samProductType,
       byte cipheringKif,
       byte cipheringKvc,
       byte sourceKif,
       byte sourceKvc) {
     super(command);
-    if (samRevision != null) {
-      this.defaultRevision = samRevision;
+    if (samProductType != null) {
+      this.defaultProductType = samProductType;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p1;
     byte p2;

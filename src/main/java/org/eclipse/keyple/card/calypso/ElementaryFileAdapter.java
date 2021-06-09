@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,9 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.card.ElementaryFile;
-import org.eclipse.keyple.card.calypso.card.FileData;
-import org.eclipse.keyple.card.calypso.card.FileHeader;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.card.FileData;
+import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**

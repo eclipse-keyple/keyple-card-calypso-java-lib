@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -30,15 +30,15 @@ final class SamDigestAuthenticateBuilder
   /**
    * Instantiates a new SamDigestAuthenticateBuilder .
    *
-   * @param revision of the SAM.
+   * @param productType of the SAM.
    * @param signature the signature.
    * @throws IllegalArgumentException - if the signature is null or has a wrong length.
    * @since 2.0
    */
-  public SamDigestAuthenticateBuilder(SamRevision revision, byte[] signature) {
+  public SamDigestAuthenticateBuilder(CalypsoSam.ProductType productType, byte[] signature) {
     super(command);
-    if (revision != null) {
-      this.defaultRevision = revision;
+    if (productType != null) {
+      this.defaultProductType = productType;
     }
     if (signature == null) {
       throw new IllegalArgumentException("Signature can't be null");
@@ -47,7 +47,7 @@ final class SamDigestAuthenticateBuilder
       throw new IllegalArgumentException(
           "Signature is not the right length : length is " + signature.length);
     }
-    byte cla = SamRevision.S1D.equals(this.defaultRevision) ? (byte) 0x94 : (byte) 0x80;
+    byte cla = SamUtilAdapter.getClassByte(defaultProductType);
     byte p1 = 0x00;
     byte p2 = (byte) 0x00;
 

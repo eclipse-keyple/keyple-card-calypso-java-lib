@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -33,17 +33,17 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
    *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
    * @since 2.0
    */
-  public SamSvCheckBuilder(SamRevision revision, byte[] svCardSignature) {
+  public SamSvCheckBuilder(CalypsoSam.ProductType revision, byte[] svCardSignature) {
     super(command);
     if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svCardSignature.");
     }
 
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

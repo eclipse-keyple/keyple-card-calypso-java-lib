@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,14 +11,14 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
-import static org.calypsonet.terminal.reader.CardReaderEvent.EventType.CARD_INSERTED;
-import static org.calypsonet.terminal.reader.CardReaderEvent.EventType.CARD_MATCHED;
+import static org.calypsonet.terminal.reader.CardReaderEvent.Type.CARD_INSERTED;
+import static org.calypsonet.terminal.reader.CardReaderEvent.Type.CARD_MATCHED;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.reader.CardReaderEvent;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.calypsonet.terminal.reader.spi.CardReaderObservationExceptionHandlerSpi;
 import org.calypsonet.terminal.reader.spi.CardReaderObserverSpi;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.core.service.*;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ class CardReaderObserver
    */
   @Override
   public void onReaderEvent(CardReaderEvent event) {
-    switch (event.getEventType()) {
+    switch (event.getType()) {
       case CARD_MATCHED:
         // the selection has one target, get the result at index 0
         CalypsoCard calypsoCard =
@@ -90,7 +90,7 @@ class CardReaderObserver
         break;
     }
 
-    if (event.getEventType() == CARD_INSERTED || event.getEventType() == CARD_MATCHED) {
+    if (event.getType() == CARD_INSERTED || event.getType() == CARD_MATCHED) {
 
       // Informs the underlying layer of the end of the card processing, in order to manage the
       // removal sequence.

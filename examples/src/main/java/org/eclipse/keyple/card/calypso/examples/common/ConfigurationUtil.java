@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,12 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.examples.common;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.service.Plugin;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.resource.*;
+import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
 import org.eclipse.keyple.core.service.resource.spi.ReaderConfiguratorSpi;
 import org.eclipse.keyple.core.util.protocol.ContactlessCardCommonProtocol;
 import org.eclipse.keyple.plugin.pcsc.PcscReader;
@@ -85,10 +86,12 @@ public class ConfigurationUtil {
       Plugin plugin, String readerNameRegex, String samProfileName) {
 
     // Create a card resource extension expecting a SAM "C1".
-    CalypsoSamResourceProfileExtension samCardResourceExtension =
+    CalypsoSamSelection samSelection =
         CalypsoExtensionService.getInstance()
-            .createSamResourceProfileExtension()
-            .setSamRevision(SamRevision.C1);
+            .createSamSelection()
+            .filterByProductType(CalypsoSam.ProductType.SAM_C1);
+    CardResourceProfileExtension samCardResourceExtension =
+        CalypsoExtensionService.getInstance().createSamResourceProfileExtension(samSelection);
 
     // Get the service
     CardResourceService cardResourceService = CardResourceServiceProvider.getService();

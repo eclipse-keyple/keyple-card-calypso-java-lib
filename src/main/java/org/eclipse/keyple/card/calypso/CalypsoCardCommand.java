@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.card.CardRevision;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 
 /**
  * (package-private)<br>
@@ -31,10 +31,7 @@ enum CalypsoCardCommand implements CardCommand {
   OPEN_SESSION_24("Open Secure Session V2.4", (byte) 0x8A),
 
   /** open session. */
-  OPEN_SESSION_31("Open Secure Session V3.1", (byte) 0x8A),
-
-  /** open session. */
-  OPEN_SESSION_32("Open Secure Session V3.2", (byte) 0x8A),
+  OPEN_SESSION_3X("Open Secure Session V3", (byte) 0x8A),
 
   /** close session. */
   CLOSE_SESSION("Close Secure Session", (byte) 0x8E),
@@ -129,23 +126,21 @@ enum CalypsoCardCommand implements CardCommand {
   }
 
   /**
-   * Get the open session command for a given {@link CardRevision}
+   * Get the open session command for a given {@link CalypsoCard.ProductType}
    *
-   * @param rev Command revision.
+   * @param calypsoCard The {@link CalypsoCard}.
    * @return Returned command
    * @since 2.0
    */
-  public static CalypsoCardCommand getOpenSessionForRev(CardRevision rev) {
-    switch (rev) {
-      case REV1_0:
+  public static CalypsoCardCommand getOpenSessionForRev(CalypsoCard calypsoCard) {
+    switch (calypsoCard.getProductType()) {
+      case PRIME_REV1_0:
         return OPEN_SESSION_10;
-      case REV2_4:
+      case PRIME_REV2_4:
         return OPEN_SESSION_24;
-      case REV3_1:
-      case REV3_1_CLAP:
-        return OPEN_SESSION_31;
-      case REV3_2:
-        return OPEN_SESSION_32;
+      case PRIME_REV3:
+      case LIGHT:
+        return OPEN_SESSION_3X;
       default:
         throw new IllegalStateException("Any revision should have a matching command");
     }

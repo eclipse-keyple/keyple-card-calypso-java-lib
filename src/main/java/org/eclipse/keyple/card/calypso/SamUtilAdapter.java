@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,23 +11,25 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-/**
- * (package-private)<br>
- * Indicates that the status word is not referenced.
- *
- * @since 2.0
- */
-final class CardUnknownStatusException extends CardCommandException {
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+
+/** (package-private)<br> */
+final class SamUtilAdapter {
+  /** Constructor */
+  private SamUtilAdapter() {}
 
   /**
    * (package-private)<br>
+   * Get the class byte to use for the provided product type.
    *
-   * @param message the message to identify the exception context.
-   * @param command the Calypso card command.
-   * @param statusWord the status word.
+   * @param productType The SAM product type.
+   * @return A byte.
    * @since 2.0
    */
-  CardUnknownStatusException(String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  static byte getClassByte(CalypsoSam.ProductType productType) {
+    if (productType == CalypsoSam.ProductType.SAM_S1Dx) {
+      return (byte) 0x94;
+    }
+    return (byte) 0x80;
   }
 }

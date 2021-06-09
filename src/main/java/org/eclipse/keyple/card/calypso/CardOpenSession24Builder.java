@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +35,7 @@ final class CardOpenSession24Builder
   /**
    * Instantiates a new AbstractCardOpenSessionBuilder.
    *
+   * @param calypsoCard The {@link CalypsoCard}.
    * @param keyIndex the key index.
    * @param samChallenge the sam challenge returned by the SAM Get Challenge APDU command.
    * @param sfi the sfi to select.
@@ -43,8 +44,9 @@ final class CardOpenSession24Builder
    * @throws IllegalArgumentException - if the request is inconsistent
    * @since 2.0
    */
-  public CardOpenSession24Builder(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-    super(CardRevision.REV2_4);
+  public CardOpenSession24Builder(
+      CalypsoCard calypsoCard, byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
+    super(calypsoCard);
 
     if (keyIndex == 0x00) {
       throw new IllegalArgumentException("Key index can't be null for rev 2.4!");
@@ -65,7 +67,7 @@ final class CardOpenSession24Builder
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.LEGACY.getValue(),
-                CalypsoCardCommand.getOpenSessionForRev(CardRevision.REV2_4).getInstructionByte(),
+                CalypsoCardCommand.getOpenSessionForRev(calypsoCard).getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,

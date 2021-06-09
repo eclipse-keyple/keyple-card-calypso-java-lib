@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.reader.selection.spi.CardSelection;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 
 /**
  * (package-private)<br>
@@ -31,10 +31,10 @@ interface SamCardSelection extends CardSelection {
    * <p>Note that at this stage the SAM is not yet selected, so we can only presume what its version
    * is.
    *
-   * @param samRevision The supposed {@link SamRevision}.
+   * @param samProductType The supposed {@link CalypsoSam.ProductType}.
    * @param unlockData A byte array containing the unlock data (8 or 16 bytes).
    * @throws IllegalArgumentException If one of the provided argument is null or out of range.
    * @since 2.0
    */
-  void prepareUnlock(SamRevision samRevision, byte[] unlockData);
+  void prepareUnlock(CalypsoSam.ProductType samProductType, byte[] unlockData);
 }

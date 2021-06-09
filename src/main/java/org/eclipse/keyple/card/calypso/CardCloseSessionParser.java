@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -33,17 +33,14 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
         0x6700,
         new StatusProperties(
             "Lc signatureLo not supported (e.g. Lc=4 with a Revision 3.2 mode for Open Secure Session).",
-            CalypsoCardIllegalParameterException.class));
+            CardIllegalParameterException.class));
     m.put(
         0x6B00,
         new StatusProperties(
-            "P1 or P2 signatureLo not supported.", CalypsoCardIllegalParameterException.class));
+            "P1 or P2 signatureLo not supported.", CardIllegalParameterException.class));
+    m.put(0x6988, new StatusProperties("incorrect signatureLo.", CardSecurityDataException.class));
     m.put(
-        0x6988,
-        new StatusProperties("incorrect signatureLo.", CalypsoCardSecurityDataException.class));
-    m.put(
-        0x6985,
-        new StatusProperties("No session was opened.", CalypsoCardAccessForbiddenException.class));
+        0x6985, new StatusProperties("No session was opened.", CardAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
 

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -12,7 +12,8 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
-import org.eclipse.keyple.card.calypso.card.FileHeader;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
@@ -26,7 +27,7 @@ class FileHeaderAdapter implements FileHeader {
   private final short lid;
   private final int recordsNumber;
   private final int recordSize;
-  private final FileType type;
+  private final ElementaryFile.Type type;
   private final byte[] accessConditions;
   private final byte[] keyIndexes;
   private final byte dfStatus;
@@ -55,7 +56,7 @@ class FileHeaderAdapter implements FileHeader {
     private short lid;
     private int recordsNumber;
     private int recordSize;
-    private FileType type;
+    private ElementaryFile.Type type;
     private byte[] accessConditions;
     private byte[] keyIndexes;
     private byte dfStatus;
@@ -111,7 +112,7 @@ class FileHeaderAdapter implements FileHeader {
      * @return The builder instance
      * @since 2.0
      */
-    FileHeaderBuilder type(FileType type) {
+    FileHeaderBuilder type(ElementaryFile.Type type) {
       this.type = type;
       return this;
     }
@@ -216,7 +217,7 @@ class FileHeaderAdapter implements FileHeader {
    * @since 2.0
    */
   @Override
-  public FileType getType() {
+  public ElementaryFile.Type getEfType() {
     return type;
   }
 
@@ -256,16 +257,6 @@ class FileHeaderAdapter implements FileHeader {
    * @since 2.0
    */
   @Override
-  public boolean isShared() {
-    return sharedReference != null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
   public Short getSharedReference() {
     return sharedReference;
   }
@@ -292,7 +283,7 @@ class FileHeaderAdapter implements FileHeader {
     this.lid = source.getLid();
     this.recordsNumber = source.getRecordsNumber();
     this.recordSize = source.getRecordSize();
-    this.type = source.getType();
+    this.type = source.getEfType();
     this.accessConditions =
         Arrays.copyOf(source.getAccessConditions(), source.getAccessConditions().length);
     this.keyIndexes = Arrays.copyOf(source.getKeyIndexes(), source.getKeyIndexes().length);

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -18,7 +18,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0
  */
-final class CalypsoCardDataAccessException extends CalypsoCardCommandException {
+final class CardDataAccessException extends CardCommandException {
 
   /**
    * (package-private)<br>
@@ -28,7 +28,7 @@ final class CalypsoCardDataAccessException extends CalypsoCardCommandException {
    * @param statusWord the status word.
    * @since 2.0
    */
-  CalypsoCardDataAccessException(String message, CalypsoCardCommand command, Integer statusWord) {
+  CardDataAccessException(String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);
   }
 }

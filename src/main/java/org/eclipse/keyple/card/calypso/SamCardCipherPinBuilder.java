@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -43,7 +43,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    * @since 2.0
    */
   public SamCardCipherPinBuilder(
-      SamRevision revision,
+      CalypsoSam.ProductType revision,
       byte cipheringKif,
       byte cipheringKvc,
       byte[] currentPin,
@@ -51,7 +51,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
     super(command);
 
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
     if (currentPin == null || currentPin.length != 4) {
       throw new IllegalArgumentException("Bad current PIN value.");
@@ -61,7 +61,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
       throw new IllegalArgumentException("Bad new PIN value.");
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p1;
     byte p2;

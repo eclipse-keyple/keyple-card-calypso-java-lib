@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.card.SvLoadLogRecord;
+import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -42,6 +42,16 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * @since 2.0
    */
   @Override
+  public byte[] getRawData() {
+    return cardResponse;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
   public int getAmount() {
     return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 8);
   }
@@ -62,17 +72,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * @since 2.0
    */
   @Override
-  public int getLoadTime() {
-    return ByteArrayUtil.twoBytesToInt(getLoadTimeBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getLoadTimeBytes() {
+  public byte[] getLoadTime() {
     final byte[] time = new byte[2];
     time[0] = cardResponse[offset + 11];
     time[1] = cardResponse[offset + 12];
@@ -85,17 +85,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * @since 2.0
    */
   @Override
-  public int getLoadDate() {
-    return ByteArrayUtil.twoBytesToInt(getLoadDateBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getLoadDateBytes() {
+  public byte[] getLoadDate() {
     final byte[] date = new byte[2];
     date[0] = cardResponse[offset + 0];
     date[1] = cardResponse[offset + 1];
@@ -108,17 +98,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * @since 2.0
    */
   @Override
-  public String getFreeByte() {
-    return new String(getFreeByteBytes());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getFreeByteBytes() {
+  public byte[] getFreeData() {
     final byte[] free = new byte[2];
     free[0] = cardResponse[offset + 2];
     free[1] = cardResponse[offset + 4];
@@ -141,17 +121,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * @since 2.0
    */
   @Override
-  public long getSamId() {
-    return ByteArrayUtil.fourBytesToInt(getSamIdBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSamIdBytes() {
+  public byte[] getSamId() {
     byte[] samId = new byte[4];
     System.arraycopy(cardResponse, offset + 13, samId, 0, 4);
     return samId;
@@ -164,20 +134,10 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getSvTNum() {
-    return ByteArrayUtil.twoBytesToInt(getSvTNumBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSvTNumBytes() {
     final byte[] tnNum = new byte[2];
     tnNum[0] = cardResponse[offset + 20];
     tnNum[1] = cardResponse[offset + 21];
-    return tnNum;
+    return ByteArrayUtil.twoBytesToInt(tnNum, 0);
   }
 
   /**
@@ -187,19 +147,9 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getSamTNum() {
-    return ByteArrayUtil.threeBytesToInt(getSamTNumBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSamTNumBytes() {
     byte[] samTNum = new byte[3];
     System.arraycopy(cardResponse, offset + 17, samTNum, 0, 3);
-    return samTNum;
+    return ByteArrayUtil.threeBytesToInt(samTNum, 0);
   }
 
   /**
@@ -215,15 +165,15 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
         + ", \"balance\":"
         + getBalance()
         + ", \"debitDate\":"
-        + getLoadDate()
+        + ByteArrayUtil.toHex(getLoadDate())
         + ", \"loadTime\":"
-        + getLoadDate()
+        + ByteArrayUtil.toHex(getLoadDate())
         + ", \"freeBytes\": \""
-        + ByteArrayUtil.toHex(getFreeByteBytes())
+        + ByteArrayUtil.toHex(getFreeData())
         + "\", \"kvc\":"
         + getKvc()
         + ", \"samId\": \""
-        + ByteArrayUtil.toHex(getSamIdBytes())
+        + ByteArrayUtil.toHex(getSamId())
         + "\", \"svTransactionNumber\":"
         + getSvTNum()
         + ", \"svSamTransactionNumber\":"

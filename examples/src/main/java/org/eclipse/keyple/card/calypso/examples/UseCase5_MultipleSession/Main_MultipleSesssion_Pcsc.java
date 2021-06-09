@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -14,15 +14,19 @@ package org.eclipse.keyple.card.calypso.examples.UseCase5_MultipleSession;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionService;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
-import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
+import org.eclipse.keyple.core.service.resource.CardResource;
+import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
@@ -98,17 +102,16 @@ public class Main_MultipleSesssion_Pcsc {
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario.
     selectionService.prepareSelection(
-        cardExtension.createCardSelection(
-            CalypsoExtensionService.getInstance()
-                .createCardSelector()
-                .filterByDfName(CalypsoConstants.AID),
-            true));
+        cardExtension
+            .createCardSelection()
+            .acceptInvalidatedCard()
+            .filterByDfName(CalypsoConstants.AID));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
-    if (!selectionResult.hasActiveSelection()) {
+    if (selectionResult.getActiveSmartCard() == null) {
       throw new IllegalStateException(
           "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
@@ -120,17 +123,19 @@ public class Main_MultipleSesssion_Pcsc {
 
     // Create security settings that reference the same SAM profile requested from the card resource
     // service and enable the multiple session mode.
+    CardResource samResource =
+        CardResourceServiceProvider.getService().getCardResource(CalypsoConstants.SAM_PROFILE_NAME);
     CardSecuritySetting cardSecuritySetting =
-        CardSecuritySetting.builder()
-            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
-            .enableMultipleSession()
-            .build();
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
+            .enableMultipleSession();
 
     // Performs file reads using the card transaction service in non-secure mode.
     CardTransactionService cardTransaction =
         cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
+    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
 
     // Compute the number of append records (29 bytes) commands that will overflow the card
     // modifications buffer. Each append records will consume 35 (29 + 6) bytes in the

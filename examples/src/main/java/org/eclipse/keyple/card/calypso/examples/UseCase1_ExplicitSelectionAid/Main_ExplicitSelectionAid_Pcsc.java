@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,10 +13,10 @@ package org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
@@ -93,8 +93,9 @@ public class Main_ExplicitSelectionAid_Pcsc {
     // scenario.
     selectionService.prepareSelection(
         cardExtension
-            .createCardSelection(
-                cardExtension.createCardSelector().filterByDfName(CalypsoConstants.AID), true)
+            .createCardSelection()
+            .filterByDfName(CalypsoConstants.AID)
+            .acceptInvalidatedCard()
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1));
 
@@ -102,7 +103,7 @@ public class Main_ExplicitSelectionAid_Pcsc {
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
-    if (!selectionResult.hasActiveSelection()) {
+    if (selectionResult.getActiveSmartCard() == null) {
       throw new IllegalStateException(
           "The selection of the application '" + CalypsoConstants.AID + "' failed.");
     }

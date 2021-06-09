@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -30,21 +30,21 @@ final class SamSelectDiversifierBuilder
   /**
    * Instantiates a new SamSelectDiversifierBuilder.
    *
-   * @param revision the SAM revision.
+   * @param productType the SAM product type.
    * @param diversifier the application serial number.
    * @throws IllegalArgumentException - if the diversifier is null or has a wrong length
    * @since 2.0
    */
-  public SamSelectDiversifierBuilder(SamRevision revision, byte[] diversifier) {
+  public SamSelectDiversifierBuilder(CalypsoSam.ProductType productType, byte[] diversifier) {
     super(command);
-    if (revision != null) {
-      this.defaultRevision = revision;
+    if (productType != null) {
+      this.defaultProductType = productType;
     }
     if (diversifier == null || (diversifier.length != 4 && diversifier.length != 8)) {
       throw new IllegalArgumentException("Bad diversifier value!");
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = 0x00;
     byte p2 = 0x00;
 

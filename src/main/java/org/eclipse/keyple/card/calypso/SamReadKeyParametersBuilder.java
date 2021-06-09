@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -44,14 +44,14 @@ final class SamReadKeyParametersBuilder
     NEXT
   }
 
-  public SamReadKeyParametersBuilder(SamRevision revision) {
+  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision) {
 
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p2 = (byte) 0xE0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -62,14 +62,14 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(SamRevision revision, byte kif) {
+  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision, byte kif) {
 
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p2 = (byte) 0xC0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -82,14 +82,14 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(SamRevision revision, byte kif, byte kvc) {
+  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision, byte kif, byte kvc) {
 
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p2 = (byte) 0xF0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -104,12 +104,12 @@ final class SamReadKeyParametersBuilder
   }
 
   public SamReadKeyParametersBuilder(
-      SamRevision revision, SourceRef sourceKeyRef, int recordNumber) {
+      CalypsoSam.ProductType revision, SourceRef sourceKeyRef, int recordNumber) {
 
     super(command);
 
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
     if (recordNumber < 1 || recordNumber > MAX_WORK_KEY_REC_NUMB) {
@@ -117,7 +117,7 @@ final class SamReadKeyParametersBuilder
           "Record Number must be between 1 and " + MAX_WORK_KEY_REC_NUMB + ".");
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -142,14 +142,15 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(SamRevision revision, byte kif, NavControl navControl) {
+  public SamReadKeyParametersBuilder(
+      CalypsoSam.ProductType revision, byte kif, NavControl navControl) {
 
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};

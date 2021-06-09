@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -29,16 +29,14 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
   /** The command. */
   private static final CalypsoCardCommand command = CalypsoCardCommand.SV_DEBIT;
 
-  private final CalypsoCardClass calypsoCardClass;
-  private final CardRevision cardRevision;
+  private final CalypsoCard calypsoCard;
   /** apdu data array */
   private final byte[] dataIn;
 
   /**
    * Instantiates a new CardSvDebitBuilder.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param cardRevision the card revision.
+   * @param calypsoCard the Calypso card.
    * @param amount amount to debit (positive integer from 0 to 32767).
    * @param kvc the KVC.
    * @param date debit date (not checked by the card).
@@ -47,12 +45,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * @since 2.0
    */
   public CardSvDebitBuilder(
-      CalypsoCardClass calypsoCardClass,
-      CardRevision cardRevision,
-      int amount,
-      byte kvc,
-      byte[] date,
-      byte[] time) {
+      CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time) {
     super(command);
 
     /* @see Calypso Layer ID 8.02 (200108) */
@@ -68,12 +61,11 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.cardRevision = cardRevision;
-    this.calypsoCardClass = calypsoCardClass;
+    this.calypsoCard = calypsoCard;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[15 + (cardRevision == CardRevision.REV3_2 ? 10 : 5)];
+    dataIn = new byte[15 + (calypsoCard.isConfidentialSessionModeSupported() ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     short amountShort = (short) -amount;
@@ -103,8 +95,9 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * @since 2.0
    */
   public void finalizeBuilder(byte[] debitComplementaryData) {
-    if ((cardRevision == CardRevision.REV3_2 && debitComplementaryData.length != 20)
-        || (cardRevision != CardRevision.REV3_2 && debitComplementaryData.length != 15)) {
+    if ((calypsoCard.isConfidentialSessionModeSupported() && debitComplementaryData.length != 20)
+        || (!calypsoCard.isConfidentialSessionModeSupported()
+            && debitComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -119,7 +112,12 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null)));
+                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
+                command.getInstructionByte(),
+                p1,
+                p2,
+                dataIn,
+                null)));
   }
 
   /**
@@ -133,7 +131,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     svDebitData[0] = command.getInstructionByte();
     // svDebitData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svDebitData[3] = cardRevision == CardRevision.REV3_2 ? (byte) 0x19 : (byte) 0x14;
+    svDebitData[3] = calypsoCard.isConfidentialSessionModeSupported() ? (byte) 0x19 : (byte) 0x14;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svDebitData, 4, 8);
     return svDebitData;

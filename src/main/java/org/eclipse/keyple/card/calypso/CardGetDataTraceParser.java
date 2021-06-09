@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -33,14 +33,13 @@ final class CardGetDataTraceParser extends AbstractCardResponseParser {
     m.put(
         0x6A88,
         new StatusProperties(
-            "Data object not found (optional mode not available).",
-            CalypsoCardDataAccessException.class));
+            "Data object not found (optional mode not available).", CardDataAccessException.class));
     m.put(
         0x6B00,
         new StatusProperties(
             "P1 or P2 value not supported (<>004fh, 0062h, 006Fh, 00C0h, 00D0h, 0185h and 5F52h, according to "
                 + "available optional modes).",
-            CalypsoCardIllegalParameterException.class));
+            CardIllegalParameterException.class));
     m.put(
         0x6283,
         new StatusProperties("Successful execution, FCI request and DF is invalidated.", null));

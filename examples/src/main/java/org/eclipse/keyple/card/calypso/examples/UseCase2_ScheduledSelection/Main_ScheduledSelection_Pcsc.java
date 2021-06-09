@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,9 +13,9 @@ package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
@@ -89,12 +89,10 @@ public class Main_ScheduledSelection_Pcsc {
     // Select the card and read the record 1 of the file ENVIRONMENT_AND_HOLDER
     CalypsoCardSelection cardSelection =
         cardExtension
-            .createCardSelection(
-                CalypsoExtensionService.getInstance()
-                    .createCardSelector()
-                    .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
-                    .filterByDfName(CalypsoConstants.AID),
-                true)
+            .createCardSelection()
+            .acceptInvalidatedCard()
+            .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
+            .filterByDfName(CalypsoConstants.AID)
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1);
 
@@ -105,14 +103,14 @@ public class Main_ScheduledSelection_Pcsc {
     // case.
     selectionService.scheduleCardSelectionScenario(
         (ObservableReader) cardReader,
-        ObservableReader.NotificationMode.MATCHED_ONLY,
-        ObservableReader.PollingMode.REPEATING);
+        ObservableReader.DetectionMode.REPEATING,
+        ObservableReader.NotificationMode.MATCHED_ONLY);
 
     // Create and add an observer for this reader
     CardReaderObserver cardReaderObserver = new CardReaderObserver(cardReader, selectionService);
     ((ObservableReader) cardReader).setReaderObservationExceptionHandler(cardReaderObserver);
     ((ObservableReader) cardReader).addObserver(cardReaderObserver);
-    ((ObservableReader) cardReader).startCardDetection(ObservableReader.PollingMode.REPEATING);
+    ((ObservableReader) cardReader).startCardDetection(ObservableReader.DetectionMode.REPEATING);
 
     logger.info(
         "= #### Wait for a card. The default AID based selection to be processed as soon as the card is detected.");

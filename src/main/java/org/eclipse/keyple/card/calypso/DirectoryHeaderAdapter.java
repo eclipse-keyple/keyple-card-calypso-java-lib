@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -12,9 +12,8 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.EnumMap;
-import java.util.NoSuchElementException;
-import org.eclipse.keyple.card.calypso.card.DirectoryHeader;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
@@ -30,8 +29,8 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   private final byte[] accessConditions;
   private final byte[] keyIndexes;
   private final byte dfStatus;
-  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kif;
-  private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvc;
+  private final EnumMap<WriteAccessLevel, Byte> kif;
+  private final EnumMap<WriteAccessLevel, Byte> kvc;
   private static final String LEVEL_STR = "level";
 
   /** Private constructor */
@@ -56,12 +55,10 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     private byte[] accessConditions;
     private byte[] keyIndexes;
     private byte dfStatus;
-    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kif =
-        new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
-            CardTransactionService.SessionAccessLevel.class);
-    private final EnumMap<CardTransactionService.SessionAccessLevel, Byte> kvc =
-        new EnumMap<CardTransactionService.SessionAccessLevel, Byte>(
-            CardTransactionService.SessionAccessLevel.class);
+    private final EnumMap<WriteAccessLevel, Byte> kif =
+        new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+    private final EnumMap<WriteAccessLevel, Byte> kvc =
+        new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
 
     /** Private constructor */
     private DirectoryHeaderBuilder() {}
@@ -127,7 +124,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @return the builder instance
      * @since 2.0
      */
-    DirectoryHeaderBuilder kif(CardTransactionService.SessionAccessLevel level, byte kif) {
+    DirectoryHeaderBuilder kif(WriteAccessLevel level, byte kif) {
       this.kif.put(level, kif);
       return this;
     }
@@ -141,7 +138,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @return the builder instance
      * @since 2.0
      */
-    DirectoryHeaderBuilder kvc(CardTransactionService.SessionAccessLevel level, byte kvc) {
+    DirectoryHeaderBuilder kvc(WriteAccessLevel level, byte kvc) {
       this.kvc.put(level, kvc);
       return this;
     }
@@ -179,39 +176,19 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   @Override
-  public boolean isKifAvailable(CardTransactionService.SessionAccessLevel level) {
-    Assert.getInstance().notNull(level, LEVEL_STR);
-    return kif.get(level) != null;
+  public byte getKif(WriteAccessLevel writeAccessLevel) {
+
+    Assert.getInstance().notNull(writeAccessLevel, LEVEL_STR);
+
+    return kif.get(writeAccessLevel);
   }
 
   @Override
-  public boolean isKvcAvailable(CardTransactionService.SessionAccessLevel level) {
-    Assert.getInstance().notNull(level, LEVEL_STR);
-    return kvc.get(level) != null;
-  }
+  public byte getKvc(WriteAccessLevel lwriteAccessLevelvel) {
 
-  @Override
-  public byte getKif(CardTransactionService.SessionAccessLevel level) {
+    Assert.getInstance().notNull(lwriteAccessLevelvel, LEVEL_STR);
 
-    Assert.getInstance().notNull(level, LEVEL_STR);
-
-    Byte result = kif.get(level);
-    if (result == null) {
-      throw new NoSuchElementException("KIF not found for session access level [" + level + "].");
-    }
-    return result;
-  }
-
-  @Override
-  public byte getKvc(CardTransactionService.SessionAccessLevel level) {
-
-    Assert.getInstance().notNull(level, LEVEL_STR);
-
-    Byte result = kvc.get(level);
-    if (result == null) {
-      throw new NoSuchElementException("KVC not found for session access level [" + level + "].");
-    }
-    return result;
+    return kvc.get(lwriteAccessLevelvel);
   }
 
   /**

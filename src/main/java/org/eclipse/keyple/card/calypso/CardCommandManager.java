@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoCardTransactionIllegalStateException;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
+import org.calypsonet.terminal.calypso.transaction.SvAction;
+import org.calypsonet.terminal.calypso.transaction.SvOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ class CardCommandManager {
           new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
 
   private CalypsoCardCommand svLastCommand;
-  private CardTransactionService.SvSettings.Operation svOperation;
+  private SvOperation svOperation;
   private boolean svOperationComplete = false;
 
   /**
@@ -69,9 +69,8 @@ class CardCommandManager {
    *
    * <p>Set up a mini state machine to manage the scheduling of Stored Value commands.
    *
-   * <p>The {@link CardTransactionService.SvSettings.Operation} and {@link
-   * CardTransactionService.SvSettings.Action} are also used to check the consistency of the SV
-   * process.
+   * <p>The {@link SvOperation} and {@link SvAction} are also used to check the consistency of the
+   * SV process.
    *
    * <p>The svOperationPending flag is set when an SV operation (Reload/Debit/Undebit) command is
    * added.
@@ -79,11 +78,11 @@ class CardCommandManager {
    * @param commandBuilder the StoredValue command builder.
    * @param svOperation the type of the current SV operation (Realod/Debit/Undebit).
    * @throws IllegalStateException if the provided command is not an SV command
-   * @throws CalypsoCardTransactionIllegalStateException if the SV API is not properly used.
+   * @throws CardTransactionIllegalStateException if the SV API is not properly used.
    */
   void addStoredValueCommand(
       AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder,
-      CardTransactionService.SvSettings.Operation svOperation) {
+      SvOperation svOperation) {
     // Check the logic of the SV command sequencing
     switch (commandBuilder.getCommandRef()) {
       case SV_GET:
@@ -93,7 +92,7 @@ class CardCommandManager {
       case SV_DEBIT:
       case SV_UNDEBIT:
         if (!cardCommands.isEmpty()) {
-          throw new CalypsoCardTransactionIllegalStateException(
+          throw new IllegalStateException(
               "This SV command can only be placed in the first position in the list of prepared commands");
         }
 
@@ -105,7 +104,7 @@ class CardCommandManager {
         // here, we expect the builder and the SV operation to be consistent
         if (svOperation != this.svOperation) {
           logger.error("Sv operation = {}, current command = {}", this.svOperation, svOperation);
-          throw new CalypsoCardTransactionIllegalStateException("Inconsistent SV operation.");
+          throw new IllegalStateException("Inconsistent SV operation.");
         }
         this.svOperation = svOperation;
         svOperationComplete = true;

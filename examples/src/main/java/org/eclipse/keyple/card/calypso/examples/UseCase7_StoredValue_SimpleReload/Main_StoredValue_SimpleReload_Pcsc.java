@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -14,15 +14,20 @@ package org.eclipse.keyple.card.calypso.examples.UseCase7_StoredValue_SimpleRelo
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionService;
+import org.calypsonet.terminal.calypso.transaction.SvAction;
+import org.calypsonet.terminal.calypso.transaction.SvOperation;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
-import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
+import org.eclipse.keyple.core.service.resource.CardResource;
+import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,17 +101,16 @@ public class Main_StoredValue_SimpleReload_Pcsc {
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario.
     selectionService.prepareSelection(
-        cardExtension.createCardSelection(
-            CalypsoExtensionService.getInstance()
-                .createCardSelector()
-                .filterByDfName(CalypsoConstants.AID),
-            true));
+        cardExtension
+            .createCardSelection()
+            .acceptInvalidatedCard()
+            .filterByDfName(CalypsoConstants.AID));
 
     // Actual card communication: run the selection scenario.
     CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
-    if (!selectionResult.hasActiveSelection()) {
+    if (selectionResult.getActiveSmartCard() == null) {
       throw new IllegalStateException(
           "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
@@ -118,19 +122,19 @@ public class Main_StoredValue_SimpleReload_Pcsc {
 
     // Create security settings that reference the same SAM profile requested from the card resource
     // service.
+    CardResource samResource =
+        CardResourceServiceProvider.getService().getCardResource(CalypsoConstants.SAM_PROFILE_NAME);
     CardSecuritySetting cardSecuritySetting =
-        CardSecuritySetting.builder()
-            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
-            .build();
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard());
 
     // Performs file reads using the card transaction service in non-secure mode.
     // Prepare the command to retrieve the SV status with the two debit and reload logs.
     CardTransactionService cardTransaction =
         cardExtension
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-            .prepareSvGet(
-                CardTransactionService.SvSettings.Operation.RELOAD,
-                CardTransactionService.SvSettings.Action.DO)
+            .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
             .processCardCommands();
 
     // Display the current SV status

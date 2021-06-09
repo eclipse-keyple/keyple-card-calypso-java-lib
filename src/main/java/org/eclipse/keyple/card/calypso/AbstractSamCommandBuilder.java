@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 
 /**
  * (package-private)<br>
@@ -23,7 +23,7 @@ import org.eclipse.keyple.card.calypso.sam.SamRevision;
 abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
     extends AbstractApduCommandBuilder {
 
-  protected SamRevision defaultRevision = SamRevision.C1;
+  protected CalypsoSam.ProductType defaultProductType = CalypsoSam.ProductType.SAM_C1;
 
   protected AbstractSamCommandBuilder(CalypsoSamCommand reference) {
     super(reference);

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -65,11 +65,10 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CalypsoCardSessionBufferOverflowException.class));
+            "Too many modifications in session.", CardSessionBufferOverflowException.class));
     m.put(
         0x6700,
-        new StatusProperties(
-            "Lc value not supported.", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
     m.put(
         0x6900,
         new StatusProperties(
@@ -79,9 +78,7 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
         0x6985,
         new StatusProperties(
             "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect signatureHi.", CalypsoCardSecurityDataException.class));
+    m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
     m.put(
         0x6200,
         new StatusProperties(

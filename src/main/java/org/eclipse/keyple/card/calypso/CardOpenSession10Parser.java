@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
 
 /**
  * (package-private)<br>
@@ -31,7 +30,7 @@ final class CardOpenSession10Parser extends AbstractCardOpenSessionParser {
    * @since 2.0
    */
   public CardOpenSession10Parser(ApduResponseApi response, CardOpenSession10Builder builder) {
-    super(response, builder, CardRevision.REV1_0);
+    super(response, builder);
   }
 
   @Override

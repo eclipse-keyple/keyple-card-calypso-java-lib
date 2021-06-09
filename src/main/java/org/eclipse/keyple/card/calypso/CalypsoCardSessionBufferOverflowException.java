@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0
  */
-final class CalypsoCardSessionBufferOverflowException extends CalypsoCardCommandException {
+final class CardSessionBufferOverflowException extends CardCommandException {
 
   /**
    * (package-private)<br>
@@ -27,7 +27,7 @@ final class CalypsoCardSessionBufferOverflowException extends CalypsoCardCommand
    * @param statusWord the status word.
    * @since 2.0
    */
-  CalypsoCardSessionBufferOverflowException(
+  CardSessionBufferOverflowException(
       String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);
   }
