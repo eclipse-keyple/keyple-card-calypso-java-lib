@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -35,12 +35,12 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
    *     TODO implement specific settings for rev less than 3
    * @since 2.0
    */
-  public SamGiveRandomBuilder(SamRevision revision, byte[] random) {
+  public SamGiveRandomBuilder(CalypsoSam.ProductType revision, byte[] random) {
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

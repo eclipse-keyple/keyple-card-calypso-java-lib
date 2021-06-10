@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -29,31 +29,28 @@ final class CardReadRecordsParser extends AbstractCardResponseParser {
         new HashMap<Integer, StatusProperties>(AbstractApduResponseParser.STATUS_TABLE);
     m.put(
         0x6981,
-        new StatusProperties(
-            "Command forbidden on binary files", CalypsoCardDataAccessException.class));
+        new StatusProperties("Command forbidden on binary files", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (PIN code not presented, encryption required).",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, stored value log file and a stored value operation was done during the current session).",
-            CalypsoCardAccessForbiddenException.class));
+            CardAccessForbiddenException.class));
     m.put(
         0x6986,
-        new StatusProperties(
-            "Command not allowed (no current EF)", CalypsoCardDataAccessException.class));
-    m.put(0x6A82, new StatusProperties("File not found", CalypsoCardDataAccessException.class));
+        new StatusProperties("Command not allowed (no current EF)", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found (record index is 0, or above NumRec",
-            CalypsoCardDataAccessException.class));
+            "Record not found (record index is 0, or above NumRec", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P2 value not supported", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("P2 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -34,16 +34,16 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
    * @throws IllegalArgumentException - if the expected response length has wrong value.
    * @since 2.0
    */
-  public SamGetChallengeBuilder(SamRevision revision, byte expectedResponseLength) {
+  public SamGetChallengeBuilder(CalypsoSam.ProductType revision, byte expectedResponseLength) {
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
     if (expectedResponseLength != 0x04 && expectedResponseLength != 0x08) {
       throw new IllegalArgumentException(
           String.format("Bad challenge length! Expected 4 or 8, got %s", expectedResponseLength));
     }
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = 0x00;
     byte p2 = 0x00;
 

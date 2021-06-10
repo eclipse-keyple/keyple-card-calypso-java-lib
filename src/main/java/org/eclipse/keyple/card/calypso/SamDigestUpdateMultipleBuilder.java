@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -30,18 +30,18 @@ final class SamDigestUpdateMultipleBuilder
   /**
    * Instantiates a new SamDigestUpdateMultipleBuilder.
    *
-   * @param revision the revision.
+   * @param productType the product type.
    * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData the digest data.
    * @since 2.0
    */
   public SamDigestUpdateMultipleBuilder(
-      SamRevision revision, boolean encryptedSession, byte[] digestData) {
+      CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
     super(command);
-    if (revision != null) {
-      this.defaultRevision = revision;
+    if (productType != null) {
+      this.defaultProductType = productType;
     }
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = (byte) 0x00;
     byte p2 = encryptedSession ? (byte) 0x80 : (byte) 0x00;
 

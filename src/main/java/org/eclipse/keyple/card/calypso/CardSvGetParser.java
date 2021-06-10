@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,9 +13,9 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
+import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.SvDebitLogRecord;
-import org.eclipse.keyple.card.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -34,23 +34,19 @@ final class CardSvGetParser extends AbstractCardResponseParser {
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled.", CalypsoCardSecurityContextException.class));
+            "Security conditions not fulfilled.", CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Preconditions not satisfied (a store value operation was already done in the current session).",
             CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6A81,
-        new StatusProperties("Incorrect P1 or P2.", CalypsoCardIllegalParameterException.class));
+    m.put(0x6A81, new StatusProperties("Incorrect P1 or P2.", CardIllegalParameterException.class));
     m.put(
         0x6A86,
-        new StatusProperties(
-            "Le inconsistent with P2.", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("Le inconsistent with P2.", CardIllegalParameterException.class));
     m.put(
         0x6D00,
-        new StatusProperties(
-            "SV function not present.", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("SV function not present.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

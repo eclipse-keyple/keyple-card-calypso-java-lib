@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -31,38 +31,35 @@ final class CardUpdateRecordParser extends AbstractCardResponseParser {
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session", CalypsoCardSessionBufferOverflowException.class));
-    m.put(
-        0x6700,
-        new StatusProperties("Lc value not supported", CalypsoCardDataAccessException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
     m.put(
         0x6981,
         new StatusProperties(
             "Command forbidden on cyclic files when the record exists and is not record 01h and on binary files",
-            CalypsoCardDataAccessException.class));
+            CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (no session, wrong key, encryption required)",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, DF is invalidated, etc..)",
-            CalypsoCardAccessForbiddenException.class));
+            CardAccessForbiddenException.class));
     m.put(
         0x6986,
-        new StatusProperties(
-            "Command not allowed (no current EF)", CalypsoCardDataAccessException.class));
-    m.put(0x6A82, new StatusProperties("File not found", CalypsoCardDataAccessException.class));
+        new StatusProperties("Command not allowed (no current EF)", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
             "Record is not found (record index is 0 or above NumRec)",
-            CalypsoCardDataAccessException.class));
+            CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P2 value not supported", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("P2 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

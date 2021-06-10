@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -31,35 +31,28 @@ final class CardChangeKeyParser extends AbstractCardResponseParser {
         0x6700,
         new StatusProperties(
             "Lc value not supported (not 04h, 10h, 18h, 20h).",
-            CalypsoCardIllegalParameterException.class));
-    m.put(
-        0x6900,
-        new StatusProperties("Transaction Counter is 0.", CalypsoCardTerminatedException.class));
+            CardIllegalParameterException.class));
+    m.put(0x6900, new StatusProperties("Transaction Counter is 0.", CardTerminatedException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (Get Challenge not done: challenge unavailable).",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (a session is open or DF is invalidated).",
-            CalypsoCardAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect Cryptogram.", CalypsoCardSecurityDataException.class));
+            CardAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect Cryptogram.", CardSecurityDataException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Decrypted message incorrect (key algorithm not supported, incorrect padding, etc.).",
-            CalypsoCardSecurityDataException.class));
+            CardSecurityDataException.class));
     m.put(
         0x6A87,
-        new StatusProperties(
-            "Lc not compatible with P2.", CalypsoCardIllegalParameterException.class));
-    m.put(
-        0x6B00,
-        new StatusProperties("Incorrect P1, P2.", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("Lc not compatible with P2.", CardIllegalParameterException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

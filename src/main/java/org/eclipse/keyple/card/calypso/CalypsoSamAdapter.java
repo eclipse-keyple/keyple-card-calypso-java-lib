@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,11 +13,9 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
-import org.eclipse.keyple.card.calypso.sam.CalypsoSam;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +30,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoSamAdapter.class);
 
-  private final byte[] fciBytes;
-  private final byte[] powerOnData;
-  private final SamRevision samRevision;
+  private final String powerOnData;
+  private final CalypsoSam.ProductType samProductType;
   private final byte[] serialNumber = new byte[4];
   private final byte platform;
   private final byte applicationType;
@@ -52,25 +49,17 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    */
   CalypsoSamAdapter(CardSelectionResponseApi cardSelectionResponse) {
 
-    ApduResponseApi fci = cardSelectionResponse.getSelectionStatus().getFci();
-    if (fci != null) {
-      this.fciBytes = fci.getBytes();
-    } else {
-      this.fciBytes = null;
-    }
-
     // in the case of a SAM, the power-on data corresponds to the ATR of the card.
-    this.powerOnData = cardSelectionResponse.getSelectionStatus().getPowerOnData();
+    this.powerOnData = cardSelectionResponse.getPowerOnData();
     if (this.powerOnData == null) {
       throw new IllegalStateException("ATR should not be empty.");
     }
 
-    String atrString = ByteArrayUtil.toHex(this.powerOnData);
     /* extract the historical bytes from T3 to T12 */
     String extractRegex = "3B(.{6}|.{10})805A(.{20})829000";
     Pattern pattern = Pattern.compile(extractRegex); // NOSONAR: hex strings here, regex is safe
     // to use
-    Matcher matcher = pattern.matcher(atrString);
+    Matcher matcher = pattern.matcher(powerOnData);
     if (matcher.find(0)) {
       byte[] atrSubElements = ByteArrayUtil.fromHex(matcher.group(2));
       platform = atrSubElements[0];
@@ -80,15 +69,15 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       // determine SAM revision from Application Subtype
       switch (applicationSubType) {
         case (byte) 0xC1:
-          samRevision = SamRevision.C1;
+          samProductType = ProductType.SAM_C1;
           break;
         case (byte) 0xD0:
         case (byte) 0xD1:
         case (byte) 0xD2:
-          samRevision = SamRevision.S1D;
+          samProductType = ProductType.SAM_S1Dx;
           break;
         case (byte) 0xE1:
-          samRevision = SamRevision.S1E;
+          samProductType = ProductType.SAM_S1E1;
           break;
         default:
           throw new IllegalStateException(
@@ -106,7 +95,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
             String.format(
                 "SAM %s PLATFORM = %02X, APPTYPE = %02X, APPSUBTYPE = %02X, SWISSUER = %02X, SWVERSION = "
                     + "%02X, SWREVISION = %02X",
-                samRevision.getName(),
+                samProductType.name(),
                 platform,
                 applicationType,
                 applicationSubType,
@@ -116,7 +105,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
         logger.trace("SAM SERIALNUMBER = {}", ByteArrayUtil.toHex(serialNumber));
       }
     } else {
-      throw new IllegalStateException("Unrecognized ATR structure: " + atrString);
+      throw new IllegalStateException("Unrecognized ATR structure: " + powerOnData);
     }
   }
 
@@ -126,8 +115,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean hasFci() {
-    return this.fciBytes != null && this.fciBytes.length > 0;
+  public byte[] getSelectApplicationResponse() {
+    return null;
   }
 
   /**
@@ -136,8 +125,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean hasPowerOnData() {
-    return this.powerOnData != null && this.powerOnData.length > 0;
+  public String getPowerOnData() {
+    return powerOnData;
   }
 
   /**
@@ -146,36 +135,18 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public byte[] getFciBytes() {
-    if (this.hasFci()) {
-      return this.fciBytes;
-    } else {
-      throw new IllegalStateException("No FCI is available in this AbstractSmartCard");
-    }
+  public final CalypsoSam.ProductType getProductType() {
+    return samProductType;
   }
 
   /**
-   * {@inheritDoc}
+   * Gets textual information about the SAM.
    *
-   * @since 2.0
+   * @return A not empty String.
    */
   @Override
-  public byte[] getPowerOnData() {
-    if (this.hasPowerOnData()) {
-      return this.powerOnData;
-    } else {
-      throw new IllegalStateException("No ATR is available in this AbstractSmartCard");
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public final SamRevision getSamRevision() {
-    return samRevision;
+  public String getProductInfo() {
+    return "Type: " + getProductType().name() + ", S/N: " + ByteArrayUtil.toHex(getSerialNumber());
   }
 
   /**

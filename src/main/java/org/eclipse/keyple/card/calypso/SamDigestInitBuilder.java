@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -32,7 +32,6 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
    * @param revision of the SAM.
    * @param verificationMode the verification mode.
    * @param confidentialSessionMode the confidential session mode (rev 3.2).
-   * @param workKeyRecordNumber the work key record number.
    * @param workKif from the AbstractCardOpenSessionBuilder response.
    * @param workKvc from the AbstractCardOpenSessionBuilder response.
    * @param digestData all data out from the AbstractCardOpenSessionBuilder response.
@@ -42,25 +41,24 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
    * @since 2.0
    */
   public SamDigestInitBuilder(
-      SamRevision revision,
+      CalypsoSam.ProductType revision,
       boolean verificationMode,
       boolean confidentialSessionMode,
-      byte workKeyRecordNumber,
       byte workKif,
       byte workKvc,
       byte[] digestData) {
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    if (workKeyRecordNumber == 0x00 && (workKif == 0x00 || workKvc == 0x00)) {
+    if (workKif == 0x00 || workKvc == 0x00) {
       throw new IllegalArgumentException("Bad key record number, kif or kvc!");
     }
     if (digestData == null) {
       throw new IllegalArgumentException("Digest data is null!");
     }
-    byte cla = SamRevision.S1D.equals(this.defaultRevision) ? (byte) 0x94 : (byte) 0x80;
+    byte cla = SamUtilAdapter.getClassByte(defaultProductType);
     byte p1 = 0x00;
     if (verificationMode) {
       p1 = (byte) (p1 + 1);
@@ -70,20 +68,11 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
     }
 
     byte p2 = (byte) 0xFF;
-    if (workKif == (byte) 0xFF) {
-      p2 = workKeyRecordNumber;
-    }
 
-    byte[] dataIn;
-
-    if (p2 == (byte) 0xFF) {
-      dataIn = new byte[2 + digestData.length];
-      dataIn[0] = workKif;
-      dataIn[1] = workKvc;
-      System.arraycopy(digestData, 0, dataIn, 2, digestData.length);
-    } else {
-      dataIn = digestData;
-    }
+    byte[] dataIn = new byte[2 + digestData.length];
+    dataIn[0] = workKif;
+    dataIn[1] = workKvc;
+    System.arraycopy(digestData, 0, dataIn, 2, digestData.length);
 
     setApduRequest(
         new ApduRequestAdapter(

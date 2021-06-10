@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -32,36 +32,30 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
         0x6700,
         new StatusProperties(
             "Lc value not supported (only 00h, 04h or 08h are supported).",
-            CalypsoCardIllegalParameterException.class));
-    m.put(
-        0x6900,
-        new StatusProperties("Transaction Counter is 0.", CalypsoCardTerminatedException.class));
+            CardIllegalParameterException.class));
+    m.put(0x6900, new StatusProperties("Transaction Counter is 0.", CardTerminatedException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (Get Challenge not done: challenge unavailable).",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (a session is open or DF is invalidated).",
-            CalypsoCardAccessForbiddenException.class));
+            CardAccessForbiddenException.class));
     m.put(
         0x63C1,
-        new StatusProperties(
-            "Incorrect PIN (1 attempt remaining).", CalypsoCardPinException.class));
+        new StatusProperties("Incorrect PIN (1 attempt remaining).", CardPinException.class));
     m.put(
         0x63C2,
-        new StatusProperties(
-            "Incorrect PIN (2 attempt remaining).", CalypsoCardPinException.class));
+        new StatusProperties("Incorrect PIN (2 attempt remaining).", CardPinException.class));
     m.put(
         0x6983,
-        new StatusProperties(
-            "Presentation rejected (PIN is blocked).", CalypsoCardPinException.class));
+        new StatusProperties("Presentation rejected (PIN is blocked).", CardPinException.class));
     m.put(
         0x6D00,
-        new StatusProperties(
-            "PIN function not present.", CalypsoCardIllegalParameterException.class));
+        new StatusProperties("PIN function not present.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

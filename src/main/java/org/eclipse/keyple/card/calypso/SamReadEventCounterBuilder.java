@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2019 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2019 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -47,14 +47,14 @@ final class SamReadEventCounterBuilder
    * @since 2.0
    */
   public SamReadEventCounterBuilder(
-      SamRevision revision, SamEventCounterOperationType operationType, int index) {
+      CalypsoSam.ProductType revision, SamEventCounterOperationType operationType, int index) {
 
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p2;
 
     if (operationType == SamEventCounterOperationType.COUNTER_RECORD) {

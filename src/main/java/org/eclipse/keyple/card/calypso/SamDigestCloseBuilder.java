@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.sam.SamRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -34,17 +34,17 @@ final class SamDigestCloseBuilder extends AbstractSamCommandBuilder<SamDigestClo
    * @throws IllegalArgumentException - if the expected response length is wrong.
    * @since 2.0
    */
-  public SamDigestCloseBuilder(SamRevision revision, byte expectedResponseLength) {
+  public SamDigestCloseBuilder(CalypsoSam.ProductType revision, byte expectedResponseLength) {
     super(command);
     if (revision != null) {
-      this.defaultRevision = revision;
+      this.defaultProductType = revision;
     }
     if (expectedResponseLength != 0x04 && expectedResponseLength != 0x08) {
       throw new IllegalArgumentException(
           String.format("Bad digest length! Expected 4 or 8, got %s", expectedResponseLength));
     }
 
-    byte cla = this.defaultRevision.getClassByte();
+    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

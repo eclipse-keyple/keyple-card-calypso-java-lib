@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,9 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.transaction.SvOperation;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,29 +30,26 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
   /** The command. */
   private static final CalypsoCardCommand command = CalypsoCardCommand.SV_GET;
 
-  private final CardTransactionService.SvSettings.Operation svOperation;
+  private final SvOperation svOperation;
   private final byte[] header;
 
   /**
    * Instantiates a new CardSvGetBuilder.
    *
    * @param calypsoCardClass the card class.
-   * @param cardRevision the card revision.
+   * @param calypsoCard the card revision.
    * @param svOperation the desired SV operation.
    * @throws IllegalArgumentException - if the command is inconsistent
    * @since 2.0
    */
   public CardSvGetBuilder(
-      CalypsoCardClass calypsoCardClass,
-      CardRevision cardRevision,
-      CardTransactionService.SvSettings.Operation svOperation) {
+      CalypsoCardClass calypsoCardClass, CalypsoCard calypsoCard, SvOperation svOperation) {
     super(command);
     byte cla = calypsoCardClass.getValue();
-    byte p1 = cardRevision == CardRevision.REV3_2 ? (byte) 0x01 : (byte) 0x00;
-    byte p2 =
-        svOperation == CardTransactionService.SvSettings.Operation.RELOAD
-            ? (byte) 0x07
-            : (byte) 0x09;
+    // TODO Improve this. Here we assume this SV evolution is linked to the confidential mode
+    // support!
+    byte p1 = calypsoCard.isExtendedModeSupported() ? (byte) 0x01 : (byte) 0x00;
+    byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
     setApduRequest(
         new ApduRequestAdapter(
@@ -75,7 +72,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * @return The current SvSettings.Operation enum value
    * @since 2.0
    */
-  public CardTransactionService.SvSettings.Operation getSvOperation() {
+  public SvOperation getSvOperation() {
     return svOperation;
   }
 

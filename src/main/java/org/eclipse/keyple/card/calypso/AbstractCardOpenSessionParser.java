@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -32,46 +32,40 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
         new HashMap<Integer, StatusProperties>(AbstractApduResponseParser.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties(
-            "Lc value not supported.", CalypsoCardIllegalParameterException.class));
-    m.put(
-        0x6900,
-        new StatusProperties("Transaction Counter is 0", CalypsoCardTerminatedException.class));
+        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+    m.put(0x6900, new StatusProperties("Transaction Counter is 0", CardTerminatedException.class));
     m.put(
         0x6981,
         new StatusProperties(
             "Command forbidden (read requested and current EF is a Binary file).",
-            CalypsoCardDataAccessException.class));
+            CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (PIN code not presented, AES key forbidding the "
                 + "compatibility mode, encryption required).",
-            CalypsoCardSecurityContextException.class));
+            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, Session already opened).",
-            CalypsoCardAccessForbiddenException.class));
+            CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
             "Command not allowed (read requested and no current EF).",
-            CalypsoCardDataAccessException.class));
-    m.put(
-        0x6A81,
-        new StatusProperties("Wrong key index.", CalypsoCardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CalypsoCardDataAccessException.class));
+            CardDataAccessException.class));
+    m.put(0x6A81, new StatusProperties("Wrong key index.", CardIllegalParameterException.class));
+    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found (record index is above NumRec).",
-            CalypsoCardDataAccessException.class));
+            "Record not found (record index is above NumRec).", CardDataAccessException.class));
     m.put(
         0x6B00,
         new StatusProperties(
             "P1 or P2 value not supported (key index incorrect, wrong P2).",
-            CalypsoCardIllegalParameterException.class));
+            CardIllegalParameterException.class));
     m.put(0x61FF, new StatusProperties("Correct execution (ISO7816 T=0).", null));
     STATUS_TABLE = m;
   }
@@ -94,13 +88,11 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
    *
    * @param response the response from Open secure session APDU command.
    * @param builder the reference to the builder that created this parser.
-   * @param revision the revision of the card.
    * @since 2.0
    */
   AbstractCardOpenSessionParser(
       ApduResponseApi response,
-      AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> builder,
-      CardRevision revision) {
+      AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> builder) {
     super(response, builder);
     byte[] dataOut = response.getDataOut();
     if (dataOut.length > 0) {
@@ -108,19 +100,18 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     }
   }
 
-  public AbstractCardOpenSessionParser create(ApduResponseApi response, CardRevision revision) {
-    switch (revision) {
-      case REV1_0:
+  public AbstractCardOpenSessionParser create(ApduResponseApi response, CalypsoCard calypsoCard) {
+    switch (calypsoCard.getProductType()) {
+      case PRIME_REV1_0:
         return new CardOpenSession10Parser(response, (CardOpenSession10Builder) builder);
-      case REV2_4:
+      case PRIME_REV2_4:
         return new CardOpenSession24Parser(response, (CardOpenSession24Builder) builder);
-      case REV3_1:
-      case REV3_1_CLAP:
-        return new CardOpenSession31Parser(response, (CardOpenSession31Builder) builder);
-      case REV3_2:
-        return new CardOpenSession32Parser(response, (CardOpenSession32Builder) builder);
+      case PRIME_REV3:
+      case LIGHT:
+        return new CardOpenSession3Parser(response, (CardOpenSession3Builder) builder);
       default:
-        throw new IllegalArgumentException("Unknow revision " + revision);
+        throw new IllegalArgumentException(
+            "Unknown product type " + calypsoCard.getProductType().name());
     }
   }
 
@@ -142,11 +133,11 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     return secureSession.isManageSecureSessionAuthorized();
   }
 
-  public byte getSelectedKif() {
+  public Byte getSelectedKif() {
     return secureSession.getKIF();
   }
 
-  public byte getSelectedKvc() {
+  public Byte getSelectedKvc() {
     return secureSession.getKVC();
   }
 
@@ -169,8 +160,8 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     /** The manage secure session authorized boolean. */
     private final boolean manageSecureSessionAuthorized;
 
-    /** The kif. */
-    private final byte kif;
+    /** The kif (may be null if it doesn't exist in the considered card [rev 1.0]). */
+    private final Byte kif;
 
     /** The kvc (may be null if it doesn't exist in the considered card [rev 1.0]). */
     private final Byte kvc;
@@ -182,7 +173,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     private final byte[] secureSessionData;
 
     /**
-     * Instantiates a new SecureSession for a Calypso application revision 3
+     * Instantiates a new SecureSession
      *
      * @param challengeTransactionCounter Challenge transaction counter.
      * @param challengeRandomNumber Challenge random number.
@@ -201,8 +192,8 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
         byte[] challengeRandomNumber,
         boolean previousSessionRatified,
         boolean manageSecureSessionAuthorized,
-        byte kif,
-        byte kvc,
+        Byte kif,
+        Byte kvc,
         byte[] originalData,
         byte[] secureSessionData) {
       this.challengeTransactionCounter = challengeTransactionCounter;
@@ -211,38 +202,6 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
       this.manageSecureSessionAuthorized = manageSecureSessionAuthorized;
       this.kif = kif;
       this.kvc = kvc;
-      this.originalData = originalData;
-      this.secureSessionData = secureSessionData;
-    }
-
-    /**
-     * Instantiates a new SecureSession for a Calypso application revision 2.4
-     *
-     * @param challengeTransactionCounter Challenge transaction counter.
-     * @param challengeRandomNumber Challenge random number.
-     * @param previousSessionRatified the previous session ratified.
-     * @param manageSecureSessionAuthorized the manage secure session authorized.
-     * @param kvc the KVC from the response of the open secure session APDU command.
-     * @param originalData the original data from the response of the open secure session APDU.
-     *     command
-     * @param secureSessionData the secure session data from the response of open secure session.
-     *     APDU command
-     * @since 2.0
-     */
-    public SecureSession(
-        byte[] challengeTransactionCounter,
-        byte[] challengeRandomNumber,
-        boolean previousSessionRatified,
-        boolean manageSecureSessionAuthorized,
-        Byte kvc,
-        byte[] originalData,
-        byte[] secureSessionData) {
-      this.challengeTransactionCounter = challengeTransactionCounter;
-      this.challengeRandomNumber = challengeRandomNumber;
-      this.previousSessionRatified = previousSessionRatified;
-      this.manageSecureSessionAuthorized = manageSecureSessionAuthorized;
-      this.kif = (byte) 0xFF;
-      this.kvc = kvc != null ? kvc : (byte) 0xFF;
       this.originalData = originalData;
       this.secureSessionData = secureSessionData;
     }
@@ -281,7 +240,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * @return A byte
      * @since 2.0
      */
-    public byte getKIF() {
+    public Byte getKIF() {
       return kif;
     }
 
@@ -291,7 +250,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * @return A byte
      * @since 2.0
      */
-    public byte getKVC() {
+    public Byte getKVC() {
       return kvc;
     }
 

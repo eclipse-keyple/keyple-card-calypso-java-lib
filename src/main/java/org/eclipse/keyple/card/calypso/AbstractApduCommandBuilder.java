@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -71,7 +71,7 @@ abstract class AbstractApduCommandBuilder {
         this.name = subName;
       }
       if (apduRequest != null) {
-        this.apduRequest.setName(this.name);
+        this.apduRequest.setInfo(this.name);
       }
     }
   }

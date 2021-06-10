@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.card.CardRevision;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 
 /**
  * (package-private)<br>
@@ -22,40 +22,41 @@ import org.eclipse.keyple.card.calypso.card.CardRevision;
 abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponseParser>
     extends AbstractCardCommandBuilder<T> {
 
+  private static boolean isExtendedModeSupported = false;
+
   /**
    * Instantiates a new AbstractCardOpenSessionBuilder.
    *
-   * @param revision the revision of the card.
+   * @param calypsoCard the {@link CalypsoCard}.
    * @throws IllegalArgumentException - if the key index is 0 and rev is 2.4
    * @throws IllegalArgumentException - if the request is inconsistent
    * @since 2.0
    */
-  AbstractCardOpenSessionBuilder(CardRevision revision) {
-    super(CalypsoCardCommand.getOpenSessionForRev(revision));
+  AbstractCardOpenSessionBuilder(CalypsoCard calypsoCard) {
+    super(CalypsoCardCommand.getOpenSessionForRev(calypsoCard));
   }
 
   public static AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> create(
-      CardRevision revision,
+      CalypsoCard calypsoCard,
       byte debitKeyIndex,
       byte[] sessionTerminalChallenge,
       int sfi,
       int recordNumber) {
-    switch (revision) {
-      case REV1_0:
+    isExtendedModeSupported = calypsoCard.isExtendedModeSupported();
+    switch (calypsoCard.getProductType()) {
+      case PRIME_REV1_0:
         return new CardOpenSession10Builder(
-            debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
-      case REV2_4:
+            calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
+      case PRIME_REV2_4:
         return new CardOpenSession24Builder(
-            debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
-      case REV3_1:
-      case REV3_1_CLAP:
-        return new CardOpenSession31Builder(
-            debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
-      case REV3_2:
-        return new CardOpenSession32Builder(
-            debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
+            calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
+      case PRIME_REV3:
+      case LIGHT:
+        return new CardOpenSession3Builder(
+            calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
       default:
-        throw new IllegalArgumentException("Revision " + revision + " isn't supported");
+        throw new IllegalArgumentException(
+            "Product type " + calypsoCard.getProductType() + " isn't supported");
     }
   }
 
@@ -64,4 +65,13 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
 
   /** @return the record number to read */
   abstract int getRecordNumber();
+
+  /**
+   * (package-private)<br>
+   *
+   * @return True if the confidential session mode is supported.
+   */
+  boolean isIsExtendedModeSupported() {
+    return isExtendedModeSupported;
+  }
 }

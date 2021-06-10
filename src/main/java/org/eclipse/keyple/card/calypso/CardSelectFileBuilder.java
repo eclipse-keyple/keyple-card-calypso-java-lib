@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.SelectFileControl;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
@@ -67,7 +67,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
         break;
       default:
         throw new IllegalStateException(
-            "Unsupported selectFileControl parameter " + selectFileControl.toString());
+            "Unsupported selectFileControl parameter " + selectFileControl.name());
     }
 
     setApduRequest(

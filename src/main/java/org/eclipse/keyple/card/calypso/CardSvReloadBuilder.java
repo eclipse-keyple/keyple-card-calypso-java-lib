@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.card.CardRevision;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -26,8 +26,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
   /** The command. */
   private static final CalypsoCardCommand command = CalypsoCardCommand.SV_RELOAD;
 
-  private final CalypsoCardClass calypsoCardClass;
-  private final CardRevision cardRevision;
+  private final CalypsoCard calypsoCard;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -37,8 +36,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * <p>The process is carried out in two steps: first to check and store the card and application
    * data, then to create the final APDU with the data from the SAM (see finalizeBuilder).
    *
-   * @param calypsoCardClass the card class.
-   * @param cardRevision the card revision.
+   * @param calypsoCard the Calypso card.
    * @param amount amount to debit (signed integer from -8388608 to 8388607).
    * @param kvc debit key KVC (not checked by the card).
    * @param date debit date (not checked by the card).
@@ -48,13 +46,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * @since 2.0
    */
   public CardSvReloadBuilder(
-      CalypsoCardClass calypsoCardClass,
-      CardRevision cardRevision,
-      int amount,
-      byte kvc,
-      byte[] date,
-      byte[] time,
-      byte[] free) {
+      CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time, byte[] free) {
     super(command);
 
     if (amount < -8388608 || amount > 8388607) {
@@ -69,12 +61,11 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.cardRevision = cardRevision;
-    this.calypsoCardClass = calypsoCardClass;
+    this.calypsoCard = calypsoCard;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[18 + (cardRevision == CardRevision.REV3_2 ? 10 : 5)];
+    dataIn = new byte[18 + (calypsoCard.isExtendedModeSupported() ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     dataIn[1] = date[0];
@@ -107,8 +98,8 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * @since 2.0
    */
   public void finalizeBuilder(byte[] reloadComplementaryData) {
-    if ((cardRevision == CardRevision.REV3_2 && reloadComplementaryData.length != 20)
-        || (cardRevision != CardRevision.REV3_2 && reloadComplementaryData.length != 15)) {
+    if ((calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 20)
+        || (!calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -123,7 +114,12 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, dataIn, null)));
+                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
+                command.getInstructionByte(),
+                p1,
+                p2,
+                dataIn,
+                null)));
   }
 
   /**
@@ -137,7 +133,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
     svReloadData[0] = command.getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svReloadData[3] = cardRevision == CardRevision.REV3_2 ? (byte) 0x1C : (byte) 0x17;
+    svReloadData[3] = calypsoCard.isExtendedModeSupported() ? (byte) 0x1C : (byte) 0x17;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svReloadData, 4, 11);
     return svReloadData;

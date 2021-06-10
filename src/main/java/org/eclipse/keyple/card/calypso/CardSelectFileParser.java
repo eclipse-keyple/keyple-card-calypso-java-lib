@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -36,9 +36,8 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
         new HashMap<Integer, StatusProperties>(AbstractApduResponseParser.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties(
-            "Lc value not supported.", CalypsoCardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CalypsoCardDataAccessException.class));
+        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(0x6119, new StatusProperties("Correct execution (ISO7816 T=0).", null));
     STATUS_TABLE = m;
   }

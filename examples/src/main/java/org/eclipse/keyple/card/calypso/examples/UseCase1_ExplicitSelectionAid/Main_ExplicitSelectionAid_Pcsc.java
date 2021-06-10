@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,10 +13,10 @@ package org.eclipse.keyple.card.calypso.examples.UseCase1_ExplicitSelectionAid;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * <h2>Scenario:</h2>
  *
  * <ul>
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
+ *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario, including reading a file record.
  *   <li>Output the collected data (FCI, ATR and file record content).
@@ -85,24 +85,26 @@ public class Main_ExplicitSelectionAid_Pcsc {
 
     logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
-    // Get the core card selection service.
-    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+    // Get the core card selection manager.
+    CardSelectionManager cardSelectionManager = smartCardService.createCardSelectionManager();
 
     // Create a card selection using the Calypso card extension.
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario.
-    selectionService.prepareSelection(
+    cardSelectionManager.prepareSelection(
         cardExtension
-            .createCardSelection(
-                cardExtension.createCardSelector().filterByDfName(CalypsoConstants.AID), true)
+            .createCardSelection()
+            .filterByDfName(CalypsoConstants.AID)
+            .acceptInvalidatedCard()
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1));
 
     // Actual card communication: run the selection scenario.
-    CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
+    CardSelectionResult selectionResult =
+        cardSelectionManager.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
-    if (!selectionResult.hasActiveSelection()) {
+    if (selectionResult.getActiveSmartCard() == null) {
       throw new IllegalStateException(
           "The selection of the application '" + CalypsoConstants.AID + "' failed.");
     }

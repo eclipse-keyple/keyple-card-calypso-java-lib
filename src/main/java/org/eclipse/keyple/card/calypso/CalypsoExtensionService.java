@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,17 +11,17 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
+import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
 import org.calypsonet.terminal.card.CardApiProperties;
 import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.ReaderApiProperties;
-import org.calypsonet.terminal.reader.selection.spi.CardSelector;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
-import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
-import org.eclipse.keyple.card.calypso.sam.CalypsoSamResourceProfileExtension;
-import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
+import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
 
 /**
  * Card extension dedicated to the management of Calypso cards.
@@ -77,42 +77,57 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link CalypsoSelector}.
+   * Creates an instance of {@link CalypsoCardSelection} that can be supplemented later with
+   * specific commands.
    *
    * @return A not null reference.
    * @since 2.0
    */
-  public CalypsoSelector createCardSelector() {
-    return new CalypsoSelectorAdapter();
+  public CalypsoCardSelection createCardSelection() {
+    return new CalypsoCardSelectionAdapter();
+  }
+
+  /**
+   * Creates an instance of {@link CalypsoCardSelection}.
+   *
+   * @return A not null reference.
+   * @since 2.0
+   */
+  public CalypsoSamSelection createSamSelection() {
+    return new CalypsoSamCardSelectionAdapter();
+  }
+
+  /**
+   * Creates an instance of {@link CardResourceProfileExtension} to be provided to the {@link
+   * org.eclipse.keyple.core.service.resource.CardResourceService}.
+   *
+   * <p>The provided argument defines the selection rules to be applied to the SAM when detected by
+   * the card resource service.
+   *
+   * @param calypsoSamSelection A not null {@link
+   *     org.calypsonet.terminal.calypso.sam.CalypsoSamSelection}.
+   * @return A not null reference.
+   * @throws IllegalArgumentException If calypsoSamSelection is null.
+   * @since 2.0
+   */
+  public CardResourceProfileExtension createSamResourceProfileExtension(
+      CalypsoSamSelection calypsoSamSelection) {
+    return new CalypsoSamResourceProfileExtensionAdapter(calypsoSamSelection);
   }
 
   /**
    * Creates an instance of {@link CalypsoCardSelection} that can be supplemented later with
    * specific commands.
    *
-   * @param cardSelector A Calypso card selector.
-   * @param acceptInvalidatedCard true if invalidated card must be accepted, false if not.
    * @return A not null reference.
    * @since 2.0
    */
-  public CalypsoCardSelection createCardSelection(
-      CardSelector cardSelector, boolean acceptInvalidatedCard) {
-    return new CalypsoCardSelectionAdapter(cardSelector, acceptInvalidatedCard);
+  public CardSecuritySetting createCardSecuritySetting() {
+    return new CardSecuritySettingAdapter();
   }
 
   /**
-   * Creates an instance of {@link CalypsoSamResourceProfileExtension} to be provided to the {@link
-   * org.eclipse.keyple.core.service.resource.CardResourceService}.
-   *
-   * @return A not null reference.
-   * @since 2.0
-   */
-  public CalypsoSamResourceProfileExtension createSamResourceProfileExtension() {
-    return new CalypsoSamResourceProfileExtensionAdapter();
-  }
-
-  /**
-   * Creates a card transaction service to handle operations secured with a SAM.
+   * Creates a card transaction manager to handle operations secured with a SAM.
    *
    * <p>The reader and the card's initial data are those from the selection.<br>
    * The provided {@link CardSecuritySetting} must match the specific needs of the card (SAM card
@@ -124,21 +139,21 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @return A not null reference.
    * @since 2.0
    */
-  public CardTransactionService createCardTransaction(
+  public CardTransactionManager createCardTransaction(
       CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
-    return new CardTransactionServiceAdapter(reader, calypsoCard, cardSecuritySetting);
+    return new CardTransactionManagerAdapter(reader, calypsoCard, cardSecuritySetting);
   }
 
   /**
-   * Creates a card transaction service to handle non secured operations.
+   * Creates a card transaction manager to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  public CardTransactionService createCardTransactionWithoutSecurity(
+  public CardTransactionManager createCardTransactionWithoutSecurity(
       CardReader reader, CalypsoCard calypsoCard) {
-    return new CardTransactionServiceAdapter(reader, calypsoCard);
+    return new CardTransactionManagerAdapter(reader, calypsoCard);
   }
 }

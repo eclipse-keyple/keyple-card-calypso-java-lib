@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -14,16 +14,20 @@ package org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionException;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCard;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoCardTransactionException;
-import org.eclipse.keyple.card.calypso.transaction.CardSecuritySetting;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.service.*;
+import org.eclipse.keyple.core.service.resource.CardResource;
+import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +43,13 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *   <li>Sets up the card resource service to provide a Calypso SAM (C1).
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
+ *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario.
- *   <li>Creates a {@link CardTransactionService} without security.
+ *   <li>Creates a {@link CardTransactionManager} without security.
  *   <li>Verify the PIN code in plain mode with the correct code, display the remaining attempts
  *       counter.
- *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
+ *   <li>Creates a {@link CardTransactionManager} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
  *   <li>Verify the PIN code in session in encrypted mode with the code, display the remaining
  *       attempts counter.
@@ -99,24 +103,24 @@ public class Main_VerifyPin_Pcsc {
 
     logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
-    // Get the core card selection service.
-    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+    // Get the core card selection manager.
+    CardSelectionManager cardSelectionManager = smartCardService.createCardSelectionManager();
 
     // Create a card selection using the Calypso card extension.
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario.
-    selectionService.prepareSelection(
-        cardExtension.createCardSelection(
-            CalypsoExtensionService.getInstance()
-                .createCardSelector()
-                .filterByDfName(CalypsoConstants.AID),
-            true));
+    cardSelectionManager.prepareSelection(
+        cardExtension
+            .createCardSelection()
+            .acceptInvalidatedCard()
+            .filterByDfName(CalypsoConstants.AID));
 
     // Actual card communication: run the selection scenario.
-    CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
+    CardSelectionResult selectionResult =
+        cardSelectionManager.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
-    if (!selectionResult.hasActiveSelection()) {
+    if (selectionResult.getActiveSmartCard() == null) {
       throw new IllegalStateException(
           "The selection of the application " + CalypsoConstants.AID + " failed.");
     }
@@ -126,8 +130,8 @@ public class Main_VerifyPin_Pcsc {
 
     logger.info("= SmartCard = {}", calypsoCard);
 
-    // Create the card transaction service in secure mode.
-    CardTransactionService cardTransaction =
+    // Create the card transaction manager in secure mode.
+    CardTransactionManager cardTransaction =
         cardExtension.createCardTransactionWithoutSecurity(cardReader, calypsoCard);
 
     ////////////////////////////
@@ -137,12 +141,14 @@ public class Main_VerifyPin_Pcsc {
 
     // Create security settings that reference the same SAM profile requested from the card resource
     // service, specifying the key ciphering key parameters.
+    CardResource samResource =
+        CardResourceServiceProvider.getService().getCardResource(CalypsoConstants.SAM_PROFILE_NAME);
     CardSecuritySetting cardSecuritySetting =
-        CardSecuritySetting.builder()
-            .setSamCardResourceProfileName(CalypsoConstants.SAM_PROFILE_NAME)
-            .pinCipheringKey(
-                CalypsoConstants.PIN_CIPHERING_KEY_KIF, CalypsoConstants.PIN_CIPHERING_KEY_KVC)
-            .build();
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
+            .setPinCipheringKey(
+                CalypsoConstants.PIN_CIPHERING_KEY_KIF, CalypsoConstants.PIN_CIPHERING_KEY_KVC);
 
     // create a secured card transaction
     cardTransaction =
@@ -156,10 +162,10 @@ public class Main_VerifyPin_Pcsc {
 
     ////////////////////////////
     // Verification of the PIN (incorrect) inside a secure session
-    cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
+    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
     try {
       cardTransaction.processVerifyPin(CalypsoConstants.PIN_KO);
-    } catch (CalypsoCardTransactionException ex) {
+    } catch (CardTransactionException ex) {
       logger.error("PIN Exception: {}", ex.getMessage());
     }
     cardTransaction.processCancel();
@@ -170,7 +176,7 @@ public class Main_VerifyPin_Pcsc {
     // Verification of the PIN (correct) inside a secure session with reading of the counter
     //////////////////////////// before
     cardTransaction.prepareCheckPinStatus();
-    cardTransaction.processOpening(CardTransactionService.SessionAccessLevel.SESSION_LVL_DEBIT);
+    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
     // log the current counter value (should be 2)
     logger.info("Remaining attempts #4: {}", calypsoCard.getPinAttemptRemaining());
     cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);

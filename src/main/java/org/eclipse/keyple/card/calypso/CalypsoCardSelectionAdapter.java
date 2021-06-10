@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -14,18 +14,18 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.calypso.transaction.CardAnomalyException;
+import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
-import org.calypsonet.terminal.reader.selection.spi.CardSelector;
-import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
-import org.eclipse.keyple.card.calypso.card.SelectFileControl;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoCardAnomalyException;
-import org.eclipse.keyple.card.calypso.transaction.CalypsoDesynchronizedExchangesException;
 import org.eclipse.keyple.core.util.Assert;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -35,32 +35,25 @@ import org.slf4j.LoggerFactory;
  */
 final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSelectionSpi {
 
-  private static final Logger logger = LoggerFactory.getLogger(CalypsoCardSelectionAdapter.class);
-
+  private static final int AID_MIN_LENGTH = 5;
+  private static final int AID_MAX_LENGTH = 16;
   private static final int SW_CARD_INVALIDATED = 0x6283;
 
   private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
       commandBuilders;
-  private final CardSelector cardSelector;
+  private final CardSelectorAdapter cardSelector;
   private final CalypsoCardClass calypsoCardClass;
 
   /**
    * (package-private)<br>
    * Creates an instance of {@link CalypsoCardSelection}.
    *
-   * @param cardSelector A card selector.
    * @since 2.0
    * @throws IllegalArgumentException If cardSelector is null.
    */
-  CalypsoCardSelectionAdapter(CardSelector cardSelector, boolean acceptInvalidatedCard) {
+  CalypsoCardSelectionAdapter() {
 
-    Assert.getInstance().notNull(cardSelector, "cardSelector");
-
-    this.cardSelector = cardSelector;
-
-    if (acceptInvalidatedCard) {
-      this.cardSelector.addSuccessfulStatusWord(SW_CARD_INVALIDATED);
-    }
+    cardSelector = new CardSelectorAdapter();
 
     this.commandBuilders =
         new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
@@ -70,10 +63,139 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
     }
+  }
 
-    if (logger.isTraceEnabled()) {
-      logger.trace("Calypso {} selector", calypsoCardClass);
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection filterByCardProtocol(String cardProtocol) {
+
+    Assert.getInstance().notEmpty(cardProtocol, "cardProtocol");
+
+    cardSelector.filterByCardProtocol(cardProtocol);
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection filterByPowerOnData(String powerOnDataRegex) {
+
+    Assert.getInstance().notEmpty(powerOnDataRegex, "powerOnDataRegex");
+
+    try {
+      Pattern.compile(powerOnDataRegex);
+    } catch (PatternSyntaxException exception) {
+      throw new IllegalArgumentException(
+          String.format("Invalid regular expression: '%s'.", powerOnDataRegex));
     }
+
+    cardSelector.filterByPowerOnData(powerOnDataRegex);
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection filterByDfName(byte[] aid) {
+
+    Assert.getInstance()
+        .notNull(aid, "aid")
+        .isInRange(aid.length, AID_MIN_LENGTH, AID_MAX_LENGTH, "aid");
+
+    cardSelector.filterByDfName(aid);
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection filterByDfName(String aid) {
+    this.filterByDfName(ByteArrayUtil.fromHex(aid));
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection setFileOccurrence(FileOccurrence fileOccurrence) {
+
+    Assert.getInstance().notNull(fileOccurrence, "fileOccurrence");
+
+    switch (fileOccurrence) {
+      case FIRST:
+        cardSelector.setFileOccurrence(CardSelectorSpi.FileOccurrence.FIRST);
+        break;
+      case LAST:
+        cardSelector.setFileOccurrence(CardSelectorSpi.FileOccurrence.LAST);
+        break;
+      case NEXT:
+        cardSelector.setFileOccurrence(CardSelectorSpi.FileOccurrence.NEXT);
+        break;
+      case PREVIOUS:
+        cardSelector.setFileOccurrence(CardSelectorSpi.FileOccurrence.PREVIOUS);
+        break;
+    }
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection setFileControlInformation(
+      FileControlInformation fileControlInformation) {
+
+    Assert.getInstance().notNull(fileControlInformation, "fileControlInformation");
+
+    switch (fileControlInformation) {
+      case FCI:
+        cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.FCI);
+        break;
+      case NO_RESPONSE:
+        cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.NO_RESPONSE);
+        break;
+    }
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection addSuccessfulStatusWord(int statusWord) {
+    cardSelector.addSuccessfulStatusWord(statusWord);
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection acceptInvalidatedCard() {
+    cardSelector.addSuccessfulStatusWord(SW_CARD_INVALIDATED);
+    return this;
   }
 
   /**
@@ -95,6 +217,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
+    Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
     commandBuilders.add(CalypsoCardUtils.prepareSelectFile(calypsoCardClass, lid));
     return this;
   }
@@ -139,9 +262,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         cardSelectionApduRequests.add(commandBuilder.getApduRequest());
       }
       return new CardSelectionRequestAdapter(
-          (CardSelectorSpi) cardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
+          cardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
     } else {
-      return new CardSelectionRequestAdapter((CardSelectorSpi) cardSelector, null);
+      return new CardSelectionRequestAdapter(cardSelector, null);
     }
   }
 
@@ -164,8 +287,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     }
 
     if (commandBuilders.size() != apduResponses.size()) {
-      throw new CalypsoDesynchronizedExchangesException(
-          "Mismatch in the number of requests/responses");
+      throw new DesynchronizedExchangesException("Mismatch in the number of requests/responses");
     }
 
     CalypsoCardAdapter calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
@@ -173,22 +295,12 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     if (!commandBuilders.isEmpty()) {
       try {
         CalypsoCardUtils.updateCalypsoCard(calypsoCard, commandBuilders, apduResponses);
-      } catch (CalypsoCardCommandException e) {
-        throw new CalypsoCardAnomalyException(
+      } catch (CardCommandException e) {
+        throw new CardAnomalyException(
             "An error occurred while parsing the card selection request responses", e);
       }
     }
 
     return calypsoCard;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public CardSelector getCardSelector() {
-    return cardSelector;
   }
 }

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,48 +13,34 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
-import org.eclipse.keyple.card.calypso.card.*;
-import org.eclipse.keyple.card.calypso.transaction.CardTransactionService;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * This POJO concentrates all the information we know about the card being processed: from the
- * selection stage to the end of the transaction.
- *
- * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
- * selection process (e.g. (CalypsoCard)(cardSelectionsResult.getActiveSmartCard()))
- *
- * <p>The various information contained in CalypsoCard is accessible by getters and includes:
- *
- * <ul>
- *   <li>The application identification fields (revision/version, class, DF name, serial number,
- *       ATR, issuer)
- *   <li>The indication of the presence of optional features (Stored Value, PIN, Rev3.2 mode,
- *       ratification management)
- *   <li>The management information of the modification buffer
- *   <li>The invalidation status
- *   <li>The files, counters, SV data read or modified during the execution of the processes defined
- *       by {@link CardTransactionService}
- * </ul>
+ * (package-private)<br>
+ * Implementation of {@link CalypsoCard}.
  *
  * @since 2.0
  */
 final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
-  private final byte[] fciBytes;
-  private final boolean isConfidentialSessionModeSupported;
-  private final boolean isDeselectRatificationSupported;
+
+  private final ApduResponseApi selectApplicationResponse;
+  private final String powerOnData;
+
+  private final boolean isExtendedModeSupported;
+  private final boolean isRatificationOnDeselectSupported;
   private final boolean isSvFeatureAvailable;
   private final boolean isPinFeatureAvailable;
-  private final boolean isPublicAuthenticationSupported;
+  private final boolean isPkiModeSupported;
   private final boolean isDfInvalidated;
   private final CalypsoCardClass calypsoCardClass;
   private final byte[] calypsoSerialNumber;
   private final byte[] startupInfo;
-  private final CardRevision revision;
+  private final ProductType productType;
   private final byte[] dfName;
   private static final int CARD_REV1_ATR_LENGTH = 20;
   private static final int REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
@@ -84,7 +70,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       };
 
   private final int modificationsCounterMax;
-  private final byte[] powerOnData;
   private boolean modificationCounterIsInBytes = true;
   private DirectoryHeader directoryHeader;
   private final Map<Byte, ElementaryFile> efBySfi = new ConcurrentHashMap<Byte, ElementaryFile>();
@@ -109,23 +94,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   CalypsoCardAdapter(CardSelectionResponseApi cardSelectionResponse) {
 
-    ApduResponseApi fci = cardSelectionResponse.getSelectionStatus().getFci();
-    if (fci != null) {
-      this.fciBytes = fci.getBytes();
-    } else {
-      this.fciBytes = null;
-    }
-
-    powerOnData = cardSelectionResponse.getSelectionStatus().getPowerOnData();
+    powerOnData = cardSelectionResponse.getPowerOnData();
+    selectApplicationResponse = cardSelectionResponse.getSelectApplicationResponse();
 
     int bufferSizeIndicator;
     int bufferSizeValue;
 
-    if (hasFci()) {
+    if (selectApplicationResponse != null) {
 
       /* Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo */
       CardGetDataFciParser cardGetDataFciParser =
-          new CardGetDataFciParser(cardSelectionResponse.getSelectionStatus().getFci(), null);
+          new CardGetDataFciParser(selectApplicationResponse, null);
 
       // 4 fields extracted by the low level parser
       dfName = cardGetDataFciParser.getDfName();
@@ -134,39 +113,37 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       isDfInvalidated = cardGetDataFciParser.isDfInvalidated();
 
       byte applicationType = getApplicationType();
-      revision = determineRevision(applicationType);
+      productType = determineProductType(applicationType);
 
       // session buffer size
       bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
       bufferSizeValue = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
 
-      if (revision == CardRevision.REV2_4) {
+      if (productType == ProductType.PRIME_REV2_4) {
         /* old cards have their modification counter in number of commands */
         modificationCounterIsInBytes = false;
         modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
       } else {
         modificationsCounterMax = bufferSizeValue;
       }
-      isConfidentialSessionModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
-      isDeselectRatificationSupported =
+      isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
+      isRatificationOnDeselectSupported =
           (applicationType & APP_TYPE_RATIFICATION_COMMAND_REQUIRED) == 0;
       isSvFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_SV) != 0;
       isPinFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_PIN) != 0;
-      isPublicAuthenticationSupported =
-          (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
+      isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
     } else {
       /*
        * FCI is not provided: we consider it is Calypso card rev 1, it's serial number is
        * provided in the ATR
        */
-      byte[] atr = getPowerOnData();
+      byte[] atr = ByteArrayUtil.fromHex(powerOnData);
       /* basic check: we expect to be here following a selection based on the ATR */
       if (atr.length != CARD_REV1_ATR_LENGTH) {
-        throw new IllegalStateException(
-            "Unexpected ATR length: " + ByteArrayUtil.toHex(getPowerOnData()));
+        throw new IllegalStateException("Unexpected ATR length: " + powerOnData);
       }
 
-      revision = CardRevision.REV1_0;
+      productType = ProductType.PRIME_REV1_0;
       dfName = null;
       calypsoSerialNumber = new byte[8];
       /* old cards have their modification counter in number of commands */
@@ -184,66 +161,18 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       System.arraycopy(atr, 6, startupInfo, 1, 6);
 
       // TODO check these flags
-      isConfidentialSessionModeSupported = false;
-      isDeselectRatificationSupported = true;
+      isExtendedModeSupported = false;
+      isRatificationOnDeselectSupported = true;
       isSvFeatureAvailable = false;
       isPinFeatureAvailable = false;
-      isPublicAuthenticationSupported = false;
+      isPkiModeSupported = false;
       isDfInvalidated = false;
     }
     /* Rev1 and Rev2 expects the legacy class byte while Rev3 expects the ISO class byte */
-    if (revision == CardRevision.REV1_0 || revision == CardRevision.REV2_4) {
+    if (productType == ProductType.PRIME_REV1_0 || productType == ProductType.PRIME_REV2_4) {
       calypsoCardClass = CalypsoCardClass.LEGACY;
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public boolean hasFci() {
-    return this.fciBytes != null && this.fciBytes.length > 0;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public boolean hasPowerOnData() {
-    return this.powerOnData != null && this.powerOnData.length > 0;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getFciBytes() {
-    if (this.hasFci()) {
-      return this.fciBytes;
-    } else {
-      throw new IllegalStateException("No FCI is available in this AbstractSmartCard");
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getPowerOnData() {
-    if (this.hasPowerOnData()) {
-      return this.powerOnData;
-    } else {
-      throw new IllegalStateException("No ATR is available in this AbstractSmartCard");
     }
   }
 
@@ -259,18 +188,15 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * </ul>
    *
    * @param applicationType the application type (field of startup info).
-   * @return The {@link CardRevision}
+   * @return The {@link ProductType}
    */
-  private CardRevision determineRevision(byte applicationType) {
+  private ProductType determineProductType(byte applicationType) {
     if (((applicationType & 0xFF) & (1 << 7)) != 0) {
-      /* CLAP */
-      return CardRevision.REV3_1_CLAP;
-    } else if ((applicationType >> 3) == (byte) (0x05)) {
-      return CardRevision.REV3_2;
-    } else if ((applicationType >> 3) == (byte) (0x04)) {
-      return CardRevision.REV3_1;
+      return ProductType.LIGHT;
+    } else if ((applicationType >> 3) == (byte) (0x05) || (applicationType >> 3) == (byte) (0x04)) {
+      return ProductType.PRIME_REV3;
     } else {
-      return CardRevision.REV2_4;
+      return ProductType.PRIME_REV2_4;
     }
   }
 
@@ -280,8 +206,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final CardRevision getRevision() {
-    return revision;
+  public ProductType getProductType() {
+    return productType;
   }
 
   /**
@@ -290,21 +216,12 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte[] getDfNameBytes() {
+  public byte[] getDfName() {
     return dfName;
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public final String getDfName() {
-    return ByteArrayUtil.toHex(getDfNameBytes());
-  }
-
-  /**
+   * (package-private)<br>
    * Gets the full Calypso serial number including the possible validity date information in the two
    * MSB.
    *
@@ -314,7 +231,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @return A byte array containing the Calypso Serial Number (8 bytes)
    * @since 2.0
    */
-  protected final byte[] getCalypsoSerialNumber() {
+  byte[] getCalypsoSerialNumberFull() {
     return calypsoSerialNumber;
   }
 
@@ -324,7 +241,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte[] getApplicationSerialNumberBytes() {
+  public byte[] getApplicationSerialNumber() {
     byte[] applicationSerialNumber = calypsoSerialNumber.clone();
     applicationSerialNumber[0] = 0;
     applicationSerialNumber[1] = 0;
@@ -337,50 +254,24 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final String getApplicationSerialNumber() {
-    return ByteArrayUtil.toHex(getApplicationSerialNumberBytes());
+  public byte[] getStartupInfoRawData() {
+    return startupInfo;
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public final String getStartupInfo() {
-    return ByteArrayUtil.toHex(startupInfo);
-  }
-
-  protected final boolean isSerialNumberExpiring() {
-    throw new IllegalStateException("Not yet implemented");
-  }
-
-  protected final byte[] getSerialNumberExpirationBytes() {
-    throw new IllegalStateException("Not yet implemented");
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public final String getPowerOnDataString() {
-    return ByteArrayUtil.toHex(powerOnData);
-  }
-
-  /**
+   * (package-private)<br>
    * Gets the maximum length of data that an APDU in this card can carry.
    *
    * @return An int
    * @since 2.0
    */
-  protected final int getPayloadCapacity() {
+  int getPayloadCapacity() {
     // TODO make this value dependent on the type of card identified
     return 250;
   }
 
   /**
+   * (package-private)<br>
    * Tells if the change counter allowed in session is established in number of operations or number
    * of bytes modified.
    *
@@ -389,11 +280,12 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @return True if the counter is number of bytes
    * @since 2.0
    */
-  protected final boolean isModificationsCounterInBytes() {
+  boolean isModificationsCounterInBytes() {
     return modificationCounterIsInBytes;
   }
 
   /**
+   * (package-private)<br>
    * Indicates the maximum number of changes allowed in session.
    *
    * <p>This number can be a number of operations or a number of commands (see
@@ -402,7 +294,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @return The maximum number of modifications allowed
    * @since 2.0
    */
-  protected final int getModificationsCounter() {
+  int getModificationsCounter() {
     return modificationsCounterMax;
   }
 
@@ -412,7 +304,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getPlatform() {
+  public byte getPlatform() {
     return startupInfo[SI_PLATFORM];
   }
 
@@ -422,7 +314,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getApplicationType() {
+  public byte getApplicationType() {
     return startupInfo[SI_APPLICATION_TYPE];
   }
 
@@ -432,8 +324,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isConfidentialSessionModeSupported() {
-    return isConfidentialSessionModeSupported;
+  public boolean isExtendedModeSupported() {
+    return isExtendedModeSupported;
   }
 
   /**
@@ -442,8 +334,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isDeselectRatificationSupported() {
-    return isDeselectRatificationSupported;
+  public boolean isRatificationOnDeselectSupported() {
+    return isRatificationOnDeselectSupported;
   }
 
   /**
@@ -452,7 +344,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isSvFeatureAvailable() {
+  public boolean isSvFeatureAvailable() {
     return isSvFeatureAvailable;
   }
 
@@ -462,7 +354,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isPinFeatureAvailable() {
+  public boolean isPinFeatureAvailable() {
     return isPinFeatureAvailable;
   }
 
@@ -472,8 +364,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isPublicAuthenticationSupported() {
-    return isPublicAuthenticationSupported;
+  public boolean isPkiModeSupported() {
+    return isPkiModeSupported;
   }
 
   /**
@@ -482,7 +374,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getApplicationSubtype() {
+  public byte getApplicationSubtype() {
     return startupInfo[SI_APPLICATION_SUBTYPE];
   }
 
@@ -492,7 +384,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getSoftwareIssuer() {
+  public byte getSoftwareIssuer() {
     return startupInfo[SI_SOFTWARE_ISSUER];
   }
 
@@ -502,7 +394,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getSoftwareVersion() {
+  public byte getSoftwareVersion() {
     return startupInfo[SI_SOFTWARE_VERSION];
   }
 
@@ -512,7 +404,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getSoftwareRevision() {
+  public byte getSoftwareRevision() {
     return startupInfo[SI_SOFTWARE_REVISION];
   }
 
@@ -522,7 +414,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final byte getSessionModification() {
+  public byte getSessionModification() {
     return startupInfo[SI_BUFFER_SIZE_INDICATOR];
   }
 
@@ -532,7 +424,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isDfInvalidated() {
+  public boolean isDfInvalidated() {
     return isDfInvalidated;
   }
 
@@ -542,7 +434,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isDfRatified() {
+  public boolean isDfRatified() {
     if (isDfRatified != null) {
       return isDfRatified;
     }
@@ -582,7 +474,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final int getSvBalance() {
+  public int getSvBalance() {
     if (svBalance == null) {
       throw new IllegalStateException("No SV Get command has been executed.");
     }
@@ -595,7 +487,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final int getSvLastTNum() {
+  public int getSvLastTNum() {
     if (svBalance == null) {
       throw new IllegalStateException("No SV Get command has been executed.");
     }
@@ -608,7 +500,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final SvLoadLogRecord getSvLoadLogRecord() {
+  public SvLoadLogRecord getSvLoadLogRecord() {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
       byte[] logRecord =
@@ -624,7 +516,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final SvDebitLogRecord getSvDebitLogLastRecord() {
+  public SvDebitLogRecord getSvDebitLogLastRecord() {
     if (svDebitLogRecord == null) {
       // try to get it from the file data
       List<SvDebitLogRecord> svDebitLogRecords = getSvDebitLogAllRecords();
@@ -639,7 +531,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final List<SvDebitLogRecord> getSvDebitLogAllRecords() {
+  public List<SvDebitLogRecord> getSvDebitLogAllRecords() {
     // get the logs from the file data
     SortedMap<Integer, byte[]> logRecords =
         getFileBySfi(CalypsoCardUtils.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
@@ -669,7 +561,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @return the card class determined from the card revision
    */
-  protected final CalypsoCardClass getCardClass() {
+  CalypsoCardClass getCardClass() {
     return calypsoCardClass;
   }
 
@@ -679,7 +571,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final DirectoryHeader getDirectoryHeader() {
+  public DirectoryHeader getDirectoryHeader() {
     return directoryHeader;
   }
 
@@ -701,7 +593,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final ElementaryFile getFileBySfi(byte sfi) {
+  public ElementaryFile getFileBySfi(byte sfi) {
     ElementaryFile ef = efBySfi.get(sfi);
     if (ef == null) {
       throw new NoSuchElementException(
@@ -716,7 +608,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final ElementaryFile getFileByLid(short lid) {
+  public ElementaryFile getFileByLid(short lid) {
     Byte sfi = sfiByLid.get(lid);
     if (sfi == null) {
       throw new NoSuchElementException(
@@ -731,7 +623,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final Map<Byte, ElementaryFile> getAllFiles() {
+  public Map<Byte, ElementaryFile> getAllFiles() {
     return efBySfi;
   }
 
@@ -757,7 +649,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final boolean isPinBlocked() {
+  public boolean isPinBlocked() {
     return getPinAttemptRemaining() == 0;
   }
 
@@ -767,7 +659,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public final int getPinAttemptRemaining() {
+  public int getPinAttemptRemaining() {
     if (pinAttemptCounter == null) {
       throw new IllegalStateException("PIN status has not been checked.");
     }
@@ -925,6 +817,26 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private static void copyMapSfi(Map<Short, Byte> src, Map<Short, Byte> dest) {
     dest.clear();
     dest.putAll(src);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public String getPowerOnData() {
+    return powerOnData;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public byte[] getSelectApplicationResponse() {
+    return selectApplicationResponse.getApdu();
   }
 
   /**

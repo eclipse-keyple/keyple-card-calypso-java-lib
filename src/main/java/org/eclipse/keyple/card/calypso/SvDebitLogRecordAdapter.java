@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.eclipse.keyple.card.calypso.card.SvDebitLogRecord;
+import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
@@ -41,6 +41,16 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    * @since 2.0
    */
   @Override
+  public byte[] getRawData() {
+    return cardResponse;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
   public int getAmount() {
     return ByteArrayUtil.twoBytesSignedToInt(cardResponse, offset);
   }
@@ -61,17 +71,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    * @since 2.0
    */
   @Override
-  public int getDebitTime() {
-    return ByteArrayUtil.twoBytesToInt(getDebitTimeBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getDebitTimeBytes() {
+  public byte[] getDebitTime() {
     final byte[] time = new byte[2];
     time[0] = cardResponse[offset + 4];
     time[1] = cardResponse[offset + 5];
@@ -84,17 +84,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    * @since 2.0
    */
   @Override
-  public int getDebitDate() {
-    return ByteArrayUtil.twoBytesToInt(getDebitDateBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getDebitDateBytes() {
+  public byte[] getDebitDate() {
     final byte[] date = new byte[2];
     date[0] = cardResponse[offset + 2];
     date[1] = cardResponse[offset + 3];
@@ -110,24 +100,13 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   public byte getKvc() {
     return cardResponse[offset + 6];
   }
-
   /**
    * {@inheritDoc}
    *
    * @since 2.0
    */
   @Override
-  public long getSamId() {
-    return ByteArrayUtil.fourBytesToInt(getSamIdBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSamIdBytes() {
+  public byte[] getSamId() {
     byte[] samId = new byte[4];
     System.arraycopy(cardResponse, offset + 7, samId, 0, 4);
     return samId;
@@ -140,20 +119,10 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getSvTNum() {
-    return ByteArrayUtil.twoBytesToInt(getSvTNumBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSvTNumBytes() {
     final byte[] tnNum = new byte[2];
     tnNum[0] = cardResponse[offset + 17];
     tnNum[1] = cardResponse[offset + 18];
-    return tnNum;
+    return ByteArrayUtil.twoBytesToInt(tnNum, 0);
   }
 
   /**
@@ -163,19 +132,9 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getSamTNum() {
-    return ByteArrayUtil.threeBytesToInt(getSamTNumBytes(), 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public byte[] getSamTNumBytes() {
     byte[] samTNum = new byte[3];
     System.arraycopy(cardResponse, offset + 11, samTNum, 0, 3);
-    return samTNum;
+    return ByteArrayUtil.threeBytesToInt(samTNum, 0);
   }
 
   /**
@@ -191,13 +150,13 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
         + ", \"balance\":"
         + getBalance()
         + ", \"debitDate\":"
-        + getDebitDate()
+        + ByteArrayUtil.toHex(getDebitDate())
         + ", \"debitTime\":"
-        + getDebitDate()
+        + ByteArrayUtil.toHex(getDebitDate())
         + ", \"kvc\":"
         + getKvc()
         + ", \"samId\": \""
-        + ByteArrayUtil.toHex(getSamIdBytes())
+        + ByteArrayUtil.toHex(getSamId())
         + "\", \"svTransactionNumber\":"
         + getSvTNum()
         + ", \"svSamTransactionNumber\":"

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://www.calypsonet-asso.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,9 +13,9 @@ package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
+import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
-import org.eclipse.keyple.card.calypso.card.CalypsoCardSelection;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
 import org.eclipse.keyple.core.service.*;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * <h1>Use Case ‘generic 2’ – Scheduled Selection (PC/SC)</h1>
  *
  * <p>We demonstrate here the selection of a Calypso card using a scheduled scenario. The selection
- * operations are prepared in advance with the card selection service and the Calypso extension
+ * operations are prepared in advance with the card selection manager and the Calypso extension
  * service, then the reader is observed. When a card is inserted, the prepared selection scenario is
  * executed and the observer is notified of a card insertion event including the selection data
  * collected during the selection process.
@@ -82,37 +82,36 @@ public class Main_ScheduledSelection_Pcsc {
     logger.info("=============== UseCase Generic #2: scheduled selection ==================");
     logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
-    // Get the core card selection service.
-    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+    // Get the core card selection manager.
+    CardSelectionManager cardSelectionManager = smartCardService.createCardSelectionManager();
 
     // Create a card selection using the Calypso card extension.
     // Select the card and read the record 1 of the file ENVIRONMENT_AND_HOLDER
     CalypsoCardSelection cardSelection =
         cardExtension
-            .createCardSelection(
-                CalypsoExtensionService.getInstance()
-                    .createCardSelector()
-                    .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
-                    .filterByDfName(CalypsoConstants.AID),
-                true)
+            .createCardSelection()
+            .acceptInvalidatedCard()
+            .filterByCardProtocol(ContactlessCardCommonProtocol.ISO_14443_4.name())
+            .filterByDfName(CalypsoConstants.AID)
             .prepareReadRecordFile(
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1);
 
     // Prepare the selection by adding the created Calypso selection to the card selection scenario.
-    selectionService.prepareSelection(cardSelection);
+    cardSelectionManager.prepareSelection(cardSelection);
 
     // Schedule the selection scenario, request notification only if the card matches the selection
     // case.
-    selectionService.scheduleCardSelectionScenario(
+    cardSelectionManager.scheduleCardSelectionScenario(
         (ObservableReader) cardReader,
-        ObservableReader.NotificationMode.MATCHED_ONLY,
-        ObservableReader.PollingMode.REPEATING);
+        ObservableReader.DetectionMode.REPEATING,
+        ObservableReader.NotificationMode.MATCHED_ONLY);
 
     // Create and add an observer for this reader
-    CardReaderObserver cardReaderObserver = new CardReaderObserver(cardReader, selectionService);
+    CardReaderObserver cardReaderObserver =
+        new CardReaderObserver(cardReader, cardSelectionManager);
     ((ObservableReader) cardReader).setReaderObservationExceptionHandler(cardReaderObserver);
     ((ObservableReader) cardReader).addObserver(cardReaderObserver);
-    ((ObservableReader) cardReader).startCardDetection(ObservableReader.PollingMode.REPEATING);
+    ((ObservableReader) cardReader).startCardDetection(ObservableReader.DetectionMode.REPEATING);
 
     logger.info(
         "= #### Wait for a card. The default AID based selection to be processed as soon as the card is detected.");
