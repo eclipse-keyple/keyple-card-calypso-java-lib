@@ -83,9 +83,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /** The {@link ChannelControl} action */
   private ChannelControl channelControl;
 
-  /**
-   * The card Transaction State defined with the elements: ‘IOError’, ‘SEInserted’ and ‘SERemoval’.
-   */
   private enum SessionState {
     /** Initial state of a card transaction. The card must have been previously selected. */
     SESSION_UNINITIALIZED,
