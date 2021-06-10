@@ -54,7 +54,7 @@ final class CardOpenSession3Builder
     byte p2;
     byte[] dataIn;
 
-    if (!calypsoCard.isConfidentialSessionModeSupported()) {
+    if (!calypsoCard.isExtendedModeSupported()) {
       p2 = (byte) ((sfi * 8) + 1);
       dataIn = samChallenge;
     } else {

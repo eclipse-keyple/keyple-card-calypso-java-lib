@@ -65,7 +65,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[18 + (calypsoCard.isConfidentialSessionModeSupported() ? 10 : 5)];
+    dataIn = new byte[18 + (calypsoCard.isExtendedModeSupported() ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     dataIn[1] = date[0];
@@ -98,9 +98,8 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * @since 2.0
    */
   public void finalizeBuilder(byte[] reloadComplementaryData) {
-    if ((calypsoCard.isConfidentialSessionModeSupported() && reloadComplementaryData.length != 20)
-        || (!calypsoCard.isConfidentialSessionModeSupported()
-            && reloadComplementaryData.length != 15)) {
+    if ((calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 20)
+        || (!calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -134,7 +133,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
     svReloadData[0] = command.getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svReloadData[3] = calypsoCard.isConfidentialSessionModeSupported() ? (byte) 0x1C : (byte) 0x17;
+    svReloadData[3] = calypsoCard.isExtendedModeSupported() ? (byte) 0x1C : (byte) 0x17;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svReloadData, 4, 11);
     return svReloadData;

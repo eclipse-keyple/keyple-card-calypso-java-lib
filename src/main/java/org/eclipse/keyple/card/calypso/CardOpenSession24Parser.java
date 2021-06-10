@@ -95,6 +95,7 @@ final class CardOpenSession24Parser extends AbstractCardOpenSessionParser {
         Arrays.copyOfRange(apduResponseData, 4, 5),
         previousSessionRatified,
         false,
+        null,
         kvc,
         data,
         apduResponseData);

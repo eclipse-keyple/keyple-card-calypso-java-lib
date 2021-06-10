@@ -30,16 +30,16 @@ final class SamDigestUpdateMultipleBuilder
   /**
    * Instantiates a new SamDigestUpdateMultipleBuilder.
    *
-   * @param revision the revision.
+   * @param productType the product type.
    * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData the digest data.
    * @since 2.0
    */
   public SamDigestUpdateMultipleBuilder(
-      CalypsoSam.ProductType revision, boolean encryptedSession, byte[] digestData) {
+      CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
+    if (productType != null) {
+      this.defaultProductType = productType;
     }
     byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
     byte p1 = (byte) 0x00;

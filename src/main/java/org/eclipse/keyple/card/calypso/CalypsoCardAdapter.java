@@ -21,24 +21,8 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * This POJO concentrates all the information we know about the card being processed: from the
- * selection stage to the end of the transaction.
- *
- * <p>An instance of CalypsoCard is obtained by casting the AbstractSmartCard object from the
- * selection process (e.g. (CalypsoCard)(cardSelectionsResult.getActiveSmartCard()))
- *
- * <p>The various information contained in CalypsoCard is accessible by getters and includes:
- *
- * <ul>
- *   <li>The application identification fields (revision/version, class, DF name, serial number,
- *       ATR, issuer)
- *   <li>The indication of the presence of optional features (Stored Value, PIN, Rev3.2 mode,
- *       ratification management)
- *   <li>The management information of the modification buffer
- *   <li>The invalidation status
- *   <li>The files, counters, SV data read or modified during the execution of the processes defined
- *       by {@link org.calypsonet.terminal.calypso.transaction.CardTransactionService}
- * </ul>
+ * (package-private)<br>
+ * Implementation of {@link CalypsoCard}.
  *
  * @since 2.0
  */
@@ -47,11 +31,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private final ApduResponseApi selectApplicationResponse;
   private final String powerOnData;
 
-  private final boolean isConfidentialSessionModeSupported;
-  private final boolean isDeselectRatificationSupported;
+  private final boolean isExtendedModeSupported;
+  private final boolean isRatificationOnDeselectSupported;
   private final boolean isSvFeatureAvailable;
   private final boolean isPinFeatureAvailable;
-  private final boolean isPublicAuthenticationSupported;
+  private final boolean isPkiModeSupported;
   private final boolean isDfInvalidated;
   private final CalypsoCardClass calypsoCardClass;
   private final byte[] calypsoSerialNumber;
@@ -142,13 +126,12 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       } else {
         modificationsCounterMax = bufferSizeValue;
       }
-      isConfidentialSessionModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
-      isDeselectRatificationSupported =
+      isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
+      isRatificationOnDeselectSupported =
           (applicationType & APP_TYPE_RATIFICATION_COMMAND_REQUIRED) == 0;
       isSvFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_SV) != 0;
       isPinFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_PIN) != 0;
-      isPublicAuthenticationSupported =
-          (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
+      isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
     } else {
       /*
        * FCI is not provided: we consider it is Calypso card rev 1, it's serial number is
@@ -178,11 +161,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       System.arraycopy(atr, 6, startupInfo, 1, 6);
 
       // TODO check these flags
-      isConfidentialSessionModeSupported = false;
-      isDeselectRatificationSupported = true;
+      isExtendedModeSupported = false;
+      isRatificationOnDeselectSupported = true;
       isSvFeatureAvailable = false;
       isPinFeatureAvailable = false;
-      isPublicAuthenticationSupported = false;
+      isPkiModeSupported = false;
       isDfInvalidated = false;
     }
     /* Rev1 and Rev2 expects the legacy class byte while Rev3 expects the ISO class byte */
@@ -341,8 +324,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean isConfidentialSessionModeSupported() {
-    return isConfidentialSessionModeSupported;
+  public boolean isExtendedModeSupported() {
+    return isExtendedModeSupported;
   }
 
   /**
@@ -351,8 +334,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean isDeselectRatificationSupported() {
-    return isDeselectRatificationSupported;
+  public boolean isRatificationOnDeselectSupported() {
+    return isRatificationOnDeselectSupported;
   }
 
   /**
@@ -381,8 +364,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   @Override
-  public boolean isPublicAuthenticationSupported() {
-    return isPublicAuthenticationSupported;
+  public boolean isPkiModeSupported() {
+    return isPkiModeSupported;
   }
 
   /**

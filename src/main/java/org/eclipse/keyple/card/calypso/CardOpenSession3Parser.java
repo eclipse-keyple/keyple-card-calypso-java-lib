@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
 
-  private static boolean isConfidentialSessionModeSupported = false;
+  private static boolean isExtendedModeSupported = false;
 
   /**
    * Instantiates a new CardOpenSession3Parser from the response.
@@ -33,7 +33,7 @@ final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
    */
   public CardOpenSession3Parser(ApduResponseApi response, CardOpenSession3Builder builder) {
     super(response, builder);
-    isConfidentialSessionModeSupported = builder.isIsConfidentialSessionModeSupported();
+    isExtendedModeSupported = builder.isIsExtendedModeSupported();
   }
 
   @Override
@@ -42,7 +42,7 @@ final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
     boolean manageSecureSessionAuthorized;
     int offset;
 
-    if (!isConfidentialSessionModeSupported) {
+    if (!isExtendedModeSupported) {
       offset = 0;
       previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
       manageSecureSessionAuthorized = false;

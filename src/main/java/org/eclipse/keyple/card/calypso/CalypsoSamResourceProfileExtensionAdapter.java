@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.reader.CardReader;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
 import org.eclipse.keyple.core.util.Assert;
@@ -51,16 +51,16 @@ class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileEx
    * @since 2.0
    */
   @Override
-  public SmartCard matches(CardReader reader, CardSelectionService samSelectionService) {
+  public SmartCard matches(CardReader reader, CardSelectionManager samCardSelectionManager) {
 
     if (!reader.isCardPresent()) {
       return null;
     }
 
-    samSelectionService.prepareSelection(calypsoSamSelection);
+    samCardSelectionManager.prepareSelection(calypsoSamSelection);
     CardSelectionResult samCardSelectionResult = null;
     try {
-      samCardSelectionResult = samSelectionService.processCardSelectionScenario(reader);
+      samCardSelectionResult = samCardSelectionManager.processCardSelectionScenario(reader);
     } catch (Exception e) {
       logger.warn("An exception occurred while selecting the SAM: '{}'.", e.getMessage(), e);
     }

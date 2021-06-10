@@ -65,7 +65,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[15 + (calypsoCard.isConfidentialSessionModeSupported() ? 10 : 5)];
+    dataIn = new byte[15 + (calypsoCard.isExtendedModeSupported() ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     short amountShort = (short) -amount;
@@ -95,9 +95,8 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * @since 2.0
    */
   public void finalizeBuilder(byte[] debitComplementaryData) {
-    if ((calypsoCard.isConfidentialSessionModeSupported() && debitComplementaryData.length != 20)
-        || (!calypsoCard.isConfidentialSessionModeSupported()
-            && debitComplementaryData.length != 15)) {
+    if ((calypsoCard.isExtendedModeSupported() && debitComplementaryData.length != 20)
+        || (!calypsoCard.isExtendedModeSupported() && debitComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -131,7 +130,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     svDebitData[0] = command.getInstructionByte();
     // svDebitData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svDebitData[3] = calypsoCard.isConfidentialSessionModeSupported() ? (byte) 0x19 : (byte) 0x14;
+    svDebitData[3] = calypsoCard.isExtendedModeSupported() ? (byte) 0x19 : (byte) 0x14;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svDebitData, 4, 8);
     return svDebitData;

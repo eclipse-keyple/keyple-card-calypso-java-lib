@@ -15,7 +15,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
-import org.calypsonet.terminal.calypso.transaction.CardTransactionService;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
 import org.calypsonet.terminal.card.CardApiProperties;
 import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.ReaderApiProperties;
@@ -127,7 +127,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates a card transaction service to handle operations secured with a SAM.
+   * Creates a card transaction manager to handle operations secured with a SAM.
    *
    * <p>The reader and the card's initial data are those from the selection.<br>
    * The provided {@link CardSecuritySetting} must match the specific needs of the card (SAM card
@@ -139,21 +139,21 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @return A not null reference.
    * @since 2.0
    */
-  public CardTransactionService createCardTransaction(
+  public CardTransactionManager createCardTransaction(
       CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
-    return new CardTransactionServiceAdapter(reader, calypsoCard, cardSecuritySetting);
+    return new CardTransactionManagerAdapter(reader, calypsoCard, cardSecuritySetting);
   }
 
   /**
-   * Creates a card transaction service to handle non secured operations.
+   * Creates a card transaction manager to handle non secured operations.
    *
    * @param reader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @return A not null reference.
    * @since 2.0
    */
-  public CardTransactionService createCardTransactionWithoutSecurity(
+  public CardTransactionManager createCardTransactionWithoutSecurity(
       CardReader reader, CalypsoCard calypsoCard) {
-    return new CardTransactionServiceAdapter(reader, calypsoCard);
+    return new CardTransactionManagerAdapter(reader, calypsoCard);
   }
 }

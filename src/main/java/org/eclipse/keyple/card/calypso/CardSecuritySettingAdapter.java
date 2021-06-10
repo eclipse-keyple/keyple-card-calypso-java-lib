@@ -40,8 +40,8 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   private final Set<Integer> authorizedSessionKeys;
   private final Set<Integer> authorizedSvKeys;
 
-  private byte pinCipheringKif;
-  private byte pinCipheringKvc;
+  private Byte pinCipheringKif;
+  private Byte pinCipheringKvc;
 
   /**
    * (package-private)<br>
@@ -341,7 +341,10 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0
    */
   @Override
-  public boolean isSessionKeyAuthorized(byte kif, byte kvc) {
+  public boolean isSessionKeyAuthorized(Byte kif, Byte kvc) {
+    if (kif == null || kvc == null) {
+      return false;
+    }
     if (authorizedSessionKeys.isEmpty()) {
       return true;
     }
@@ -354,7 +357,10 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0
    */
   @Override
-  public boolean isSvKeyAuthorized(byte kif, byte kvc) {
+  public boolean isSvKeyAuthorized(Byte kif, Byte kvc) {
+    if (kif == null || kvc == null) {
+      return false;
+    }
     if (authorizedSvKeys.isEmpty()) {
       return true;
     }
@@ -367,7 +373,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0
    */
   @Override
-  public byte getPinCipheringKif() {
+  public Byte getPinCipheringKif() {
     return pinCipheringKif;
   }
 
@@ -377,7 +383,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0
    */
   @Override
-  public byte getPinCipheringKvc() {
+  public Byte getPinCipheringKvc() {
     return pinCipheringKvc;
   }
 }

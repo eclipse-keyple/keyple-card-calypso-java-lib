@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * (package-private)<br>
  * Handles a list {@link AbstractCardCommandBuilder} updated by the "prepare" methods of
- * CardTransactionService.
+ * CardTransactionManager.
  *
  * <p>Keeps builders between the time the commands are created and the time their responses are
  * parsed.

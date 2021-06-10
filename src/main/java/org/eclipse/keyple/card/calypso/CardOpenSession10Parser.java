@@ -94,6 +94,7 @@ final class CardOpenSession10Parser extends AbstractCardOpenSessionParser {
         previousSessionRatified,
         false,
         null,
+        null,
         data,
         apduResponseData);
   }

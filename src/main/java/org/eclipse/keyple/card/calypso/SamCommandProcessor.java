@@ -58,9 +58,8 @@ class SamCommandProcessor {
   private final CalypsoSam.ProductType samProductType;
   private boolean sessionEncryption;
   private boolean verificationMode;
-  private byte workKeyRecordNumber;
-  private byte workKif;
-  private byte workKvc;
+  private byte kif;
+  private byte kvc;
   private boolean isDiversificationDone;
   private boolean isDigestInitDone;
   private boolean isDigesterInitialized;
@@ -120,7 +119,7 @@ class SamCommandProcessor {
 
     // build the SAM Get Challenge command
     byte challengeLength =
-        calypsoCard.isConfidentialSessionModeSupported()
+        calypsoCard.isExtendedModeSupported()
             ? CHALLENGE_LENGTH_REV32
             : CHALLENGE_LENGTH_REV_INF_32;
 
@@ -167,26 +166,40 @@ class SamCommandProcessor {
   }
 
   /**
-   * Determine the work KIF from the value returned by the card and the session access level.
+   * (package-private)<br>
+   * Gets the KVC to use according to the provided write access and the card's KVC.
    *
-   * <p>If the value provided by the card undetermined (FFh), the actual value of the work KIF is
-   * found in the CardSecuritySetting according to the session access level.
-   *
-   * <p>If the value provided by the card is not undetermined, the work KIF is set to this value.
-   *
-   * @param writeAccessLevel the session access level.
-   * @param cardKif the KIF value from the card.
-   * @param cardKvc the KVC value from the card.
-   * @return the work KIF value byte
+   * @param writeAccessLevel The write access level.
+   * @param kvc The card KVC value.
+   * @return Null if the card did not provided a KVC value and if there's no default KVC value.
+   * @since 2.0
    */
-  private byte determineWorkKif(WriteAccessLevel writeAccessLevel, byte cardKif, byte cardKvc) {
-    byte kif;
-    if (cardKif == KIF_UNDEFINED) {
-      kif = cardSecuritySettings.getKif(writeAccessLevel, cardKvc);
-    } else {
-      kif = cardKif;
+  Byte computeKvc(WriteAccessLevel writeAccessLevel, Byte kvc) {
+    if (kvc != null) {
+      return kvc;
     }
-    return kif;
+    return cardSecuritySettings.getDefaultKvc(writeAccessLevel);
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the KIF to use according to the provided write access level and KVC.
+   *
+   * @param writeAccessLevel The write access level.
+   * @param kif The card KIF value.
+   * @param kvc The previously computed KVC value.
+   * @return Null if the card did not provided a KIF value and if there's no default KIF value.
+   * @since 2.0
+   */
+  Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
+    if ((kif != null && kif != KIF_UNDEFINED) || (kvc == null)) {
+      return kif;
+    }
+    Byte result = cardSecuritySettings.getKif(writeAccessLevel, kvc);
+    if (result == null) {
+      result = cardSecuritySettings.getDefaultKif(writeAccessLevel);
+    }
+    return result;
   }
 
   /**
@@ -199,30 +212,20 @@ class SamCommandProcessor {
    *
    * <p>Note: there is no communication with the SAM here.
    *
-   * @param writeAccessLevel the write access level.
    * @param sessionEncryption true if the session is encrypted.
    * @param verificationMode true if the verification mode is active.
-   * @param cardKif the card KIF.
-   * @param cardKvc the card KVC.
+   * @param kif the KIF.
+   * @param kvc the KVC.
    * @param digestData a first packet of data to digest.
    * @since 2.0
    */
   void initializeDigester(
-      WriteAccessLevel writeAccessLevel,
-      boolean sessionEncryption,
-      boolean verificationMode,
-      byte cardKif,
-      byte cardKvc,
-      byte[] digestData) {
+      boolean sessionEncryption, boolean verificationMode, byte kif, byte kvc, byte[] digestData) {
 
     this.sessionEncryption = sessionEncryption;
     this.verificationMode = verificationMode;
-    // TODO check in which case this key number is needed
-    // this.workKeyRecordNumber =
-    // cardSecuritySettings.getSessionDefaultKeyRecordNumber(writeAccessLevel);
-    this.workKif = determineWorkKif(writeAccessLevel, cardKif, cardKvc);
-    // TODO handle Rev 1.0 case where KVC is not available
-    this.workKvc = cardKvc;
+    this.kif = kif;
+    this.kvc = kvc;
 
     if (logger.isDebugEnabled()) {
       logger.debug(
@@ -232,14 +235,13 @@ class SamCommandProcessor {
           sessionEncryption,
           verificationMode);
       logger.debug(
-          "initialize: VERIFICATIONMODE = {}, REV32MODE = {} KEYRECNUMBER = {}",
+          "initialize: VERIFICATIONMODE = {}, REV32MODE = {}",
           verificationMode,
-          calypsoCard.isConfidentialSessionModeSupported(),
-          workKeyRecordNumber);
+          calypsoCard.isExtendedModeSupported());
       logger.debug(
           "initialize: KIF = {}, KVC {}, DIGESTDATA = {}",
-          String.format("%02X", cardKif),
-          String.format("%02X", cardKvc),
+          String.format("%02X", kif),
+          String.format("%02X", kvc),
           ByteArrayUtil.toHex(digestData));
     }
 
@@ -344,10 +346,9 @@ class SamCommandProcessor {
           new SamDigestInitBuilder(
               samProductType,
               verificationMode,
-              calypsoCard.isConfidentialSessionModeSupported(),
-              workKeyRecordNumber,
-              workKif,
-              workKvc,
+              calypsoCard.isExtendedModeSupported(),
+              kif,
+              kvc,
               cardDigestDataCache.get(0)));
       cardDigestDataCache.remove(0);
       // note that the digest init has been made
@@ -369,7 +370,7 @@ class SamCommandProcessor {
       samCommands.add(
           (new SamDigestCloseBuilder(
               samProductType,
-              calypsoCard.isConfidentialSessionModeSupported()
+              calypsoCard.isExtendedModeSupported()
                   ? SIGNATURE_LENGTH_REV32
                   : SIGNATURE_LENGTH_REV_INF_32)));
     }
@@ -525,10 +526,10 @@ class SamCommandProcessor {
     byte pinCipheringKif;
     byte pinCipheringKvc;
 
-    if (workKif != 0) {
+    if (kif != 0) {
       // the current work key has been set (a secure session is open)
-      pinCipheringKif = workKif;
-      pinCipheringKvc = workKvc;
+      pinCipheringKif = kif;
+      pinCipheringKvc = kvc;
     } else {
       // no current work key is available (outside secure session)
       pinCipheringKif = cardSecuritySettings.getPinCipheringKif();

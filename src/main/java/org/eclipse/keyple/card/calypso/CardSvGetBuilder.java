@@ -48,7 +48,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
     byte cla = calypsoCardClass.getValue();
     // TODO Improve this. Here we assume this SV evolution is linked to the confidential mode
     // support!
-    byte p1 = calypsoCard.isConfidentialSessionModeSupported() ? (byte) 0x01 : (byte) 0x00;
+    byte p1 = calypsoCard.isExtendedModeSupported() ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
     setApduRequest(

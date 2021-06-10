@@ -14,8 +14,8 @@ package org.eclipse.keyple.card.calypso.examples.UseCase3_Rev1Selection;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
@@ -89,14 +89,14 @@ public class Main_Rev1Selection_Pcsc {
 
     logger.info("= #### Select the card by its INNOVATRON protocol (no AID).");
 
-    // Get the core card selection service.
-    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+    // Get the core card selection manager.
+    CardSelectionManager cardSelectionManager = smartCardService.createCardSelectionManager();
 
     // Create a card selection using the Calypso card extension.
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario. No AID is defined, only the card protocol will be used to define the selection
     // case.
-    selectionService.prepareSelection(
+    cardSelectionManager.prepareSelection(
         cardExtension
             .createCardSelection()
             .acceptInvalidatedCard()
@@ -105,7 +105,8 @@ public class Main_Rev1Selection_Pcsc {
                 CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1));
 
     // Actual card communication: run the selection scenario.
-    CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
+    CardSelectionResult selectionResult =
+        cardSelectionManager.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
     if (selectionResult.getActiveSmartCard() == null) {
@@ -117,7 +118,7 @@ public class Main_Rev1Selection_Pcsc {
 
     logger.info("= SmartCard = {}", calypsoCard);
 
-    // Performs file reads using the card transaction service in non-secure mode.
+    // Performs file reads using the card transaction manager in non-secure mode.
 
     cardExtension
         .createCardTransactionWithoutSecurity(cardReader, calypsoCard)

@@ -18,9 +18,9 @@ import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
-import org.calypsonet.terminal.calypso.transaction.CardTransactionService;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
@@ -44,10 +44,10 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *   <li>Sets up the card resource service to provide a Calypso SAM (C1).
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection service.
+ *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario.
- *   <li>Creates a {@link CardTransactionService} using {@link CardSecuritySetting} referencing the
+ *   <li>Creates a {@link CardTransactionManager} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
  *   <li>Prepares and executes a number of modification commands that exceeds the number of commands
  *       allowed by the card's modification buffer size.
@@ -95,20 +95,21 @@ public class Main_MultipleSesssion_Pcsc {
 
     logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);
 
-    // Get the core card selection service.
-    CardSelectionService selectionService = CardSelectionServiceFactory.getService();
+    // Get the core card selection manager.
+    CardSelectionManager cardSelectionManager = smartCardService.createCardSelectionManager();
 
     // Create a card selection using the Calypso card extension.
     // Prepare the selection by adding the created Calypso card selection to the card selection
     // scenario.
-    selectionService.prepareSelection(
+    cardSelectionManager.prepareSelection(
         cardExtension
             .createCardSelection()
             .acceptInvalidatedCard()
             .filterByDfName(CalypsoConstants.AID));
 
     // Actual card communication: run the selection scenario.
-    CardSelectionResult selectionResult = selectionService.processCardSelectionScenario(cardReader);
+    CardSelectionResult selectionResult =
+        cardSelectionManager.processCardSelectionScenario(cardReader);
 
     // Check the selection result.
     if (selectionResult.getActiveSmartCard() == null) {
@@ -131,8 +132,8 @@ public class Main_MultipleSesssion_Pcsc {
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .enableMultipleSession();
 
-    // Performs file reads using the card transaction service in non-secure mode.
-    CardTransactionService cardTransaction =
+    // Performs file reads using the card transaction manager in non-secure mode.
+    CardTransactionManager cardTransaction =
         cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransaction.processOpening(WriteAccessLevel.DEBIT);

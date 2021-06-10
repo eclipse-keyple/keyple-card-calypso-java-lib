@@ -133,11 +133,11 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     return secureSession.isManageSecureSessionAuthorized();
   }
 
-  public byte getSelectedKif() {
+  public Byte getSelectedKif() {
     return secureSession.getKIF();
   }
 
-  public byte getSelectedKvc() {
+  public Byte getSelectedKvc() {
     return secureSession.getKVC();
   }
 
@@ -160,8 +160,8 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     /** The manage secure session authorized boolean. */
     private final boolean manageSecureSessionAuthorized;
 
-    /** The kif. */
-    private final byte kif;
+    /** The kif (may be null if it doesn't exist in the considered card [rev 1.0]). */
+    private final Byte kif;
 
     /** The kvc (may be null if it doesn't exist in the considered card [rev 1.0]). */
     private final Byte kvc;
@@ -173,7 +173,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
     private final byte[] secureSessionData;
 
     /**
-     * Instantiates a new SecureSession for a Calypso application revision 3
+     * Instantiates a new SecureSession
      *
      * @param challengeTransactionCounter Challenge transaction counter.
      * @param challengeRandomNumber Challenge random number.
@@ -192,8 +192,8 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
         byte[] challengeRandomNumber,
         boolean previousSessionRatified,
         boolean manageSecureSessionAuthorized,
-        byte kif,
-        byte kvc,
+        Byte kif,
+        Byte kvc,
         byte[] originalData,
         byte[] secureSessionData) {
       this.challengeTransactionCounter = challengeTransactionCounter;
@@ -202,38 +202,6 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
       this.manageSecureSessionAuthorized = manageSecureSessionAuthorized;
       this.kif = kif;
       this.kvc = kvc;
-      this.originalData = originalData;
-      this.secureSessionData = secureSessionData;
-    }
-
-    /**
-     * Instantiates a new SecureSession for a Calypso application revision 2.4
-     *
-     * @param challengeTransactionCounter Challenge transaction counter.
-     * @param challengeRandomNumber Challenge random number.
-     * @param previousSessionRatified the previous session ratified.
-     * @param manageSecureSessionAuthorized the manage secure session authorized.
-     * @param kvc the KVC from the response of the open secure session APDU command.
-     * @param originalData the original data from the response of the open secure session APDU.
-     *     command
-     * @param secureSessionData the secure session data from the response of open secure session.
-     *     APDU command
-     * @since 2.0
-     */
-    public SecureSession(
-        byte[] challengeTransactionCounter,
-        byte[] challengeRandomNumber,
-        boolean previousSessionRatified,
-        boolean manageSecureSessionAuthorized,
-        Byte kvc,
-        byte[] originalData,
-        byte[] secureSessionData) {
-      this.challengeTransactionCounter = challengeTransactionCounter;
-      this.challengeRandomNumber = challengeRandomNumber;
-      this.previousSessionRatified = previousSessionRatified;
-      this.manageSecureSessionAuthorized = manageSecureSessionAuthorized;
-      this.kif = (byte) 0xFF;
-      this.kvc = kvc != null ? kvc : (byte) 0xFF;
       this.originalData = originalData;
       this.secureSessionData = secureSessionData;
     }
@@ -272,7 +240,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * @return A byte
      * @since 2.0
      */
-    public byte getKIF() {
+    public Byte getKIF() {
       return kif;
     }
 
@@ -282,7 +250,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * @return A byte
      * @since 2.0
      */
-    public byte getKVC() {
+    public Byte getKVC() {
       return kvc;
     }
 

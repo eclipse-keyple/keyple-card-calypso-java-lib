@@ -18,12 +18,12 @@
         org.calypsonet.terminal.calypso.card.CalypsoCardSelection}).
     </li>
     <li>
-        Transaction service to perform non-secure operations with a card.<br>
+        Card transaction manager to perform non-secure operations with a card.<br>
         {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransactionWithoutSecurity(CardReader
         reader, CalypsoCard calypsoCard)}
     </li>
     <li>
-        Transaction service to perform secure operations with a card (<strong>Calypso Secure Session</strong>).<br>
+        Card transaction manager to perform secure operations with a card (<strong>Calypso Secure Session</strong>).<br>
         {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransaction(CardReader reader,
         CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting)}<br>
         The {@link org.calypsonet.terminal.calypso.transaction.CardSecuritySetting} POJO is used to define the security

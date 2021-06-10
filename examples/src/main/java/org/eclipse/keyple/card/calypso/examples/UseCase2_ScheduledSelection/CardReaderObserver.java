@@ -16,7 +16,7 @@ import static org.calypsonet.terminal.reader.CardReaderEvent.Type.CARD_MATCHED;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.reader.CardReaderEvent;
-import org.calypsonet.terminal.reader.selection.CardSelectionService;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.spi.CardReaderObservationExceptionHandlerSpi;
 import org.calypsonet.terminal.reader.spi.CardReaderObserverSpi;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
@@ -30,7 +30,7 @@ class CardReaderObserver
 
   private static final Logger logger = LoggerFactory.getLogger(CardReaderObserver.class);
   private final Reader reader;
-  private final CardSelectionService selectionService;
+  private final CardSelectionManager cardSelectionManager;
 
   /**
    * (package-private)<br>
@@ -41,11 +41,11 @@ class CardReaderObserver
    * CardReaderEvent}.
    *
    * @param reader The card reader.
-   * @param selectionService The card selection service.
+   * @param cardSelectionManager The card selection manager.
    */
-  CardReaderObserver(Reader reader, CardSelectionService selectionService) {
+  CardReaderObserver(Reader reader, CardSelectionManager cardSelectionManager) {
     this.reader = reader;
-    this.selectionService = selectionService;
+    this.cardSelectionManager = cardSelectionManager;
   }
 
   /**
@@ -60,7 +60,7 @@ class CardReaderObserver
         // the selection has one target, get the result at index 0
         CalypsoCard calypsoCard =
             (CalypsoCard)
-                selectionService
+                cardSelectionManager
                     .parseScheduledCardSelectionsResponse(
                         event.getScheduledCardSelectionsResponse())
                     .getActiveSmartCard();

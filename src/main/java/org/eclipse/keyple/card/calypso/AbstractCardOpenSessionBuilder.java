@@ -22,7 +22,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponseParser>
     extends AbstractCardCommandBuilder<T> {
 
-  private static boolean isConfidentialSessionModeSupported = false;
+  private static boolean isExtendedModeSupported = false;
 
   /**
    * Instantiates a new AbstractCardOpenSessionBuilder.
@@ -42,7 +42,7 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
       byte[] sessionTerminalChallenge,
       int sfi,
       int recordNumber) {
-    isConfidentialSessionModeSupported = calypsoCard.isConfidentialSessionModeSupported();
+    isExtendedModeSupported = calypsoCard.isExtendedModeSupported();
     switch (calypsoCard.getProductType()) {
       case PRIME_REV1_0:
         return new CardOpenSession10Builder(
@@ -71,7 +71,7 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
    *
    * @return True if the confidential session mode is supported.
    */
-  boolean isIsConfidentialSessionModeSupported() {
-    return isConfidentialSessionModeSupported;
+  boolean isIsExtendedModeSupported() {
+    return isExtendedModeSupported;
   }
 }
