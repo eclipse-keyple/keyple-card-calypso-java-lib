@@ -633,7 +633,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * @param cardCommands the list of card commands sent.
    * @return The list of the anticipated responses.
-   * @throws CardTransactionIllegalStateException if the anticipation process failed
+   * @throws IllegalStateException if the anticipation process failed
    */
   private List<ApduResponseApi> getAnticipatedResponses(
       List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> cardCommands) {

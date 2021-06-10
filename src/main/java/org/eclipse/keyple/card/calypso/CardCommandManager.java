@@ -77,8 +77,8 @@ class CardCommandManager {
    *
    * @param commandBuilder the StoredValue command builder.
    * @param svOperation the type of the current SV operation (Realod/Debit/Undebit).
-   * @throws IllegalStateException if the provided command is not an SV command
-   * @throws CardTransactionIllegalStateException if the SV API is not properly used.
+   * @throws IllegalStateException if the provided command is not an SV command or not properly
+   *     used.
    */
   void addStoredValueCommand(
       AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder,
