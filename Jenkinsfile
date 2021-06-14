@@ -1,7 +1,7 @@
 #!groovy
 pipeline {
   environment {
-    PROJECT_NAME = "keyple-java-card-calypso"
+    PROJECT_NAME = "keyple-card-calypso-java-lib"
     PROJECT_BOT_NAME = "Eclipse Keyple Bot"
   }
   agent { kubernetes { yaml javaBuilder('2.0') } }
@@ -16,6 +16,7 @@ pipeline {
       script {
         env.KEYPLE_VERSION = sh(script: 'grep version gradle.properties | cut -d= -f2 | tr -d "[:space:]"', returnStdout: true).trim()
         env.GIT_COMMIT_MESSAGE = sh(script: 'git log --format=%B -1 | head -1 | tr -d "\n"', returnStdout: true)
+        env.SONAR_USER_HOME = '/home/jenkins'
         echo "Building version ${env.KEYPLE_VERSION} in branch ${env.GIT_BRANCH}"
         deployRelease = env.GIT_URL == "https://github.com/eclipse/${env.PROJECT_NAME}.git" && (env.GIT_BRANCH == "main" || env.GIT_BRANCH == "release-${env.KEYPLE_VERSION}") && env.CHANGE_ID == null && env.GIT_COMMIT_MESSAGE.startsWith("Release ${env.KEYPLE_VERSION}")
         deploySnapshot = !deployRelease && env.GIT_URL == "https://github.com/eclipse/${env.PROJECT_NAME}.git" && (env.GIT_BRANCH == "main" || env.GIT_BRANCH == "release-${env.KEYPLE_VERSION}") && env.CHANGE_ID == null
