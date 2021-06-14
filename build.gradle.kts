@@ -34,7 +34,7 @@ dependencies {
     implementation("org.calypsonet.terminal:calypsonet-terminal-card-java-api:1.0-SNAPSHOT") { isChanging = true }
     implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.0-SNAPSHOT") { isChanging = true }
     implementation("org.eclipse.keyple:keyple-common-java-api:2.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-service-java-lib-resource:2.0.0-SNAPSHOT") { isChanging = true }
+    implementation("org.eclipse.keyple:keyple-service-resource-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
     implementation("org.eclipse.keyple:keyple-util-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
     implementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("junit:junit:4.13.2")
