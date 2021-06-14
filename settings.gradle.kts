@@ -1,1 +1,1 @@
-rootProject.name = "keyple-java-card-calypso"
+rootProject.name = "keyple-card-calypso-java-lib"
