@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso.examples.UseCase2_ScheduledSelection;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.reader.ObservableCardReader;
 import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
@@ -102,16 +103,17 @@ public class Main_ScheduledSelection_Pcsc {
     // Schedule the selection scenario, request notification only if the card matches the selection
     // case.
     cardSelectionManager.scheduleCardSelectionScenario(
-        (ObservableReader) cardReader,
-        ObservableReader.DetectionMode.REPEATING,
-        ObservableReader.NotificationMode.MATCHED_ONLY);
+        (ObservableCardReader) cardReader,
+        ObservableCardReader.DetectionMode.REPEATING,
+        ObservableCardReader.NotificationMode.MATCHED_ONLY);
 
     // Create and add an observer for this reader
     CardReaderObserver cardReaderObserver =
         new CardReaderObserver(cardReader, cardSelectionManager);
-    ((ObservableReader) cardReader).setReaderObservationExceptionHandler(cardReaderObserver);
-    ((ObservableReader) cardReader).addObserver(cardReaderObserver);
-    ((ObservableReader) cardReader).startCardDetection(ObservableReader.DetectionMode.REPEATING);
+    ((ObservableCardReader) cardReader).setReaderObservationExceptionHandler(cardReaderObserver);
+    ((ObservableCardReader) cardReader).addObserver(cardReaderObserver);
+    ((ObservableCardReader) cardReader)
+        .startCardDetection(ObservableCardReader.DetectionMode.REPEATING);
 
     logger.info(
         "= #### Wait for a card. The default AID based selection to be processed as soon as the card is detected.");

@@ -102,12 +102,14 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
 
   public AbstractCardOpenSessionParser create(ApduResponseApi response, CalypsoCard calypsoCard) {
     switch (calypsoCard.getProductType()) {
-      case PRIME_REV1_0:
+      case PRIME_REViSION_1:
         return new CardOpenSession10Parser(response, (CardOpenSession10Builder) builder);
-      case PRIME_REV2_4:
+      case PRIME_REViSION_2:
         return new CardOpenSession24Parser(response, (CardOpenSession24Builder) builder);
-      case PRIME_REV3:
+      case PRIME_REViSION_3:
+      case HCE:
       case LIGHT:
+      case BASIC:
         return new CardOpenSession3Parser(response, (CardOpenSession3Builder) builder);
       default:
         throw new IllegalArgumentException(

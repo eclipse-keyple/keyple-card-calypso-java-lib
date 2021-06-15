@@ -227,8 +227,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         break;
       case FCP_FOR_CURRENT_FILE:
         commandBuilders.add(CalypsoCardUtils.prepareGetDataFcp(calypsoCardClass));
+        break;
       default:
-        throw new IllegalArgumentException("Unsupported Get Data tag: " + tag.name());
+        throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
     }
 
     return this;

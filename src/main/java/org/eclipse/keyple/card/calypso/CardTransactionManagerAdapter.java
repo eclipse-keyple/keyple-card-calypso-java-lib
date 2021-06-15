@@ -1375,8 +1375,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       case FCP_FOR_CURRENT_FILE:
         cardCommandManager.addRegularCommand(
             CalypsoCardUtils.prepareGetDataFcp(calypsoCard.getCardClass()));
+        break;
       default:
-        throw new IllegalArgumentException("Unsupported Get Data tag: " + tag.name());
+        throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
     }
 
     return this;
