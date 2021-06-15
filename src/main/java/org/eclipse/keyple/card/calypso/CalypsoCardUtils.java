@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
@@ -187,6 +188,12 @@ final class CalypsoCardUtils {
     return cardReadRecordsParser;
   }
 
+  private static CardGetDataFciParser updateCalypsoCardGetDataFci(
+      CalypsoCardAdapter calypsoCard, ApduResponseApi apduResponse) {
+    calypsoCard.initializeWithFci(apduResponse);
+    return null;
+  }
+
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the card <br>
@@ -194,17 +201,13 @@ final class CalypsoCardUtils {
    * DirectoryHeader} is updated
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardSelectFileBuilder the Select File command builder.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardSelectFileParser updateCalypsoCardSelectFile(
-      CalypsoCardAdapter calypsoCard,
-      CardSelectFileBuilder cardSelectFileBuilder,
-      ApduResponseApi apduResponse)
-      throws CardCommandException {
-    CardSelectFileParser cardSelectFileParser =
-        cardSelectFileBuilder.createResponseParser(apduResponse);
+  private static CardSelectFileParser updateCalypsoCardWithFcp(
+      CalypsoCardAdapter calypsoCard, ApduResponseApi apduResponse) throws CardCommandException {
+
+    CardSelectFileParser cardSelectFileParser = new CardSelectFileParser(apduResponse, null);
 
     cardSelectFileParser.checkStatus();
 
@@ -628,7 +631,9 @@ final class CalypsoCardUtils {
    *     from the card
    * @param commandBuilder the builder of the command that get the response.
    * @param apduResponse the APDU response returned by the card to the command.
+   * @return The parser associated to the command or null if not relevant.
    * @throws CardCommandException if a response from the card was unexpected
+   * @since 2.0
    */
   static AbstractCardResponseParser updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,
@@ -639,9 +644,15 @@ final class CalypsoCardUtils {
       case READ_RECORDS:
         return updateCalypsoCardReadRecords(
             calypsoCard, (CardReadRecordsBuilder) commandBuilder, apduResponse);
+      case GET_DATA:
+        if (commandBuilder instanceof CardGetDataFciBuilder) {
+          calypsoCard.initializeWithFci(apduResponse);
+          return null;
+        } else {
+          return updateCalypsoCardWithFcp(calypsoCard, apduResponse);
+        }
       case SELECT_FILE:
-        return updateCalypsoCardSelectFile(
-            calypsoCard, (CardSelectFileBuilder) commandBuilder, apduResponse);
+        return updateCalypsoCardWithFcp(calypsoCard, apduResponse);
       case UPDATE_RECORD:
         return updateCalypsoCardUpdateRecord(
             calypsoCard, (CardUpdateRecordBuilder) commandBuilder, apduResponse);
@@ -683,7 +694,6 @@ final class CalypsoCardUtils {
       case REHABILITATE:
         return updateCalypsoInvalidateRehabilitate(commandBuilder, apduResponse);
       case CHANGE_KEY:
-      case GET_DATA_FCI:
       case GET_DATA_TRACE:
         throw new IllegalStateException("Shouldn't happen for now!");
       default:
@@ -700,6 +710,7 @@ final class CalypsoCardUtils {
    * @param commandBuilders the list of builders that get the responses.
    * @param apduResponses the APDU responses returned by the card to all commands.
    * @throws CardCommandException if a response from the card was unexpected
+   * @since 2.0
    */
   static void updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,
@@ -767,11 +778,36 @@ final class CalypsoCardUtils {
   }
 
   /**
+   * Create a Get Data command builder for the tag {@link GetDataTag#FCI_FOR_CURRENT_DF}.
+   *
+   * @param calypsoCardClass The class of the card.
+   * @return A {@link CardGetDataFciBuilder} object
+   * @since 2.0
+   */
+  static CardGetDataFciBuilder prepareGetDataFci(CalypsoCardClass calypsoCardClass) {
+
+    return new CardGetDataFciBuilder(calypsoCardClass);
+  }
+
+  /**
+   * Create a Get Data command builder for the tag {@link GetDataTag#FCP_FOR_CURRENT_FILE}.
+   *
+   * @param calypsoCardClass The class of the card.
+   * @return A {@link CardGetDataFciBuilder} object
+   * @since 2.0
+   */
+  static CardGetDataFcpBuilder prepareGetDataFcp(CalypsoCardClass calypsoCardClass) {
+
+    return new CardGetDataFcpBuilder(calypsoCardClass);
+  }
+
+  /**
    * (package-private)<br>
    * Gets the challenge received from the card
    *
    * @return An array of bytes containing the challenge bytes (variable length according to the
    *     revision of the card). May be null if the challenge is not available.
+   * @since 2.0
    */
   static byte[] getCardChallenge() {
     return poChallenge;
@@ -782,6 +818,7 @@ final class CalypsoCardUtils {
    * Gets the SV KVC from the card
    *
    * @return The SV KVC byte.
+   * @since 2.0
    */
   static byte getSvKvc() {
     return svKvc;
@@ -792,6 +829,7 @@ final class CalypsoCardUtils {
    * Gets the SV Get command header
    *
    * @return A byte array containing the SV Get command header.
+   * @since 2.0
    */
   static byte[] getSvGetHeader() {
     return svGetHeader;
@@ -802,6 +840,7 @@ final class CalypsoCardUtils {
    * Gets the SV Get command response data
    *
    * @return A byte array containing the SV Get command response data.
+   * @since 2.0
    */
   static byte[] getSvGetData() {
     return svGetData;
@@ -812,6 +851,7 @@ final class CalypsoCardUtils {
    * Gets the last SV Operation signature (SV Reload, Debit or Undebit)
    *
    * @return A byte array containing the SV Operation signature or null if not available.
+   * @since 2.0
    */
   static byte[] getSvOperationSignature() {
     return svOperationSignature;

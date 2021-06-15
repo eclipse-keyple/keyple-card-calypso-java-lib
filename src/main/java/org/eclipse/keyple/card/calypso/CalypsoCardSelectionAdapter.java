@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.transaction.CardAnomalyException;
@@ -207,6 +208,29 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
     commandBuilders.add(
         CalypsoCardUtils.prepareReadRecordFile(calypsoCardClass, sfi, recordNumber));
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CalypsoCardSelection prepareGetData(GetDataTag tag) {
+    Assert.getInstance().notNull(tag, "tag");
+
+    // create the builder and add it to the list of commands
+    switch (tag) {
+      case FCI_FOR_CURRENT_DF:
+        commandBuilders.add(CalypsoCardUtils.prepareGetDataFci(calypsoCardClass));
+        break;
+      case FCP_FOR_CURRENT_FILE:
+        commandBuilders.add(CalypsoCardUtils.prepareGetDataFcp(calypsoCardClass));
+      default:
+        throw new IllegalArgumentException("Unsupported Get Data tag: " + tag.name());
+    }
+
     return this;
   }
 

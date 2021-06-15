@@ -32,13 +32,14 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
   private final String powerOnData;
   private final CalypsoSam.ProductType samProductType;
-  private final byte[] serialNumber = new byte[4];
+  private final byte[] serialNumber;
   private final byte platform;
   private final byte applicationType;
   private final byte applicationSubType;
   private final byte softwareIssuer;
   private final byte softwareVersion;
   private final byte softwareRevision;
+
   /**
    * Constructor.
    *
@@ -54,6 +55,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
     if (this.powerOnData == null) {
       throw new IllegalStateException("ATR should not be empty.");
     }
+
+    serialNumber = new byte[4];
 
     /* extract the historical bytes from T3 to T12 */
     String extractRegex = "3B(.{6}|.{10})805A(.{20})829000";
@@ -80,10 +83,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
           samProductType = ProductType.SAM_S1E1;
           break;
         default:
-          throw new IllegalStateException(
-              String.format(
-                  "Unknown SAM revision (unrecognized application subtype 0x%02X)",
-                  applicationSubType));
+          samProductType = ProductType.UNKNOWN;
+          break;
       }
 
       softwareIssuer = atrSubElements[3];
@@ -105,7 +106,13 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
         logger.trace("SAM SERIALNUMBER = {}", ByteArrayUtil.toHex(serialNumber));
       }
     } else {
-      throw new IllegalStateException("Unrecognized ATR structure: " + powerOnData);
+      samProductType = ProductType.UNKNOWN;
+      platform = 0;
+      applicationType = 0;
+      applicationSubType = 0;
+      softwareIssuer = 0;
+      softwareVersion = 0;
+      softwareRevision = 0;
     }
   }
 

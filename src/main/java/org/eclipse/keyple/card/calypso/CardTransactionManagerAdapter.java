@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
@@ -1328,6 +1329,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager prepareSelectFile(byte[] lid) {
+
+    Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
+
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
         CalypsoCardUtils.prepareSelectFile(calypsoCard.getCardClass(), lid));
@@ -1341,10 +1345,39 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.0
    */
   @Override
-  public final CardTransactionManager prepareSelectFile(SelectFileControl control) {
+  public final CardTransactionManager prepareSelectFile(SelectFileControl selectFileControl) {
+
+    Assert.getInstance().notNull(selectFileControl, "selectFileControl");
+
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
-        CalypsoCardUtils.prepareSelectFile(calypsoCard.getCardClass(), control));
+        CalypsoCardUtils.prepareSelectFile(calypsoCard.getCardClass(), selectFileControl));
+
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CardTransactionManager prepareGetData(GetDataTag tag) {
+
+    Assert.getInstance().notNull(tag, "tag");
+
+    // create the builder and add it to the list of commands
+    switch (tag) {
+      case FCI_FOR_CURRENT_DF:
+        cardCommandManager.addRegularCommand(
+            CalypsoCardUtils.prepareGetDataFci(calypsoCard.getCardClass()));
+        break;
+      case FCP_FOR_CURRENT_FILE:
+        cardCommandManager.addRegularCommand(
+            CalypsoCardUtils.prepareGetDataFcp(calypsoCard.getCardClass()));
+      default:
+        throw new IllegalArgumentException("Unsupported Get Data tag: " + tag.name());
+    }
 
     return this;
   }

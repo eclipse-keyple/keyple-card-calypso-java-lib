@@ -22,7 +22,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 enum CalypsoCardCommand implements CardCommand {
 
   /** get data. */
-  GET_DATA_FCI("Get Data'FCI'", (byte) 0xCA),
+  GET_DATA("Get Data", (byte) 0xCA),
 
   /** open session. */
   OPEN_SESSION_10("Open Secure Session V1", (byte) 0x8A),

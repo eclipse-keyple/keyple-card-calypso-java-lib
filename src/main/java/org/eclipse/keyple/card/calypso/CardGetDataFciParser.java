@@ -25,7 +25,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Parses the FCI data returned is response to the selection application command.
+ * Parses the FCI data returned is response to the selection application command or to a Get Data
+ * (FCI) command.
  *
  * <p>Provides getter methods for all relevant information.
  *
