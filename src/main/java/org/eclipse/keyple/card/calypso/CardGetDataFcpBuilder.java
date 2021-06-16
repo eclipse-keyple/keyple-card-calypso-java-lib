@@ -16,14 +16,14 @@ import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
- * Builds the Get data APDU commands for the FCI tag.
+ * Builds the Get data APDU commands for the FCP tag.
  *
  * <p>This command can not be sent in session because it would generate a 6Cxx status in contact
  * mode and thus make calculation of the digest impossible.
  *
  * @since 2.0
  */
-final class CardGetDataFciBuilder extends AbstractCardCommandBuilder<CardGetDataFciParser> {
+final class CardGetDataFcpBuilder extends AbstractCardCommandBuilder<CardGetDataFcpParser> {
 
   private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA;
 
@@ -33,7 +33,7 @@ final class CardGetDataFciBuilder extends AbstractCardCommandBuilder<CardGetData
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.0
    */
-  public CardGetDataFciBuilder(CalypsoCardClass calypsoCardClass) {
+  public CardGetDataFcpBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
 
     setApduRequest(
@@ -42,7 +42,7 @@ final class CardGetDataFciBuilder extends AbstractCardCommandBuilder<CardGetData
                 calypsoCardClass.getValue(),
                 command.getInstructionByte(),
                 (byte) 0x00,
-                (byte) 0x6F,
+                (byte) 0x62,
                 null,
                 (byte) 0x00)));
   }
@@ -53,8 +53,8 @@ final class CardGetDataFciBuilder extends AbstractCardCommandBuilder<CardGetData
    * @since 2.0
    */
   @Override
-  public CardGetDataFciParser createResponseParser(ApduResponseApi apduResponse) {
-    return new CardGetDataFciParser(apduResponse, this);
+  public CardGetDataFcpParser createResponseParser(ApduResponseApi apduResponse) {
+    return new CardGetDataFcpParser(apduResponse, this);
   }
 
   /**

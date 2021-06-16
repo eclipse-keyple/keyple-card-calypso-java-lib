@@ -22,7 +22,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 enum CalypsoCardCommand implements CardCommand {
 
   /** get data. */
-  GET_DATA_FCI("Get Data'FCI'", (byte) 0xCA),
+  GET_DATA("Get Data", (byte) 0xCA),
 
   /** open session. */
   OPEN_SESSION_10("Open Secure Session V1", (byte) 0x8A),
@@ -134,12 +134,13 @@ enum CalypsoCardCommand implements CardCommand {
    */
   public static CalypsoCardCommand getOpenSessionForRev(CalypsoCard calypsoCard) {
     switch (calypsoCard.getProductType()) {
-      case PRIME_REV1_0:
+      case PRIME_REViSION_1:
         return OPEN_SESSION_10;
-      case PRIME_REV2_4:
+      case PRIME_REViSION_2:
         return OPEN_SESSION_24;
-      case PRIME_REV3:
+      case PRIME_REViSION_3:
       case LIGHT:
+      case BASIC:
         return OPEN_SESSION_3X;
       default:
         throw new IllegalStateException("Any revision should have a matching command");

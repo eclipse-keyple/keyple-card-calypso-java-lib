@@ -55,7 +55,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     if (logger.isDebugEnabled()) {
-      this.addSubName(String.format("OPERATION=%s", svOperation.toString()));
+      this.addSubName(String.format("OPERATION:%s", svOperation.toString()));
     }
     header = new byte[4];
     header[0] = command.getInstructionByte();

@@ -75,7 +75,7 @@ final class CardOpenSession10Builder
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format("KEYINDEX=%d, SFI=%02X, REC=%d", keyIndex, sfi, recordNumber);
+          String.format("KEYINDEX:%d, SFI:%02X, REC:%d", keyIndex, sfi, recordNumber);
       this.addSubName(extraInfo);
     }
   }
