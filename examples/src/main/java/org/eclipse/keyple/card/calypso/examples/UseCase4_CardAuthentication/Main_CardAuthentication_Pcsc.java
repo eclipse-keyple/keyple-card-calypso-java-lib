@@ -134,14 +134,22 @@ public class Main_CardAuthentication_Pcsc {
             .createCardSecuritySetting()
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard());
 
-    // Performs file reads using the card transaction manager in non-secure mode.
-    cardExtension
-        .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-        .prepareReadRecordFile(
-            CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1)
-        .processOpening(WriteAccessLevel.DEBIT)
-        .prepareReleaseCardChannel()
-        .processClosing();
+    try {
+      // Performs file reads using the card transaction manager in non-secure mode.
+      cardExtension
+          .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+          .prepareReadRecordFile(
+              CalypsoConstants.SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants.RECORD_NUMBER_1)
+          .processOpening(WriteAccessLevel.DEBIT)
+          .prepareReleaseCardChannel()
+          .processClosing();
+    } finally {
+      try {
+        CardResourceServiceProvider.getService().releaseCardResource(samResource);
+      } catch (RuntimeException e) {
+        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+      }
+    }
 
     logger.info(
         "The Secure Session ended successfully, the card is authenticated and the data read are certified.");

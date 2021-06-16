@@ -32,7 +32,7 @@ import org.eclipse.keyple.core.util.Assert;
  *
  * @since 2.0
  */
-final class CalypsoCardUtils {
+final class CalypsoCardUtilAdapter {
   public static final int MASK_3_BITS = 0x7; // 7
   public static final int MASK_4_BITS = 0xF; // 15
   public static final int MASK_5_BITS = 0x1F; // 31
@@ -104,7 +104,7 @@ final class CalypsoCardUtils {
   private static byte[] svOperationSignature;
 
   /** Private constructor */
-  private CalypsoCardUtils() {}
+  private CalypsoCardUtilAdapter() {}
 
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Open Secure Session
@@ -371,8 +371,8 @@ final class CalypsoCardUtils {
 
   /**
    * Parses the response to a Get Challenge command received from the card <br>
-   * The card challenge value is stored in {@link CalypsoCardUtils} and made available through a
-   * dedicated getters for later use
+   * The card challenge value is stored in {@link CalypsoCardUtilAdapter} and made available through
+   * a dedicated getters for later use
    *
    * @param cardGetChallengeBuilder the Get Challenge command builder.
    * @param apduResponse the response received.
@@ -430,8 +430,8 @@ final class CalypsoCardUtils {
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to an SV Get command received
    * from the card <br>
-   * The SV Data values (KVC, command header, response data) are stored in {@link CalypsoCardUtils}
-   * and made available through a dedicated getters for later use<br>
+   * The SV Data values (KVC, command header, response data) are stored in {@link
+   * CalypsoCardUtilAdapter} and made available through a dedicated getters for later use<br>
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cardSvGetBuilder the SV Get command builder.
@@ -741,9 +741,12 @@ final class CalypsoCardUtils {
   static CardReadRecordsBuilder prepareReadRecordFile(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber) {
     Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardUtils.SFI_MIN, CalypsoCardUtils.SFI_MAX, "sfi")
+        .isInRange((int) sfi, CalypsoCardUtilAdapter.SFI_MIN, CalypsoCardUtilAdapter.SFI_MAX, "sfi")
         .isInRange(
-            recordNumber, CalypsoCardUtils.NB_REC_MIN, CalypsoCardUtils.NB_REC_MAX, "recordNumber");
+            recordNumber,
+            CalypsoCardUtilAdapter.NB_REC_MIN,
+            CalypsoCardUtilAdapter.NB_REC_MAX,
+            "recordNumber");
 
     return new CardReadRecordsBuilder(
         calypsoCardClass, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);

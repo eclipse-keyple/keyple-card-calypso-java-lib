@@ -52,6 +52,7 @@ abstract class AbstractApduCommandBuilder {
    */
   protected AbstractApduCommandBuilder(CardCommand commandRef) {
     this.commandRef = commandRef;
+    this.name = commandRef.getName();
   }
 
   /**
@@ -104,6 +105,9 @@ abstract class AbstractApduCommandBuilder {
    */
   void setApduRequest(ApduRequestAdapter apduRequest) {
     this.apduRequest = apduRequest;
+    if (apduRequest != null) {
+      this.apduRequest.setInfo(this.name);
+    }
   }
 
   /**

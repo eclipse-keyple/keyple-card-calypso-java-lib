@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
@@ -28,8 +27,8 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  */
 final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
-  private final ApduResponseApi selectApplicationResponse;
-  private final String powerOnData;
+  private ApduResponseApi selectApplicationResponse;
+  private String powerOnData;
 
   private boolean isExtendedModeSupported;
   private boolean isRatificationOnDeselectSupported;
@@ -37,7 +36,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private boolean isPinFeatureAvailable;
   private boolean isPkiModeSupported;
   private boolean isDfInvalidated;
-  private final CalypsoCardClass calypsoCardClass;
+  private CalypsoCardClass calypsoCardClass;
   private byte[] calypsoSerialNumber;
   private byte[] startupInfo;
   private ProductType productType;
@@ -70,75 +69,59 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       };
 
   private int modificationsCounterMax;
-  private boolean modificationCounterIsInBytes = true;
+  private boolean isModificationCounterInBytes;
   private DirectoryHeader directoryHeader;
-  private final Map<Byte, ElementaryFile> efBySfi = new ConcurrentHashMap<Byte, ElementaryFile>();
-  private final Map<Byte, ElementaryFile> efBySfiBackup =
-      new ConcurrentHashMap<Byte, ElementaryFile>();
-  private final Map<Short, Byte> sfiByLid = new ConcurrentHashMap<Short, Byte>();
-  private final Map<Short, Byte> sfiByLidBackup = new ConcurrentHashMap<Short, Byte>();
-  private Boolean isDfRatified = null;
+  private final Map<Byte, ElementaryFile> efBySfi;
+  private final Map<Byte, ElementaryFile> efBySfiBackup;
+  private final Map<Short, Byte> sfiByLid;
+  private final Map<Short, Byte> sfiByLidBackup;
+  private Boolean isDfRatified;
   private Integer pinAttemptCounter;
   private Integer svBalance;
   private int svLastTNum;
   private SvLoadLogRecord svLoadLogRecord;
   private SvDebitLogRecord svDebitLogRecord;
+  private boolean isHce;
 
   /**
    * Constructor.
    *
-   * <p>Create the initial content from the data received in response to the card selection.
-   *
-   * @param cardSelectionResponse the response to the selection application command.
    * @since 2.0
    */
-  CalypsoCardAdapter(CardSelectionResponseApi cardSelectionResponse) {
-
-    powerOnData = cardSelectionResponse.getPowerOnData();
-    selectApplicationResponse = cardSelectionResponse.getSelectApplicationResponse();
-
-    if (selectApplicationResponse != null) {
-      productType = initializeWithFci(selectApplicationResponse);
-    } else {
-      productType = initializeWithPowerOnData(powerOnData);
-    }
-
-    /* Rev1 and Rev2 expects the legacy class byte while Rev3 expects the ISO class byte */
-    if (productType == ProductType.PRIME_REViSION_1
-        || productType == ProductType.PRIME_REViSION_2) {
-      calypsoCardClass = CalypsoCardClass.LEGACY;
-    } else {
-      calypsoCardClass = CalypsoCardClass.ISO;
-    }
+  CalypsoCardAdapter() {
+    productType = ProductType.UNKNOWN;
+    isModificationCounterInBytes = true;
+    efBySfi = new ConcurrentHashMap<Byte, ElementaryFile>();
+    efBySfiBackup = new ConcurrentHashMap<Byte, ElementaryFile>();
+    sfiByLid = new ConcurrentHashMap<Short, Byte>();
+    sfiByLidBackup = new ConcurrentHashMap<Short, Byte>();
   }
 
   /**
-   * (private)<br>
+   * (package-private)<br>
    * Initializes the object with the card power-on data.
    *
    * <p>This method should be invoked only when no response to select application is available.
    *
    * @param powerOnData The card's power-on data.
-   * @return The product type.
    */
-  private ProductType initializeWithPowerOnData(String powerOnData) {
-    /*
-     * FCI is not provided: we consider it is Calypso card rev 1, it's serial number is
-     * provided in the ATR
-     */
+  void initializeWithPowerOnData(String powerOnData) {
+
+    this.powerOnData = powerOnData;
+
+    // FCI is not provided: we consider it is Calypso card rev 1, it's serial number is provided in
+    // the ATR
     byte[] atr = ByteArrayUtil.fromHex(powerOnData);
-    /* basic check: we expect to be here following a selection based on the ATR */
+
+    // basic check: we expect to be here following a selection based on the ATR
     if (atr.length != CARD_REV1_ATR_LENGTH) {
       throw new IllegalStateException("Unexpected ATR length: " + powerOnData);
     }
 
     dfName = null;
     calypsoSerialNumber = new byte[8];
-    /* old cards have their modification counter in number of commands */
-    modificationCounterIsInBytes = false;
-    /*
-     * the array is initialized with 0 (cf. default value for primitive types)
-     */
+    // old cards have their modification counter in number of commands
+    // the array is initialized with 0 (cf. default value for primitive types)
     System.arraycopy(atr, 12, calypsoSerialNumber, 4, 4);
     modificationsCounterMax = REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
 
@@ -148,14 +131,10 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     // create the startup info with the 6 bytes of the ATR from position 6
     System.arraycopy(atr, 6, startupInfo, 1, 6);
 
-    isExtendedModeSupported = false;
     isRatificationOnDeselectSupported = true;
-    isSvFeatureAvailable = false;
-    isPinFeatureAvailable = false;
-    isPkiModeSupported = false;
-    isDfInvalidated = false;
 
-    return ProductType.PRIME_REViSION_1;
+    productType = ProductType.PRIME_REViSION_1;
+    calypsoCardClass = CalypsoCardClass.LEGACY;
   }
 
   /**
@@ -163,82 +142,78 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Initializes or post-initializes the object with the application FCI data.
    *
    * @param selectApplicationResponse The select application response.
-   * @return The product type.
    * @since 2.0
    */
-  ProductType initializeWithFci(ApduResponseApi selectApplicationResponse) {
-    int bufferSizeIndicator;
-    int bufferSizeValue;
-    ProductType type;
+  void initializeWithFci(ApduResponseApi selectApplicationResponse) {
 
-    /* Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo */
-    CardGetDataFciParser cardFciParser = new CardGetDataFciParser(selectApplicationResponse, null);
+    this.selectApplicationResponse = selectApplicationResponse;
 
-    isDfInvalidated = cardFciParser.isDfInvalidated();
-
-    if (cardFciParser.isValidCalypsoFCI()) {
-      dfName = cardFciParser.getDfName();
-      calypsoSerialNumber = cardFciParser.getApplicationSerialNumber();
-      startupInfo = cardFciParser.getDiscretionaryData();
-
-      byte applicationType = getApplicationType();
-      type = computeProductType(applicationType, calypsoSerialNumber);
-
-      // session buffer size
-      bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
-      bufferSizeValue = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
-
-      if (type == ProductType.PRIME_REViSION_2) {
-        /* old cards have their modification counter in number of commands */
-        modificationCounterIsInBytes = false;
-        modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
-      } else {
-        modificationsCounterMax = bufferSizeValue;
-      }
-      isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
-      isRatificationOnDeselectSupported =
-          (applicationType & APP_TYPE_RATIFICATION_COMMAND_REQUIRED) == 0;
-      isSvFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_SV) != 0;
-      isPinFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_PIN) != 0;
-      isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
-    } else {
-      type = ProductType.UNKNOWN;
+    if (selectApplicationResponse.getDataOut().length == 0) {
+      // No FCI provided. May be filled later with a Get Data response.
+      return;
     }
 
-    return type;
+    // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
+    CardGetDataFciParser cardFciParser = new CardGetDataFciParser(selectApplicationResponse, null);
+
+    if (!cardFciParser.isValidCalypsoFCI()) {
+      throw new IllegalArgumentException("Bad FCI format.");
+    }
+    isDfInvalidated = cardFciParser.isDfInvalidated();
+
+    dfName = cardFciParser.getDfName();
+    calypsoSerialNumber = cardFciParser.getApplicationSerialNumber();
+    startupInfo = cardFciParser.getDiscretionaryData();
+
+    byte applicationType = getApplicationType();
+
+    productType = computeProductType(applicationType & 0xFF);
+
+    if (productType == ProductType.PRIME_REViSION_2) {
+      calypsoCardClass = CalypsoCardClass.LEGACY;
+      // old cards have their modification counter in number of commands
+      isModificationCounterInBytes = false;
+      modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
+    } else {
+      calypsoCardClass = CalypsoCardClass.ISO;
+      // session buffer size
+      int bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
+      modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
+    }
+
+    isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
+    isRatificationOnDeselectSupported =
+        (applicationType & APP_TYPE_RATIFICATION_COMMAND_REQUIRED) == 0;
+    isSvFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_SV) != 0;
+    isPinFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_PIN) != 0;
+    isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
+
+    isHce = (calypsoSerialNumber[3] & (byte) 0x80) == (byte) 0x80;
   }
 
   /**
    * Resolve the card product type from the application type byte
    *
-   * <ul>
-   *   <li>if <code>%1-------</code>&nbsp;&nbsp;&rarr;&nbsp;&nbsp;CLAP&nbsp;&nbsp;&rarr;&nbsp;&
-   *       nbsp; REV3.1
-   *   <li>if <code>%00101---</code>&nbsp;&nbsp;&rarr;&nbsp;&nbsp;REV3.2
-   *   <li>if <code>%00100---</code>&nbsp;&nbsp;&rarr;&nbsp;&nbsp;REV3.1
-   *   <li>otherwise&nbsp;&nbsp;&rarr;&nbsp;&nbsp;REV2.4
-   * </ul>
-   *
-   * si ff ou 00, exception si inférieur ou égal à 1F PRIME_REViSION_2 sinon PRIME_REViSION_3 et
-   * dans PRIME_REViSION_3 : si 24 ou 26 HCE si 90 à 97 LIGHT si 98 à 9F BASIC si 20h à 7F alors {
-   * si bit0 = 1 isPINFeatureAvailable = true si bit1 = 1 isSVFeatureAvailable = true si bit2 = 1
-   * isDeselectRatificationSupported = true si bit3 = 1 isConfidentialSessionModeSupported = true
-   * (AES / 3.2) si bit4 = 1 isPublicAuthenticationSupported= true (PKI / 3.3) } *
-   *
    * @param applicationType The application type (field of startup info).
-   * @param serialNumber The serial number.
-   * @return The {@link ProductType}
+   * @return The product type.
    */
-  private ProductType computeProductType(byte applicationType, byte[] serialNumber) {
-    if (applicationType == 0 || applicationType == 0xFF) {
+  private ProductType computeProductType(int applicationType) {
+    if (applicationType == 0) {
+      throw new IllegalArgumentException("Invalid application type 00h");
+    }
+    if (applicationType == 0xFF) {
       return ProductType.UNKNOWN;
     }
     if (applicationType <= 0x1F) {
       return ProductType.PRIME_REViSION_2;
-    } else if (applicationType == (byte) (0x05) || (applicationType >> 3) == (byte) (0x04)) {
-      return ProductType.PRIME_REViSION_3;
     }
-    return ProductType.UNKNOWN;
+    if (applicationType >= 0x90 && applicationType <= 0x97) {
+      return ProductType.LIGHT;
+    }
+    if (applicationType >= 0x98 && applicationType <= 0x9F) {
+      return ProductType.BASIC;
+    }
+    return ProductType.PRIME_REViSION_3;
   }
 
   /**
@@ -249,6 +224,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public ProductType getProductType() {
     return productType;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public boolean isHce() {
+    return isHce;
   }
 
   /**
@@ -322,7 +307,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0
    */
   boolean isModificationsCounterInBytes() {
-    return modificationCounterIsInBytes;
+    return isModificationCounterInBytes;
   }
 
   /**
@@ -545,7 +530,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
       byte[] logRecord =
-          getFileBySfi(CalypsoCardUtils.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
+          getFileBySfi(CalypsoCardUtilAdapter.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
       svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
     }
     return svLoadLogRecord;
@@ -575,7 +560,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public List<SvDebitLogRecord> getSvDebitLogAllRecords() {
     // get the logs from the file data
     SortedMap<Integer, byte[]> logRecords =
-        getFileBySfi(CalypsoCardUtils.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
+        getFileBySfi(CalypsoCardUtilAdapter.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
     List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
     for (Map.Entry<Integer, byte[]> entry : logRecords.entrySet()) {
       svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));

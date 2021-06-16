@@ -150,38 +150,47 @@ public class Main_VerifyPin_Pcsc {
             .setPinCipheringKey(
                 CalypsoConstants.PIN_CIPHERING_KEY_KIF, CalypsoConstants.PIN_CIPHERING_KEY_KVC);
 
-    // create a secured card transaction
-    cardTransaction =
-        cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-
-    ////////////////////////////
-    // Verification of the PIN (correct) out of a secure session in encrypted mode
-    cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
-    // log the current counter value (should be 3)
-    logger.info("Remaining attempts #2: {}", calypsoCard.getPinAttemptRemaining());
-
-    ////////////////////////////
-    // Verification of the PIN (incorrect) inside a secure session
-    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
     try {
-      cardTransaction.processVerifyPin(CalypsoConstants.PIN_KO);
-    } catch (CardTransactionException ex) {
-      logger.error("PIN Exception: {}", ex.getMessage());
-    }
-    cardTransaction.processCancel();
-    // log the current counter value (should be 2)
-    logger.error("Remaining attempts #3: {}", calypsoCard.getPinAttemptRemaining());
+      // create a secured card transaction
+      cardTransaction =
+          cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    ////////////////////////////
-    // Verification of the PIN (correct) inside a secure session with reading of the counter
-    //////////////////////////// before
-    cardTransaction.prepareCheckPinStatus();
-    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
-    // log the current counter value (should be 2)
-    logger.info("Remaining attempts #4: {}", calypsoCard.getPinAttemptRemaining());
-    cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
-    cardTransaction.prepareReleaseCardChannel();
-    cardTransaction.processClosing();
+      ////////////////////////////
+      // Verification of the PIN (correct) out of a secure session in encrypted mode
+      cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
+      // log the current counter value (should be 3)
+      logger.info("Remaining attempts #2: {}", calypsoCard.getPinAttemptRemaining());
+
+      ////////////////////////////
+      // Verification of the PIN (incorrect) inside a secure session
+      cardTransaction.processOpening(WriteAccessLevel.DEBIT);
+      try {
+        cardTransaction.processVerifyPin(CalypsoConstants.PIN_KO);
+      } catch (CardTransactionException ex) {
+        logger.error("PIN Exception: {}", ex.getMessage());
+      }
+      cardTransaction.processCancel();
+      // log the current counter value (should be 2)
+      logger.error("Remaining attempts #3: {}", calypsoCard.getPinAttemptRemaining());
+
+      ////////////////////////////
+      // Verification of the PIN (correct) inside a secure session with reading of the counter
+      //////////////////////////// before
+      cardTransaction.prepareCheckPinStatus();
+      cardTransaction.processOpening(WriteAccessLevel.DEBIT);
+      // log the current counter value (should be 2)
+      logger.info("Remaining attempts #4: {}", calypsoCard.getPinAttemptRemaining());
+      cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
+      cardTransaction.prepareReleaseCardChannel();
+      cardTransaction.processClosing();
+    } finally {
+      try {
+        CardResourceServiceProvider.getService().releaseCardResource(samResource);
+      } catch (RuntimeException e) {
+        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+      }
+    }
+
     // log the current counter value (should be 3)
     logger.info("Remaining attempts #5: {}", calypsoCard.getPinAttemptRemaining());
 

@@ -107,7 +107,6 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
       case PRIME_REViSION_2:
         return new CardOpenSession24Parser(response, (CardOpenSession24Builder) builder);
       case PRIME_REViSION_3:
-      case HCE:
       case LIGHT:
       case BASIC:
         return new CardOpenSession3Parser(response, (CardOpenSession3Builder) builder);

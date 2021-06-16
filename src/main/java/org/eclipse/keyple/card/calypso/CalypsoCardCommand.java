@@ -139,7 +139,6 @@ enum CalypsoCardCommand implements CardCommand {
       case PRIME_REViSION_2:
         return OPEN_SESSION_24;
       case PRIME_REViSION_3:
-      case HCE:
       case LIGHT:
       case BASIC:
         return OPEN_SESSION_3X;

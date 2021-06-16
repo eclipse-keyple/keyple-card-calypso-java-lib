@@ -18,9 +18,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
-import org.calypsonet.terminal.calypso.transaction.CardAnomalyException;
-import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -207,7 +206,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
     commandBuilders.add(
-        CalypsoCardUtils.prepareReadRecordFile(calypsoCardClass, sfi, recordNumber));
+        CalypsoCardUtilAdapter.prepareReadRecordFile(calypsoCardClass, sfi, recordNumber));
     return this;
   }
 
@@ -223,10 +222,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     // create the builder and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        commandBuilders.add(CalypsoCardUtils.prepareGetDataFci(calypsoCardClass));
+        commandBuilders.add(CalypsoCardUtilAdapter.prepareGetDataFci(calypsoCardClass));
         break;
       case FCP_FOR_CURRENT_FILE:
-        commandBuilders.add(CalypsoCardUtils.prepareGetDataFcp(calypsoCardClass));
+        commandBuilders.add(CalypsoCardUtilAdapter.prepareGetDataFcp(calypsoCardClass));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -243,7 +242,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
-    commandBuilders.add(CalypsoCardUtils.prepareSelectFile(calypsoCardClass, lid));
+    commandBuilders.add(CalypsoCardUtilAdapter.prepareSelectFile(calypsoCardClass, lid));
     return this;
   }
 
@@ -269,7 +268,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
-    commandBuilders.add(CalypsoCardUtils.prepareSelectFile(calypsoCardClass, selectControl));
+    commandBuilders.add(CalypsoCardUtilAdapter.prepareSelectFile(calypsoCardClass, selectControl));
     return this;
   }
 
@@ -299,8 +298,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0
    */
   @Override
-  // TODO check how to handle exceptions in this method
-  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) {
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
+
     CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
 
     List<ApduResponseApi> apduResponses;
@@ -312,18 +311,30 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     }
 
     if (commandBuilders.size() != apduResponses.size()) {
-      throw new DesynchronizedExchangesException("Mismatch in the number of requests/responses");
+      throw new ParseException("Mismatch in the number of requests/responses.");
     }
 
-    CalypsoCardAdapter calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
-
-    if (!commandBuilders.isEmpty()) {
-      try {
-        CalypsoCardUtils.updateCalypsoCard(calypsoCard, commandBuilders, apduResponses);
-      } catch (CardCommandException e) {
-        throw new CardAnomalyException(
-            "An error occurred while parsing the card selection request responses", e);
+    CalypsoCardAdapter calypsoCard;
+    try {
+      calypsoCard = new CalypsoCardAdapter();
+      if (cardSelectionResponse.getSelectApplicationResponse() != null) {
+        calypsoCard.initializeWithFci(cardSelectionResponse.getSelectApplicationResponse());
+      } else if (cardSelectionResponse.getPowerOnData() != null) {
+        calypsoCard.initializeWithPowerOnData(cardSelectionResponse.getPowerOnData());
       }
+
+      if (!commandBuilders.isEmpty()) {
+        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commandBuilders, apduResponses);
+      }
+    } catch (Exception e) {
+      throw new ParseException("Invalid card response: " + e.getMessage(), e);
+    }
+
+    if (calypsoCard.getProductType() == CalypsoCard.ProductType.UNKNOWN
+        && cardSelectionResponse.getSelectApplicationResponse() == null
+        && cardSelectionResponse.getPowerOnData() == null) {
+      throw new ParseException(
+          "Unable to create a CalypsoCard: no power-on data and no FCI provided.");
     }
 
     return calypsoCard;

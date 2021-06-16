@@ -51,7 +51,6 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
         return new CardOpenSession24Builder(
             calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
       case PRIME_REViSION_3:
-      case HCE:
       case LIGHT:
       case BASIC:
         return new CardOpenSession3Builder(

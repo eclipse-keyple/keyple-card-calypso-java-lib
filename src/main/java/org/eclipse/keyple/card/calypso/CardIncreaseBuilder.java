@@ -76,7 +76,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format("SFI=%02X, COUNTER=%d, INCREMENT=%d", sfi, counterNumber, incValue);
+          String.format("SFI:%02X, COUNTER:%d, INCREMENT:%d", sfi, counterNumber, incValue);
       this.addSubName(extraInfo);
     }
   }

@@ -130,27 +130,36 @@ public class Main_StoredValue_SimpleReload_Pcsc {
             .createCardSecuritySetting()
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard());
 
-    // Performs file reads using the card transaction manager in non-secure mode.
-    // Prepare the command to retrieve the SV status with the two debit and reload logs.
-    CardTransactionManager cardTransaction =
-        cardExtension
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-            .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
-            .processCardCommands();
+    try {
+      // Performs file reads using the card transaction manager in non-secure mode.
+      // Prepare the command to retrieve the SV status with the two debit and reload logs.
+      CardTransactionManager cardTransaction =
+          cardExtension
+              .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+              .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+              .processCardCommands();
 
-    // Display the current SV status
-    logger.info("Current SV status (SV Get for RELOAD):");
-    logger.info(". Balance = {}", calypsoCard.getSvBalance());
-    logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
+      // Display the current SV status
+      logger.info("Current SV status (SV Get for RELOAD):");
+      logger.info(". Balance = {}", calypsoCard.getSvBalance());
+      logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
 
-    logger.info(". Debit log record = {}", calypsoCard.getSvLoadLogRecord());
+      logger.info(". Debit log record = {}", calypsoCard.getSvLoadLogRecord());
 
-    // Reload with 2 units
-    cardTransaction.prepareSvReload(2);
+      // Reload with 2 units
+      cardTransaction.prepareSvReload(2);
 
-    // Execute the command and close the communication after
-    cardTransaction.prepareReleaseCardChannel();
-    cardTransaction.processCardCommands();
+      // Execute the command and close the communication after
+      cardTransaction.prepareReleaseCardChannel();
+      cardTransaction.processCardCommands();
+
+    } finally {
+      try {
+        CardResourceServiceProvider.getService().releaseCardResource(samResource);
+      } catch (RuntimeException e) {
+        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+      }
+    }
 
     logger.info(
         "The Secure Session ended successfully, the stored value has been reloaded by 2 units.");

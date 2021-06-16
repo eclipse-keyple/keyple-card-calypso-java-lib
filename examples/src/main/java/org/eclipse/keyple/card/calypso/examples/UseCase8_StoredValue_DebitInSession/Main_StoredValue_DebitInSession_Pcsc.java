@@ -132,24 +132,33 @@ public class Main_StoredValue_DebitInSession_Pcsc {
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .enableSvLoadAndDebitLog();
 
-    // Performs file reads using the card transaction manager in non-secure mode.
-    CardTransactionManager cardTransaction =
-        cardExtension
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-            .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
-            .processOpening(WriteAccessLevel.DEBIT);
+    try {
+      // Performs file reads using the card transaction manager in non-secure mode.
+      CardTransactionManager cardTransaction =
+          cardExtension
+              .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
+              .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+              .processOpening(WriteAccessLevel.DEBIT);
 
-    // Display the current SV status
-    logger.info("Current SV status (SV Get for DEBIT):");
-    logger.info(". Balance = {}", calypsoCard.getSvBalance());
-    logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
+      // Display the current SV status
+      logger.info("Current SV status (SV Get for DEBIT):");
+      logger.info(". Balance = {}", calypsoCard.getSvBalance());
+      logger.info(". Last Transaction Number = {}", calypsoCard.getSvLastTNum());
 
-    // Display the load and debit records.
-    logger.info(". Load log record = {}", calypsoCard.getSvLoadLogRecord());
-    logger.info(". Debit log record = {}", calypsoCard.getSvDebitLogLastRecord());
+      // Display the load and debit records.
+      logger.info(". Load log record = {}", calypsoCard.getSvLoadLogRecord());
+      logger.info(". Debit log record = {}", calypsoCard.getSvDebitLogLastRecord());
 
-    // Prepare an SV Debit of 2 units
-    cardTransaction.prepareSvDebit(2).prepareReleaseCardChannel().processClosing();
+      // Prepare an SV Debit of 2 units
+      cardTransaction.prepareSvDebit(2).prepareReleaseCardChannel().processClosing();
+
+    } finally {
+      try {
+        CardResourceServiceProvider.getService().releaseCardResource(samResource);
+      } catch (RuntimeException e) {
+        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+      }
+    }
 
     logger.info(
         "The Secure Session ended successfully, the stored value has been debited by 2 units.");

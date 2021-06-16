@@ -132,35 +132,43 @@ public class Main_MultipleSesssion_Pcsc {
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .enableMultipleSession();
 
-    // Performs file reads using the card transaction manager in non-secure mode.
-    CardTransactionManager cardTransaction =
-        cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    try {
+      // Performs file reads using the card transaction manager in non-secure mode.
+      CardTransactionManager cardTransaction =
+          cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    cardTransaction.processOpening(WriteAccessLevel.DEBIT);
+      cardTransaction.processOpening(WriteAccessLevel.DEBIT);
 
-    // Compute the number of append records (29 bytes) commands that will overflow the card
-    // modifications buffer. Each append records will consume 35 (29 + 6) bytes in the
-    // buffer.
-    //
-    // We'll send one more command to demonstrate the MULTIPLE mode
-    int modificationsBufferSize = 430; // note: not all Calypso card have this buffer size
+      // Compute the number of append records (29 bytes) commands that will overflow the card
+      // modifications buffer. Each append records will consume 35 (29 + 6) bytes in the
+      // buffer.
+      //
+      // We'll send one more command to demonstrate the MULTIPLE mode
+      int modificationsBufferSize = 430; // note: not all Calypso card have this buffer size
 
-    int nbCommands = (modificationsBufferSize / 35) + 1;
+      int nbCommands = (modificationsBufferSize / 35) + 1;
 
-    logger.info(
-        "==== Send {} Append Record commands. Modifications buffer capacity = {} bytes i.e. {} 29-byte commands ====",
-        nbCommands,
-        modificationsBufferSize,
-        modificationsBufferSize / 35);
+      logger.info(
+          "==== Send {} Append Record commands. Modifications buffer capacity = {} bytes i.e. {} 29-byte commands ====",
+          nbCommands,
+          modificationsBufferSize,
+          modificationsBufferSize / 35);
 
-    for (int i = 0; i < nbCommands; i++) {
+      for (int i = 0; i < nbCommands; i++) {
 
-      cardTransaction.prepareAppendRecord(
-          CalypsoConstants.SFI_EVENT_LOG,
-          ByteArrayUtil.fromHex(CalypsoConstants.EVENT_LOG_DATA_FILL));
+        cardTransaction.prepareAppendRecord(
+            CalypsoConstants.SFI_EVENT_LOG,
+            ByteArrayUtil.fromHex(CalypsoConstants.EVENT_LOG_DATA_FILL));
+      }
+
+      cardTransaction.prepareReleaseCardChannel().processClosing();
+    } finally {
+      try {
+        CardResourceServiceProvider.getService().releaseCardResource(samResource);
+      } catch (RuntimeException e) {
+        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+      }
     }
-
-    cardTransaction.prepareReleaseCardChannel().processClosing();
 
     logger.info(
         "The secure session has ended successfully, all data has been written to the card's memory.");
