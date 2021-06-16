@@ -134,11 +134,11 @@ enum CalypsoCardCommand implements CardCommand {
    */
   public static CalypsoCardCommand getOpenSessionForRev(CalypsoCard calypsoCard) {
     switch (calypsoCard.getProductType()) {
-      case PRIME_REViSION_1:
+      case PRIME_REVISION_1:
         return OPEN_SESSION_10;
-      case PRIME_REViSION_2:
+      case PRIME_REVISION_2:
         return OPEN_SESSION_24;
-      case PRIME_REViSION_3:
+      case PRIME_REVISION_3:
       case LIGHT:
       case BASIC:
         return OPEN_SESSION_3X;

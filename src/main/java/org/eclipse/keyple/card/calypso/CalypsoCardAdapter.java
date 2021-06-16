@@ -133,7 +133,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     isRatificationOnDeselectSupported = true;
 
-    productType = ProductType.PRIME_REViSION_1;
+    productType = ProductType.PRIME_REVISION_1;
     calypsoCardClass = CalypsoCardClass.LEGACY;
   }
 
@@ -169,7 +169,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     productType = computeProductType(applicationType & 0xFF);
 
-    if (productType == ProductType.PRIME_REViSION_2) {
+    if (productType == ProductType.PRIME_REVISION_2) {
       calypsoCardClass = CalypsoCardClass.LEGACY;
       // old cards have their modification counter in number of commands
       isModificationCounterInBytes = false;
@@ -205,7 +205,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       return ProductType.UNKNOWN;
     }
     if (applicationType <= 0x1F) {
-      return ProductType.PRIME_REViSION_2;
+      return ProductType.PRIME_REVISION_2;
     }
     if (applicationType >= 0x90 && applicationType <= 0x97) {
       return ProductType.LIGHT;
@@ -213,7 +213,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     if (applicationType >= 0x98 && applicationType <= 0x9F) {
       return ProductType.BASIC;
     }
-    return ProductType.PRIME_REViSION_3;
+    return ProductType.PRIME_REVISION_3;
   }
 
   /**

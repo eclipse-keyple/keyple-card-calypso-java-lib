@@ -183,7 +183,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
         case SAM_C1:
           applicationTypeMask = "C1";
           break;
-        case SAM_S1Dx:
+        case SAM_S1DX:
           applicationTypeMask = "D?";
           break;
         case SAM_S1E1:

@@ -44,13 +44,13 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
       int recordNumber) {
     isExtendedModeSupported = calypsoCard.isExtendedModeSupported();
     switch (calypsoCard.getProductType()) {
-      case PRIME_REViSION_1:
+      case PRIME_REVISION_1:
         return new CardOpenSession10Builder(
             calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
-      case PRIME_REViSION_2:
+      case PRIME_REVISION_2:
         return new CardOpenSession24Builder(
             calypsoCard, debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
-      case PRIME_REViSION_3:
+      case PRIME_REVISION_3:
       case LIGHT:
       case BASIC:
         return new CardOpenSession3Builder(

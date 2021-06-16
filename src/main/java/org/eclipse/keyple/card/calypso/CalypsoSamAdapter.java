@@ -77,7 +77,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
         case (byte) 0xD0:
         case (byte) 0xD1:
         case (byte) 0xD2:
-          samProductType = ProductType.SAM_S1Dx;
+          samProductType = ProductType.SAM_S1DX;
           break;
         case (byte) 0xE1:
           samProductType = ProductType.SAM_S1E1;
