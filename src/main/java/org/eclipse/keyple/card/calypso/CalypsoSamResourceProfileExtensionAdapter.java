@@ -17,7 +17,6 @@ import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
-import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +38,6 @@ class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileEx
    * @since 2.0
    */
   CalypsoSamResourceProfileExtensionAdapter(CalypsoSamSelection calypsoSamSelection) {
-
-    Assert.getInstance().notNull(calypsoSamSelection, "calypsoSamSelection");
-
     this.calypsoSamSelection = calypsoSamSelection;
   }
 

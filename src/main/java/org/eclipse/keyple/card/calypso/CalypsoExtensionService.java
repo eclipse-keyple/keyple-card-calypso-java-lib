@@ -22,6 +22,7 @@ import org.calypsonet.terminal.reader.ReaderApiProperties;
 import org.eclipse.keyple.core.common.CommonsApiProperties;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
+import org.eclipse.keyple.core.util.Assert;
 
 /**
  * Card extension dedicated to the management of Calypso cards.
@@ -31,7 +32,9 @@ import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension
 public final class CalypsoExtensionService implements KeypleCardExtension {
 
   /** singleton instance of CalypsoExtensionService */
-  private static final CalypsoExtensionService uniqueInstance = new CalypsoExtensionService();
+  private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
+
+  public static final String PRODUCT_TYPE = "productType";
 
   /** Private constructor. */
   private CalypsoExtensionService() {}
@@ -43,7 +46,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @since 2.0
    */
   public static CalypsoExtensionService getInstance() {
-    return uniqueInstance;
+    return INSTANCE;
   }
 
   /**
@@ -112,6 +115,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    */
   public CardResourceProfileExtension createSamResourceProfileExtension(
       CalypsoSamSelection calypsoSamSelection) {
+    Assert.getInstance().notNull(calypsoSamSelection, "calypsoSamSelection");
     return new CalypsoSamResourceProfileExtensionAdapter(calypsoSamSelection);
   }
 
@@ -137,10 +141,20 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
    * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
+   *     has a null or unknown product type.
    * @since 2.0
    */
   public CardTransactionManager createCardTransaction(
       CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+
+    Assert.getInstance()
+        .notNull(reader, "reader")
+        .notNull(calypsoCard, "calypsoCard")
+        .notNull(calypsoCard.getProductType(), PRODUCT_TYPE)
+        .isTrue(calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN, PRODUCT_TYPE)
+        .notNull(cardSecuritySetting, "cardSecuritySetting");
+
     return new CardTransactionManagerAdapter(reader, calypsoCard, cardSecuritySetting);
   }
 
@@ -150,10 +164,19 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @param reader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
+   *     has a null or unknown product type.
    * @since 2.0
    */
   public CardTransactionManager createCardTransactionWithoutSecurity(
       CardReader reader, CalypsoCard calypsoCard) {
+
+    Assert.getInstance()
+        .notNull(reader, "reader")
+        .notNull(calypsoCard, "calypsoCard")
+        .notNull(calypsoCard.getProductType(), PRODUCT_TYPE)
+        .isTrue(calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN, PRODUCT_TYPE);
+
     return new CardTransactionManagerAdapter(reader, calypsoCard);
   }
 }

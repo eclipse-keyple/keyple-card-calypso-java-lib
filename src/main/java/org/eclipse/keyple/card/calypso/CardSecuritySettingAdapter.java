@@ -63,7 +63,11 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   @Override
   public CardSecuritySetting setSamResource(CardReader samReader, CalypsoSam calypsoSam) {
 
-    Assert.getInstance().notNull(samReader, "samReader").notNull(calypsoSam, "calypsoSam");
+    Assert.getInstance()
+        .notNull(samReader, "samReader")
+        .notNull(calypsoSam, "calypsoSam")
+        .notNull(calypsoSam.getProductType(), "productType")
+        .isTrue(calypsoSam.getProductType() != CalypsoSam.ProductType.UNKNOWN, "productType");
 
     this.samReader = samReader;
     this.calypsoSam = calypsoSam;

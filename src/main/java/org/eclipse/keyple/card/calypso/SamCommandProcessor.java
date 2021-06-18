@@ -23,6 +23,7 @@ import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,11 @@ class SamCommandProcessor {
    * @since 2.0
    */
   SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+
+    Assert.getInstance()
+        .notNull(cardSecuritySetting.getSamReader(), "samReader")
+        .notNull(cardSecuritySetting.getCalypsoSam(), "calypsoSam");
+
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
     this.cardSecuritySettings = cardSecuritySetting;
     CalypsoSam calypsoSam = cardSecuritySettings.getCalypsoSam();
