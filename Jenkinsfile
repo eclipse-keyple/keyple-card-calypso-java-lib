@@ -32,7 +32,7 @@ pipeline {
     stage('Build Examples') {
       when { expression { !deploySnapshot && !deployRelease } }
       steps { container('java-builder') {
-        sh 'cd ./examples && ./gradlew clean classes --no-build-cache --info --stacktrace'
+        sh 'cd ./examples && ./gradlew clean spotlessCheck classes --no-build-cache --info --stacktrace'
       } }
     }
     stage('Publish Snapshot') {
