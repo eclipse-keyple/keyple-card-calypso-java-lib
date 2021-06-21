@@ -30,14 +30,14 @@ repositories {
     maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
-    implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.0-SNAPSHOT") { isChanging = true }
-    implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-common-java-api:2.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-service-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-service-resource-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-plugin-pcsc-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-util-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-card-calypso-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
+    implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.0-rc1")
+    implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.0-rc1")
+    implementation("org.eclipse.keyple:keyple-common-java-api:2.0-rc1")
+    implementation("org.eclipse.keyple:keyple-service-java-lib:2.0.0-rc1")
+    implementation("org.eclipse.keyple:keyple-service-resource-java-lib:2.0.0-rc1")
+    implementation("org.eclipse.keyple:keyple-plugin-pcsc-java-lib:2.0.0-rc1")
+    implementation("org.eclipse.keyple:keyple-util-java-lib:2.0.0-rc1")
+    implementation("org.eclipse.keyple:keyple-card-calypso-java-lib:2.0.0-rc1")
     implementation ("org.slf4j:slf4j-simple:1.7.25")
     implementation ("org.slf4j:slf4j-ext:1.7.25")
 }
