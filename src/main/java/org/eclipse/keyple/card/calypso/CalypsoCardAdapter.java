@@ -104,6 +104,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * <p>This method should be invoked only when no response to select application is available.
    *
    * @param powerOnData The card's power-on data.
+   * @throws IllegalArgumentException If powerOnData is inconsistent.
    */
   void initializeWithPowerOnData(String powerOnData) {
 
@@ -115,7 +116,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     // basic check: we expect to be here following a selection based on the ATR
     if (atr.length != CARD_REV1_ATR_LENGTH) {
-      throw new IllegalStateException("Unexpected ATR length: " + powerOnData);
+      throw new IllegalArgumentException("Unexpected ATR length: " + powerOnData);
     }
 
     dfName = null;
@@ -142,6 +143,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Initializes or post-initializes the object with the application FCI data.
    *
    * @param selectApplicationResponse The select application response.
+   * @throws IllegalArgumentException If the FCI is inconsistent.
    * @since 2.0
    */
   void initializeWithFci(ApduResponseApi selectApplicationResponse) {

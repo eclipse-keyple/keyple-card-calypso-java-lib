@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link SamCardSelection}.
+ * Implementation of {@link CalypsoSamSelection}.
  *
  * <p>If not specified, the SAM product type used for unlocking is {@link
  * org.calypsonet.terminal.calypso.sam.CalypsoSam.ProductType#SAM_C1}.
@@ -45,7 +45,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
 
   /**
    * (package-private)<br>
-   * Creates a {@link SamCardSelection}.
+   * Creates a {@link CalypsoSamSelection}.
    *
    * @since 2.0
    */

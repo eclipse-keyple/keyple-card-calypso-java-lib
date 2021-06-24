@@ -39,6 +39,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.assertj:assertj-core:3.15.0")
+    testImplementation("org.mockito:mockito-core:2.28.2")
 }
 
 val javaSourceLevel: String by project
