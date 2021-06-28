@@ -1470,8 +1470,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareAppendRecord(byte sfi, byte[] recordData) {
     Assert.getInstance() //
-        .isInRange(
-            (int) sfi, CalypsoCardUtilAdapter.SFI_MIN, CalypsoCardUtilAdapter.SFI_MAX, "sfi");
+        .isInRange((int) sfi, CalypsoCardUtilAdapter.SFI_MIN, CalypsoCardUtilAdapter.SFI_MAX, "sfi")
+        .notNull(recordData, "recordData");
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
@@ -1495,7 +1495,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             recordNumber,
             CalypsoCardUtilAdapter.NB_REC_MIN,
             CalypsoCardUtilAdapter.NB_REC_MAX,
-            "recordNumber");
+            "recordNumber")
+        .notNull(recordData, "recordData");
+    ;
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
@@ -1656,6 +1658,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager prepareSvGet(SvOperation svOperation, SvAction svAction) {
+
+    Assert.getInstance().notNull(svOperation, "svOperation").notNull(svAction, "svAction");
+
     if (!calypsoCard.isSvFeatureAvailable()) {
       throw new UnsupportedOperationException("Stored Value is not available for this card.");
     }

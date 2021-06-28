@@ -180,6 +180,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       calypsoCardClass = CalypsoCardClass.ISO;
       // session buffer size
       int bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
+      if (bufferSizeIndicator < (byte) 0x06 || bufferSizeIndicator > (byte) 0x37) {
+        throw new IllegalArgumentException(
+            "Session modifications byte should be in range 06h to 47h. Was: "
+                + String.format("%02X", bufferSizeIndicator));
+      }
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
     }
 
@@ -864,6 +869,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte[] getSelectApplicationResponse() {
+    if (selectApplicationResponse == null) {
+      return null;
+    }
     return selectApplicationResponse.getApdu();
   }
 

@@ -59,9 +59,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Any unexpected behavior will result in runtime exceptions.
  *
- * @since 2.0
- */
-public class Main_CardAuthentication_Pcsc {
+ * @since 3.0
+*/public class Main_CardAuthentication_Pcsc {
   private static final Logger logger = LoggerFactory.getLogger(Main_CardAuthentication_Pcsc.class);
 
   public static void main(String[] args) {

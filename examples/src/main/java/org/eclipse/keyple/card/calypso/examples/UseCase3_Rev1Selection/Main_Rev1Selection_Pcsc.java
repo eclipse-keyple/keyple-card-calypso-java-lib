@@ -53,9 +53,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Any unexpected behavior will result in runtime exceptions.
  *
- * @since 2.0
- */
-public class Main_Rev1Selection_Pcsc {
+ * @since 3.0
+*/public class Main_Rev1Selection_Pcsc {
   private static final Logger logger = LoggerFactory.getLogger(Main_Rev1Selection_Pcsc.class);
 
   public static void main(String[] args) {

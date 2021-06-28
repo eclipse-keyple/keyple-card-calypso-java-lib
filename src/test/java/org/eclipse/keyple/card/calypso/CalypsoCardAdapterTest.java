@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -24,16 +23,32 @@ public class CalypsoCardAdapterTest {
 
   private CalypsoCardAdapter calypsoCardAdapter;
   public static final String CALYPSO_SERIAL_NUMBER = "0000000012345678";
+  public static final String CALYPSO_SERIAL_NUMBER_HCE = "12340080FEDCBA98";
   public static final String POWER_ON_DATA =
       "3B8F8001805A0A0103200311" + CALYPSO_SERIAL_NUMBER.substring(8) + "829000F7";
   public static final String POWER_ON_DATA_BAD_LENGTH =
       "3B8F8001805A0A010320031124B77FE7829000F700";
 
   public static final String DF_NAME = "315449432E49434131";
+  public static final String STARTUP_INFO_PRIME_REVISION_2 = "0A3C1005141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3 = "0A3C2005141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_PIN = "0A3C2105141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE = "0A3C2205141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_RATIFICATION_ON_DESELECT =
+      "0A3C2405141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_EXTENDED_MODE = "0A3C2805141001";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_PKI_MODE = "0A3C3005141001";
+  public static final String STARTUP_INFO_SESSION_MODIFICATION_XX = "%02X3C2005141001";
+  public static final String STARTUP_INFO_PLATFORM_XX = "0A%02X2005141001";
   public static final String STARTUP_INFO_APP_TYPE_XX = "0A3C%02X05141001";
+  public static final String STARTUP_INFO_SUBTYPE_XX = "0A3C20%02X141001";
+  public static final String STARTUP_INFO_SOFTWARE_ISSUER_XX = "0A3C2005%02X1001";
+  public static final String STARTUP_INFO_SOFTWARE_VERSION_XX = "0A3C200514%02X01";
+  public static final String STARTUP_INFO_SOFTWARE_REVISION_XX = "0A3C20051410%02X";
   public static final String STARTUP_INFO_APP_TYPE_00 = "0A3C0005141001";
   public static final String STARTUP_INFO_APP_TYPE_FF = "0A3CFF05141001";
   public static final int SW1SW2_OK = 0x9000;
+  public static final int SW1SW2_INVALIDATED = 0x6283;
 
   @Before
   public void setUp() {
@@ -86,8 +101,8 @@ public class CalypsoCardAdapterTest {
   @Test
   public void initializeWithFci_whenAppTypeIs_FF_shouldInitUnknownProductType() {
     ApduResponseApi selectApplicationResponse =
-            buildSelectApplicationResponse(
-                    DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_APP_TYPE_FF, SW1SW2_OK);
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_APP_TYPE_FF, SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.UNKNOWN);
   }
@@ -96,49 +111,61 @@ public class CalypsoCardAdapterTest {
   public void
       initializeWithFci_whenAppTypeIsBetween_01_and_1F_shouldInitPrimeRevision2ProductType() {
     ApduResponseApi selectApplicationResponse;
-    for(int appType=1; appType <= 0x1F; appType++) {
+    for (int appType = 1; appType <= 0x1F; appType++) {
       selectApplicationResponse =
-              buildSelectApplicationResponse(
-                      DF_NAME, CALYPSO_SERIAL_NUMBER, String.format(STARTUP_INFO_APP_TYPE_XX, appType), SW1SW2_OK);
+          buildSelectApplicationResponse(
+              DF_NAME,
+              CALYPSO_SERIAL_NUMBER,
+              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
-      assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_2);
+      assertThat(calypsoCardAdapter.getProductType())
+          .isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_2);
     }
   }
 
   @Test
   public void
-  initializeWithFci_whenAppTypeIsBetween_20_and_89_shouldInitPrimeRevision3ProductType() {
+      initializeWithFci_whenAppTypeIsBetween_20_and_89_shouldInitPrimeRevision3ProductType() {
     ApduResponseApi selectApplicationResponse;
-    for(int appType=0x20; appType <= 0x89; appType++) {
+    for (int appType = 0x20; appType <= 0x89; appType++) {
       selectApplicationResponse =
-              buildSelectApplicationResponse(
-                      DF_NAME, CALYPSO_SERIAL_NUMBER, String.format(STARTUP_INFO_APP_TYPE_XX, appType), SW1SW2_OK);
+          buildSelectApplicationResponse(
+              DF_NAME,
+              CALYPSO_SERIAL_NUMBER,
+              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
-      assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_3);
+      assertThat(calypsoCardAdapter.getProductType())
+          .isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_3);
     }
   }
 
   @Test
-  public void
-  initializeWithFci_whenAppTypeIsBetween_90_and_97_shouldInitLightProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_90_and_97_shouldInitLightProductType() {
     ApduResponseApi selectApplicationResponse;
-    for(int appType=0x90; appType <= 0x97; appType++) {
+    for (int appType = 0x90; appType <= 0x97; appType++) {
       selectApplicationResponse =
-              buildSelectApplicationResponse(
-                      DF_NAME, CALYPSO_SERIAL_NUMBER, String.format(STARTUP_INFO_APP_TYPE_XX, appType), SW1SW2_OK);
+          buildSelectApplicationResponse(
+              DF_NAME,
+              CALYPSO_SERIAL_NUMBER,
+              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
       assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.LIGHT);
     }
   }
 
   @Test
-  public void
-  initializeWithFci_whenAppTypeIsBetween_98_and_9F_shouldInitBasicProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_98_and_9F_shouldInitBasicProductType() {
     ApduResponseApi selectApplicationResponse;
-    for(int appType=0x98; appType <= 0x9F; appType++) {
+    for (int appType = 0x98; appType <= 0x9F; appType++) {
       selectApplicationResponse =
-              buildSelectApplicationResponse(
-                      DF_NAME, CALYPSO_SERIAL_NUMBER, String.format(STARTUP_INFO_APP_TYPE_XX, appType), SW1SW2_OK);
+          buildSelectApplicationResponse(
+              DF_NAME,
+              CALYPSO_SERIAL_NUMBER,
+              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
       assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.BASIC);
     }
@@ -146,27 +173,367 @@ public class CalypsoCardAdapterTest {
 
   @Test
   public void
-  initializeWithFci_whenAppTypeIsBetween_A0_and_FE_shouldInitPrimeRevision3ProductType() {
+      initializeWithFci_whenAppTypeIsBetween_A0_and_FE_shouldInitPrimeRevision3ProductType() {
     ApduResponseApi selectApplicationResponse;
-    for(int appType=0xA0; appType <= 0xFE; appType++) {
+    for (int appType = 0xA0; appType <= 0xFE; appType++) {
       selectApplicationResponse =
-              buildSelectApplicationResponse(
-                      DF_NAME, CALYPSO_SERIAL_NUMBER, String.format(STARTUP_INFO_APP_TYPE_XX, appType), SW1SW2_OK);
+          buildSelectApplicationResponse(
+              DF_NAME,
+              CALYPSO_SERIAL_NUMBER,
+              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
-      assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_3);
+      assertThat(calypsoCardAdapter.getProductType())
+          .isEqualTo(CalypsoCard.ProductType.PRIME_REVISION_3);
     }
   }
 
+  @Test
+  public void initializeWithFci_whenStatusWord_9000_shouldInitNotInvalidated() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isDfInvalidated()).isFalse();
+  }
+
+  @Test
+  public void initializeWithFci_whenStatusWord_6283_shouldInitInvalidated() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_INVALIDATED);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isDfInvalidated()).isTrue();
+  }
+
+  @Test
+  public void initializeWithFci_whenSerialNumberNotHce_shouldInitHceFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isHce()).isFalse();
+  }
+
+  @Test
+  public void initializeWithFci_whenSerialNumberHce_shouldInitHceTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER_HCE, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isHce()).isTrue();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeInf_shouldIAE() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER_HCE,
+            String.format(STARTUP_INFO_SESSION_MODIFICATION_XX, (byte) 0x05),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeSup_shouldIAE() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER_HCE,
+            String.format(STARTUP_INFO_SESSION_MODIFICATION_XX, (byte) 0x38),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+  }
+
+  @Test
+  public void getPowerOnData_whenNotSet_shouldReturnNull() {
+    assertThat(calypsoCardAdapter.getPowerOnData()).isNull();
+  }
+
+  @Test
+  public void getPowerOnData_shouldReturnPowerOnData() {
+    calypsoCardAdapter.initializeWithPowerOnData(POWER_ON_DATA);
+    assertThat(calypsoCardAdapter.getPowerOnData()).isEqualTo(POWER_ON_DATA);
+  }
+
+  @Test
+  public void getSelectApplicationResponse_whenNotSet_shouldReturnNull() {
+    assertThat(calypsoCardAdapter.getSelectApplicationResponse()).isNull();
+  }
+
+  @Test
+  public void getSelectApplicationResponse_shouldSelectApplicationResponse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getSelectApplicationResponse())
+        .isEqualTo(selectApplicationResponse.getApdu());
+  }
+
+  @Test
+  public void getDfName_shouldReturnDfNameFromFCI() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(ByteArrayUtil.fromHex(DF_NAME));
+  }
+
+  @Test
+  public void getApplicationSerialNumber_shouldReturnApplicationSerialNumberFromFCI() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getApplicationSerialNumber())
+        .isEqualTo(ByteArrayUtil.fromHex(CALYPSO_SERIAL_NUMBER));
+  }
+
+  @Test
+  public void getStartupInfoRawData_shouldReturnFromFCI() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getStartupInfoRawData())
+        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3));
+  }
+
+  @Test
+  public void isPinFeatureAvailable_whenAppTypeBit0IsNotSet_shouldReturnFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isPinFeatureAvailable()).isFalse();
+  }
+
+  @Test
+  public void isPinFeatureAvailable_whenAppTypeBit0IsSet_shouldReturnTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_PIN, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isPinFeatureAvailable()).isTrue();
+  }
+
+  @Test
+  public void isSvFeatureAvailable_whenAppTypeBit1IsNotSet_shouldReturnFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isSvFeatureAvailable()).isFalse();
+  }
+
+  @Test
+  public void isSvFeatureAvailable_whenAppTypeBit1IsSet_shouldReturnTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isSvFeatureAvailable()).isTrue();
+  }
+
+  @Test
+  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsNotSet_shouldReturnTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isRatificationOnDeselectSupported()).isTrue();
+  }
+
+  @Test
+  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsSet_shouldReturnFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            STARTUP_INFO_PRIME_REVISION_3_RATIFICATION_ON_DESELECT,
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isRatificationOnDeselectSupported()).isFalse();
+  }
+
+  @Test
+  public void isExtendedModeSupported_whenAppTypeBit3IsNotSet_shouldReturnFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isExtendedModeSupported()).isFalse();
+  }
+
+  @Test
+  public void isExtendedModeSupported_whenAppTypeBit3IsSet_shouldReturnTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_EXTENDED_MODE, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isExtendedModeSupported()).isTrue();
+  }
+
+  @Test
+  public void isPkiModeSupported_whenAppTypeBit4IsNotSet_shouldReturnFalse() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isPkiModeSupported()).isFalse();
+  }
+
+  @Test
+  public void isPkiModeSupported_whenAppTypeBit4IsSet_shouldReturnTrue() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_PKI_MODE, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.isPkiModeSupported()).isTrue();
+  }
+
+  @Test
+  public void getSessionModification_shouldReturnSessionModification() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SESSION_MODIFICATION_XX, 0x11),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getSessionModification()).isEqualTo((byte) 0x11);
+  }
+
+  @Test
+  public void getPlatform_shouldReturnPlatformByte() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_PLATFORM_XX, 0x22),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getPlatform()).isEqualTo((byte) 0x22);
+  }
+
+  @Test
+  public void getApplicationType_shouldReturnApplicationType() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_APP_TYPE_XX, 0x33),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getApplicationType()).isEqualTo((byte) 0x33);
+  }
+
+  @Test
+  public void getApplicationSubType_shouldReturnApplicationSubType() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SUBTYPE_XX, 0x44),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getApplicationSubtype()).isEqualTo((byte) 0x44);
+  }
+
+  @Test
+  public void getSoftwareIssuer_shouldReturnSoftwareIssuer() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SOFTWARE_ISSUER_XX, 0x55),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getSoftwareIssuer()).isEqualTo((byte) 0x55);
+  }
+
+  @Test
+  public void getSoftwareVersion_shouldReturnSoftwareVersion() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SOFTWARE_VERSION_XX, 0x66),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getSoftwareVersion()).isEqualTo((byte) 0x66);
+  }
+
+  @Test
+  public void getSoftwareRevision_shouldReturnSoftwareRevision() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SOFTWARE_REVISION_XX, 0x77),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getSoftwareRevision()).isEqualTo((byte) 0x77);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void getSvBalance_whenNotSet_shouldThrowISE() {
+    calypsoCardAdapter.getSvBalance();
+  }
+
+  @Test
+  public void getSvLastTNum() {}
+
+  @Test
+  public void getSvLoadLogRecord() {}
+
+  @Test
+  public void getSvDebitLogLastRecord() {}
+
+  @Test
+  public void getSvDebitLogAllRecords() {}
+
+  @Test
+  public void getDirectoryHeader() {}
+
+  @Test
+  public void getFileBySfi() {}
+
+  @Test
+  public void getFileByLid() {}
+
+  @Test
+  public void getAllFiles() {}
+
+  @Test
+  public void isPinBlocked() {}
+
+  @Test
+  public void getPinAttemptRemaining() {}
+
+  /**
+   * (private)<br>
+   * Builds a simulated response to a Select Application command.
+   *
+   * @param dfNameAsHexString The DF Name.
+   * @param serialNumberAsHexString The Calypso Serial Number.
+   * @param startupInfoAsHexString The startup info data.
+   * @param statusWord The status word.
+   * @return The APDU response containing the FCI and the status word.
+   */
   private ApduResponseApi buildSelectApplicationResponse(
       String dfNameAsHexString,
       String serialNumberAsHexString,
       String startupInfoAsHexString,
       int statusWord) {
-    String FCI = "6F238409315449432E49434131A516BF0C13C70800000000C16B293F53070A3C23051410019000";
+
     byte[] dfName = ByteArrayUtil.fromHex(dfNameAsHexString);
     byte[] serialNumber = ByteArrayUtil.fromHex(serialNumberAsHexString);
     byte[] startupInfo = ByteArrayUtil.fromHex(startupInfoAsHexString);
     byte[] selAppResponse = new byte[30 + dfName.length];
+
     selAppResponse[0] = (byte) 0x6F;
     selAppResponse[1] = (byte) (26 + dfName.length);
     selAppResponse[2] = (byte) 0x84;
@@ -186,40 +553,5 @@ public class CalypsoCardAdapterTest {
     selAppResponse[28 + dfName.length] = (byte) ((statusWord & 0xFF00) >> 8);
     selAppResponse[29 + dfName.length] = (byte) (statusWord & 0xFF);
     return new ApduResponseAdapter(selAppResponse);
-  }
-
-  /**
-   * (private)<br>
-   * Adapter of {@link ApduResponseApi}.
-   */
-  private static class ApduResponseAdapter implements ApduResponseApi {
-
-    private final byte[] apdu;
-    private final int statusWord;
-
-    /** Constructor */
-    public ApduResponseAdapter(byte[] apdu) {
-      this.apdu = apdu;
-      statusWord =
-          ((apdu[apdu.length - 2] & 0x000000FF) << 8) + (apdu[apdu.length - 1] & 0x000000FF);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public byte[] getApdu() {
-      return apdu;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public byte[] getDataOut() {
-      return Arrays.copyOfRange(this.apdu, 0, this.apdu.length - 2);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int getStatusWord() {
-      return statusWord;
-    }
   }
 }
