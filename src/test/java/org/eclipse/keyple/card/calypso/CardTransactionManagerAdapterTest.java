@@ -68,10 +68,10 @@ public class CardTransactionManagerAdapterTest {
   private static final String SW1SW2_OK = "9000";
   private static final String SW1SW2_KO = "6700";
   private static final String SAM_CHALLENGE = "C1C2C3C4";
-  private static final String PO_CHALLENGE = "C1C2C3C4C5C6C7C8";
-  private static final String PO_DIVERSIFIER = "0000000011223344";
+  private static final String CARD_CHALLENGE = "C1C2C3C4C5C6C7C8";
+  private static final String CARD_DIVERSIFIER = "0000000011223344";
   private static final String SAM_SIGNATURE = "12345678";
-  private static final String PO_SIGNATURE = "9ABCDEF0";
+  private static final String CARD_SIGNATURE = "9ABCDEF0";
 
   private static final String FILE7_REC1_29B =
       "7111111111111111111111111111111111111111111111111111111111";
@@ -121,109 +121,109 @@ public class CardTransactionManagerAdapterTest {
   private static final String KEY_INDEXES_0003 = "01020101";
 
   private static final String SW1SW2_OK_RSP = SW1SW2_OK;
-  private static final String PO_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
+  private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
       "008A0B3904" + SAM_CHALLENGE + "00";
-  private static final String PO_OPEN_SECURE_SESSION_SFI7_REC1_RSP =
+  private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP =
       "030490980030791D" + FILE7_REC1_29B + SW1SW2_OK;
-  private static final String PO_OPEN_SECURE_SESSION_SFI7_REC1_NOT_RATIFIED_RSP =
+  private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_NOT_RATIFIED_RSP =
       "030490980130791D" + FILE7_REC1_29B + SW1SW2_OK;
-  private static final String PO_OPEN_SECURE_SESSION_CMD = "008A030104" + SAM_CHALLENGE + "00";
-  private static final String PO_OPEN_SECURE_SESSION_RSP = "0304909800307900" + SW1SW2_OK;
-  private static final String PO_OPEN_SECURE_SESSION_KVC_78_CMD = "0304909800307800" + SW1SW2_OK;
-  private static final String PO_OPEN_SECURE_SESSION_SFI7_REC1_2_4_CMD = "948A8B3804C1C2C3C400";
-  private static final String PO_OPEN_SECURE_SESSION_SFI7_REC1_2_4_RSP =
+  private static final String CARD_OPEN_SECURE_SESSION_CMD = "008A030104" + SAM_CHALLENGE + "00";
+  private static final String CARD_OPEN_SECURE_SESSION_RSP = "0304909800307900" + SW1SW2_OK;
+  private static final String CARD_OPEN_SECURE_SESSION_KVC_78_CMD = "0304909800307800" + SW1SW2_OK;
+  private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_2_4_CMD = "948A8B3804C1C2C3C400";
+  private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_2_4_RSP =
       "79030D307124B928480805CBABAE30001240800000000000000000000000000000009000";
-  private static final String PO_CLOSE_SECURE_SESSION_CMD = "008E800004" + SAM_SIGNATURE + "00";
-  private static final String PO_CLOSE_SECURE_SESSION_NOT_RATIFIED_CMD =
+  private static final String CARD_CLOSE_SECURE_SESSION_CMD = "008E800004" + SAM_SIGNATURE + "00";
+  private static final String CARD_CLOSE_SECURE_SESSION_NOT_RATIFIED_CMD =
       "008E000004" + SAM_SIGNATURE + "00";
-  private static final String PO_CLOSE_SECURE_SESSION_RSP = PO_SIGNATURE + SW1SW2_OK;
-  private static final String PO_CLOSE_SECURE_SESSION_FAILED_RSP = "6988";
-  private static final String PO_ABORT_SECURE_SESSION_CMD = "008E000000";
-  private static final String PO_RATIFICATION_CMD = "00B2000000";
-  private static final String PO_RATIFICATION_RSP = "6B00";
+  private static final String CARD_CLOSE_SECURE_SESSION_RSP = CARD_SIGNATURE + SW1SW2_OK;
+  private static final String CARD_CLOSE_SECURE_SESSION_FAILED_RSP = "6988";
+  private static final String CARD_ABORT_SECURE_SESSION_CMD = "008E000000";
+  private static final String CARD_RATIFICATION_CMD = "00B2000000";
+  private static final String CARD_RATIFICATION_RSP = "6B00";
 
-  private static final String PO_READ_REC_SFI7_REC1_CMD = "00B2013C00";
-  private static final String PO_READ_REC_SFI7_REC1_RSP = FILE7_REC1_29B + SW1SW2_OK;
-  private static final String PO_READ_REC_SFI7_REC1_6B_COUNTER_CMD = "00B2013C06";
-  private static final String PO_READ_REC_SFI7_REC1_6B_COUNTER_RSP =
+  private static final String CARD_READ_REC_SFI7_REC1_CMD = "00B2013C00";
+  private static final String CARD_READ_REC_SFI7_REC1_RSP = FILE7_REC1_29B + SW1SW2_OK;
+  private static final String CARD_READ_REC_SFI7_REC1_6B_COUNTER_CMD = "00B2013C06";
+  private static final String CARD_READ_REC_SFI7_REC1_6B_COUNTER_RSP =
       FILE7_REC1_COUNTER1 + FILE7_REC1_COUNTER2 + SW1SW2_OK;
-  private static final String PO_READ_REC_SFI8_REC1_CMD = "00B2014400";
-  private static final String PO_READ_REC_SFI8_REC1_RSP = FILE8_REC1_29B + SW1SW2_OK;
-  private static final String PO_READ_REC_SFI7_REC3_4_CMD = "00B2033D3E";
-  private static final String PO_READ_REC_SFI7_REC3_4_RSP =
+  private static final String CARD_READ_REC_SFI8_REC1_CMD = "00B2014400";
+  private static final String CARD_READ_REC_SFI8_REC1_RSP = FILE8_REC1_29B + SW1SW2_OK;
+  private static final String CARD_READ_REC_SFI7_REC3_4_CMD = "00B2033D3E";
+  private static final String CARD_READ_REC_SFI7_REC3_4_RSP =
       "031D" + FILE7_REC3_29B + "041D" + FILE7_REC4_29B + SW1SW2_OK;
-  private static final String PO_READ_REC_SFI10_REC1_CMD = "00B2018400";
-  private static final String PO_READ_REC_SFI10_REC1_RSP = FILE10_REC1_COUNTER + SW1SW2_OK;
-  private static final String PO_READ_REC_SFI11_REC1_CMD = "00B2018C00";
-  private static final String PO_READ_REC_SFI11_REC1_RSP = FILE11_REC1_COUNTER + SW1SW2_OK;
-  private static final String PO_UPDATE_REC_SFI7_REC1_4B_CMD = "00DC013C0400112233";
-  private static final String PO_UPDATE_REC_SFI8_REC1_29B_CMD = "00DC01441D" + FILE8_REC1_29B;
-  private static final String PO_UPDATE_REC_SFI8_REC1_5B_CMD = "00DC014405" + FILE8_REC1_5B;
-  private static final String PO_UPDATE_REC_SFI8_REC1_4B_CMD = "00DC014404" + FILE8_REC1_4B;
-  private static final String PO_UPDATE_REC_SFI8_REC1_29B_2_4_CMD = "94DC01441D" + FILE8_REC1_29B;
-  private static final String PO_WRITE_REC_SFI8_REC1_4B_CMD = "00D2014404" + FILE8_REC1_4B;
-  private static final String PO_APPEND_REC_SFI9_REC1_4B_CMD = "00E2004804" + FILE9_REC1_4B;
-  private static final String PO_DECREASE_SFI10_REC1_100U_CMD = "003001800300006400";
-  private static final String PO_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
-  private static final String PO_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
-  private static final String PO_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
+  private static final String CARD_READ_REC_SFI10_REC1_CMD = "00B2018400";
+  private static final String CARD_READ_REC_SFI10_REC1_RSP = FILE10_REC1_COUNTER + SW1SW2_OK;
+  private static final String CARD_READ_REC_SFI11_REC1_CMD = "00B2018C00";
+  private static final String CARD_READ_REC_SFI11_REC1_RSP = FILE11_REC1_COUNTER + SW1SW2_OK;
+  private static final String CARD_UPDATE_REC_SFI7_REC1_4B_CMD = "00DC013C0400112233";
+  private static final String CARD_UPDATE_REC_SFI8_REC1_29B_CMD = "00DC01441D" + FILE8_REC1_29B;
+  private static final String CARD_UPDATE_REC_SFI8_REC1_5B_CMD = "00DC014405" + FILE8_REC1_5B;
+  private static final String CARD_UPDATE_REC_SFI8_REC1_4B_CMD = "00DC014404" + FILE8_REC1_4B;
+  private static final String CARD_UPDATE_REC_SFI8_REC1_29B_2_4_CMD = "94DC01441D" + FILE8_REC1_29B;
+  private static final String CARD_WRITE_REC_SFI8_REC1_4B_CMD = "00D2014404" + FILE8_REC1_4B;
+  private static final String CARD_APPEND_REC_SFI9_REC1_4B_CMD = "00E2004804" + FILE9_REC1_4B;
+  private static final String CARD_DECREASE_SFI10_REC1_100U_CMD = "003001800300006400";
+  private static final String CARD_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
+  private static final String CARD_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
+  private static final String CARD_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
 
-  private static final String PO_SELECT_FILE_CURRENT_CMD = "00A4090002000000";
-  private static final String PO_SELECT_FILE_FIRST_CMD = "00A4020002000000";
-  private static final String PO_SELECT_FILE_NEXT_CMD = "00A4020202000000";
-  private static final String PO_SELECT_FILE_1234_CMD = "00A4090002123400";
-  private static final String PO_SELECT_FILE_1234_RSP =
+  private static final String CARD_SELECT_FILE_CURRENT_CMD = "00A4090002000000";
+  private static final String CARD_SELECT_FILE_FIRST_CMD = "00A4020002000000";
+  private static final String CARD_SELECT_FILE_NEXT_CMD = "00A4020202000000";
+  private static final String CARD_SELECT_FILE_1234_CMD = "00A4090002123400";
+  private static final String CARD_SELECT_FILE_1234_RSP =
       "85170001000000" + ACCESS_CONDITIONS_1234 + KEY_INDEXES_1234 + "00777879616770003F009000";
 
-  private static final String PO_GET_DATA_FCI_CMD = "00CA006F00";
-  private static final String PO_GET_DATA_FCP_CMD = "00CA006200";
-  private static final String PO_GET_DATA_FCI_RSP = SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3;
-  private static final String PO_GET_DATA_FCP_RSP = PO_SELECT_FILE_1234_RSP;
+  private static final String CARD_GET_DATA_FCI_CMD = "00CA006F00";
+  private static final String CARD_GET_DATA_FCP_CMD = "00CA006200";
+  private static final String CARD_GET_DATA_FCI_RSP = SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3;
+  private static final String CARD_GET_DATA_FCP_RSP = CARD_SELECT_FILE_1234_RSP;
 
-  private static final String PO_VERIFY_PIN_PLAIN_OK_CMD =
+  private static final String CARD_VERIFY_PIN_PLAIN_OK_CMD =
       "0020000004" + ByteArrayUtil.toHex(PIN_OK.getBytes());
-  private static final String PO_VERIFY_PIN_ENCRYPTED_OK_CMD = "0020000008" + CIPHER_PIN_OK;
-  private static final String PO_CHECK_PIN_CMD = "0020000000";
-  private static final String PO_VERIFY_PIN_OK_RSP = "9000";
-  private static final String PO_VERIFY_PIN_KO_RSP = "63C2";
+  private static final String CARD_VERIFY_PIN_ENCRYPTED_OK_CMD = "0020000008" + CIPHER_PIN_OK;
+  private static final String CARD_CHECK_PIN_CMD = "0020000000";
+  private static final String CARD_VERIFY_PIN_OK_RSP = "9000";
+  private static final String CARD_VERIFY_PIN_KO_RSP = "63C2";
 
   private static int SV_BALANCE = 0x123456;
   private static String SV_BALANCE_STR = "123456";
-  private static final String PO_SV_GET_DEBIT_CMD = "007C000900";
-  private static final String PO_SV_GET_DEBIT_RSP =
+  private static final String CARD_SV_GET_DEBIT_CMD = "007C000900";
+  private static final String CARD_SV_GET_DEBIT_RSP =
       "790073A54BC97DFA" + SV_BALANCE_STR + "FFFE0000000079123456780000DD0000160072" + SW1SW2_OK;
-  private static final String PO_SV_GET_RELOAD_CMD = "007C000700";
-  private static final String PO_SV_GET_RELOAD_RSP =
+  private static final String CARD_SV_GET_RELOAD_CMD = "007C000700";
+  private static final String CARD_SV_GET_RELOAD_RSP =
       "79007221D35F0E36"
           + SV_BALANCE_STR
           + "000000790000001A0000020000123456780000DB0070"
           + SW1SW2_OK;
-  private static final String PO_SV_RELOAD_CMD =
+  private static final String CARD_SV_RELOAD_CMD =
       "00B89591171600000079000000020000123456780000DE2C8CB3D280";
-  private static final String PO_SV_RELOAD_RSP = "A54BC9" + SW1SW2_OK;
-  private static final String PO_SV_DEBIT_CMD =
+  private static final String CARD_SV_RELOAD_RSP = "A54BC9" + SW1SW2_OK;
+  private static final String CARD_SV_DEBIT_CMD =
       "00BACD001434FFFE0000000079123456780000DF0C9437AABB";
-  private static final String PO_SV_DEBIT_RSP = "A54BC9" + SW1SW2_OK;
-  private static final String PO_SV_UNDEBIT_CMD =
+  private static final String CARD_SV_DEBIT_RSP = "A54BC9" + SW1SW2_OK;
+  private static final String CARD_SV_UNDEBIT_CMD =
       "00BCCD00143400020000000079123456780000DF0C9437AABB";
-  private static final String PO_SV_UNDEBIT_RSP = "A54BC9" + SW1SW2_OK;
-  private static final String PO_READ_SV_LOAD_LOG_FILE_CMD = "00B201A400";
-  private static final String PO_READ_SV_LOAD_LOG_FILE_RSP =
+  private static final String CARD_SV_UNDEBIT_RSP = "A54BC9" + SW1SW2_OK;
+  private static final String CARD_READ_SV_LOAD_LOG_FILE_CMD = "00B201A400";
+  private static final String CARD_READ_SV_LOAD_LOG_FILE_RSP =
       "000000780000001A0000020000AABBCCDD0000DB007000000000000000" + SW1SW2_OK;
-  private static final String PO_READ_SV_DEBIT_LOG_FILE_CMD = "00B201AD5D";
-  private static final String PO_READ_SV_DEBIT_LOG_FILE_RSP =
+  private static final String CARD_READ_SV_DEBIT_LOG_FILE_CMD = "00B201AD5D";
+  private static final String CARD_READ_SV_DEBIT_LOG_FILE_RSP =
       "011DFFFE0000000079AABBCC010000DA000018006F00000000000000000000"
           + "021DFFFE0000000079AABBCC020000DA000018006F00000000000000000000"
           + "031DFFFE0000000079AABBCC030000DA000018006F00000000000000000000"
           + SW1SW2_OK;
 
-  private static final String PO_INVALIDATE_CMD = "0004000000";
-  private static final String PO_REHABILITATE_CMD = "0044000000";
+  private static final String CARD_INVALIDATE_CMD = "0004000000";
+  private static final String CARD_REHABILITATE_CMD = "0044000000";
 
-  private static final String PO_GET_CHALLENGE_CMD = "0084000008";
-  private static final String PO_GET_CHALLENGE_RSP = PO_CHALLENGE + SW1SW2_OK;
+  private static final String CARD_GET_CHALLENGE_CMD = "0084000008";
+  private static final String CARD_GET_CHALLENGE_RSP = CARD_CHALLENGE + SW1SW2_OK;
 
-  private static final String SAM_SELECT_DIVERSIFIER_CMD = "8014000008" + PO_DIVERSIFIER;
+  private static final String SAM_SELECT_DIVERSIFIER_CMD = "8014000008" + CARD_DIVERSIFIER;
   private static final String SAM_GET_CHALLENGE_CMD = "8084000004";
   private static final String SAM_GET_CHALLENGE_RSP = SAM_CHALLENGE + SW1SW2_OK;
   private static final String SAM_DIGEST_INIT_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
@@ -263,13 +263,13 @@ public class CardTransactionManagerAdapterTest {
       "808C00000900E2004804" + FILE9_REC1_4B;
   private static final String SAM_DIGEST_CLOSE_CMD = "808E000004";
   private static final String SAM_DIGEST_CLOSE_RSP = SAM_SIGNATURE + SW1SW2_OK;
-  private static final String SAM_DIGEST_AUTHENTICATE = "8082000004" + PO_SIGNATURE;
+  private static final String SAM_DIGEST_AUTHENTICATE = "8082000004" + CARD_SIGNATURE;
   private static final String SAM_DIGEST_AUTHENTICATE_FAILED = "6988";
 
   private static final String SAM_CARD_CIPHER_PIN_CMD =
       "801280FF060000" + ByteArrayUtil.toHex(PIN_OK.getBytes());
   private static final String SAM_CARD_CIPHER_PIN_RSP = CIPHER_PIN_OK + SW1SW2_OK;
-  private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + PO_CHALLENGE;
+  private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + CARD_CHALLENGE;
   private static final String SAM_GIVE_RANDOM_RSP = SW1SW2_OK;
   private static final String SAM_PREPARE_LOAD_CMD =
       "805601FF367C00070079007221D35F0E36"
@@ -340,9 +340,9 @@ public class CardTransactionManagerAdapterTest {
           CardBrokenCommunicationException {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest = createCardRequest(PO_OPEN_SECURE_SESSION_CMD);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse = createCardResponse(PO_OPEN_SECURE_SESSION_RSP);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -368,9 +368,9 @@ public class CardTransactionManagerAdapterTest {
           CardBrokenCommunicationException {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest = createCardRequest(PO_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse = createCardResponse(PO_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -398,10 +398,10 @@ public class CardTransactionManagerAdapterTest {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
     CardRequestSpi cardCardRequest =
-        createCardRequest(PO_OPEN_SECURE_SESSION_SFI7_REC1_CMD, PO_READ_REC_SFI8_REC1_CMD);
+        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse =
-        createCardResponse(PO_OPEN_SECURE_SESSION_SFI7_REC1_RSP, PO_READ_REC_SFI8_REC1_RSP);
+        createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -431,9 +431,9 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(false);
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest = createCardRequest(PO_OPEN_SECURE_SESSION_CMD);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse = createCardResponse(PO_OPEN_SECURE_SESSION_RSP);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -449,10 +449,10 @@ public class CardTransactionManagerAdapterTest {
           CardBrokenCommunicationException {
     CardRequestSpi cardCardRequest =
         createCardRequest(
-            PO_READ_REC_SFI7_REC1_CMD, PO_READ_REC_SFI8_REC1_CMD, PO_READ_REC_SFI10_REC1_CMD);
+            CARD_READ_REC_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD, CARD_READ_REC_SFI10_REC1_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(
-            PO_READ_REC_SFI7_REC1_RSP, PO_READ_REC_SFI8_REC1_RSP, PO_READ_REC_SFI10_REC1_RSP);
+            CARD_READ_REC_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP, CARD_READ_REC_SFI10_REC1_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -502,8 +502,8 @@ public class CardTransactionManagerAdapterTest {
       throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     byte[] lid = new byte[] {(byte) 0x12, (byte) 0x34};
-    CardRequestSpi cardCardRequest = createCardRequest(PO_SELECT_FILE_1234_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_SELECT_FILE_1234_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -520,8 +520,8 @@ public class CardTransactionManagerAdapterTest {
       prepareSelectFile_whenSelectFileControlIsFirstEF_shouldPrepareSelectFileApduWithP2_02_P1_00()
           throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
               CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_SELECT_FILE_FIRST_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_SELECT_FILE_1234_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_FIRST_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -538,8 +538,8 @@ public class CardTransactionManagerAdapterTest {
       prepareSelectFile_whenSelectFileControlIsNextEF_shouldPrepareSelectFileApduWithP2_02_P1_02()
           throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
               CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_SELECT_FILE_NEXT_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_SELECT_FILE_1234_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_NEXT_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -556,8 +556,8 @@ public class CardTransactionManagerAdapterTest {
       prepareSelectFile_whenSelectFileControlIsCurrentEF_shouldPrepareSelectFileApduWithP2_09_P1_00()
           throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
               CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_SELECT_FILE_CURRENT_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_SELECT_FILE_1234_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_CURRENT_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -578,8 +578,8 @@ public class CardTransactionManagerAdapterTest {
   public void prepareGetData_whenGetDataTagIsFCP_shouldPrepareSelectFileApduWithTagFCP()
       throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_GET_DATA_FCP_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_GET_DATA_FCP_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCP_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCP_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -595,8 +595,8 @@ public class CardTransactionManagerAdapterTest {
   public void prepareGetData_whenGetDataTagIsFCI_shouldPrepareSelectFileApduWithTagFCI()
       throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_GET_DATA_FCI_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_GET_DATA_FCI_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCI_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCI_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -628,8 +628,8 @@ public class CardTransactionManagerAdapterTest {
       prepareReadRecordFile_whenSfi07RecNumber1_shouldPrepareReadRecordApduWithSfi07RecNumber1()
           throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
               CardBrokenCommunicationException {
-    CardRequestSpi cardCardRequest = createCardRequest(PO_READ_REC_SFI7_REC1_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_READ_REC_SFI7_REC1_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_REC_SFI7_REC1_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -763,7 +763,7 @@ public class CardTransactionManagerAdapterTest {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
-    CardRequestSpi cardCardRequest = createCardRequest(PO_CHECK_PIN_CMD);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
@@ -786,15 +786,20 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager.prepareSvGet(SvOperation.DEBIT, null);
   }
 
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareSvGet_whenSvOperationNotAvailable_shouldThrowUOE() {
+    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO);
+  }
+
   @Test
-  public void prepareSvGet_whenSvFeatureIsAvailable_shouldPrepareSvGetApdu()
+  public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu()
       throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
-    CardRequestSpi cardCardRequest = createCardRequest(PO_SV_DEBIT_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(PO_SV_DEBIT_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_DEBIT_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_DEBIT_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -804,6 +809,36 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_RELOAD_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO);
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws UnexpectedStatusWordException, ReaderBrokenCommunicationException, CardBrokenCommunicationException {
+    CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+            .thenReturn(samCardResponse);
+    cardTransactionManager.prepareSvReload(1);
   }
 
   @Test
