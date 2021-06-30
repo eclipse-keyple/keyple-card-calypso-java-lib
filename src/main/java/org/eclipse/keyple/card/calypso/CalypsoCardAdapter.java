@@ -82,6 +82,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private SvLoadLogRecord svLoadLogRecord;
   private SvDebitLogRecord svDebitLogRecord;
   private boolean isHce;
+  private byte[] cardChallenge;
+  private byte svKvc;
+  private byte[] svGetHeader;
+  private byte[] svGetData;
+  private byte[] svOperationSignature;
 
   /**
    * Constructor.
@@ -479,17 +484,27 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * (package-private)<br>
    * Sets the Stored Value data from the SV Get command
    *
+   * @param svKvc The KVC value.
+   * @param svGetHeader A not empty array.
+   * @param svGetData A not empty array.
    * @param svBalance the current SV balance.
    * @param svLastTNum the last SV transaction number.
    * @param svLoadLogRecord the SV load log record (may be null if not available).
    * @param svDebitLogRecord the SV debit log record (may be null if not available).
    * @since 2.0
    */
-  final void setSvData(
+  void setSvData(
+      byte svKvc,
+      byte[] svGetHeader,
+      byte[] svGetData,
       int svBalance,
       int svLastTNum,
       SvLoadLogRecord svLoadLogRecord,
       SvDebitLogRecord svDebitLogRecord) {
+
+    this.svKvc = svKvc;
+    this.svGetHeader = svGetHeader;
+    this.svGetData = svGetData;
     this.svBalance = svBalance;
     this.svLastTNum = svLastTNum;
     // update logs, do not overwrite existing values (case of double reading)
@@ -537,7 +552,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
       byte[] logRecord =
-          getFileBySfi(CalypsoCardUtilAdapter.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
+          getFileBySfi(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
       svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
     }
     return svLoadLogRecord;
@@ -567,7 +582,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public List<SvDebitLogRecord> getSvDebitLogAllRecords() {
     // get the logs from the file data
     SortedMap<Integer, byte[]> logRecords =
-        getFileBySfi(CalypsoCardUtilAdapter.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
+        getFileBySfi(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
     List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
     for (Map.Entry<Integer, byte[]> entry : logRecords.entrySet()) {
       svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));
@@ -581,7 +596,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param dfRatified true if the session was ratified.
    */
-  final void setDfRatified(boolean dfRatified) {
+  void setDfRatified(boolean dfRatified) {
     isDfRatified = dfRatified;
   }
 
@@ -615,7 +630,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param directoryHeader the DF metadata (should be not null).
    * @return the current instance.
    */
-  final CalypsoCard setDirectoryHeader(DirectoryHeader directoryHeader) {
+  CalypsoCard setDirectoryHeader(DirectoryHeader directoryHeader) {
     this.directoryHeader = directoryHeader;
     return this;
   }
@@ -707,7 +722,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param pinAttemptCounter the number of remaining attempts to present the PIN code.
    */
-  final void setPinAttemptRemaining(int pinAttemptCounter) {
+  void setPinAttemptRemaining(int pinAttemptCounter) {
     this.pinAttemptCounter = pinAttemptCounter;
   }
 
@@ -719,7 +734,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param sfi the SFI.
    * @param header the file header (should be not null).
    */
-  final void setFileHeader(byte sfi, FileHeader header) {
+  void setFileHeader(byte sfi, FileHeader header) {
     ElementaryFileAdapter ef = getOrCreateFile(sfi);
     ef.setHeader(header);
     sfiByLid.put(header.getLid(), sfi);
@@ -735,7 +750,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
    */
-  final void setContent(byte sfi, int numRecord, byte[] content) {
+  void setContent(byte sfi, int numRecord, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
     ((FileDataAdapter) ef.getData()).setContent(numRecord, content);
   }
@@ -749,7 +764,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param numCounter the counter number (should be {@code >=} 1).
    * @param content the counter value (should be not null and 3 bytes length).
    */
-  final void setCounter(byte sfi, int numCounter, byte[] content) {
+  void setCounter(byte sfi, int numCounter, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
     ((FileDataAdapter) ef.getData()).setCounter(numCounter, content);
   }
@@ -767,7 +782,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param content the content (should be not empty).
    * @param offset the offset (should be {@code >=} 0).
    */
-  final void setContent(byte sfi, int numRecord, byte[] content, int offset) {
+  void setContent(byte sfi, int numRecord, byte[] content, int offset) {
     ElementaryFile ef = getOrCreateFile(sfi);
     ((FileDataAdapter) ef.getData()).setContent(numRecord, content, offset);
   }
@@ -784,7 +799,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
    */
-  final void fillContent(byte sfi, int numRecord, byte[] content) {
+  void fillContent(byte sfi, int numRecord, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
     ((FileDataAdapter) ef.getData()).fillContent(numRecord, content);
   }
@@ -800,7 +815,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param sfi the SFI.
    * @param content the content (should be not empty).
    */
-  final void addCyclicContent(byte sfi, byte[] content) {
+  void addCyclicContent(byte sfi, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
     ((FileDataAdapter) ef.getData()).addCyclicContent(content);
   }
@@ -810,7 +825,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Make a backup of the Elementary Files.<br>
    * This method should be used before starting a card secure session.
    */
-  final void backupFiles() {
+  void backupFiles() {
     copyMapFiles(efBySfi, efBySfiBackup);
     copyMapSfi(sfiByLid, sfiByLidBackup);
   }
@@ -821,7 +836,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * This method should be used when SW of the card close secure session command is unsuccessful or
    * if secure session is aborted.
    */
-  final void restoreFiles() {
+  void restoreFiles() {
     copyMapFiles(efBySfiBackup, efBySfi);
     copyMapSfi(sfiByLidBackup, sfiByLid);
   }
@@ -873,6 +888,90 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       return null;
     }
     return selectApplicationResponse.getApdu();
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the challenge received in response to the GET CHALLENGE command.
+   *
+   * @param cardChallenge A not empty array.
+   */
+  void setCardChallenge(byte[] cardChallenge) {
+    this.cardChallenge = cardChallenge;
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the SV signature.
+   *
+   * @param svOperationSignature A not empty array.
+   */
+  void setSvOperationSignature(byte[] svOperationSignature) {
+    this.svOperationSignature = svOperationSignature;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the challenge received from the card
+   *
+   * @return An array of bytes containing the challenge bytes (variable length according to the
+   *     revision of the card). May be null if the challenge is not available.
+   * @since 2.0
+   */
+  byte[] getCardChallenge() {
+    return cardChallenge;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the SV KVC from the card
+   *
+   * @return The SV KVC byte.
+   * @since 2.0
+   */
+  byte getSvKvc() {
+    return svKvc;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the SV Get command header
+   *
+   * @return A byte array containing the SV Get command header.
+   * @throws IllegalStateException If the requested data has not been set.
+   * @since 2.0
+   */
+  byte[] getSvGetHeader() {
+    if (svGetHeader == null) {
+      throw new IllegalStateException("SV Get Header not available.");
+    }
+    return svGetHeader;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the SV Get command response data
+   *
+   * @return A byte array containing the SV Get command response data.
+   * @throws IllegalStateException If the requested data has not been set.
+   * @since 2.0
+   */
+  byte[] getSvGetData() {
+    if (svGetData == null) {
+      throw new IllegalStateException("SV Get Data not available.");
+    }
+    return svGetData;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the last SV Operation signature (SV Reload, Debit or Undebit)
+   *
+   * @return A byte array containing the SV Operation signature or null if not available.
+   * @since 2.0
+   */
+  byte[] getSvOperationSignature() {
+    return svOperationSignature;
   }
 
   /**
