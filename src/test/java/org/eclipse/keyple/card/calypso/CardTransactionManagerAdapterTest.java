@@ -41,6 +41,8 @@ public class CardTransactionManagerAdapterTest {
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C21051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C22051410019000";
+  private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED =
+      "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C20051410016283";
   private static final String SAM_C1_POWER_ON_DATA = "3B3F9600805A4880C120501711223344829000";
   private static final String FCI_REV10 =
       "6F228408315449432E494341A516BF0C13C708   0000000011223344 5307060A01032003119000";
@@ -466,8 +468,10 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
   }
 
-  @Test
-  public void processClosing() {}
+  @Test(expected = IllegalStateException.class)
+  public void processClosing_whenNoSessionIsOpen_shouldThrowISE() {
+    cardTransactionManager.processClosing();
+  }
 
   @Test
   public void processCancel() {}
@@ -832,32 +836,91 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws UnexpectedStatusWordException, ReaderBrokenCommunicationException, CardBrokenCommunicationException {
+  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
     CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
+        .thenReturn(samCardResponse);
     cardTransactionManager.prepareSvReload(1);
   }
 
-  @Test
-  public void prepareSvReload() {}
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
+    CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    cardTransactionManager.prepareSvDebit(1);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareSvReadAllLogs_whenPinFeatureIsNotAvailable_shouldThrowISE() {
+    cardTransactionManager.prepareSvReadAllLogs();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+    cardTransactionManager.prepareSvReadAllLogs();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+    cardTransactionManager.prepareInvalidate();
+  }
 
   @Test
-  public void testPrepareSvReload() {}
+  public void prepareInvalidate_whenCardIsNotInvalidated_prepareInvalidateApdu()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_INVALIDATE_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareInvalidate();
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareRehabilitate_whenCardIsNotInvalidated_shouldThrowISE() {
+    cardTransactionManager.prepareRehabilitate();
+  }
 
   @Test
-  public void prepareSvDebit() {}
-
-  @Test
-  public void testPrepareSvDebit() {}
-
-  @Test
-  public void prepareSvReadAllLogs() {}
-
-  @Test
-  public void prepareInvalidate() {}
+  public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_REHABILITATE_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareRehabilitate();
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
 
   @Test
   public void prepareRehabilitate() {}

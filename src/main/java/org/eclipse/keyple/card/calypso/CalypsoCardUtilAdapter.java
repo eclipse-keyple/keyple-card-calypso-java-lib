@@ -188,12 +188,6 @@ final class CalypsoCardUtilAdapter {
     return cardReadRecordsParser;
   }
 
-  private static CardGetDataFciParser updateCalypsoCardGetDataFci(
-      CalypsoCardAdapter calypsoCard, ApduResponseApi apduResponse) {
-    calypsoCard.initializeWithFci(apduResponse);
-    return null;
-  }
-
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the card <br>
@@ -832,9 +826,13 @@ final class CalypsoCardUtilAdapter {
    * Gets the SV Get command header
    *
    * @return A byte array containing the SV Get command header.
+   * @throws IllegalStateException If the requested data has not been set.
    * @since 2.0
    */
   static byte[] getSvGetHeader() {
+    if (svGetHeader == null) {
+      throw new IllegalStateException("SV Get Header not available.");
+    }
     return svGetHeader;
   }
 
@@ -843,9 +841,13 @@ final class CalypsoCardUtilAdapter {
    * Gets the SV Get command response data
    *
    * @return A byte array containing the SV Get command response data.
+   * @throws IllegalStateException If the requested data has not been set.
    * @since 2.0
    */
   static byte[] getSvGetData() {
+    if (svGetData == null) {
+      throw new IllegalStateException("SV Get Data not available.");
+    }
     return svGetData;
   }
 

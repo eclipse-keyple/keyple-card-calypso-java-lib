@@ -840,7 +840,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.0
    */
   @Override
-  public final void processClosing() {
+  public final CardTransactionManager processClosing() {
 
     checkSessionIsOpen();
 
@@ -911,6 +911,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // sets the flag indicating that the commands have been executed
     cardCommandManager.notifyCommandsProcessed();
+
+    return this;
   }
 
   /**
@@ -919,7 +921,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.0
    */
   @Override
-  public final void processCancel() {
+  public final CardTransactionManager processCancel() {
     // card ApduRequestAdapter List to hold Close Secure Session command
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
 
@@ -949,6 +951,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // session is now considered closed regardless the previous state or the result of the abort
     // session command sent to the card.
     sessionState = SessionState.SESSION_CLOSED;
+
+    return this;
   }
 
   /**
@@ -1859,7 +1863,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
     if (calypsoCard.getApplicationSubtype()
         != CalypsoCardUtilAdapter.STORED_VALUE_FILE_STRUCTURE_ID) {
-      throw new IllegalStateException(
+      throw new UnsupportedOperationException(
           "The currently selected application is not an SV application.");
     }
     // reset SV data in CalypsoCard if any
