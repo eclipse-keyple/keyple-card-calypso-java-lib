@@ -90,7 +90,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    * @since 2.0
    */
   @Override
-  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) {
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
 
     if (commandBuilders.size() == 1) {
       // an unlock command has been requested
@@ -103,8 +103,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
       try {
         commandBuilders.get(0).createResponseParser(apduResponses.get(0)).checkStatus();
       } catch (CalypsoSamCommandException e) {
-        // TODO check what to do here!
-        logger.error("An exception occurred while parse the SAM responses: {}", e.getMessage());
+        throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
     }
 

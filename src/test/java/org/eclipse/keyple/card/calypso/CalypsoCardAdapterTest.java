@@ -483,36 +483,6 @@ public class CalypsoCardAdapterTest {
     calypsoCardAdapter.getSvBalance();
   }
 
-  @Test
-  public void getSvLastTNum() {}
-
-  @Test
-  public void getSvLoadLogRecord() {}
-
-  @Test
-  public void getSvDebitLogLastRecord() {}
-
-  @Test
-  public void getSvDebitLogAllRecords() {}
-
-  @Test
-  public void getDirectoryHeader() {}
-
-  @Test
-  public void getFileBySfi() {}
-
-  @Test
-  public void getFileByLid() {}
-
-  @Test
-  public void getAllFiles() {}
-
-  @Test
-  public void isPinBlocked() {}
-
-  @Test
-  public void getPinAttemptRemaining() {}
-
   /**
    * (private)<br>
    * Builds a simulated response to a Select Application command.

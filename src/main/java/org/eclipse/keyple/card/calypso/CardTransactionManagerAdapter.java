@@ -54,6 +54,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
+  private static final String RECORD_NUMBER = "recordNumber";
 
   // commands that modify the content of the card in session have a cost on the session buffer equal
   // to the length of the outgoing data plus 6 bytes
@@ -313,7 +314,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     poApduResponses.remove(0);
 
     // update CalypsoCard with the received data
-    // TODO check if this is not redundant with what is done 40 lines above
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, poApduResponses);
     } catch (CardCommandException e) {
@@ -472,8 +472,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Get Terminal Signature from the latest response
     byte[] sessionTerminalSignature = getSessionTerminalSignature();
 
-    boolean ratificationCommandResponseReceived;
-
     // Build the card Close Session command. The last one for this session
     CardCloseSessionBuilder closeSessionCmdBuild =
         new CardCloseSessionBuilder(
@@ -499,9 +497,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     CardResponseApi poCardResponse;
     try {
       poCardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
-      // if the ratification command was added and no error occurred then the response has been
-      // received
-      ratificationCommandResponseReceived = ratificationCommandAdded;
     } catch (CardBrokenCommunicationException e) {
       poCardResponse = e.getCardResponse();
       // The current exception may have been caused by a communication issue with the card
@@ -516,8 +511,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           || poCardResponse.getApduResponses().size() != apduRequests.size() - 1) {
         throw new CardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
       }
-      // we received all responses except the response to the ratification command
-      ratificationCommandResponseReceived = false;
     } catch (ReaderBrokenCommunicationException e) {
       throw new CardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (UnexpectedStatusWordException e) {
@@ -553,16 +546,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
 
     sessionState = SessionState.SESSION_CLOSED;
-
-    if (ratificationCommandResponseReceived) { // NOSONAR: boolean change in catch
-      // is not taken into account by
-      // Sonar
-      // Remove the ratification response
-      apduResponses.remove(apduResponses.size() - 1);
-    }
-
-    // Remove Close Secure Session response and create a new CardResponse
-    apduResponses.remove(apduResponses.size() - 1);
   }
 
   /**
@@ -922,6 +905,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager processCancel() {
+
+    checkSessionIsOpen();
+
     // card ApduRequestAdapter List to hold Close Secure Session command
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
 
@@ -1386,7 +1372,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
-            "recordNumber");
+            RECORD_NUMBER);
 
     CardReadRecordsBuilder cardReadRecordsBuilder =
         new CardReadRecordsBuilder(
@@ -1507,9 +1493,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
-            "recordNumber")
+            RECORD_NUMBER)
         .notNull(recordData, "recordData");
-    ;
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
@@ -1532,7 +1517,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
-            "recordNumber");
+            RECORD_NUMBER);
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(

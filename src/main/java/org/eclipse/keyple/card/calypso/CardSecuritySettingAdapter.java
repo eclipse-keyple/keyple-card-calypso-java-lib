@@ -26,6 +26,7 @@ import org.eclipse.keyple.core.util.Assert;
  */
 final class CardSecuritySettingAdapter implements CardSecuritySetting {
 
+  private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
   private CardReader samReader;
   private CalypsoSam calypsoSam;
   private boolean isMultipleSessionEnabled;
@@ -149,7 +150,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   public CardSecuritySettingAdapter assignKif(
       WriteAccessLevel writeAccessLevel, byte kvc, byte kif) {
 
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
 
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
     if (map == null) {
@@ -168,7 +169,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   @Override
   public CardSecuritySettingAdapter assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif) {
 
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
 
     defaultKifMap.put(writeAccessLevel, kif);
     return this;
@@ -182,7 +183,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   @Override
   public CardSecuritySettingAdapter assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc) {
 
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
 
     defaultKvcMap.put(writeAccessLevel, kvc);
     return this;
@@ -310,7 +311,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   @Override
   public Byte getKif(WriteAccessLevel writeAccessLevel, byte kvc) {
 
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
     if (map != null) {
       return map.get(kvc);
