@@ -15,93 +15,20 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.GetDataTag;
-import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.core.util.Assert;
 
 /**
  * (package-private)<br>
- * Utility class used to check Calypso specific data.
- *
- * <p>Helps the preparation and the analysis of Calypso Card commands.
+ * Helper class used to update the {@link org.calypsonet.terminal.calypso.card.CalypsoCard} with the
+ * responses received from the card.
  *
  * @since 2.0
  */
 final class CalypsoCardUtilAdapter {
-  public static final int MASK_3_BITS = 0x7; // 7
-  public static final int MASK_4_BITS = 0xF; // 15
-  public static final int MASK_5_BITS = 0x1F; // 31
-  public static final int MASK_7_BITS = 0x7F; // 127
-  public static final int MASK_1_BYTE = 0xFF; // 255
-  public static final int MASK_2_BYTES = 0xFFFF;
-  public static final int MASK_3_BYTES = 0xFFFFFF;
-
-  // SFI
-  public static final int SFI_MIN = 0;
-  public static final int SFI_MAX = MASK_5_BITS;
-  // Record number
-  public static final int NB_REC_MIN = 1;
-  public static final int NB_REC_MAX = 255;
-
-  // Counter number
-  public static final int NB_CNT_MIN = 1;
-  public static final int NB_CNT_MAX = 255;
-
-  // Counter value
-  public static final int CNT_VALUE_MIN = 0;
-  public static final int CNT_VALUE_MAX = 16777215;
-
-  // Le max
-  public static final int LE_MAX = 255;
-
-  // File Type Values
-  public static final int FILE_TYPE_MF = 1;
-  public static final int FILE_TYPE_DF = 2;
-  public static final int FILE_TYPE_EF = 4;
-
-  // EF Type Values
-  public static final int EF_TYPE_DF = 0;
-  public static final int EF_TYPE_BINARY = 1;
-  public static final int EF_TYPE_LINEAR = 2;
-  public static final int EF_TYPE_CYCLIC = 4;
-  public static final int EF_TYPE_SIMULATED_COUNTERS = 8;
-  public static final int EF_TYPE_COUNTERS = 9;
-
-  // Field offsets in select file response (tag/length excluded)
-  public static final int SEL_SFI_OFFSET = 0;
-  public static final int SEL_TYPE_OFFSET = 1;
-  public static final int SEL_EF_TYPE_OFFSET = 2;
-  public static final int SEL_REC_SIZE_OFFSET = 3;
-  public static final int SEL_NUM_REC_OFFSET = 4;
-  public static final int SEL_AC_OFFSET = 5;
-  public static final int SEL_AC_LENGTH = 4;
-  public static final int SEL_NKEY_OFFSET = 9;
-  public static final int SEL_NKEY_LENGTH = 4;
-  public static final int SEL_DF_STATUS_OFFSET = 13;
-  public static final int SEL_KVCS_OFFSET = 14;
-  public static final int SEL_KIFS_OFFSET = 17;
-  public static final int SEL_DATA_REF_OFFSET = 14;
-  public static final int SEL_LID_OFFSET = 21;
-
-  public static final int PIN_LENGTH = 4;
-
-  public static final byte STORED_VALUE_FILE_STRUCTURE_ID = (byte) 0x20;
-  public static final byte SV_RELOAD_LOG_FILE_SFI = (byte) 0x14;
-  public static final int SV_RELOAD_LOG_FILE_NB_REC = 1;
-  public static final byte SV_DEBIT_LOG_FILE_SFI = (byte) 0x15;
-  public static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
-  public static final int SV_LOG_FILE_REC_LENGTH = 29;
-
-  private static byte[] poChallenge;
-  private static byte svKvc;
-  private static byte[] svGetHeader;
-  private static byte[] svGetData;
-  private static byte[] svOperationSignature;
 
   /** Private constructor */
   private CalypsoCardUtilAdapter() {}
@@ -188,12 +115,6 @@ final class CalypsoCardUtilAdapter {
     return cardReadRecordsParser;
   }
 
-  private static CardGetDataFciParser updateCalypsoCardGetDataFci(
-      CalypsoCardAdapter calypsoCard, ApduResponseApi apduResponse) {
-    calypsoCard.initializeWithFci(apduResponse);
-    return null;
-  }
-
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the card <br>
@@ -212,15 +133,15 @@ final class CalypsoCardUtilAdapter {
     cardSelectFileParser.checkStatus();
 
     byte[] proprietaryInformation = cardSelectFileParser.getProprietaryInformation();
-    byte sfi = proprietaryInformation[SEL_SFI_OFFSET];
-    byte fileType = proprietaryInformation[SEL_TYPE_OFFSET];
+    byte sfi = proprietaryInformation[CalypsoCardConstant.SEL_SFI_OFFSET];
+    byte fileType = proprietaryInformation[CalypsoCardConstant.SEL_TYPE_OFFSET];
     switch (fileType) {
-      case FILE_TYPE_MF:
-      case FILE_TYPE_DF:
+      case CalypsoCardConstant.FILE_TYPE_MF:
+      case CalypsoCardConstant.FILE_TYPE_DF:
         DirectoryHeader directoryHeader = createDirectoryHeader(proprietaryInformation);
         calypsoCard.setDirectoryHeader(directoryHeader);
         break;
-      case FILE_TYPE_EF:
+      case CalypsoCardConstant.FILE_TYPE_EF:
         FileHeader fileHeader = createFileHeader(proprietaryInformation);
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
@@ -371,22 +292,24 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * Parses the response to a Get Challenge command received from the card <br>
-   * The card challenge value is stored in {@link CalypsoCardUtilAdapter} and made available through
-   * a dedicated getters for later use
+   * The card challenge value is stored in {@link CalypsoCardAdapter}.
    *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cardGetChallengeBuilder the Get Challenge command builder.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
   private static CardGetChallengeRespPars updateCalypsoCardGetChallenge(
-      CardGetChallengeBuilder cardGetChallengeBuilder, ApduResponseApi apduResponse)
+      CalypsoCardAdapter calypsoCard,
+      CardGetChallengeBuilder cardGetChallengeBuilder,
+      ApduResponseApi apduResponse)
       throws CardCommandException {
     CardGetChallengeRespPars cardGetChallengeRespPars =
         cardGetChallengeBuilder.createResponseParser(apduResponse);
 
     cardGetChallengeRespPars.checkStatus();
 
-    poChallenge = apduResponse.getDataOut();
+    calypsoCard.setCardChallenge(apduResponse.getDataOut());
 
     return cardGetChallengeRespPars;
   }
@@ -448,14 +371,13 @@ final class CalypsoCardUtilAdapter {
     cardSvGetParser.checkStatus();
 
     calypsoCard.setSvData(
+        cardSvGetParser.getCurrentKVC(),
+        cardSvGetParser.getSvGetCommandHeader(),
+        cardSvGetParser.getApduResponse().getApdu(),
         cardSvGetParser.getBalance(),
         cardSvGetParser.getTransactionNumber(),
         cardSvGetParser.getLoadLog(),
         cardSvGetParser.getDebitLog());
-
-    svKvc = cardSvGetParser.getCurrentKVC();
-    svGetHeader = cardSvGetParser.getSvGetCommandHeader();
-    svGetData = cardSvGetParser.getApduResponse().getApdu();
 
     return cardSvGetParser;
   }
@@ -463,14 +385,17 @@ final class CalypsoCardUtilAdapter {
   /**
    * Checks the response to a SV Operation command (reload, debit or undebit) response received from
    * the card<br>
-   * Keep the card SV signature if any (command executed outside a secure session).
+   * Stores the card SV signature if any (command executed outside a secure session) in the {@link
+   * CalypsoCardAdapter}.
    *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param svOperationCmdBuild the SV Operation command builder (CardSvReloadBuilder,
    *     CardSvDebitBuilder or CardSvUndebitBuilder)
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
   private static AbstractCardResponseParser updateCalypsoCardSvOperation(
+      CalypsoCardAdapter calypsoCard,
       AbstractCardCommandBuilder<? extends AbstractCardResponseParser> svOperationCmdBuild,
       ApduResponseApi apduResponse)
       throws CardCommandException {
@@ -479,7 +404,7 @@ final class CalypsoCardUtilAdapter {
 
     svOperationRespPars.checkStatus();
 
-    svOperationSignature = svOperationRespPars.getApduResponse().getDataOut();
+    calypsoCard.setSvOperationSignature(svOperationRespPars.getApduResponse().getDataOut());
 
     return svOperationRespPars;
   }
@@ -512,30 +437,46 @@ final class CalypsoCardUtilAdapter {
    * @return A {@link DirectoryHeader} object
    */
   private static DirectoryHeader createDirectoryHeader(byte[] proprietaryInformation) {
-    byte[] accessConditions = new byte[SEL_AC_LENGTH];
-    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
+    byte[] accessConditions = new byte[CalypsoCardConstant.SEL_AC_LENGTH];
+    System.arraycopy(
+        proprietaryInformation,
+        CalypsoCardConstant.SEL_AC_OFFSET,
+        accessConditions,
+        0,
+        CalypsoCardConstant.SEL_AC_LENGTH);
 
-    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
-    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
+    byte[] keyIndexes = new byte[CalypsoCardConstant.SEL_NKEY_LENGTH];
+    System.arraycopy(
+        proprietaryInformation,
+        CalypsoCardConstant.SEL_NKEY_OFFSET,
+        keyIndexes,
+        0,
+        CalypsoCardConstant.SEL_NKEY_LENGTH);
 
-    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
+    byte dfStatus = proprietaryInformation[CalypsoCardConstant.SEL_DF_STATUS_OFFSET];
 
     short lid =
         (short)
-            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET + 1] & 0x00ff));
 
     return DirectoryHeaderAdapter.builder()
         .lid(lid)
         .accessConditions(accessConditions)
         .keyIndexes(keyIndexes)
         .dfStatus(dfStatus)
-        .kvc(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KVCS_OFFSET])
-        .kvc(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KVCS_OFFSET + 1])
-        .kvc(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KVCS_OFFSET + 2])
-        .kif(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KIFS_OFFSET])
-        .kif(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KIFS_OFFSET + 1])
-        .kif(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KIFS_OFFSET + 2])
+        .kvc(
+            WriteAccessLevel.PERSONALIZATION,
+            proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET])
+        .kvc(WriteAccessLevel.LOAD, proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET + 1])
+        .kvc(
+            WriteAccessLevel.DEBIT, proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET + 2])
+        .kif(
+            WriteAccessLevel.PERSONALIZATION,
+            proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET])
+        .kif(WriteAccessLevel.LOAD, proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET + 1])
+        .kif(
+            WriteAccessLevel.DEBIT, proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET + 2])
         .build();
   }
 
@@ -548,19 +489,19 @@ final class CalypsoCardUtilAdapter {
   private static ElementaryFile.Type getEfTypeFromCardValue(byte efType) {
     ElementaryFile.Type fileType;
     switch (efType) {
-      case EF_TYPE_BINARY:
+      case CalypsoCardConstant.EF_TYPE_BINARY:
         fileType = ElementaryFile.Type.BINARY;
         break;
-      case EF_TYPE_LINEAR:
+      case CalypsoCardConstant.EF_TYPE_LINEAR:
         fileType = ElementaryFile.Type.LINEAR;
         break;
-      case EF_TYPE_CYCLIC:
+      case CalypsoCardConstant.EF_TYPE_CYCLIC:
         fileType = ElementaryFile.Type.CYCLIC;
         break;
-      case EF_TYPE_SIMULATED_COUNTERS:
+      case CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS:
         fileType = ElementaryFile.Type.SIMULATED_COUNTERS;
         break;
-      case EF_TYPE_COUNTERS:
+      case CalypsoCardConstant.EF_TYPE_COUNTERS:
         fileType = ElementaryFile.Type.COUNTERS;
         break;
       default:
@@ -579,37 +520,47 @@ final class CalypsoCardUtilAdapter {
   private static FileHeader createFileHeader(byte[] proprietaryInformation) {
 
     ElementaryFile.Type fileType =
-        getEfTypeFromCardValue(proprietaryInformation[SEL_EF_TYPE_OFFSET]);
+        getEfTypeFromCardValue(proprietaryInformation[CalypsoCardConstant.SEL_EF_TYPE_OFFSET]);
 
     int recordSize;
     int recordsNumber;
     if (fileType == ElementaryFile.Type.BINARY) {
       recordSize =
-          ((proprietaryInformation[SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
-              | (proprietaryInformation[SEL_NUM_REC_OFFSET] & 0x000000ff);
+          ((proprietaryInformation[CalypsoCardConstant.SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
+              | (proprietaryInformation[CalypsoCardConstant.SEL_NUM_REC_OFFSET] & 0x000000ff);
       recordsNumber = 1;
     } else {
-      recordSize = proprietaryInformation[SEL_REC_SIZE_OFFSET];
-      recordsNumber = proprietaryInformation[SEL_NUM_REC_OFFSET];
+      recordSize = proprietaryInformation[CalypsoCardConstant.SEL_REC_SIZE_OFFSET];
+      recordsNumber = proprietaryInformation[CalypsoCardConstant.SEL_NUM_REC_OFFSET];
     }
 
-    byte[] accessConditions = new byte[SEL_AC_LENGTH];
-    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
+    byte[] accessConditions = new byte[CalypsoCardConstant.SEL_AC_LENGTH];
+    System.arraycopy(
+        proprietaryInformation,
+        CalypsoCardConstant.SEL_AC_OFFSET,
+        accessConditions,
+        0,
+        CalypsoCardConstant.SEL_AC_LENGTH);
 
-    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
-    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
+    byte[] keyIndexes = new byte[CalypsoCardConstant.SEL_NKEY_LENGTH];
+    System.arraycopy(
+        proprietaryInformation,
+        CalypsoCardConstant.SEL_NKEY_OFFSET,
+        keyIndexes,
+        0,
+        CalypsoCardConstant.SEL_NKEY_LENGTH);
 
-    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
+    byte dfStatus = proprietaryInformation[CalypsoCardConstant.SEL_DF_STATUS_OFFSET];
 
     short sharedReference =
         (short)
-            (((proprietaryInformation[SEL_DATA_REF_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_DATA_REF_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[CalypsoCardConstant.SEL_DATA_REF_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[CalypsoCardConstant.SEL_DATA_REF_OFFSET + 1] & 0x00ff));
 
     short lid =
         (short)
-            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET + 1] & 0x00ff));
 
     return FileHeaderAdapter.builder()
         .lid(lid)
@@ -680,7 +631,7 @@ final class CalypsoCardUtilAdapter {
             (CardCloseSessionBuilder) commandBuilder, apduResponse);
       case GET_CHALLENGE:
         return updateCalypsoCardGetChallenge(
-            (CardGetChallengeBuilder) commandBuilder, apduResponse);
+            calypsoCard, (CardGetChallengeBuilder) commandBuilder, apduResponse);
       case VERIFY_PIN:
         return updateCalypsoVerifyPin(
             calypsoCard, (CardVerifyPinBuilder) commandBuilder, apduResponse);
@@ -689,7 +640,7 @@ final class CalypsoCardUtilAdapter {
       case SV_RELOAD:
       case SV_DEBIT:
       case SV_UNDEBIT:
-        return updateCalypsoCardSvOperation(commandBuilder, apduResponse);
+        return updateCalypsoCardSvOperation(calypsoCard, commandBuilder, apduResponse);
       case INVALIDATE:
       case REHABILITATE:
         return updateCalypsoInvalidateRehabilitate(commandBuilder, apduResponse);
@@ -726,137 +677,5 @@ final class CalypsoCardUtilAdapter {
         updateCalypsoCard(calypsoCard, commandBuilder, apduResponse);
       }
     }
-  }
-
-  /**
-   * Create a Read Records command builder for the provided arguments
-   *
-   * @param calypsoCardClass the class of the card.
-   * @param sfi the SFI of the EF to read.
-   * @param recordNumber the record number to read.
-   * @return A {@link CardReadRecordsBuilder} object
-   * @throws IllegalArgumentException If one of the arguments is out of range.
-   * @since 2.0
-   */
-  static CardReadRecordsBuilder prepareReadRecordFile(
-      CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber) {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardUtilAdapter.SFI_MIN, CalypsoCardUtilAdapter.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardUtilAdapter.NB_REC_MIN,
-            CalypsoCardUtilAdapter.NB_REC_MAX,
-            "recordNumber");
-
-    return new CardReadRecordsBuilder(
-        calypsoCardClass, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);
-  }
-
-  /**
-   * Create a Select File command builder for the provided LID
-   *
-   * @param calypsoCardClass the class of the card.
-   * @param lid the LID of the EF to select.
-   * @return A {@link CardSelectFileBuilder} object
-   * @throws IllegalArgumentException If one of the arguments is out of range.
-   * @since 2.0
-   */
-  static CardSelectFileBuilder prepareSelectFile(CalypsoCardClass calypsoCardClass, byte[] lid) {
-    Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid");
-
-    return new CardSelectFileBuilder(calypsoCardClass, lid);
-  }
-
-  /**
-   * Create a Select File command builder for the provided select control
-   *
-   * @param calypsoCardClass the class of the card.
-   * @param selectControl provides the navigation case: FIRST, NEXT or CURRENT.
-   * @return A {@link CardSelectFileBuilder} object
-   * @since 2.0
-   */
-  static CardSelectFileBuilder prepareSelectFile(
-      CalypsoCardClass calypsoCardClass, SelectFileControl selectControl) {
-    return new CardSelectFileBuilder(calypsoCardClass, selectControl);
-  }
-
-  /**
-   * Create a Get Data command builder for the tag {@link GetDataTag#FCI_FOR_CURRENT_DF}.
-   *
-   * @param calypsoCardClass The class of the card.
-   * @return A {@link CardGetDataFciBuilder} object
-   * @since 2.0
-   */
-  static CardGetDataFciBuilder prepareGetDataFci(CalypsoCardClass calypsoCardClass) {
-
-    return new CardGetDataFciBuilder(calypsoCardClass);
-  }
-
-  /**
-   * Create a Get Data command builder for the tag {@link GetDataTag#FCP_FOR_CURRENT_FILE}.
-   *
-   * @param calypsoCardClass The class of the card.
-   * @return A {@link CardGetDataFciBuilder} object
-   * @since 2.0
-   */
-  static CardGetDataFcpBuilder prepareGetDataFcp(CalypsoCardClass calypsoCardClass) {
-
-    return new CardGetDataFcpBuilder(calypsoCardClass);
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the challenge received from the card
-   *
-   * @return An array of bytes containing the challenge bytes (variable length according to the
-   *     revision of the card). May be null if the challenge is not available.
-   * @since 2.0
-   */
-  static byte[] getCardChallenge() {
-    return poChallenge;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the SV KVC from the card
-   *
-   * @return The SV KVC byte.
-   * @since 2.0
-   */
-  static byte getSvKvc() {
-    return svKvc;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the SV Get command header
-   *
-   * @return A byte array containing the SV Get command header.
-   * @since 2.0
-   */
-  static byte[] getSvGetHeader() {
-    return svGetHeader;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the SV Get command response data
-   *
-   * @return A byte array containing the SV Get command response data.
-   * @since 2.0
-   */
-  static byte[] getSvGetData() {
-    return svGetData;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the last SV Operation signature (SV Reload, Debit or Undebit)
-   *
-   * @return A byte array containing the SV Operation signature or null if not available.
-   * @since 2.0
-   */
-  static byte[] getSvOperationSignature() {
-    return svOperationSignature;
   }
 }

@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
 
-  private static boolean isExtendedModeSupported = false;
+  private final boolean isExtendedModeSupported;
 
   /**
    * Instantiates a new CardOpenSession3Parser from the response.

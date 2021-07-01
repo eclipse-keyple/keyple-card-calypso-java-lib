@@ -37,8 +37,10 @@ dependencies {
     implementation("org.eclipse.keyple:keyple-service-resource-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
     implementation("org.eclipse.keyple:keyple-util-java-lib:2.0.0-SNAPSHOT") { isChanging = true }
     implementation("org.slf4j:slf4j-api:1.7.25")
+    testImplementation("org.slf4j:slf4j-simple:1.7.25")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.assertj:assertj-core:3.15.0")
+    testImplementation("org.mockito:mockito-core:2.28.2")
 }
 
 val javaSourceLevel: String by project

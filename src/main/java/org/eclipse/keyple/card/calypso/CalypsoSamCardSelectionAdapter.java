@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Implementation of {@link SamCardSelection}.
+ * Implementation of {@link CalypsoSamSelection}.
  *
  * <p>If not specified, the SAM product type used for unlocking is {@link
  * org.calypsonet.terminal.calypso.sam.CalypsoSam.ProductType#SAM_C1}.
@@ -45,7 +45,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
 
   /**
    * (package-private)<br>
-   * Creates a {@link SamCardSelection}.
+   * Creates a {@link CalypsoSamSelection}.
    *
    * @since 2.0
    */
@@ -90,7 +90,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    * @since 2.0
    */
   @Override
-  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) {
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
 
     if (commandBuilders.size() == 1) {
       // an unlock command has been requested
@@ -103,8 +103,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
       try {
         commandBuilders.get(0).createResponseParser(apduResponses.get(0)).checkStatus();
       } catch (CalypsoSamCommandException e) {
-        // TODO check what to do here!
-        logger.error("An exception occurred while parse the SAM responses: {}", e.getMessage());
+        throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
     }
 

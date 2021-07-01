@@ -114,8 +114,7 @@ class SamCommandProcessor {
     if (!isDiversificationDone) {
       // build the SAM Select Diversifier command to provide the SAM with the card S/N
       AbstractApduCommandBuilder selectDiversifier =
-          new SamSelectDiversifierBuilder(
-              samProductType, ((CalypsoCardAdapter) calypsoCard).getCalypsoSerialNumberFull());
+          new SamSelectDiversifierBuilder(samProductType, calypsoCard.getCalypsoSerialNumberFull());
 
       apduRequests.add(selectDiversifier.getApduRequest());
 

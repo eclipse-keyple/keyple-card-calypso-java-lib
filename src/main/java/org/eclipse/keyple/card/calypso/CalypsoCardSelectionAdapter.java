@@ -205,8 +205,20 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
-    commandBuilders.add(
-        CalypsoCardUtilAdapter.prepareReadRecordFile(calypsoCardClass, sfi, recordNumber));
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            recordNumber,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX,
+            "recordNumber");
+
+    CardReadRecordsBuilder cardReadRecordsBuilder =
+        new CardReadRecordsBuilder(
+            calypsoCardClass, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);
+    commandBuilders.add(cardReadRecordsBuilder);
+
     return this;
   }
 
@@ -222,10 +234,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     // create the builder and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        commandBuilders.add(CalypsoCardUtilAdapter.prepareGetDataFci(calypsoCardClass));
+        commandBuilders.add(new CardGetDataFciBuilder(calypsoCardClass));
         break;
       case FCP_FOR_CURRENT_FILE:
-        commandBuilders.add(CalypsoCardUtilAdapter.prepareGetDataFcp(calypsoCardClass));
+        commandBuilders.add(new CardGetDataFcpBuilder(calypsoCardClass));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -241,8 +253,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
+
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
-    commandBuilders.add(CalypsoCardUtilAdapter.prepareSelectFile(calypsoCardClass, lid));
+
+    commandBuilders.add(new CardSelectFileBuilder(calypsoCardClass, lid));
     return this;
   }
 
@@ -268,7 +282,11 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
-    commandBuilders.add(CalypsoCardUtilAdapter.prepareSelectFile(calypsoCardClass, selectControl));
+
+    Assert.getInstance().notNull(selectControl, "selectControl");
+
+    commandBuilders.add(new CardSelectFileBuilder(calypsoCardClass, selectControl));
+
     return this;
   }
 
