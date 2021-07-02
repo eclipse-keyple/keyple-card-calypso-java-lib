@@ -155,6 +155,10 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
       }
 
       dfName = tlv.getValue();
+      if (dfName.length < 5 || dfName.length > 16) {
+        logger.error("Invalid DF name length: {}. Should be between 5 and 16.", dfName.length);
+        return;
+      }
 
       /* Get the FCI Proprietary Template */
       if (!tlv.parse(TAG_FCI_PROPRIETARY_TEMPLATE, tlv.getPosition())) {
@@ -175,6 +179,11 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
       }
 
       applicationSN = tlv.getValue();
+      if (applicationSN.length != 8) {
+        logger.error(
+            "Invalid application serial number length: {}. Should be 8.", applicationSN.length);
+        return;
+      }
 
       if (logger.isDebugEnabled()) {
         logger.debug("Application Serial Number = {}", ByteArrayUtil.toHex(applicationSN));
@@ -187,6 +196,11 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
       }
 
       discretionaryData = tlv.getValue();
+
+      if (discretionaryData.length < 7) {
+        logger.error("Invalid startup info length: {}. Should be >= 7.", discretionaryData.length);
+        return;
+      }
 
       if (logger.isDebugEnabled()) {
         logger.debug("Discretionary Data = {}", ByteArrayUtil.toHex(discretionaryData));

@@ -21,8 +21,6 @@ import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -34,8 +32,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.0
  */
 class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
-  private static final Logger logger =
-      LoggerFactory.getLogger(CalypsoSamCardSelectionAdapter.class);
+
   private final CardSelectorAdapter samCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
       commandBuilders;

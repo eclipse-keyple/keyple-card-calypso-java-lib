@@ -32,6 +32,8 @@ public class CalypsoCardAdapterTest {
   public static final String DF_NAME = "315449432E49434131";
   public static final String STARTUP_INFO_PRIME_REVISION_2 = "0A3C1005141001";
   public static final String STARTUP_INFO_PRIME_REVISION_3 = "0A3C2005141001";
+  public static final String STARTUP_INFO_TOO_SHORT = "0A3C20051410";
+  public static final String STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE = "0A3C2005141001FF";
   public static final String STARTUP_INFO_PRIME_REVISION_3_PIN = "0A3C2105141001";
   public static final String STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE = "0A3C2205141001";
   public static final String STARTUP_INFO_PRIME_REVISION_3_RATIFICATION_ON_DESELECT =
@@ -41,6 +43,7 @@ public class CalypsoCardAdapterTest {
   public static final String STARTUP_INFO_SESSION_MODIFICATION_XX = "%02X3C2005141001";
   public static final String STARTUP_INFO_PLATFORM_XX = "0A%02X2005141001";
   public static final String STARTUP_INFO_APP_TYPE_XX = "0A3C%02X05141001";
+  public static final String STARTUP_INFO_BASIC_APP_TYPE_XX = "043C%02X05141001";
   public static final String STARTUP_INFO_SUBTYPE_XX = "0A3C20%02X141001";
   public static final String STARTUP_INFO_SOFTWARE_ISSUER_XX = "0A3C2005%02X1001";
   public static final String STARTUP_INFO_SOFTWARE_VERSION_XX = "0A3C200514%02X01";
@@ -164,7 +167,7 @@ public class CalypsoCardAdapterTest {
           buildSelectApplicationResponse(
               DF_NAME,
               CALYPSO_SERIAL_NUMBER,
-              String.format(STARTUP_INFO_APP_TYPE_XX, appType),
+              String.format(STARTUP_INFO_BASIC_APP_TYPE_XX, appType),
               SW1SW2_OK);
       calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
       assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.BASIC);
@@ -244,6 +247,27 @@ public class CalypsoCardAdapterTest {
             String.format(STARTUP_INFO_SESSION_MODIFICATION_XX, (byte) 0x38),
             SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void initializeWithFci_whenStartupInfoIsShorter_shouldThrowParsingException() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME, CALYPSO_SERIAL_NUMBER_HCE, STARTUP_INFO_TOO_SHORT, SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+  }
+
+  @Test
+  public void initializeWithFci_whenStartupInfoIsLarger_shouldProvideWholeData() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER_HCE,
+            STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE,
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getStartupInfoRawData())
+        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE));
   }
 
   @Test
@@ -430,6 +454,30 @@ public class CalypsoCardAdapterTest {
     assertThat(calypsoCardAdapter.getApplicationType()).isEqualTo((byte) 0x33);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void getApplicationSubType_whenValueIs00_shouldThrowIAE() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SUBTYPE_XX, 0x00),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    calypsoCardAdapter.getApplicationSubtype();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void getApplicationSubType_whenValueIsFF_shouldThrowIAE() {
+    ApduResponseApi selectApplicationResponse =
+        buildSelectApplicationResponse(
+            DF_NAME,
+            CALYPSO_SERIAL_NUMBER,
+            String.format(STARTUP_INFO_SUBTYPE_XX, 0xFF),
+            SW1SW2_OK);
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    calypsoCardAdapter.getApplicationSubtype();
+  }
+
   @Test
   public void getApplicationSubType_shouldReturnApplicationSubType() {
     ApduResponseApi selectApplicationResponse =
@@ -502,7 +550,7 @@ public class CalypsoCardAdapterTest {
     byte[] dfName = ByteArrayUtil.fromHex(dfNameAsHexString);
     byte[] serialNumber = ByteArrayUtil.fromHex(serialNumberAsHexString);
     byte[] startupInfo = ByteArrayUtil.fromHex(startupInfoAsHexString);
-    byte[] selAppResponse = new byte[30 + dfName.length];
+    byte[] selAppResponse = new byte[23 + dfName.length + startupInfo.length];
 
     selAppResponse[0] = (byte) 0x6F;
     selAppResponse[1] = (byte) (26 + dfName.length);
@@ -518,10 +566,10 @@ public class CalypsoCardAdapterTest {
     selAppResponse[10 + dfName.length] = (byte) 0x08;
     System.arraycopy(serialNumber, 0, selAppResponse, 11 + dfName.length, 8);
     selAppResponse[19 + dfName.length] = (byte) 0x53;
-    selAppResponse[20 + dfName.length] = (byte) 0x07;
-    System.arraycopy(startupInfo, 0, selAppResponse, 21 + dfName.length, 7);
-    selAppResponse[28 + dfName.length] = (byte) ((statusWord & 0xFF00) >> 8);
-    selAppResponse[29 + dfName.length] = (byte) (statusWord & 0xFF);
+    selAppResponse[20 + dfName.length] = (byte) (startupInfo.length);
+    System.arraycopy(startupInfo, 0, selAppResponse, 21 + dfName.length, startupInfo.length);
+    selAppResponse[21 + dfName.length + startupInfo.length] = (byte) ((statusWord & 0xFF00) >> 8);
+    selAppResponse[22 + dfName.length + startupInfo.length] = (byte) (statusWord & 0xFF);
     return new ApduResponseAdapter(selAppResponse);
   }
 }

@@ -41,6 +41,8 @@ public class CardTransactionManagerAdapterTest {
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C21051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C22051410019000";
+  private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE =
+      "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C12051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C20051410016283";
   private static final String SAM_C1_POWER_ON_DATA = "3B3F9600805A4880C120501711223344829000";
@@ -196,6 +198,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_SV_GET_DEBIT_RSP =
       "790073A54BC97DFA" + SV_BALANCE_STR + "FFFE0000000079123456780000DD0000160072" + SW1SW2_OK;
   private static final String CARD_SV_GET_RELOAD_CMD = "007C000700";
+  private static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000700";
   private static final String CARD_SV_GET_RELOAD_RSP =
       "79007221D35F0E36"
           + SV_BALANCE_STR
@@ -1067,6 +1070,26 @@ public class CardTransactionManagerAdapterTest {
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_RELOAD_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO);
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void prepareSvGet_whenSvOperationReloadWithPrimeRev2_shouldPrepareSvGetReloadApdu()
+      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE)));
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_PRIME_REV2_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
