@@ -342,8 +342,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processOpening_whenNoCommandsArePrepared_shouldExchangeApduWithCardAndSam()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
@@ -370,8 +369,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processOpening_whenOneReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
@@ -399,8 +397,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processOpening_whenTwoReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
     CardRequestSpi cardCardRequest =
@@ -431,8 +428,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = UnauthorizedKeyException.class)
   public void processOpening_whenKeyNotAuthorized_shouldThrowUnauthorizedKeyException()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     when(cardSecuritySetting.isSessionKeyAuthorized(any(Byte.class), any(Byte.class)))
         .thenReturn(false);
     CardRequestSpi samCardRequest =
@@ -451,8 +447,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processCardCommands_whenOutOfSession_shouldExchangeApduWithCardOnly()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi cardCardRequest =
         createCardRequest(
             CARD_READ_REC_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD, CARD_READ_REC_SFI10_REC1_CMD);
@@ -479,8 +474,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processClosing_whenASessionIsOpen_shouldExchangeApduWithCardAndSam()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     // open sesion
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
@@ -544,8 +538,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = CardCloseSecureSessionException.class)
   public void processClosing_whenCloseSessionFails_shouldThrowCardCloseSecureSessionException()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     // open sesion
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
@@ -589,8 +582,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = SessionAuthenticationException.class)
   public void processClosing_whenCardAuthenticationFails_shouldThrowSessionAuthenticationException()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     // open session
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
@@ -644,9 +636,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void processCancel_whenASessionIsOpen_shouldSendCancelApduToCard()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void processCancel_whenASessionIsOpen_shouldSendCancelApduToCard() throws Exception {
     // open session
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
@@ -712,8 +702,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void processVerifyPin_whenPINTransmittedInPlainText_shouldSendApduVerifyPIN()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     when(cardSecuritySetting.isPinPlainTransmissionEnabled()).thenReturn(true);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
@@ -750,8 +739,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareSelectFile_whenLidIs1234_shouldPrepareSelectFileApduWith1234()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     byte[] lid = new byte[] {(byte) 0x12, (byte) 0x34};
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
@@ -769,8 +757,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsFirstEF_shouldPrepareSelectFileApduWithP2_02_P1_00()
-          throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-              CardBrokenCommunicationException {
+          throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_FIRST_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
@@ -787,8 +774,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsNextEF_shouldPrepareSelectFileApduWithP2_02_P1_02()
-          throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-              CardBrokenCommunicationException {
+          throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_NEXT_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
@@ -805,8 +791,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsCurrentEF_shouldPrepareSelectFileApduWithP2_09_P1_00()
-          throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-              CardBrokenCommunicationException {
+          throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_CURRENT_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
     when(cardReader.transmitCardRequest(
@@ -827,8 +812,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareGetData_whenGetDataTagIsFCP_shouldPrepareSelectFileApduWithTagFCP()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCP_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCP_RSP);
     when(cardReader.transmitCardRequest(
@@ -844,8 +828,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareGetData_whenGetDataTagIsFCI_shouldPrepareSelectFileApduWithTagFCI()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCI_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCI_RSP);
     when(cardReader.transmitCardRequest(
@@ -877,8 +860,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void
       prepareReadRecordFile_whenSfi07RecNumber1_shouldPrepareReadRecordApduWithSfi07RecNumber1()
-          throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-              CardBrokenCommunicationException {
+          throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_REC_SFI7_REC1_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
     when(cardReader.transmitCardRequest(
@@ -1009,8 +991,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareCheckPinStatus_whenPinFeatureIsAvailable_shouldPrepareCheckPinStatusApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
@@ -1043,9 +1024,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
@@ -1063,9 +1042,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
@@ -1084,8 +1061,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareSvGet_whenSvOperationReloadWithPrimeRev2_shouldPrepareSvGetReloadApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+      throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE)));
@@ -1103,9 +1079,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws Exception {
     CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
     when(samReader.transmitCardRequest(
@@ -1115,9 +1089,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws Exception {
     CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
     when(samReader.transmitCardRequest(
@@ -1148,9 +1120,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareInvalidate_whenCardIsNotInvalidated_prepareInvalidateApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareInvalidate_whenCardIsNotInvalidated_prepareInvalidateApdu() throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_INVALIDATE_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -1170,9 +1140,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu()
-      throws UnexpectedStatusWordException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
+  public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
