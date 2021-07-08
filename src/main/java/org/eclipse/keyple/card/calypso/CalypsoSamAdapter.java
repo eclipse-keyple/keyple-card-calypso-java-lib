@@ -117,7 +117,55 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the class byte to use for the provided product type.
+   *
+   * @return A byte.
+   * @since 2.0
+   */
+  static byte getClassByte(CalypsoSam.ProductType type) {
+    if (type == CalypsoSam.ProductType.SAM_S1DX || type == CalypsoSam.ProductType.CSAM_F) {
+      return (byte) 0x94;
+    }
+    return (byte) 0x80;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the class byte to use for the current product type.
+   *
+   * @return A byte.
+   * @since 2.0
+   */
+  byte getClassByte() {
+    return getClassByte(samProductType);
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the maximum length allowed for digest commands.
+   *
+   * @return An positive int.
+   * @since 2.0
+   */
+  int getMaxDigestDataLength() {
+    switch (samProductType) {
+      case SAM_C1:
+        return 255;
+      case SAM_S1DX:
+        return 70;
+      case SAM_S1E1:
+        return 240;
+      case CSAM_F:
+        return 247;
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * {@inheritDoc}<br>
+   * No select application for a SAM.
    *
    * @since 2.0
    */

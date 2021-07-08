@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.*;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -133,15 +135,15 @@ final class CalypsoCardUtilAdapter {
     cardSelectFileParser.checkStatus();
 
     byte[] proprietaryInformation = cardSelectFileParser.getProprietaryInformation();
-    byte sfi = proprietaryInformation[CalypsoCardConstant.SEL_SFI_OFFSET];
-    byte fileType = proprietaryInformation[CalypsoCardConstant.SEL_TYPE_OFFSET];
+    byte sfi = proprietaryInformation[SEL_SFI_OFFSET];
+    byte fileType = proprietaryInformation[SEL_TYPE_OFFSET];
     switch (fileType) {
-      case CalypsoCardConstant.FILE_TYPE_MF:
-      case CalypsoCardConstant.FILE_TYPE_DF:
+      case FILE_TYPE_MF:
+      case FILE_TYPE_DF:
         DirectoryHeader directoryHeader = createDirectoryHeader(proprietaryInformation);
         calypsoCard.setDirectoryHeader(directoryHeader);
         break;
-      case CalypsoCardConstant.FILE_TYPE_EF:
+      case FILE_TYPE_EF:
         FileHeader fileHeader = createFileHeader(proprietaryInformation);
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
@@ -437,46 +439,30 @@ final class CalypsoCardUtilAdapter {
    * @return A {@link DirectoryHeader} object
    */
   private static DirectoryHeader createDirectoryHeader(byte[] proprietaryInformation) {
-    byte[] accessConditions = new byte[CalypsoCardConstant.SEL_AC_LENGTH];
-    System.arraycopy(
-        proprietaryInformation,
-        CalypsoCardConstant.SEL_AC_OFFSET,
-        accessConditions,
-        0,
-        CalypsoCardConstant.SEL_AC_LENGTH);
+    byte[] accessConditions = new byte[SEL_AC_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
 
-    byte[] keyIndexes = new byte[CalypsoCardConstant.SEL_NKEY_LENGTH];
-    System.arraycopy(
-        proprietaryInformation,
-        CalypsoCardConstant.SEL_NKEY_OFFSET,
-        keyIndexes,
-        0,
-        CalypsoCardConstant.SEL_NKEY_LENGTH);
+    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
 
-    byte dfStatus = proprietaryInformation[CalypsoCardConstant.SEL_DF_STATUS_OFFSET];
+    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
 
     short lid =
         (short)
-            (((proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
 
     return DirectoryHeaderAdapter.builder()
         .lid(lid)
         .accessConditions(accessConditions)
         .keyIndexes(keyIndexes)
         .dfStatus(dfStatus)
-        .kvc(
-            WriteAccessLevel.PERSONALIZATION,
-            proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET])
-        .kvc(WriteAccessLevel.LOAD, proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET + 1])
-        .kvc(
-            WriteAccessLevel.DEBIT, proprietaryInformation[CalypsoCardConstant.SEL_KVCS_OFFSET + 2])
-        .kif(
-            WriteAccessLevel.PERSONALIZATION,
-            proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET])
-        .kif(WriteAccessLevel.LOAD, proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET + 1])
-        .kif(
-            WriteAccessLevel.DEBIT, proprietaryInformation[CalypsoCardConstant.SEL_KIFS_OFFSET + 2])
+        .kvc(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KVCS_OFFSET])
+        .kvc(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KVCS_OFFSET + 1])
+        .kvc(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KVCS_OFFSET + 2])
+        .kif(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KIFS_OFFSET])
+        .kif(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KIFS_OFFSET + 1])
+        .kif(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KIFS_OFFSET + 2])
         .build();
   }
 
@@ -489,19 +475,19 @@ final class CalypsoCardUtilAdapter {
   private static ElementaryFile.Type getEfTypeFromCardValue(byte efType) {
     ElementaryFile.Type fileType;
     switch (efType) {
-      case CalypsoCardConstant.EF_TYPE_BINARY:
+      case EF_TYPE_BINARY:
         fileType = ElementaryFile.Type.BINARY;
         break;
-      case CalypsoCardConstant.EF_TYPE_LINEAR:
+      case EF_TYPE_LINEAR:
         fileType = ElementaryFile.Type.LINEAR;
         break;
-      case CalypsoCardConstant.EF_TYPE_CYCLIC:
+      case EF_TYPE_CYCLIC:
         fileType = ElementaryFile.Type.CYCLIC;
         break;
-      case CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS:
+      case EF_TYPE_SIMULATED_COUNTERS:
         fileType = ElementaryFile.Type.SIMULATED_COUNTERS;
         break;
-      case CalypsoCardConstant.EF_TYPE_COUNTERS:
+      case EF_TYPE_COUNTERS:
         fileType = ElementaryFile.Type.COUNTERS;
         break;
       default:
@@ -520,47 +506,37 @@ final class CalypsoCardUtilAdapter {
   private static FileHeader createFileHeader(byte[] proprietaryInformation) {
 
     ElementaryFile.Type fileType =
-        getEfTypeFromCardValue(proprietaryInformation[CalypsoCardConstant.SEL_EF_TYPE_OFFSET]);
+        getEfTypeFromCardValue(proprietaryInformation[SEL_EF_TYPE_OFFSET]);
 
     int recordSize;
     int recordsNumber;
     if (fileType == ElementaryFile.Type.BINARY) {
       recordSize =
-          ((proprietaryInformation[CalypsoCardConstant.SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
-              | (proprietaryInformation[CalypsoCardConstant.SEL_NUM_REC_OFFSET] & 0x000000ff);
+          ((proprietaryInformation[SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
+              | (proprietaryInformation[SEL_NUM_REC_OFFSET] & 0x000000ff);
       recordsNumber = 1;
     } else {
-      recordSize = proprietaryInformation[CalypsoCardConstant.SEL_REC_SIZE_OFFSET];
-      recordsNumber = proprietaryInformation[CalypsoCardConstant.SEL_NUM_REC_OFFSET];
+      recordSize = proprietaryInformation[SEL_REC_SIZE_OFFSET];
+      recordsNumber = proprietaryInformation[SEL_NUM_REC_OFFSET];
     }
 
-    byte[] accessConditions = new byte[CalypsoCardConstant.SEL_AC_LENGTH];
-    System.arraycopy(
-        proprietaryInformation,
-        CalypsoCardConstant.SEL_AC_OFFSET,
-        accessConditions,
-        0,
-        CalypsoCardConstant.SEL_AC_LENGTH);
+    byte[] accessConditions = new byte[SEL_AC_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
 
-    byte[] keyIndexes = new byte[CalypsoCardConstant.SEL_NKEY_LENGTH];
-    System.arraycopy(
-        proprietaryInformation,
-        CalypsoCardConstant.SEL_NKEY_OFFSET,
-        keyIndexes,
-        0,
-        CalypsoCardConstant.SEL_NKEY_LENGTH);
+    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
 
-    byte dfStatus = proprietaryInformation[CalypsoCardConstant.SEL_DF_STATUS_OFFSET];
+    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
 
     short sharedReference =
         (short)
-            (((proprietaryInformation[CalypsoCardConstant.SEL_DATA_REF_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[CalypsoCardConstant.SEL_DATA_REF_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[SEL_DATA_REF_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_DATA_REF_OFFSET + 1] & 0x00ff));
 
     short lid =
         (short)
-            (((proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[CalypsoCardConstant.SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
 
     return FileHeaderAdapter.builder()
         .lid(lid)

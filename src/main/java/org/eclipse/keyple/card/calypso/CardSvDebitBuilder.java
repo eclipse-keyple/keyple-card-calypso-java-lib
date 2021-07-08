@@ -111,7 +111,9 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
+                ((CalypsoCardAdapter) calypsoCard).getCardClass() == CalypsoCardClass.LEGACY
+                    ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
+                    : CalypsoCardClass.ISO.getValue(),
                 command.getInstructionByte(),
                 p1,
                 p2,

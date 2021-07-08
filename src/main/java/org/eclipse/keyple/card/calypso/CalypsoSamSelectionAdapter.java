@@ -13,6 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
@@ -21,8 +23,6 @@ import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -33,9 +33,8 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
-  private static final Logger logger =
-      LoggerFactory.getLogger(CalypsoSamCardSelectionAdapter.class);
+class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
+
   private final CardSelectorAdapter samCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
       commandBuilders;
@@ -49,9 +48,8 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    *
    * @since 2.0
    */
-  CalypsoSamCardSelectionAdapter() {
+  CalypsoSamSelectionAdapter() {
     samCardSelector = new CardSelectorAdapter();
-    productType = CalypsoSam.ProductType.SAM_C1;
     this.commandBuilders =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
   }
@@ -94,14 +92,15 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
 
     if (commandBuilders.size() == 1) {
       // an unlock command has been requested
-      List<ApduResponseApi> apduResponses =
-          cardSelectionResponse.getCardResponse().getApduResponses();
-      if (apduResponses == null) {
+      if (cardSelectionResponse.getCardResponse() == null
+          || cardSelectionResponse.getCardResponse().getApduResponses().isEmpty()) {
         throw new DesynchronizedExchangesException("Mismatch in the number of requests/responses");
       }
+      ApduResponseApi apduResponse =
+          cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       // check the SAM response to the unlock command
       try {
-        commandBuilders.get(0).createResponseParser(apduResponses.get(0)).checkStatus();
+        commandBuilders.get(0).createResponseParser(apduResponse).checkStatus();
       } catch (CalypsoSamCommandException e) {
         throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
@@ -117,6 +116,9 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    */
   @Override
   public CalypsoSamSelection filterByProductType(CalypsoSam.ProductType productType) {
+
+    Assert.getInstance().notNull(productType, "productType");
+
     this.productType = productType;
     return this;
   }
@@ -128,6 +130,16 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    */
   @Override
   public CalypsoSamSelection filterBySerialNumber(String serialNumberRegex) {
+
+    Assert.getInstance().notNull(serialNumberRegex, "serialNumberRegex");
+
+    try {
+      Pattern.compile(serialNumberRegex);
+    } catch (PatternSyntaxException exception) {
+      throw new IllegalArgumentException(
+          String.format("Invalid regular expression: '%s'.", serialNumberRegex));
+    }
+
     this.serialNumberRegex = serialNumberRegex;
     return this;
   }

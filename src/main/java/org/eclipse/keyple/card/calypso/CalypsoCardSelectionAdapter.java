@@ -42,7 +42,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
       commandBuilders;
   private final CardSelectorAdapter cardSelector;
-  private final CalypsoCardClass calypsoCardClass;
 
   /**
    * (package-private)<br>
@@ -57,12 +56,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     this.commandBuilders =
         new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
-    // deduces the class of the card according to the type of selection
-    if (cardSelector.getAid() == null) {
-      calypsoCardClass = CalypsoCardClass.LEGACY;
-    } else {
-      calypsoCardClass = CalypsoCardClass.ISO;
-    }
   }
 
   /**
@@ -123,6 +116,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection filterByDfName(String aid) {
+
+    Assert.getInstance().isTrue(ByteArrayUtil.isValidHexString(aid), "aid format");
+
     this.filterByDfName(ByteArrayUtil.fromHex(aid));
     return this;
   }
@@ -183,6 +179,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection addSuccessfulStatusWord(int statusWord) {
+
+    Assert.getInstance().isInRange(statusWord, 0, 0xFFFF, "statusWord");
+
     cardSelector.addSuccessfulStatusWord(statusWord);
     return null;
   }
@@ -216,7 +215,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     CardReadRecordsBuilder cardReadRecordsBuilder =
         new CardReadRecordsBuilder(
-            calypsoCardClass, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);
+            CalypsoCardClass.ISO, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);
     commandBuilders.add(cardReadRecordsBuilder);
 
     return this;
@@ -234,10 +233,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     // create the builder and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        commandBuilders.add(new CardGetDataFciBuilder(calypsoCardClass));
+        commandBuilders.add(new CardGetDataFciBuilder(CalypsoCardClass.ISO));
         break;
       case FCP_FOR_CURRENT_FILE:
-        commandBuilders.add(new CardGetDataFcpBuilder(calypsoCardClass));
+        commandBuilders.add(new CardGetDataFcpBuilder(CalypsoCardClass.ISO));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -256,7 +255,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
 
-    commandBuilders.add(new CardSelectFileBuilder(calypsoCardClass, lid));
+    commandBuilders.add(new CardSelectFileBuilder(CalypsoCardClass.ISO, lid));
     return this;
   }
 
@@ -285,7 +284,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(selectControl, "selectControl");
 
-    commandBuilders.add(new CardSelectFileBuilder(calypsoCardClass, selectControl));
+    commandBuilders.add(new CardSelectFileBuilder(CalypsoCardClass.ISO, selectControl));
 
     return this;
   }

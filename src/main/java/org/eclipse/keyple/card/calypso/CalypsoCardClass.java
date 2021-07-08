@@ -20,9 +20,11 @@ package org.eclipse.keyple.card.calypso;
  */
 enum CalypsoCardClass {
 
-  /** Calypso revision 1 / B Prime protocol */
+  /** Calypso revision 1/2 / B Prime protocol, regular commands */
   LEGACY((byte) 0x94),
-  /** Calypso revision 2 and higher */
+  /** Calypso revision 1/2 / B Prime protocol, Stored Value commands */
+  LEGACY_STORED_VALUE((byte) 0xFA),
+  /** Calypso revision 3 and higher */
   ISO((byte) 0x00);
 
   private final byte cla;

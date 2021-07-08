@@ -45,7 +45,10 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
   public CardSvGetBuilder(
       CalypsoCardClass calypsoCardClass, CalypsoCard calypsoCard, SvOperation svOperation) {
     super(command);
-    byte cla = calypsoCardClass.getValue();
+    byte cla =
+        calypsoCardClass == CalypsoCardClass.LEGACY
+            ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
+            : CalypsoCardClass.ISO.getValue();
     byte p1 = calypsoCard.isExtendedModeSupported() ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 

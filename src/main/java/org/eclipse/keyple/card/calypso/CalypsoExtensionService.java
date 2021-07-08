@@ -97,7 +97,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @since 2.0
    */
   public CalypsoSamSelection createSamSelection() {
-    return new CalypsoSamCardSelectionAdapter();
+    return new CalypsoSamSelectionAdapter();
   }
 
   /**

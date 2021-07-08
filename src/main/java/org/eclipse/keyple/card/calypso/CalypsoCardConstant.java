@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0
  */
-class CalypsoCardConstant {
+final class CalypsoCardConstant {
 
   static final int MASK_3_BITS = 0x7; // 7
   static final int MASK_4_BITS = 0xF; // 15

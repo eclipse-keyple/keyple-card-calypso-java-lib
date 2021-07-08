@@ -87,6 +87,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte[] svGetHeader;
   private byte[] svGetData;
   private byte[] svOperationSignature;
+  private byte applicationSubType;
+  private byte applicationType;
+  private byte sessionModification;
 
   /**
    * Constructor.
@@ -172,25 +175,39 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     calypsoSerialNumber = cardFciParser.getApplicationSerialNumber();
     startupInfo = cardFciParser.getDiscretionaryData();
 
-    byte applicationType = getApplicationType();
-
+    applicationType = startupInfo[SI_APPLICATION_TYPE];
     productType = computeProductType(applicationType & 0xFF);
+
+    applicationSubType = startupInfo[SI_APPLICATION_SUBTYPE];
+    if (applicationSubType == (byte) 0x00 || applicationSubType == (byte) 0xFF) {
+      throw new IllegalArgumentException(
+          "Unexpected application subtype: " + String.format("%02X", applicationSubType));
+    }
+    sessionModification = startupInfo[SI_BUFFER_SIZE_INDICATOR];
 
     if (productType == ProductType.PRIME_REVISION_2) {
       calypsoCardClass = CalypsoCardClass.LEGACY;
       // old cards have their modification counter in number of commands
       isModificationCounterInBytes = false;
       modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
+    } else if (productType == ProductType.BASIC) {
+      if (sessionModification < 0x04 || sessionModification > 0x37) {
+        throw new IllegalArgumentException(
+            "Wrong session modification value for a Basic type (should be between 04h and 37h): "
+                + String.format("%02X", sessionModification));
+      }
+      calypsoCardClass = CalypsoCardClass.ISO;
+      isModificationCounterInBytes = false;
+      modificationsCounterMax = 3; // TODO Verify this
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
       // session buffer size
-      int bufferSizeIndicator = startupInfo[SI_BUFFER_SIZE_INDICATOR];
-      if (bufferSizeIndicator < (byte) 0x06 || bufferSizeIndicator > (byte) 0x37) {
+      if (sessionModification < (byte) 0x06 || sessionModification > (byte) 0x37) {
         throw new IllegalArgumentException(
             "Session modifications byte should be in range 06h to 47h. Was: "
-                + String.format("%02X", bufferSizeIndicator));
+                + String.format("%02X", sessionModification));
       }
-      modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[bufferSizeIndicator];
+      modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
     }
 
     isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
@@ -353,7 +370,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte getApplicationType() {
-    return startupInfo[SI_APPLICATION_TYPE];
+    return applicationType;
   }
 
   /**
@@ -413,7 +430,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte getApplicationSubtype() {
-    return startupInfo[SI_APPLICATION_SUBTYPE];
+    return applicationSubType;
   }
 
   /**
@@ -453,7 +470,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte getSessionModification() {
-    return startupInfo[SI_BUFFER_SIZE_INDICATOR];
+    return sessionModification;
   }
 
   /**
@@ -601,13 +618,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * The card class is the ISO7816 class to be used with the current card.
+   * (package-private)<br>
+   * Gets the current card class.
    *
-   * <p>It determined from the card revision
-   *
-   * <p>Two classes are possible: LEGACY and ISO.
-   *
-   * @return the card class determined from the card revision
+   * @return A not null reference.
+   * @since 2.0
    */
   CalypsoCardClass getCardClass() {
     return calypsoCardClass;
