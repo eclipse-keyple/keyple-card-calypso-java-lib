@@ -33,7 +33,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0
  */
-class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
+class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
 
   private final CardSelectorAdapter samCardSelector;
   private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
@@ -48,7 +48,7 @@ class CalypsoSamCardSelectionAdapter implements CalypsoSamSelection, CardSelecti
    *
    * @since 2.0
    */
-  CalypsoSamCardSelectionAdapter() {
+  CalypsoSamSelectionAdapter() {
     samCardSelector = new CardSelectorAdapter();
     this.commandBuilders =
         new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();

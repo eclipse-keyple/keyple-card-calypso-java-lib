@@ -28,15 +28,15 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CalypsoSamCardSelectionAdapterTest {
+public class CalypsoSamSelectionAdapterTest {
 
   public static final String SAM_ATR = "3B3F9600805AAABBC1DDEEFF11223344829000";
-  private CalypsoSamCardSelectionAdapter samSelection;
+  private CalypsoSamSelectionAdapter samSelection;
 
   @Before
   public void setUp() {
     samSelection =
-        (CalypsoSamCardSelectionAdapter) CalypsoExtensionService.getInstance().createSamSelection();
+        (CalypsoSamSelectionAdapter) CalypsoExtensionService.getInstance().createSamSelection();
   }
 
   @Test(expected = IllegalArgumentException.class)

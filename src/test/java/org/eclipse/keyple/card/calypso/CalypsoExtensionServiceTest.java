@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -103,7 +102,7 @@ public class CalypsoExtensionServiceTest {
   public void createSamSelection_shouldReturnInstanceOfInternalSpi() {
     assertThat(service.createSamSelection())
         .isInstanceOf(CardSelectionSpi.class)
-        .isInstanceOf(CalypsoSamCardSelectionAdapter.class);
+        .isInstanceOf(CalypsoSamSelectionAdapter.class);
   }
 
   @Test
