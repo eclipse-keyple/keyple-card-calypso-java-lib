@@ -11,15 +11,11 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.core.util.bertlv.Tag.TagType.CONSTRUCTED;
-import static org.eclipse.keyple.core.util.bertlv.Tag.TagType.PRIMITIVE;
-
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.eclipse.keyple.core.util.bertlv.TLV;
-import org.eclipse.keyple.core.util.bertlv.Tag;
+import org.eclipse.keyple.core.util.bertlv.BerTlv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,25 +63,9 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
   }
 
   /* BER-TLV tags definitions */
-  /* FCI Template: application class, constructed, tag number Fh => tag field 6Fh */
-  private static final Tag TAG_FCI_TEMPLATE = new Tag(0x0F, Tag.APPLICATION, CONSTRUCTED, 1);
-  /* DF Name: context-specific class, primitive, tag number 4h => tag field 84h */
-  private static final Tag TAG_DF_NAME = new Tag(0x04, Tag.CONTEXT, PRIMITIVE, 1);
-  /*
-   * FCI Proprietary Template: context-specific class, constructed, tag number 5h => tag field A5h
-   */
-  private static final Tag TAG_FCI_PROPRIETARY_TEMPLATE =
-      new Tag(0x05, Tag.CONTEXT, CONSTRUCTED, 1);
-  /*
-   * FCI Issuer Discretionary Data: context-specific class, constructed, tag number Ch => tag
-   * field BF0Ch
-   */
-  private static final Tag TAG_FCI_ISSUER_DISCRETIONARY_DATA =
-      new Tag(0x0C, Tag.CONTEXT, CONSTRUCTED, 2);
-  /* Application Serial Number: private class, primitive, tag number 7h => tag field C7h */
-  private static final Tag TAG_APPLICATION_SERIAL_NUMBER = new Tag(0x07, Tag.PRIVATE, PRIMITIVE, 1);
-  /* Discretionary Data: application class, primitive, tag number 13h => tag field 53h */
-  private static final Tag TAG_DISCRETIONARY_DATA = new Tag(0x13, Tag.APPLICATION, PRIMITIVE, 1);
+  private static final int TAG_DF_NAME = 0x84;
+  private static final int TAG_APPLICATION_SERIAL_NUMBER = 0xC7;
+  private static final int TAG_DISCRETIONARY_DATA = 0x53;
 
   /** attributes result of th FCI parsing */
   private boolean isDfInvalidated = false;
@@ -127,7 +107,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    */
   public CardGetDataFciParser(ApduResponseApi response, CardGetDataFciBuilder builder) {
     super(response, builder);
-    TLV tlv;
+    Map<Integer, byte[]> tags;
 
     /* check the command status to determine if the DF has been invalidated */
     if (response.getStatusWord() == 0x6283) {
@@ -139,69 +119,45 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
     /* parse the raw data with the help of the TLV class */
     try {
       /* init TLV object with the raw data and extract the FCI Template */
-      final byte[] responseData = response.getApdu();
-      tlv = new TLV(responseData);
+      final byte[] responseData = response.getDataOut();
+      tags = BerTlv.parseSimple(responseData, true);
 
-      /* Get the FCI template */
-      if (!tlv.parse(TAG_FCI_TEMPLATE, 0)) {
-        logger.error("FCI parsing error: FCI template tag not found.");
+      dfName = tags.get(TAG_DF_NAME);
+      if (dfName == null) {
+        logger.error("DF name tag (84h) not found.");
         return;
       }
-
-      /* Get the DF Name */
-      if (!tlv.parse(TAG_DF_NAME, tlv.getPosition())) {
-        logger.error("FCI parsing error: DF name tag not found.");
-        return;
-      }
-
-      dfName = tlv.getValue();
       if (dfName.length < 5 || dfName.length > 16) {
         logger.error("Invalid DF name length: {}. Should be between 5 and 16.", dfName.length);
         return;
       }
-
-      /* Get the FCI Proprietary Template */
-      if (!tlv.parse(TAG_FCI_PROPRIETARY_TEMPLATE, tlv.getPosition())) {
-        logger.error("FCI parsing error: FCI proprietary template tag not found.");
-        return;
+      if (logger.isDebugEnabled()) {
+        logger.debug("DF name = {}", ByteArrayUtil.toHex(dfName));
       }
 
-      /* Get the FCI Issuer Discretionary Data */
-      if (!tlv.parse(TAG_FCI_ISSUER_DISCRETIONARY_DATA, tlv.getPosition())) {
-        logger.error("FCI parsing error: FCI issuer discretionary data tag not found.");
+      applicationSN = tags.get(TAG_APPLICATION_SERIAL_NUMBER);
+      if (applicationSN == null) {
+        logger.error("Serial Number tag (C7h) not found.");
         return;
       }
-
-      /* Get the Application Serial Number */
-      if (!tlv.parse(TAG_APPLICATION_SERIAL_NUMBER, tlv.getPosition())) {
-        logger.error("FCI parsing error: serial number tag not found.");
-        return;
-      }
-
-      applicationSN = tlv.getValue();
       if (applicationSN.length != 8) {
         logger.error(
             "Invalid application serial number length: {}. Should be 8.", applicationSN.length);
         return;
       }
-
       if (logger.isDebugEnabled()) {
         logger.debug("Application Serial Number = {}", ByteArrayUtil.toHex(applicationSN));
       }
 
-      /* Get the Discretionary Data */
-      if (!tlv.parse(TAG_DISCRETIONARY_DATA, tlv.getPosition())) {
-        logger.error("FCI parsing error: discretionary data tag not found.");
+      discretionaryData = tags.get(TAG_DISCRETIONARY_DATA);
+      if (discretionaryData == null) {
+        logger.error("Discretionary data tag (53h) not found.");
         return;
       }
-
-      discretionaryData = tlv.getValue();
-
       if (discretionaryData.length < 7) {
         logger.error("Invalid startup info length: {}. Should be >= 7.", discretionaryData.length);
         return;
       }
-
       if (logger.isDebugEnabled()) {
         logger.debug("Discretionary Data = {}", ByteArrayUtil.toHex(discretionaryData));
       }

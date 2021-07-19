@@ -22,36 +22,38 @@ import org.junit.Test;
 public class CalypsoCardAdapterTest {
 
   private CalypsoCardAdapter calypsoCardAdapter;
-  public static final String CALYPSO_SERIAL_NUMBER = "0000000012345678";
-  public static final String CALYPSO_SERIAL_NUMBER_HCE = "12340080FEDCBA98";
-  public static final String POWER_ON_DATA =
+  private static final String CALYPSO_SERIAL_NUMBER = "0000000012345678";
+  private static final String CALYPSO_SERIAL_NUMBER_HCE = "12340080FEDCBA98";
+  private static final String POWER_ON_DATA =
       "3B8F8001805A0A0103200311" + CALYPSO_SERIAL_NUMBER.substring(8) + "829000F7";
-  public static final String POWER_ON_DATA_BAD_LENGTH =
+  private static final String POWER_ON_DATA_BAD_LENGTH =
       "3B8F8001805A0A010320031124B77FE7829000F700";
 
-  public static final String DF_NAME = "315449432E49434131";
-  public static final String STARTUP_INFO_PRIME_REVISION_2 = "0A3C1005141001";
-  public static final String STARTUP_INFO_PRIME_REVISION_3 = "0A3C2005141001";
-  public static final String STARTUP_INFO_TOO_SHORT = "0A3C20051410";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE = "0A3C2005141001FF";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_PIN = "0A3C2105141001";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE = "0A3C2205141001";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_RATIFICATION_ON_DESELECT =
+  private static final String DF_NAME = "315449432E49434131";
+  private static final String STARTUP_INFO_PRIME_REVISION_2 = "0A3C1005141001";
+  private static final String STARTUP_INFO_PRIME_REVISION_3 = "0A3C2005141001";
+  private static final String STARTUP_INFO_TOO_SHORT = "0A3C20051410";
+  private static final String STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE = "0A3C2005141001FF";
+  private static final String STARTUP_INFO_PRIME_REVISION_3_PIN = "0A3C2105141001";
+  private static final String STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE = "0A3C2205141001";
+  private static final String STARTUP_INFO_PRIME_REVISION_3_RATIFICATION_ON_DESELECT =
       "0A3C2405141001";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_EXTENDED_MODE = "0A3C2805141001";
-  public static final String STARTUP_INFO_PRIME_REVISION_3_PKI_MODE = "0A3C3005141001";
-  public static final String STARTUP_INFO_SESSION_MODIFICATION_XX = "%02X3C2005141001";
-  public static final String STARTUP_INFO_PLATFORM_XX = "0A%02X2005141001";
-  public static final String STARTUP_INFO_APP_TYPE_XX = "0A3C%02X05141001";
-  public static final String STARTUP_INFO_BASIC_APP_TYPE_XX = "043C%02X05141001";
-  public static final String STARTUP_INFO_SUBTYPE_XX = "0A3C20%02X141001";
-  public static final String STARTUP_INFO_SOFTWARE_ISSUER_XX = "0A3C2005%02X1001";
-  public static final String STARTUP_INFO_SOFTWARE_VERSION_XX = "0A3C200514%02X01";
-  public static final String STARTUP_INFO_SOFTWARE_REVISION_XX = "0A3C20051410%02X";
-  public static final String STARTUP_INFO_APP_TYPE_00 = "0A3C0005141001";
-  public static final String STARTUP_INFO_APP_TYPE_FF = "0A3CFF05141001";
-  public static final int SW1SW2_OK = 0x9000;
-  public static final int SW1SW2_INVALIDATED = 0x6283;
+  private static final String STARTUP_INFO_PRIME_REVISION_3_EXTENDED_MODE = "0A3C2805141001";
+  private static final String STARTUP_INFO_PRIME_REVISION_3_PKI_MODE = "0A3C3005141001";
+  private static final String STARTUP_INFO_SESSION_MODIFICATION_XX = "%02X3C2005141001";
+  private static final String STARTUP_INFO_PLATFORM_XX = "0A%02X2005141001";
+  private static final String STARTUP_INFO_APP_TYPE_XX = "0A3C%02X05141001";
+  private static final String STARTUP_INFO_BASIC_APP_TYPE_XX = "043C%02X05141001";
+  private static final String STARTUP_INFO_SUBTYPE_XX = "0A3C20%02X141001";
+  private static final String STARTUP_INFO_SOFTWARE_ISSUER_XX = "0A3C2005%02X1001";
+  private static final String STARTUP_INFO_SOFTWARE_VERSION_XX = "0A3C200514%02X01";
+  private static final String STARTUP_INFO_SOFTWARE_REVISION_XX = "0A3C20051410%02X";
+  private static final String STARTUP_INFO_APP_TYPE_00 = "0A3C0005141001";
+  private static final String STARTUP_INFO_APP_TYPE_FF = "0A3CFF05141001";
+  private static final int SW1SW2_OK = 0x9000;
+  private static final int SW1SW2_INVALIDATED = 0x6283;
+  private final String SELECT_APPLICATION_RESPONSE_DIFFERENT_TAGS_ORDER =
+      "6F23A516BF0C1353070A3C2005141001C70800000000123456788409315449432E494341319000";
 
   @Before
   public void setUp() {
@@ -268,6 +270,19 @@ public class CalypsoCardAdapterTest {
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getStartupInfoRawData())
         .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE));
+  }
+
+  @Test
+  public void initializeWithFci_whenTagsAreInADifferentOrder_shouldProvideSameResult() {
+    ApduResponseApi selectApplicationResponse =
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_DIFFERENT_TAGS_ORDER));
+    calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
+    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(ByteArrayUtil.fromHex(DF_NAME));
+    assertThat(calypsoCardAdapter.getCalypsoSerialNumberFull())
+        .isEqualTo(ByteArrayUtil.fromHex(CALYPSO_SERIAL_NUMBER));
+    assertThat(calypsoCardAdapter.getStartupInfoRawData())
+        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3));
   }
 
   @Test
@@ -553,17 +568,17 @@ public class CalypsoCardAdapterTest {
     byte[] selAppResponse = new byte[23 + dfName.length + startupInfo.length];
 
     selAppResponse[0] = (byte) 0x6F;
-    selAppResponse[1] = (byte) (26 + dfName.length);
+    selAppResponse[1] = (byte) (11 + dfName.length + serialNumber.length + startupInfo.length);
     selAppResponse[2] = (byte) 0x84;
     selAppResponse[3] = (byte) (dfName.length);
     System.arraycopy(dfName, 0, selAppResponse, 4, dfName.length);
     selAppResponse[4 + dfName.length] = (byte) 0xA5;
-    selAppResponse[5 + dfName.length] = (byte) 0x16;
+    selAppResponse[5 + dfName.length] = (byte) (7 + serialNumber.length + startupInfo.length);
     selAppResponse[6 + dfName.length] = (byte) 0xBF;
     selAppResponse[7 + dfName.length] = (byte) 0x0C;
-    selAppResponse[8 + dfName.length] = (byte) 0x13;
+    selAppResponse[8 + dfName.length] = (byte) (4 + serialNumber.length + startupInfo.length);
     selAppResponse[9 + dfName.length] = (byte) 0xC7;
-    selAppResponse[10 + dfName.length] = (byte) 0x08;
+    selAppResponse[10 + dfName.length] = (byte) (serialNumber.length);
     System.arraycopy(serialNumber, 0, selAppResponse, 11 + dfName.length, 8);
     selAppResponse[19 + dfName.length] = (byte) 0x53;
     selAppResponse[20 + dfName.length] = (byte) (startupInfo.length);
