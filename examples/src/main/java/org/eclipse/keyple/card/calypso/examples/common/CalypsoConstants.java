@@ -58,8 +58,10 @@ public final class CalypsoConstants {
   // Security settings
   public static final String SAM_PROFILE_NAME = "SAM C1";
 
-  public static final byte PIN_CIPHERING_KEY_KIF = (byte) 0x30;
-  public static final byte PIN_CIPHERING_KEY_KVC = (byte) 0x79;
+  public static final byte PIN_MODIFICATION_CIPHERING_KEY_KIF = (byte) 0x21;
+  public static final byte PIN_MODIFICATION_CIPHERING_KEY_KVC = (byte) 0x79;
+  public static final byte PIN_VERIFICATION_CIPHERING_KEY_KIF = (byte) 0x30;
+  public static final byte PIN_VERIFICATION_CIPHERING_KEY_KVC = (byte) 0x79;
 
   public static final String PIN_OK = "0000";
   public static final String PIN_KO = "0001";
