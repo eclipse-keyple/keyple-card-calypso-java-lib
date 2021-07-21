@@ -289,7 +289,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     Byte kvc = samCommandProcessor.computeKvc(writeAccessLevel, cardKvc);
     Byte kif = samCommandProcessor.computeKif(writeAccessLevel, cardKif, kvc);
 
-    if (!cardSecuritySettings.isSessionKeyAuthorized(kif, kvc)) {
+    if (!((CardSecuritySettingAdapter) cardSecuritySettings).isSessionKeyAuthorized(kif, kvc)) {
       String logKif = kif != null ? Integer.toHexString(kif).toUpperCase() : "null";
       String logKvc = kvc != null ? Integer.toHexString(kvc).toUpperCase() : "null";
       throw new UnauthorizedKeyException(
@@ -890,7 +890,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // Finally, close the session as requested
     processAtomicClosing(
-        cardAtomicCommands, cardSecuritySettings.isRatificationMechanismEnabled(), channelControl);
+        cardAtomicCommands,
+        ((CardSecuritySettingAdapter) cardSecuritySettings).isRatificationMechanismEnabled(),
+        channelControl);
 
     // sets the flag indicating that the commands have been executed
     cardCommandManager.notifyCommandsProcessed();
@@ -961,7 +963,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           "No commands should have been prepared prior to a PIN submission.");
     }
 
-    if (cardSecuritySettings != null && !cardSecuritySettings.isPinPlainTransmissionEnabled()) {
+    if (cardSecuritySettings != null
+        && !((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
       cardCommandManager.addRegularCommand(new CardGetChallengeBuilder(calypsoCard.getCardClass()));
 
       // transmit and receive data with the card
@@ -992,6 +995,73 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     } else {
       cardCommandManager.addRegularCommand(
           new CardVerifyPinBuilder(calypsoCard.getCardClass(), false, pin));
+    }
+
+    // transmit and receive data with the card
+    processAtomicCardCommands(cardCommandManager.getCardCommandBuilders(), channelControl);
+
+    // sets the flag indicating that the commands have been executed
+    cardCommandManager.notifyCommandsProcessed();
+
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CardTransactionManager processChangePin(byte[] newPin) {
+
+    Assert.getInstance()
+        .notNull(newPin, "newPin")
+        .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+
+    if (!calypsoCard.isPinFeatureAvailable()) {
+      throw new UnsupportedOperationException("PIN is not available for this card.");
+    }
+
+    if (sessionState == SessionState.SESSION_OPEN) {
+      throw new IllegalStateException("Change PIN not allowed when a secure session is open.");
+    }
+
+    if (((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
+      // transmission in plain mode
+      if (calypsoCard.getPinAttemptRemaining() >= 0) {
+        cardCommandManager.addRegularCommand(
+            new CardChangePinBuilder(calypsoCard.getCardClass(), false, newPin));
+      }
+    } else {
+      cardCommandManager.addRegularCommand(new CardGetChallengeBuilder(calypsoCard.getCardClass()));
+
+      // transmit and receive data with the card
+      processAtomicCardCommands(
+          cardCommandManager.getCardCommandBuilders(), ChannelControl.KEEP_OPEN);
+
+      // sets the flag indicating that the commands have been executed
+      cardCommandManager.notifyCommandsProcessed();
+
+      // Get the encrypted PIN with the help of the SAM
+      byte[] newPinData;
+      byte[] currentPin = new byte[4]; // all zeros as required
+      try {
+        newPinData =
+            samCommandProcessor.getCipheredPinData(
+                calypsoCard.getCardChallenge(), currentPin, newPin);
+      } catch (CalypsoSamCommandException e) {
+        throw new SamAnomalyException(
+            SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
+            e);
+      } catch (ReaderBrokenCommunicationException e) {
+        throw new SamIOException(
+            SAM_READER_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
+      } catch (CardBrokenCommunicationException e) {
+        throw new SamIOException(
+            SAM_COMMUNICATION_ERROR + "generating of the PIN ciphered data.", e);
+      }
+      cardCommandManager.addRegularCommand(
+          new CardChangePinBuilder(calypsoCard.getCardClass(), true, newPinData));
     }
 
     // transmit and receive data with the card
@@ -1222,7 +1292,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
               - APDU_HEADER_LENGTH);
       if (isSessionBufferOverflowed(neededSessionBufferSpace.get())) {
         // raise an exception if in atomic mode
-        if (!cardSecuritySettings.isMultipleSessionEnabled()) {
+        if (!((CardSecuritySettingAdapter) cardSecuritySettings).isMultipleSessionEnabled()) {
           throw new AtomicTransactionException(
               "ATOMIC mode error! This command would overflow the card modifications buffer: "
                   + builder.getName());
@@ -1658,7 +1728,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (!calypsoCard.isSvFeatureAvailable()) {
       throw new UnsupportedOperationException("Stored Value is not available for this card.");
     }
-    if (cardSecuritySettings.isSvLoadAndDebitLogEnabled()
+    if (((CardSecuritySettingAdapter) cardSecuritySettings).isSvLoadAndDebitLogEnabled()
         && (!calypsoCard.isExtendedModeSupported())) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
@@ -1739,7 +1809,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
           CalypsoSamCommandException {
 
-    if (!cardSecuritySettings.isSvNegativeBalanceAuthorized()
+    if (!((CardSecuritySettingAdapter) cardSecuritySettings).isSvNegativeBalanceAuthorized()
         && (calypsoCard.getSvBalance() - amount) < 0) {
       throw new IllegalStateException("Negative balances not allowed.");
     }

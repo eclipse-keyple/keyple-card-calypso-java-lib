@@ -41,8 +41,10 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   private final Set<Integer> authorizedSessionKeys;
   private final Set<Integer> authorizedSvKeys;
 
-  private Byte pinCipheringKif;
-  private Byte pinCipheringKvc;
+  private Byte pinVerificationCipheringKif;
+  private Byte pinVerificationCipheringKvc;
+  private Byte pinModificationCipheringKif;
+  private Byte pinModificationCipheringKvc;
 
   /**
    * (package-private)<br>
@@ -217,9 +219,21 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0
    */
   @Override
-  public CardSecuritySettingAdapter setPinCipheringKey(byte kif, byte kvc) {
-    this.pinCipheringKif = kif;
-    this.pinCipheringKvc = kvc;
+  public CardSecuritySettingAdapter setPinVerificationCipheringKey(byte kif, byte kvc) {
+    this.pinVerificationCipheringKif = kif;
+    this.pinVerificationCipheringKvc = kvc;
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0
+   */
+  @Override
+  public CardSecuritySettingAdapter setPinModificationCipheringKey(byte kif, byte kvc) {
+    this.pinModificationCipheringKif = kif;
+    this.pinModificationCipheringKvc = kvc;
     return this;
   }
 
@@ -244,72 +258,82 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the multiple session mode is enabled.
    *
+   * @return True if the multiple session mode is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isMultipleSessionEnabled() {
+  boolean isMultipleSessionEnabled() {
     return isMultipleSessionEnabled;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the ratification mechanism is enabled.
    *
+   * @return True if the ratification mechanism is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isRatificationMechanismEnabled() {
+  boolean isRatificationMechanismEnabled() {
     return isRatificationMechanismEnabled;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the transmission of the PIN in plain text is enabled.
    *
+   * @return True if the transmission of the PIN in plain text is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isPinPlainTransmissionEnabled() {
+  boolean isPinPlainTransmissionEnabled() {
     return isPinPlainTransmissionEnabled;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the transaction audit is enabled.
    *
+   * @return True if the transaction audit is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isTransactionAuditEnabled() {
+  boolean isTransactionAuditEnabled() {
     return isTransactionAuditEnabled;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the retrieval of both load and debit log is enabled.
    *
+   * @return True if the retrieval of both load and debit log is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isSvLoadAndDebitLogEnabled() {
+  boolean isSvLoadAndDebitLogEnabled() {
     return isSvLoadAndDebitLogEnabled;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the SV balance is allowed to become negative.
    *
+   * @return True if the retrieval of both load and debit log is enabled.
    * @since 2.0
    */
-  @Override
-  public boolean isSvNegativeBalanceAuthorized() {
+  boolean isSvNegativeBalanceAuthorized() {
     return isSvNegativeBalanceAuthorized;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the KIF value to use for the provided write access level and KVC value.
    *
+   * @param writeAccessLevel The write access level.
+   * @param kvc The KVC value.
+   * @return Null if no KIF is available.
+   * @throws IllegalArgumentException If the provided writeAccessLevel is null.
    * @since 2.0
    */
-  @Override
-  public Byte getKif(WriteAccessLevel writeAccessLevel, byte kvc) {
+  Byte getKif(WriteAccessLevel writeAccessLevel, byte kvc) {
 
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
@@ -321,32 +345,41 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the default KIF value for the provided write access level.
    *
+   * @param writeAccessLevel The write access level.
+   * @return Null if no KIF is available.
+   * @throws IllegalArgumentException If the provided argument is null.
    * @since 2.0
    */
-  @Override
-  public Byte getDefaultKif(WriteAccessLevel writeAccessLevel) {
+  Byte getDefaultKif(WriteAccessLevel writeAccessLevel) {
     return defaultKifMap.get(writeAccessLevel);
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the default KVC value for the provided write access level.
    *
+   * @param writeAccessLevel The write access level.
+   * @return Null if no KVC is available.
+   * @throws IllegalArgumentException If the provided argument is null.
    * @since 2.0
    */
-  @Override
-  public Byte getDefaultKvc(WriteAccessLevel writeAccessLevel) {
+  Byte getDefaultKvc(WriteAccessLevel writeAccessLevel) {
     return defaultKvcMap.get(writeAccessLevel);
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the KIF/KVC pair is authorized for a session.
    *
+   * @param kif The KIF value.
+   * @param kvc The KVC value.
+   * @return False if KIF or KVC is null or unauthorized.
    * @since 2.0
    */
-  @Override
-  public boolean isSessionKeyAuthorized(Byte kif, Byte kvc) {
+  boolean isSessionKeyAuthorized(Byte kif, Byte kvc) {
     if (kif == null || kvc == null) {
       return false;
     }
@@ -357,12 +390,15 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Indicates if the KIF/KVC pair is authorized for a SV operation.
    *
+   * @param kif The KIF value.
+   * @param kvc The KVC value.
+   * @return False if KIF or KVC is null or unauthorized.
    * @since 2.0
    */
-  @Override
-  public boolean isSvKeyAuthorized(Byte kif, Byte kvc) {
+  boolean isSvKeyAuthorized(Byte kif, Byte kvc) {
     if (kif == null || kvc == null) {
       return false;
     }
@@ -373,22 +409,46 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the KIF value of the PIN verification ciphering key.
    *
+   * @return Null if no KIF is available.
    * @since 2.0
    */
-  @Override
-  public Byte getPinCipheringKif() {
-    return pinCipheringKif;
+  Byte getPinVerificationCipheringKif() {
+    return pinVerificationCipheringKif;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the KVC value of the PIN verification ciphering key.
    *
+   * @return Null if no KVC is available.
    * @since 2.0
    */
-  @Override
-  public Byte getPinCipheringKvc() {
-    return pinCipheringKvc;
+  Byte getPinVerificationCipheringKvc() {
+    return pinVerificationCipheringKvc;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the KIF value of the PIN modification ciphering key.
+   *
+   * @return Null if no KIF is available.
+   * @since 2.0
+   */
+  Byte getPinModificationCipheringKif() {
+    return pinModificationCipheringKif;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the KVC value of the PIN modification ciphering key.
+   *
+   * @return Null if no KVC is available.
+   * @since 2.0
+   */
+  Byte getPinModificationCipheringKvc() {
+    return pinModificationCipheringKvc;
   }
 }
