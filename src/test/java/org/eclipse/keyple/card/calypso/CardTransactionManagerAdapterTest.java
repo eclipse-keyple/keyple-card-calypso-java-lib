@@ -315,11 +315,10 @@ public class CardTransactionManagerAdapterTest {
     samCardSelectionResponse = mock(CardSelectionResponseApi.class);
     when(samCardSelectionResponse.getPowerOnData()).thenReturn(SAM_C1_POWER_ON_DATA);
     calypsoSam = new CalypsoSamAdapter(samCardSelectionResponse);
-    cardSecuritySetting = mock(CardSecuritySetting.class);
-    when(cardSecuritySetting.getSamReader()).thenReturn(samReader);
-    when(cardSecuritySetting.getCalypsoSam()).thenReturn(calypsoSam);
-    when(cardSecuritySetting.isSessionKeyAuthorized(any(Byte.class), any(Byte.class)))
-        .thenReturn(true);
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samReader, calypsoSam);
     cardTransactionManager =
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
@@ -429,8 +428,15 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = UnauthorizedKeyException.class)
   public void processOpening_whenKeyNotAuthorized_shouldThrowUnauthorizedKeyException()
       throws Exception {
-    when(cardSecuritySetting.isSessionKeyAuthorized(any(Byte.class), any(Byte.class)))
-        .thenReturn(false);
+    // force the checking of the session key to fail
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samReader, calypsoSam)
+            .addAuthorizedSessionKey((byte) 0x00, (byte) 0x00);
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
@@ -703,7 +709,14 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void processVerifyPin_whenPINTransmittedInPlainText_shouldSendApduVerifyPIN()
       throws Exception {
-    when(cardSecuritySetting.isPinPlainTransmissionEnabled()).thenReturn(true);
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samReader, calypsoSam)
+            .enablePinPlainTransmission();
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
