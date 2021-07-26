@@ -256,7 +256,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    *     different from {@link CalypsoSam.ProductType#UNKNOWN}.
    * @since 2.0
    */
-  public CalypsoSam getCalypsoSam() {
+  CalypsoSam getCalypsoSam() {
     return calypsoSam;
   }
 
