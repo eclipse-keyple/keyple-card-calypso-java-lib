@@ -14,8 +14,8 @@ package org.eclipse.keyple.card.calypso;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
+import org.eclipse.keyple.core.util.BerTlvUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.eclipse.keyple.core.util.bertlv.BerTlv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +120,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
     try {
       /* init TLV object with the raw data and extract the FCI Template */
       final byte[] responseData = response.getDataOut();
-      tags = BerTlv.parseSimple(responseData, true);
+      tags = BerTlvUtil.parseSimple(responseData, true);
 
       dfName = tags.get(TAG_DF_NAME);
       if (dfName == null) {

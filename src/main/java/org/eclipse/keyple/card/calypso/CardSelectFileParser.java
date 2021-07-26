@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.bertlv.BerTlv;
+import org.eclipse.keyple.core.util.BerTlvUtil;
 
 /**
  * (package-private)<br>
@@ -72,7 +72,7 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
    */
   public byte[] getProprietaryInformation() {
     if (proprietaryInformation == null) {
-      Map<Integer, byte[]> tags = BerTlv.parseSimple(response.getDataOut(), true);
+      Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(response.getDataOut(), true);
       proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
       if (proprietaryInformation == null) {
         throw new IllegalStateException("Proprietary information: tag not found.");
