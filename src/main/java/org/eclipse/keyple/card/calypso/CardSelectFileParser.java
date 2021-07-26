@@ -11,14 +11,11 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.core.util.bertlv.Tag.TagType.PRIMITIVE;
-
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.bertlv.TLV;
-import org.eclipse.keyple.core.util.bertlv.Tag;
+import org.eclipse.keyple.core.util.BerTlvUtil;
 
 /**
  * (package-private)<br>
@@ -54,8 +51,7 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
     return STATUS_TABLE;
   }
 
-  /* Proprietary Information: context-specific class, primitive, tag number 5h => tag field 85h */
-  private static final Tag TAG_PROPRIETARY_INFORMATION = new Tag(0x05, Tag.CONTEXT, PRIMITIVE, 1);
+  private static final int TAG_PROPRIETARY_INFORMATION = 0x85;
 
   /**
    * Instantiates a new CardSelectFileParser.
@@ -76,11 +72,11 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
    */
   public byte[] getProprietaryInformation() {
     if (proprietaryInformation == null) {
-      TLV tlv = new TLV(response.getDataOut());
-      if (!tlv.parse(TAG_PROPRIETARY_INFORMATION, 0)) {
+      Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(response.getDataOut(), true);
+      proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
+      if (proprietaryInformation == null) {
         throw new IllegalStateException("Proprietary information: tag not found.");
       }
-      proprietaryInformation = tlv.getValue();
       Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
     }
     return proprietaryInformation;

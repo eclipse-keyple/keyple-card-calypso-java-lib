@@ -75,15 +75,15 @@ class SamCommandProcessor {
   SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
     Assert.getInstance()
-        .notNull(cardSecuritySetting.getSamReader(), "samReader")
-        .notNull(cardSecuritySetting.getCalypsoSam(), "calypsoSam");
+        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader(), "samReader")
+        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam(), "calypsoSam");
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
     this.cardSecuritySettings = cardSecuritySetting;
-    CalypsoSam calypsoSam = cardSecuritySettings.getCalypsoSam();
+    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     samProductType = calypsoSam.getProductType();
     samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReaderApi) cardSecuritySettings.getSamReader();
+    samReader = (ProxyReaderApi) ((CardSecuritySettingAdapter) cardSecuritySettings).getSamReader();
   }
 
   /**
@@ -183,7 +183,7 @@ class SamCommandProcessor {
     if (kvc != null) {
       return kvc;
     }
-    return cardSecuritySettings.getDefaultKvc(writeAccessLevel);
+    return ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKvc(writeAccessLevel);
   }
 
   /**
@@ -200,9 +200,9 @@ class SamCommandProcessor {
     if ((kif != null && kif != KIF_UNDEFINED) || (kvc == null)) {
       return kif;
     }
-    Byte result = cardSecuritySettings.getKif(writeAccessLevel, kvc);
+    Byte result = ((CardSecuritySettingAdapter) cardSecuritySettings).getKif(writeAccessLevel, kvc);
     if (result == null) {
-      result = cardSecuritySettings.getDefaultKif(writeAccessLevel);
+      result = ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKif(writeAccessLevel);
     }
     return result;
   }
@@ -537,8 +537,19 @@ class SamCommandProcessor {
       pinCipheringKvc = kvc;
     } else {
       // no current work key is available (outside secure session)
-      pinCipheringKif = cardSecuritySettings.getPinCipheringKif();
-      pinCipheringKvc = cardSecuritySettings.getPinCipheringKvc();
+      if (newPin == null) {
+        // PIN verification
+        pinCipheringKif =
+            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif();
+        pinCipheringKvc =
+            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc();
+      } else {
+        // PIN modification
+        pinCipheringKif =
+            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif();
+        pinCipheringKvc =
+            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc();
+      }
     }
 
     if (!isDiversificationDone) {

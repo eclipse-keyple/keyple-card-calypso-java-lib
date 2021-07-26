@@ -63,6 +63,9 @@ enum CalypsoCardCommand implements CardCommand {
   /** change key */
   CHANGE_KEY("Change Key", (byte) 0xD8),
 
+  /** change PIN */
+  CHANGE_PIN("Change PIN", (byte) 0xD8),
+
   /** verify PIN */
   VERIFY_PIN("Verify PIN", (byte) 0x20),
 

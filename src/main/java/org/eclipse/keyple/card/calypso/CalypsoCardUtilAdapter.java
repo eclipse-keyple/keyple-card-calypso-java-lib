@@ -353,6 +353,26 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Change Pin command
+   * received from the card
+   *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cardChangePinBuilder the Change PIN command builder.
+   * @param apduResponse the response received.
+   * @return The command parser.
+   */
+  private static CardChangePinParser updateCalypsoChangePin(
+      CalypsoCardAdapter calypsoCard,
+      CardChangePinBuilder cardChangePinBuilder,
+      ApduResponseApi apduResponse)
+      throws CardCommandException {
+    CardChangePinParser cardChangePinParser =
+        cardChangePinBuilder.createResponseParser(apduResponse);
+    cardChangePinParser.checkStatus();
+    return cardChangePinParser;
+  }
+
+  /**
    * Updates the {@link CalypsoCardAdapter} object with the response to an SV Get command received
    * from the card <br>
    * The SV Data values (KVC, command header, response data) are stored in {@link
@@ -620,6 +640,9 @@ final class CalypsoCardUtilAdapter {
       case INVALIDATE:
       case REHABILITATE:
         return updateCalypsoInvalidateRehabilitate(commandBuilder, apduResponse);
+      case CHANGE_PIN:
+        return updateCalypsoChangePin(
+            calypsoCard, (CardChangePinBuilder) commandBuilder, apduResponse);
       case CHANGE_KEY:
       case GET_DATA_TRACE:
         throw new IllegalStateException("Shouldn't happen for now!");

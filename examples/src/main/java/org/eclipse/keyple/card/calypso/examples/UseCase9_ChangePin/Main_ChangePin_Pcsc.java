@@ -9,23 +9,26 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ************************************************************************************** */
-package org.eclipse.keyple.card.calypso.examples.UseCase6_VerifyPin;
+package org.eclipse.keyple.card.calypso.examples.UseCase9_ChangePin;
 
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
 import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
-import org.calypsonet.terminal.calypso.transaction.CardTransactionException;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
 import org.eclipse.keyple.card.calypso.examples.common.CalypsoConstants;
 import org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil;
-import org.eclipse.keyple.core.service.*;
+import org.eclipse.keyple.core.service.Plugin;
+import org.eclipse.keyple.core.service.Reader;
+import org.eclipse.keyple.core.service.SmartCardService;
+import org.eclipse.keyple.core.service.SmartCardServiceProvider;
 import org.eclipse.keyple.core.service.resource.CardResource;
 import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
@@ -35,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  *
  *
- * <h1>Use Case ‘Calypso 6’ – Calypso Card Verify PIN (PC/SC)</h1>
+ * <h1>Use Case ‘Calypso 9’ – Calypso Card Verify PIN (PC/SC)</h1>
  *
  * <p>We demonstrate here the various operations around the PIN code checking.
  *
@@ -46,18 +49,11 @@ import org.slf4j.LoggerFactory;
  *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario.
- *   <li>Creates a {@link CardTransactionManager} without security.
- *   <li>Verify the PIN code in plain mode with the correct code, display the remaining attempts
- *       counter.
  *   <li>Creates a {@link CardTransactionManager} using {@link CardSecuritySetting} referencing the
  *       SAM profile defined in the card resource service.
- *   <li>Verify the PIN code in session in encrypted mode with the code, display the remaining
- *       attempts counter.
- *   <li>Verify the PIN code in session in encrypted mode with a bad code, display the remaining
- *       attempts counter.
- *   <li>Cancel the card transaction, re-open a new one.
- *   <li>Verify the PIN code in session in encrypted mode with the code, display the remaining
- *       attempts counter.
+ *   <li>Ask for the new PIN code.
+ *   <li>Change the PIN code.
+ *   <li>Verify the PIN code.
  *   <li>Close the card transaction.
  * </ul>
  *
@@ -67,10 +63,10 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0
  */
-public class Main_VerifyPin_Pcsc {
-  private static final Logger logger = LoggerFactory.getLogger(Main_VerifyPin_Pcsc.class);
+public class Main_ChangePin_Pcsc {
+  private static final Logger logger = LoggerFactory.getLogger(Main_ChangePin_Pcsc.class);
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
 
     // Get the instance of the SmartCardService (singleton pattern)
     SmartCardService smartCardService = SmartCardServiceProvider.getService();
@@ -130,14 +126,8 @@ public class Main_VerifyPin_Pcsc {
 
     logger.info("= SmartCard = {}", calypsoCard);
 
-    // Create the card transaction manager in secure mode.
-    CardTransactionManager cardTransaction =
-        cardExtension.createCardTransactionWithoutSecurity(cardReader, calypsoCard);
-
-    ////////////////////////////
-    // Verification of the PIN (correct) out of a secure session in plain mode
-    cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
-    logger.info("Remaining attempts #1: {}", calypsoCard.getPinAttemptRemaining());
+    // Create the card transaction manager
+    CardTransactionManager cardTransaction;
 
     // Create security settings that reference the same SAM profile requested from the card resource
     // service, specifying the key ciphering key parameters.
@@ -149,41 +139,48 @@ public class Main_VerifyPin_Pcsc {
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .setPinVerificationCipheringKey(
                 CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KIF,
-                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC);
+                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC)
+            .setPinModificationCipheringKey(
+                CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KIF,
+                CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KVC);
 
     try {
       // create a secured card transaction
       cardTransaction =
           cardExtension.createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-      ////////////////////////////
-      // Verification of the PIN (correct) out of a secure session in encrypted mode
-      cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
-      // log the current counter value (should be 3)
-      logger.info("Remaining attempts #2: {}", calypsoCard.getPinAttemptRemaining());
+      // Short delay to allow logs to be displayed before the prompt
+      Thread.sleep(2000);
+
+      BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+      String inputString;
+      byte[] newPinCode = new byte[4];
+      boolean validPinCodeEntered = false;
+      do {
+        System.out.print("Enter new PIN code (4 numeric digits):");
+        inputString = br.readLine();
+        if (!inputString.matches("[0-9]{4}")) {
+          System.out.println("Invalid PIN code.");
+        } else {
+          newPinCode = inputString.getBytes();
+          validPinCodeEntered = true;
+        }
+      } while (!validPinCodeEntered);
 
       ////////////////////////////
-      // Verification of the PIN (incorrect) inside a secure session
-      cardTransaction.processOpening(WriteAccessLevel.DEBIT);
-      try {
-        cardTransaction.processVerifyPin(CalypsoConstants.PIN_KO);
-      } catch (CardTransactionException ex) {
-        logger.error("PIN Exception: {}", ex.getMessage());
-      }
-      cardTransaction.processCancel();
-      // log the current counter value (should be 2)
-      logger.error("Remaining attempts #3: {}", calypsoCard.getPinAttemptRemaining());
+      // Change the PIN (correct)
+      cardTransaction.processChangePin(newPinCode);
+
+      logger.info("PIN code value successfully updated to {}", inputString);
 
       ////////////////////////////
-      // Verification of the PIN (correct) inside a secure session with reading of the counter
-      //////////////////////////// before
-      cardTransaction.prepareCheckPinStatus();
-      cardTransaction.processOpening(WriteAccessLevel.DEBIT);
-      // log the current counter value (should be 2)
-      logger.info("Remaining attempts #4: {}", calypsoCard.getPinAttemptRemaining());
-      cardTransaction.processVerifyPin(CalypsoConstants.PIN_OK);
+      // Verification of the PIN
+      cardTransaction.processVerifyPin(newPinCode);
+      logger.info("Remaining attempts: {}", calypsoCard.getPinAttemptRemaining());
+
+      logger.info("PIN {} code successfully presented.", inputString);
+
       cardTransaction.prepareReleaseCardChannel();
-      cardTransaction.processClosing();
     } finally {
       try {
         CardResourceServiceProvider.getService().releaseCardResource(samResource);
@@ -191,11 +188,6 @@ public class Main_VerifyPin_Pcsc {
         logger.error("Error during the card resource release: {}", e.getMessage(), e);
       }
     }
-
-    // log the current counter value (should be 3)
-    logger.info("Remaining attempts #5: {}", calypsoCard.getPinAttemptRemaining());
-
-    logger.info("The Secure Session ended successfully, the PIN has been verified.");
 
     logger.info("= #### End of the Calypso card processing.");
 
