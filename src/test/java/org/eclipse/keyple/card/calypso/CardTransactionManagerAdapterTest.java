@@ -689,7 +689,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void processVerifyPin_whenPINIsNot4Digits_shouldThrowIAE() {
-    cardTransactionManager.processVerifyPin(PIN_5_DIGITS);
+    cardTransactionManager.processVerifyPin(PIN_5_DIGITS.getBytes());
   }
 
   @Test(expected = IllegalStateException.class)
@@ -698,12 +698,12 @@ public class CardTransactionManagerAdapterTest {
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
     cardTransactionManager.prepareReadRecordFile(FILE7, 1);
-    cardTransactionManager.processVerifyPin(PIN_OK);
+    cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void processVerifyPin_whenPINNotAvailable_shouldThrowUOE() {
-    cardTransactionManager.processVerifyPin(PIN_OK);
+    cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
   }
 
   @Test
@@ -725,7 +725,7 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    cardTransactionManager.processVerifyPin(PIN_OK);
+    cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
     InOrder inOrder = inOrder(samReader, cardReader);
     inOrder
         .verify(cardReader)

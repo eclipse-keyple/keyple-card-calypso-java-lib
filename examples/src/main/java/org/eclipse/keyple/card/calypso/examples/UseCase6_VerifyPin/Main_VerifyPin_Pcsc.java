@@ -148,7 +148,8 @@ public class Main_VerifyPin_Pcsc {
             .createCardSecuritySetting()
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .setPinVerificationCipheringKey(
-                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KIF, CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC);
+                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KIF,
+                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC);
 
     try {
       // create a secured card transaction

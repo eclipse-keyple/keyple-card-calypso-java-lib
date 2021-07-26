@@ -1073,18 +1073,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0
-   */
-  @Override
-  public final CardTransactionManager processVerifyPin(String pin) {
-    processVerifyPin(pin.getBytes());
-
-    return this;
-  }
-
   private CardResponseApi safeTransmit(CardRequestSpi cardRequest, ChannelControl channelControl) {
     try {
       return cardReader.transmitCardRequest(cardRequest, channelControl);

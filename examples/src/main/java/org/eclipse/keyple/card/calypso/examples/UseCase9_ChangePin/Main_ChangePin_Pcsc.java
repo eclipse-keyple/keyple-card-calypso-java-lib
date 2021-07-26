@@ -11,11 +11,14 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso.examples.UseCase9_ChangePin;
 
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
+import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
-import org.calypsonet.terminal.calypso.transaction.CardTransactionException;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
@@ -31,13 +34,6 @@ import org.eclipse.keyple.core.service.resource.CardResourceServiceProvider;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
-import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.getCardReader;
-import static org.eclipse.keyple.card.calypso.examples.common.ConfigurationUtil.setupCardResourceService;
 
 /**
  *
@@ -142,9 +138,11 @@ public class Main_ChangePin_Pcsc {
             .createCardSecuritySetting()
             .setSamResource(samResource.getReader(), (CalypsoSam) samResource.getSmartCard())
             .setPinVerificationCipheringKey(
-                    CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KIF, CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC)
-                .setPinModificationCipheringKey(
-                        CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KIF, CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KVC);
+                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KIF,
+                CalypsoConstants.PIN_VERIFICATION_CIPHERING_KEY_KVC)
+            .setPinModificationCipheringKey(
+                CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KIF,
+                CalypsoConstants.PIN_MODIFICATION_CIPHERING_KEY_KVC);
 
     try {
       // create a secured card transaction
@@ -161,13 +159,13 @@ public class Main_ChangePin_Pcsc {
       do {
         System.out.print("Enter new PIN code (4 numeric digits):");
         inputString = br.readLine();
-        if(!inputString.matches("[0-9]{4}")) {
+        if (!inputString.matches("[0-9]{4}")) {
           System.out.println("Invalid PIN code.");
         } else {
           newPinCode = inputString.getBytes();
           validPinCodeEntered = true;
         }
-      } while(!validPinCodeEntered);
+      } while (!validPinCodeEntered);
 
       ////////////////////////////
       // Change the PIN (correct)

@@ -238,21 +238,24 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the associated SAM reader to use for secured operations.
    *
+   * @return Null if no SAM reader is set.
    * @since 2.0
    */
-  @Override
-  public CardReader getSamReader() {
+  CardReader getSamReader() {
     return samReader;
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the SAM used for secured operations.
    *
+   * @return Null if no SAM is set or a {@link CalypsoSam} having a {@link CalypsoSam.ProductType}
+   *     different from {@link CalypsoSam.ProductType#UNKNOWN}.
    * @since 2.0
    */
-  @Override
   public CalypsoSam getCalypsoSam() {
     return calypsoSam;
   }

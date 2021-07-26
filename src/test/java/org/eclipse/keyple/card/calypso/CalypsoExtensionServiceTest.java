@@ -54,7 +54,7 @@ public class CalypsoExtensionServiceTest {
     calypsoCard = new CalypsoCardAdapter();
     calypsoSam = mock(CalypsoSam.class);
     calypsoSamSelection = mock(CalypsoSamSelection.class);
-    cardSecuritySetting = mock(CardSecuritySetting.class);
+    cardSecuritySetting = mock(CardSecuritySettingAdapter.class);
   }
 
   @Test
@@ -150,8 +150,8 @@ public class CalypsoExtensionServiceTest {
   @Test
   public void createCardTransaction_shouldReturnANewReference() {
     calypsoCard.initializeWithPowerOnData(POWER_ON_DATA);
-    when(cardSecuritySetting.getCalypsoSam()).thenReturn(calypsoSam);
-    when(cardSecuritySetting.getSamReader()).thenReturn(reader);
+    when(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam()).thenReturn(calypsoSam);
+    when(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader()).thenReturn(reader);
     CardTransactionManager cardTransaction =
         service.createCardTransaction(reader, calypsoCard, cardSecuritySetting);
     assertThat(service.createCardTransaction(reader, calypsoCard, cardSecuritySetting))
@@ -177,8 +177,8 @@ public class CalypsoExtensionServiceTest {
   @Test
   public void createCardTransactionWithoutSecurity_whenInvoked_shouldReturnANewReference() {
     calypsoCard.initializeWithPowerOnData(POWER_ON_DATA);
-    when(cardSecuritySetting.getCalypsoSam()).thenReturn(calypsoSam);
-    when(cardSecuritySetting.getSamReader()).thenReturn(reader);
+    when(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam()).thenReturn(calypsoSam);
+    when(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader()).thenReturn(reader);
     CardTransactionManager cardTransaction =
         service.createCardTransactionWithoutSecurity(reader, calypsoCard);
     assertThat(service.createCardTransactionWithoutSecurity(reader, calypsoCard))

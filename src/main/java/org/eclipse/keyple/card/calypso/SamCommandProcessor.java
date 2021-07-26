@@ -75,15 +75,15 @@ class SamCommandProcessor {
   SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
     Assert.getInstance()
-        .notNull(cardSecuritySetting.getSamReader(), "samReader")
-        .notNull(cardSecuritySetting.getCalypsoSam(), "calypsoSam");
+        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader(), "samReader")
+        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam(), "calypsoSam");
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
     this.cardSecuritySettings = cardSecuritySetting;
-    CalypsoSam calypsoSam = cardSecuritySettings.getCalypsoSam();
+    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     samProductType = calypsoSam.getProductType();
     samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReaderApi) cardSecuritySettings.getSamReader();
+    samReader = (ProxyReaderApi) ((CardSecuritySettingAdapter) cardSecuritySettings).getSamReader();
   }
 
   /**
