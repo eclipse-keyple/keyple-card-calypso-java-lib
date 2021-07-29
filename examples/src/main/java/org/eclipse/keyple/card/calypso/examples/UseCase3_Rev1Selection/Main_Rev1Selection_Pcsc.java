@@ -69,9 +69,10 @@ public class Main_Rev1Selection_Pcsc {
 
     Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
-    cardReader.activateProtocol(
-        PcscSupportedContactlessProtocol.INNOVATRON_B_PRIME_CARD.name(),
-        ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name());
+    ((ConfigurableReader) cardReader)
+        .activateProtocol(
+            PcscSupportedContactlessProtocol.INNOVATRON_B_PRIME_CARD.name(),
+            ContactlessCardCommonProtocol.INNOVATRON_B_PRIME_CARD.name());
 
     // Get the Calypso card extension service
     CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();

@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso.examples.common;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.eclipse.keyple.card.calypso.CalypsoExtensionService;
+import org.eclipse.keyple.core.service.ConfigurableReader;
 import org.eclipse.keyple.core.service.Plugin;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.resource.*;
@@ -56,7 +57,7 @@ public class ConfigurationUtil {
   public static Reader getCardReader(Plugin plugin, String readerNameRegex) {
     for (String readerName : plugin.getReaderNames()) {
       if (readerName.matches(readerNameRegex)) {
-        Reader reader = plugin.getReader(readerName);
+        ConfigurableReader reader = (ConfigurableReader) plugin.getReader(readerName);
         // Configure the reader with parameters suitable for contactless operations.
         reader
             .getExtension(PcscReader.class)
