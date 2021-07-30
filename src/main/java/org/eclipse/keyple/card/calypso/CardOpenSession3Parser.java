@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
 
-  private final boolean isExtendedModeSupported;
+  private boolean isExtendedModeSupported;
 
   /**
    * Instantiates a new CardOpenSession3Parser from the response.
@@ -33,7 +33,6 @@ final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
    */
   public CardOpenSession3Parser(ApduResponseApi response, CardOpenSession3Builder builder) {
     super(response, builder);
-    isExtendedModeSupported = builder.isIsExtendedModeSupported();
   }
 
   @Override
@@ -41,6 +40,8 @@ final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
     boolean previousSessionRatified;
     boolean manageSecureSessionAuthorized;
     int offset;
+
+    isExtendedModeSupported = ((CardOpenSession3Builder) builder).isIsExtendedModeSupported();
 
     if (!isExtendedModeSupported) {
       offset = 0;
