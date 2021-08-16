@@ -76,9 +76,10 @@ public class Main_ScheduledSelection_Pcsc {
     Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
     // Activate the ISO14443 card protocol.
-    cardReader.activateProtocol(
-        PcscSupportedContactlessProtocol.ISO_14443_4.name(),
-        ContactlessCardCommonProtocol.ISO_14443_4.name());
+    ((ConfigurableReader) cardReader)
+        .activateProtocol(
+            PcscSupportedContactlessProtocol.ISO_14443_4.name(),
+            ContactlessCardCommonProtocol.ISO_14443_4.name());
 
     logger.info("=============== UseCase Generic #2: scheduled selection ==================");
     logger.info("= #### Select application with AID = '{}'.", CalypsoConstants.AID);

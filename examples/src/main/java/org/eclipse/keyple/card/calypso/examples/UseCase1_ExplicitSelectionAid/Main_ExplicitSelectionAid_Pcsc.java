@@ -65,9 +65,10 @@ public class Main_ExplicitSelectionAid_Pcsc {
 
     Reader cardReader = getCardReader(plugin, ConfigurationUtil.CARD_READER_NAME_REGEX);
 
-    cardReader.activateProtocol(
-        PcscSupportedContactlessProtocol.ISO_14443_4.name(),
-        ContactlessCardCommonProtocol.ISO_14443_4.name());
+    ((ConfigurableReader) cardReader)
+        .activateProtocol(
+            PcscSupportedContactlessProtocol.ISO_14443_4.name(),
+            ContactlessCardCommonProtocol.ISO_14443_4.name());
 
     // Get the Calypso card extension service
     CalypsoExtensionService cardExtension = CalypsoExtensionService.getInstance();
