@@ -72,26 +72,72 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
   public CardCloseSessionParser(ApduResponseApi response, CardCloseSessionBuilder builder) {
     super(response, builder);
     byte[] responseData = response.getDataOut();
-    if (responseData.length == 8) {
-      signatureLo = Arrays.copyOfRange(responseData, 4, 8);
-      postponedData = Arrays.copyOfRange(responseData, 1, 4);
-    } else if (responseData.length == 4) {
-      signatureLo = Arrays.copyOfRange(responseData, 0, 4);
-      postponedData = new byte[0];
-    } else {
-      if (responseData.length != 0) {
-        throw new IllegalArgumentException(
-            "Unexpected length in response to CloseSecureSession command: " + responseData.length);
+    if (builder.getCalypsoCard().isExtendedModeSupported()) {
+      // 8-byte signature
+      if (responseData.length == 8) {
+        // signature only
+        signatureLo = Arrays.copyOfRange(responseData, 0, 8);
+        postponedData = new byte[0];
+      } else if (responseData.length == 12) {
+        // signature + 3 postponed bytes (+1)
+        signatureLo = Arrays.copyOfRange(responseData, 4, 12);
+        postponedData = Arrays.copyOfRange(responseData, 1, 4);
+      } else if (responseData.length == 15) {
+        // signature + 6 postponed bytes (+1)
+        signatureLo = Arrays.copyOfRange(responseData, 7, 15);
+        postponedData = Arrays.copyOfRange(responseData, 1, 7);
+      } else {
+        if (responseData.length != 0) {
+          throw new IllegalArgumentException(
+              "Unexpected length in response to CloseSecureSession command: "
+                  + responseData.length);
+        }
+        // session abort case
+        signatureLo = new byte[0];
+        postponedData = new byte[0];
       }
-      signatureLo = new byte[0];
-      postponedData = new byte[0];
+    } else {
+      // 4-byte signature
+      if (responseData.length == 4) {
+        // signature only
+        signatureLo = Arrays.copyOfRange(responseData, 0, 4);
+        postponedData = new byte[0];
+      } else if (responseData.length == 8) {
+        // signature + 3 postponed bytes (+1)
+        signatureLo = Arrays.copyOfRange(responseData, 4, 8);
+        postponedData = Arrays.copyOfRange(responseData, 1, 4);
+      } else if (responseData.length == 11) {
+        // signature + 6 postponed bytes (+1)
+        signatureLo = Arrays.copyOfRange(responseData, 7, 11);
+        postponedData = Arrays.copyOfRange(responseData, 1, 7);
+      } else {
+        if (responseData.length != 0) {
+          throw new IllegalArgumentException(
+              "Unexpected length in response to CloseSecureSession command: "
+                  + responseData.length);
+        }
+        // session abort case
+        signatureLo = new byte[0];
+        postponedData = new byte[0];
+      }
     }
   }
 
+  /**
+   * Gets the low part of the session signature.
+   *
+   * @return A 4 or 8-byte array of bytes according to the extended mode availability.
+   */
   public byte[] getSignatureLo() {
     return signatureLo;
   }
 
+  /**
+   * Gets the secure session postponed data (e.g. Sv Signature).
+   *
+   * @return A 0, 3 or 6-byte array of bytes according to presence of postponed data and the
+   *     extended mode usage.
+   */
   public byte[] getPostponedData() {
     return postponedData;
   }

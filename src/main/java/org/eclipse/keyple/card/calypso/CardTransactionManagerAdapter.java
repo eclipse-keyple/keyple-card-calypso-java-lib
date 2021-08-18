@@ -475,7 +475,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Build the card Close Session command. The last one for this session
     CardCloseSessionBuilder closeSessionCmdBuild =
         new CardCloseSessionBuilder(
-            calypsoCard.getCardClass(), !isRatificationMechanismEnabled, sessionTerminalSignature);
+            calypsoCard, !isRatificationMechanismEnabled, sessionTerminalSignature);
 
     apduRequests.add(closeSessionCmdBuild.getApduRequest());
 
@@ -914,8 +914,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
 
     // Build the card Close Session command (in "abort" mode since no signature is provided).
-    CardCloseSessionBuilder closeSessionCmdBuild =
-        new CardCloseSessionBuilder(calypsoCard.getCardClass());
+    CardCloseSessionBuilder closeSessionCmdBuild = new CardCloseSessionBuilder(calypsoCard);
 
     apduRequests.add(closeSessionCmdBuild.getApduRequest());
 
