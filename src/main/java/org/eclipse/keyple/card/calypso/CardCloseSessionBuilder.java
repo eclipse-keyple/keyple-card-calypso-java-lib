@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -26,10 +27,12 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
   /** The command. */
   private static final CalypsoCardCommand command = CalypsoCardCommand.CLOSE_SESSION;
 
+  private final CalypsoCard calypsoCard;
+
   /**
-   * Instantiates a new CardCloseSessionBuilder depending of the revision of the card.
+   * Instantiates a new CardCloseSessionBuilder depending on the revision of the card.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The {@link CalypsoCard}.
    * @param ratificationAsked the ratification asked.
    * @param terminalSessionSignature the sam half session signature.
    * @throws IllegalArgumentException - if the signature is null or has a wrong length
@@ -37,10 +40,11 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * @since 2.0
    */
   public CardCloseSessionBuilder(
-      CalypsoCardClass calypsoCardClass,
-      boolean ratificationAsked,
-      byte[] terminalSessionSignature) {
+      CalypsoCard calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
     super(command);
+
+    this.calypsoCard = calypsoCard;
+
     // The optional parameter terminalSessionSignature could contain 4 or 8
     // bytes.
     if (terminalSessionSignature != null
@@ -60,7 +64,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
                 command.getInstructionByte(),
                 p1,
                 (byte) 0x00,
@@ -72,15 +76,18 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * Instantiates a new CardCloseSessionBuilder based on the revision of the card to generate an
    * abort session command (Close Secure Session with p1 = p2 = lc = 0).
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The {@link CalypsoCard}.
    * @since 2.0
    */
-  public CardCloseSessionBuilder(CalypsoCardClass calypsoCardClass) {
+  public CardCloseSessionBuilder(CalypsoCard calypsoCard) {
     super(command);
+
+    this.calypsoCard = calypsoCard;
+
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
                 command.getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
@@ -109,5 +116,16 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
   @Override
   public boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the {@link CalypsoCard} provided at construction time.
+   *
+   * @return The CalypsoCard.
+   * @since 2.0
+   */
+  CalypsoCard getCalypsoCard() {
+    return calypsoCard;
   }
 }

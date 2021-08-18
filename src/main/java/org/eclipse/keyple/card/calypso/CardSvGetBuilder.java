@@ -37,7 +37,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * Instantiates a new CardSvGetBuilder.
    *
    * @param calypsoCardClass the card class.
-   * @param calypsoCard the card revision.
+   * @param calypsoCard the Calypso card.
    * @param svOperation the desired SV operation.
    * @throws IllegalArgumentException - if the command is inconsistent
    * @since 2.0
