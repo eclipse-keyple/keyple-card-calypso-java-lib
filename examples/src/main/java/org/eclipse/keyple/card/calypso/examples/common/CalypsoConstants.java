@@ -63,6 +63,6 @@ public final class CalypsoConstants {
   public static final byte PIN_VERIFICATION_CIPHERING_KEY_KIF = (byte) 0x30;
   public static final byte PIN_VERIFICATION_CIPHERING_KEY_KVC = (byte) 0x79;
 
-  public static final byte[] PIN_OK = {(byte) 0, (byte) 0};
-  public static final byte[] PIN_KO = {(byte) 0, (byte) 1};
+  public static final byte[] PIN_OK = {(byte) 0x30, (byte) 0x30, (byte) 0x30, (byte) 0x30};
+  public static final byte[] PIN_KO = {(byte) 0x30, (byte) 0x30, (byte) 0x30, (byte) 0x31};
 }
