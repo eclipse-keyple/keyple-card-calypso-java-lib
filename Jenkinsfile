@@ -29,12 +29,6 @@ pipeline {
         junit testResults: 'build/test-results/test/*.xml', allowEmptyResults: true
       } }
     }
-    stage('Build Examples') {
-      when { expression { !deploySnapshot && !deployRelease } }
-      steps { container('java-builder') {
-        sh 'cd ./examples && ./gradlew clean spotlessCheck classes --no-build-cache --info --stacktrace'
-      } }
-    }
     stage('Publish Snapshot') {
       when { expression { deploySnapshot } }
       steps { container('java-builder') {
