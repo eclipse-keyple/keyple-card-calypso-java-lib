@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the ChangeKey response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardChangeKeyParser extends AbstractCardResponseParser {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
@@ -61,7 +61,7 @@ final class CardChangeKeyParser extends AbstractCardResponseParser {
    *
    * @param response the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardChangeKeyParser(ApduResponseApi response, CardChangeKeyBuilder builder) {
     super(response, builder);
@@ -70,7 +70,7 @@ final class CardChangeKeyParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

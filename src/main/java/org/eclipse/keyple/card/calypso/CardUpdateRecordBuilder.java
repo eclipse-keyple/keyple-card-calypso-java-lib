@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Update Record APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdateRecordParser> {
   private static final Logger logger = LoggerFactory.getLogger(CardUpdateRecordBuilder.class);
@@ -42,7 +42,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
    * @param newRecordData the new record data to write.
    * @throws IllegalArgumentException - if record number is &lt; 1
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardUpdateRecordBuilder(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
@@ -69,7 +69,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardUpdateRecordParser createResponseParser(ApduResponseApi apduResponse) {
@@ -82,7 +82,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -91,7 +91,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
 
   /**
    * @return The SFI of the accessed file
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getSfi() {
     return sfi;
@@ -99,7 +99,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
 
   /**
    * @return The number of the accessed record
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getRecordNumber() {
     return recordNumber;
@@ -107,7 +107,7 @@ final class CardUpdateRecordBuilder extends AbstractCardCommandBuilder<CardUpdat
 
   /**
    * @return The data sent to the card
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getData() {
     return data;

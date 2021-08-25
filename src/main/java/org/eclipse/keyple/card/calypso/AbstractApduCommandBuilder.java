@@ -24,7 +24,7 @@ package org.eclipse.keyple.card.calypso;
  *   <li>the corresponding AbstractApduResponseParser class.
  * </ul>
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractApduCommandBuilder {
 
@@ -33,7 +33,7 @@ abstract class AbstractApduCommandBuilder {
    * manipulating a list of abstract builder objects. Unfortunately, the diversity of these objects
    * does not allow the use of simple generic methods.
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   protected final CardCommand commandRef;
 
@@ -48,7 +48,7 @@ abstract class AbstractApduCommandBuilder {
    * array.
    *
    * @param commandRef command reference (should not be null).
-   * @since 2.0
+   * @since 2.0.0
    */
   protected AbstractApduCommandBuilder(CardCommand commandRef) {
     this.commandRef = commandRef;
@@ -62,7 +62,7 @@ abstract class AbstractApduCommandBuilder {
    * called conditionally (log level &gt;= debug).
    *
    * @param subName the string to append.
-   * @since 2.0
+   * @since 2.0.0
    */
   public final void addSubName(String subName) {
     if (subName.length() != 0) {
@@ -81,7 +81,7 @@ abstract class AbstractApduCommandBuilder {
    * Gets {@link CardCommand} the current command identification
    *
    * @return A not null reference.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardCommand getCommandRef() {
     return commandRef;
@@ -91,7 +91,7 @@ abstract class AbstractApduCommandBuilder {
    * Gets the name of this APDU command if it has been allowed by the log level (see constructor).
    *
    * @return A String (may be null).
-   * @since 2.0
+   * @since 2.0.0
    */
   public final String getName() {
     return this.name;
@@ -114,7 +114,7 @@ abstract class AbstractApduCommandBuilder {
    * Gets the {@link ApduRequestAdapter}.
    *
    * @return A not null reference.
-   * @since 2.0
+   * @since 2.0.0
    */
   public final ApduRequestAdapter getApduRequest() {
     return apduRequest;

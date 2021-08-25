@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Read event counter.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamReadEventCounterParser extends AbstractSamResponseParser {
 
@@ -39,7 +39,7 @@ final class SamReadEventCounterParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -51,7 +51,7 @@ final class SamReadEventCounterParser extends AbstractSamResponseParser {
    *
    * @param response of the SamReadEventCounterParser.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamReadEventCounterParser(ApduResponseApi response, SamReadEventCounterBuilder builder) {
     super(response, builder);
@@ -61,7 +61,7 @@ final class SamReadEventCounterParser extends AbstractSamResponseParser {
    * Gets the key parameters.
    *
    * @return the counter data (Value or Record)
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getCounterData() {
     return isSuccessful() ? response.getDataOut() : null;

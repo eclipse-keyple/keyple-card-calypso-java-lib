@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Read Event Counter APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamReadEventCounterBuilder
     extends AbstractSamCommandBuilder<SamReadEventCounterParser> {
@@ -44,7 +44,7 @@ final class SamReadEventCounterBuilder
    * @param revision revision of the SAM.
    * @param operationType the counter operation type.
    * @param index the counter index.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamReadEventCounterBuilder(
       CalypsoSam.ProductType revision, SamEventCounterOperationType operationType, int index) {
@@ -80,7 +80,7 @@ final class SamReadEventCounterBuilder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamReadEventCounterParser createResponseParser(ApduResponseApi apduResponse) {

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Open Session command for a card revision 3.X.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardOpenSession3Builder
     extends AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> {
@@ -41,7 +41,7 @@ final class CardOpenSession3Builder
    * @param sfi the sfi to select.
    * @param recordNumber the record number to read.
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardOpenSession3Builder(
       CalypsoCard calypsoCard, byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
@@ -90,7 +90,7 @@ final class CardOpenSession3Builder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardOpenSession3Parser createResponseParser(ApduResponseApi apduResponse) {
@@ -103,7 +103,7 @@ final class CardOpenSession3Builder
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -113,7 +113,7 @@ final class CardOpenSession3Builder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getSfi() {
@@ -123,7 +123,7 @@ final class CardOpenSession3Builder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getRecordNumber() {

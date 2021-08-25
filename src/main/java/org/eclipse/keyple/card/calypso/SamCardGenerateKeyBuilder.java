@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Give Random APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardGenerateKeyParser> {
   /** The command reference. */
@@ -37,7 +37,7 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
    * @param cipheringKvc The KVC of the ciphering key.
    * @param sourceKif The KIF of the source key.
    * @param sourceKvc The KVC of the source key.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamCardGenerateKeyBuilder(
       CalypsoSam.ProductType samProductType,
@@ -85,7 +85,7 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamCardGenerateKeyParser createResponseParser(ApduResponseApi apduResponse) {

@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Constants related to Calypso cards.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoCardConstant {
 

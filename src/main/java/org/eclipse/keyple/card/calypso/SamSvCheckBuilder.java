@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the SV Check APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamResponseParser> {
   /** The command reference. */
@@ -31,7 +31,7 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
    * @param revision of the SAM.
    * @param svCardSignature null if the operation is to abort the SV transaction, a 3 or 6-byte
    *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamSvCheckBuilder(CalypsoSam.ProductType revision, byte[] svCardSignature) {
     super(command);
@@ -64,7 +64,7 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamSvCheckParser createResponseParser(ApduResponseApi apduResponse) {

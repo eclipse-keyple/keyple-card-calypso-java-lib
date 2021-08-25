@@ -20,7 +20,7 @@ package org.eclipse.keyple.card.calypso;
  * This particular builder is not associated with any parser since the response to this command is
  * always an error and is never checked.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardRatificationBuilder {
   private CardRatificationBuilder() {}
@@ -28,7 +28,7 @@ final class CardRatificationBuilder {
   /**
    * @param calypsoCardClass the card class.
    * @return the ApduRequestAdapter ratification command according to the card class provided
-   * @since 2.0
+   * @since 2.0.0
    */
   public static ApduRequestAdapter getApduRequest(CalypsoCardClass calypsoCardClass) {
     byte[] ratificationApdu =

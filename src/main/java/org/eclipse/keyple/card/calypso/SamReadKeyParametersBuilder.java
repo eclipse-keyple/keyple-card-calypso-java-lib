@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Read Key Parameters APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamReadKeyParametersBuilder
     extends AbstractSamCommandBuilder<SamReadKeyParametersParser> {
@@ -180,7 +180,7 @@ final class SamReadKeyParametersBuilder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamReadKeyParametersParser createResponseParser(ApduResponseApi apduResponse) {

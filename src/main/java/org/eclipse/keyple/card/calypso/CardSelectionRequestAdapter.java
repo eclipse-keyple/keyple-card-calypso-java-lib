@@ -27,7 +27,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * <p>One of the uses of this class is to open a logical communication channel with a card in order
  * to continue with other exchanges and carry out a complete transaction.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
 
@@ -40,7 +40,7 @@ final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
    * <p>The cardRequest field is set to null.
    *
    * @param cardSelector The card selector.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectionRequestAdapter(CardSelectorSpi cardSelector) {
     this(cardSelector, null);
@@ -52,7 +52,7 @@ final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
    *
    * @param cardSelector The card selector.
    * @param cardRequest The card request.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectionRequestAdapter(CardSelectorSpi cardSelector, CardRequestSpi cardRequest) {
     this.cardSelector = cardSelector;
@@ -62,7 +62,7 @@ final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSelectorSpi getCardSelector() {
@@ -73,7 +73,7 @@ final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
    * Gets the card request.
    *
    * @return a {@link CardRequestSpi} or null if it has not been defined
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardRequestSpi getCardRequest() {
@@ -84,7 +84,7 @@ final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
    * Converts the card selection request into a string where the data is encoded in a json format.
    *
    * @return A not empty String
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

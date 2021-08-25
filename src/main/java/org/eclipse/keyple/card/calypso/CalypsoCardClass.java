@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso;
  * Defines the two existing ISO7816 class bytes for a Calypso card command.: LEGACY for REV1 /
  * BPRIME type card, ISO for REV2/3 / B type
  *
- * @since 2.0
+ * @since 2.0.0
  */
 enum CalypsoCardClass {
 
@@ -33,7 +33,7 @@ enum CalypsoCardClass {
    * Gets the class byte.
    *
    * @return A byte
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte getValue() {
     return cla;

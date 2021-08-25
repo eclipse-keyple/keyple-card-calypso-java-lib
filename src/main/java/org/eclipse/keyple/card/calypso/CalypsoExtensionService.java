@@ -27,7 +27,7 @@ import org.eclipse.keyple.core.util.Assert;
 /**
  * Card extension dedicated to the management of Calypso cards.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 public final class CalypsoExtensionService implements KeypleCardExtension {
 
@@ -43,7 +43,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * Gets the single instance of CalypsoExtensionService.
    *
    * @return The instance of CalypsoExtensionService.
-   * @since 2.0
+   * @since 2.0.0
    */
   public static CalypsoExtensionService getInstance() {
     return INSTANCE;
@@ -52,7 +52,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getReaderApiVersion() {
@@ -62,7 +62,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getCardApiVersion() {
@@ -72,7 +72,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getCommonApiVersion() {
@@ -84,7 +84,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * specific commands.
    *
    * @return A not null reference.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CalypsoCardSelection createCardSelection() {
     return new CalypsoCardSelectionAdapter();
@@ -94,7 +94,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * Creates an instance of {@link CalypsoCardSelection}.
    *
    * @return A not null reference.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CalypsoSamSelection createSamSelection() {
     return new CalypsoSamSelectionAdapter();
@@ -111,7 +111,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    *     org.calypsonet.terminal.calypso.sam.CalypsoSamSelection}.
    * @return A not null reference.
    * @throws IllegalArgumentException If calypsoSamSelection is null.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardResourceProfileExtension createSamResourceProfileExtension(
       CalypsoSamSelection calypsoSamSelection) {
@@ -124,7 +124,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * specific commands.
    *
    * @return A not null reference.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSecuritySetting createCardSecuritySetting() {
     return new CardSecuritySettingAdapter();
@@ -143,7 +143,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @return A not null reference.
    * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
    *     has a null or unknown product type.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardTransactionManager createCardTransaction(
       CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
@@ -166,7 +166,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @return A not null reference.
    * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
    *     has a null or unknown product type.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardTransactionManager createCardTransactionWithoutSecurity(
       CardReader reader, CalypsoCard calypsoCard) {

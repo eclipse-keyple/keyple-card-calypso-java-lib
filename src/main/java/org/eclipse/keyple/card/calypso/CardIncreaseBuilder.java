@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Increase APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseParser> {
 
@@ -84,7 +84,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardIncreaseParser createResponseParser(ApduResponseApi apduResponse) {
@@ -97,7 +97,7 @@ final class CardIncreaseBuilder extends AbstractCardCommandBuilder<CardIncreaseP
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

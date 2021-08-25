@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso;
  * Indicates that the number of transactions authorized by the card has reached its limit.<br>
  * This may occur, for example, when requesting an open secure session.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardTerminatedException extends CardCommandException {
 
@@ -26,7 +26,7 @@ final class CardTerminatedException extends CardCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardTerminatedException(String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);

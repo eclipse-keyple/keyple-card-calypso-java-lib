@@ -24,7 +24,7 @@ final class SamUtilAdapter {
    *
    * @param productType The SAM product type.
    * @return A byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   static byte getClassByte(CalypsoSam.ProductType productType) {
     if (productType == CalypsoSam.ProductType.SAM_S1DX) {

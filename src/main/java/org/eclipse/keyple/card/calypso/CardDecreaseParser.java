@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Parses the Decrease response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardDecreaseParser extends AbstractCardResponseParser {
 
@@ -68,7 +68,7 @@ final class CardDecreaseParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -80,7 +80,7 @@ final class CardDecreaseParser extends AbstractCardResponseParser {
    *
    * @param response the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardDecreaseParser(ApduResponseApi response, CardDecreaseBuilder builder) {
     super(response, builder);
@@ -90,7 +90,7 @@ final class CardDecreaseParser extends AbstractCardResponseParser {
    * Returns the new counter value as an int between 0
    *
    * @return The new value
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getNewValue() {
     byte[] newValueBuffer = getApduResponse().getDataOut();

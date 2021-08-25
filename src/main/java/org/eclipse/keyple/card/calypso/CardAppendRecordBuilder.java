@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Append Record APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppendRecordParser> {
 
@@ -40,7 +40,7 @@ final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppen
    * @param sfi the sfi to select.
    * @param newRecordData the new record data to write.
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardAppendRecordBuilder(
       CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
@@ -66,7 +66,7 @@ final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppen
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardAppendRecordParser createResponseParser(ApduResponseApi apduResponse) {
@@ -79,7 +79,7 @@ final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppen
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -88,7 +88,7 @@ final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppen
 
   /**
    * @return The SFI of the accessed file
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getSfi() {
     return sfi;
@@ -96,7 +96,7 @@ final class CardAppendRecordBuilder extends AbstractCardCommandBuilder<CardAppen
 
   /**
    * @return The data sent to the card
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getData() {
     return data;

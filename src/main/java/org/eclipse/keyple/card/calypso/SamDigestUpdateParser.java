@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Digest update response parser.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamDigestUpdateParser extends AbstractSamResponseParser {
 
@@ -46,7 +46,7 @@ final class SamDigestUpdateParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -58,7 +58,7 @@ final class SamDigestUpdateParser extends AbstractSamResponseParser {
    *
    * @param response the response.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamDigestUpdateParser(ApduResponseApi response, SamDigestUpdateBuilder builder) {
     super(response, builder);

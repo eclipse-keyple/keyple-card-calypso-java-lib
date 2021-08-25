@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso;
  * Indicates that the content of the command is incompatible with the SAM's file system (e.g.
  * signing key not found,...).
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamDataAccessException extends CalypsoSamCommandException {
 
@@ -26,7 +26,7 @@ final class CalypsoSamDataAccessException extends CalypsoSamCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamDataAccessException(String message, CalypsoSamCommand command, Integer statusWord) {
     super(message, command, statusWord);

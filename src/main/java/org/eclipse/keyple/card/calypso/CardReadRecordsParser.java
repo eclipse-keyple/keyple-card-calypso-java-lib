@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Read Records response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardReadRecordsParser extends AbstractCardResponseParser {
 
@@ -57,7 +57,7 @@ final class CardReadRecordsParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -69,7 +69,7 @@ final class CardReadRecordsParser extends AbstractCardResponseParser {
    *
    * @param apduResponse the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardReadRecordsParser(ApduResponseApi apduResponse, CardReadRecordsBuilder builder) {
     super(apduResponse, builder);
@@ -84,7 +84,7 @@ final class CardReadRecordsParser extends AbstractCardResponseParser {
    * <p>An empty map is returned if no data is available.
    *
    * @return a map of records
-   * @since 2.0
+   * @since 2.0.0
    */
   public SortedMap<Integer, byte[]> getRecords() {
     SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();

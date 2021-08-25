@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Card Cipher PIN APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCipherPinParser> {
   /** The command reference. */
@@ -40,7 +40,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    * @param currentPin the current PIN (a 4-byte byte array).
    * @param newPin the new PIN (a 4-byte byte array if the operation in progress is a PIN update,
    *     null if the operation in progress is a PIN verification)
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamCardCipherPinBuilder(
       CalypsoSam.ProductType revision,
@@ -92,7 +92,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamCardCipherPinParser createResponseParser(ApduResponseApi apduResponse) {

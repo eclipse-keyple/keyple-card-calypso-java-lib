@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.util.Assert;
  * (package-private)<br>
  * Implementation of {@link org.calypsonet.terminal.calypso.transaction.CardSecuritySetting}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSecuritySettingAdapter implements CardSecuritySetting {
 
@@ -61,7 +61,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySetting setSamResource(CardReader samReader, CalypsoSam calypsoSam) {
@@ -80,7 +80,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter enableMultipleSession() {
@@ -91,7 +91,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter enableRatificationMechanism() {
@@ -102,7 +102,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter enablePinPlainTransmission() {
@@ -113,7 +113,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter enableTransactionAudit() {
@@ -124,7 +124,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter enableSvLoadAndDebitLog() {
@@ -135,7 +135,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter authorizeSvNegativeBalance() {
@@ -146,7 +146,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter assignKif(
@@ -166,7 +166,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif) {
@@ -180,7 +180,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc) {
@@ -194,7 +194,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter addAuthorizedSessionKey(byte kif, byte kvc) {
@@ -205,7 +205,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter addAuthorizedSvKey(byte kif, byte kvc) {
@@ -216,7 +216,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter setPinVerificationCipheringKey(byte kif, byte kvc) {
@@ -228,7 +228,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySettingAdapter setPinModificationCipheringKey(byte kif, byte kvc) {
@@ -242,7 +242,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Gets the associated SAM reader to use for secured operations.
    *
    * @return Null if no SAM reader is set.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardReader getSamReader() {
     return samReader;
@@ -254,7 +254,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    *
    * @return Null if no SAM is set or a {@link CalypsoSam} having a {@link CalypsoSam.ProductType}
    *     different from {@link CalypsoSam.ProductType#UNKNOWN}.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSam getCalypsoSam() {
     return calypsoSam;
@@ -265,7 +265,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the multiple session mode is enabled.
    *
    * @return True if the multiple session mode is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isMultipleSessionEnabled() {
     return isMultipleSessionEnabled;
@@ -276,7 +276,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the ratification mechanism is enabled.
    *
    * @return True if the ratification mechanism is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isRatificationMechanismEnabled() {
     return isRatificationMechanismEnabled;
@@ -287,7 +287,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the transmission of the PIN in plain text is enabled.
    *
    * @return True if the transmission of the PIN in plain text is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isPinPlainTransmissionEnabled() {
     return isPinPlainTransmissionEnabled;
@@ -298,7 +298,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the transaction audit is enabled.
    *
    * @return True if the transaction audit is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isTransactionAuditEnabled() {
     return isTransactionAuditEnabled;
@@ -309,7 +309,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the retrieval of both load and debit log is enabled.
    *
    * @return True if the retrieval of both load and debit log is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isSvLoadAndDebitLogEnabled() {
     return isSvLoadAndDebitLogEnabled;
@@ -320,7 +320,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Indicates if the SV balance is allowed to become negative.
    *
    * @return True if the retrieval of both load and debit log is enabled.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isSvNegativeBalanceAuthorized() {
     return isSvNegativeBalanceAuthorized;
@@ -334,7 +334,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @param kvc The KVC value.
    * @return Null if no KIF is available.
    * @throws IllegalArgumentException If the provided writeAccessLevel is null.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getKif(WriteAccessLevel writeAccessLevel, byte kvc) {
 
@@ -354,7 +354,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @param writeAccessLevel The write access level.
    * @return Null if no KIF is available.
    * @throws IllegalArgumentException If the provided argument is null.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getDefaultKif(WriteAccessLevel writeAccessLevel) {
     return defaultKifMap.get(writeAccessLevel);
@@ -367,7 +367,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @param writeAccessLevel The write access level.
    * @return Null if no KVC is available.
    * @throws IllegalArgumentException If the provided argument is null.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getDefaultKvc(WriteAccessLevel writeAccessLevel) {
     return defaultKvcMap.get(writeAccessLevel);
@@ -380,7 +380,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return False if KIF or KVC is null or unauthorized.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isSessionKeyAuthorized(Byte kif, Byte kvc) {
     if (kif == null || kvc == null) {
@@ -399,7 +399,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return False if KIF or KVC is null or unauthorized.
-   * @since 2.0
+   * @since 2.0.0
    */
   boolean isSvKeyAuthorized(Byte kif, Byte kvc) {
     if (kif == null || kvc == null) {
@@ -416,7 +416,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Gets the KIF value of the PIN verification ciphering key.
    *
    * @return Null if no KIF is available.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getPinVerificationCipheringKif() {
     return pinVerificationCipheringKif;
@@ -427,7 +427,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Gets the KVC value of the PIN verification ciphering key.
    *
    * @return Null if no KVC is available.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getPinVerificationCipheringKvc() {
     return pinVerificationCipheringKvc;
@@ -438,7 +438,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Gets the KIF value of the PIN modification ciphering key.
    *
    * @return Null if no KIF is available.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getPinModificationCipheringKif() {
     return pinModificationCipheringKif;
@@ -449,7 +449,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * Gets the KVC value of the PIN modification ciphering key.
    *
    * @return Null if no KVC is available.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte getPinModificationCipheringKvc() {
     return pinModificationCipheringKvc;

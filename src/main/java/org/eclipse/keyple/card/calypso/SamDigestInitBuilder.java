@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Digest Init APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInitParser> {
 
@@ -38,7 +38,7 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
    * @throws IllegalArgumentException - if the work key record number
    * @throws IllegalArgumentException - if the digest data is null
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamDigestInitBuilder(
       CalypsoSam.ProductType revision,
@@ -82,7 +82,7 @@ final class SamDigestInitBuilder extends AbstractSamCommandBuilder<SamDigestInit
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamDigestInitParser createResponseParser(ApduResponseApi apduResponse) {

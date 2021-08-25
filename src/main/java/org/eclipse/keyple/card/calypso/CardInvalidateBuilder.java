@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Invalidate command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalidateParser> {
 
@@ -28,7 +28,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
    * Instantiates a new CardInvalidateBuilder.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardInvalidateBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
@@ -45,7 +45,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardInvalidateParser createResponseParser(ApduResponseApi apduResponse) {
@@ -58,7 +58,7 @@ final class CardInvalidateBuilder extends AbstractCardCommandBuilder<CardInvalid
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

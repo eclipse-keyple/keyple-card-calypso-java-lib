@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Implementation of {@link SvDebitLogRecord}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   final int offset;
@@ -38,7 +38,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getRawData() {
@@ -48,7 +48,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getAmount() {
@@ -58,7 +58,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getBalance() {
@@ -68,7 +68,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getDebitTime() {
@@ -81,7 +81,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getDebitDate() {
@@ -94,7 +94,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte getKvc() {
@@ -103,7 +103,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getSamId() {
@@ -115,7 +115,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getSvTNum() {
@@ -128,7 +128,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getSamTNum() {
@@ -141,7 +141,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

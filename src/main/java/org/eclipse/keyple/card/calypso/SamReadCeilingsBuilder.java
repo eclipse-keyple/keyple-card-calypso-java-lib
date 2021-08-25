@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Read Ceilings APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeilingsParser> {
   /** The command reference. */
@@ -43,7 +43,7 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
    * @param revision revision of the SAM.
    * @param operationType the counter operation type.
    * @param index the counter index.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamReadCeilingsBuilder(
       CalypsoSam.ProductType revision, CeilingsOperationType operationType, int index) {
@@ -84,7 +84,7 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamReadCeilingsParser createResponseParser(ApduResponseApi apduResponse) {

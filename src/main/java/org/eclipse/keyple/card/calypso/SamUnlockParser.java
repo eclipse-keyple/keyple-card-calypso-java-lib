@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Unlock response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamUnlockParser extends AbstractSamResponseParser {
 
@@ -42,7 +42,7 @@ final class SamUnlockParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -54,7 +54,7 @@ final class SamUnlockParser extends AbstractSamResponseParser {
    *
    * @param response the response.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamUnlockParser(ApduResponseApi response, SamUnlockBuilder builder) {
     super(response, builder);

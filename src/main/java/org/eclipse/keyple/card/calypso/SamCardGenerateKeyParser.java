@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Card Generate Key response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamCardGenerateKeyParser extends AbstractSamResponseParser {
 
@@ -51,7 +51,7 @@ final class SamCardGenerateKeyParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -63,7 +63,7 @@ final class SamCardGenerateKeyParser extends AbstractSamResponseParser {
    *
    * @param response from the SAM.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamCardGenerateKeyParser(ApduResponseApi response, SamCardGenerateKeyBuilder builder) {
     super(response, builder);
@@ -73,7 +73,7 @@ final class SamCardGenerateKeyParser extends AbstractSamResponseParser {
    * Gets the 32 bytes of ciphered data.
    *
    * @return the ciphered data byte array or null if the operation failed
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getCipheredData() {
     return isSuccessful() ? response.getDataOut() : null;

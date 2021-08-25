@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Builds the Close Secure Session APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardCloseSessionParser> {
 
@@ -37,7 +37,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * @param terminalSessionSignature the sam half session signature.
    * @throws IllegalArgumentException - if the signature is null or has a wrong length
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardCloseSessionBuilder(
       CalypsoCard calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
@@ -77,7 +77,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * abort session command (Close Secure Session with p1 = p2 = lc = 0).
    *
    * @param calypsoCard The {@link CalypsoCard}.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardCloseSessionBuilder(CalypsoCard calypsoCard) {
     super(command);
@@ -98,7 +98,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardCloseSessionParser createResponseParser(ApduResponseApi apduResponse) {
@@ -111,7 +111,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
    * @return False
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -123,7 +123,7 @@ final class CardCloseSessionBuilder extends AbstractCardCommandBuilder<CardClose
    * Gets the {@link CalypsoCard} provided at construction time.
    *
    * @return The CalypsoCard.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoCard getCalypsoCard() {
     return calypsoCard;

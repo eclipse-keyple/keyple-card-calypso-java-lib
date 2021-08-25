@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the SV Get command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser> {
   private static final Logger logger = LoggerFactory.getLogger(CardSvGetBuilder.class);
@@ -40,7 +40,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * @param calypsoCard the Calypso card.
    * @param svOperation the desired SV operation.
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvGetBuilder(
       CalypsoCardClass calypsoCardClass, CalypsoCard calypsoCard, SvOperation svOperation) {
@@ -71,7 +71,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * Gets the request SV operation (used to check the SV command sequence)
    *
    * @return The current SvSettings.Operation enum value
-   * @since 2.0
+   * @since 2.0.0
    */
   public SvOperation getSvOperation() {
     return svOperation;
@@ -80,7 +80,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSvGetParser createResponseParser(ApduResponseApi apduResponse) {
@@ -94,7 +94,7 @@ final class CardSvGetBuilder extends AbstractCardCommandBuilder<CardSvGetParser>
    * buffer.
    *
    * @return False
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

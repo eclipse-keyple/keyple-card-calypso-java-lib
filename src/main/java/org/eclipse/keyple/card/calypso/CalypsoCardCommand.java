@@ -17,7 +17,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
  * (package-private)<br>
  * Defines all supported Calypso card APDU commands.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 enum CalypsoCardCommand implements CardCommand {
 
@@ -101,7 +101,7 @@ enum CalypsoCardCommand implements CardCommand {
    *
    * @param name the name.
    * @param instructionByte the instruction byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoCardCommand(String name, byte instructionByte) {
     this.name = name;
@@ -112,7 +112,7 @@ enum CalypsoCardCommand implements CardCommand {
    * Gets the name.
    *
    * @return A String
-   * @since 2.0
+   * @since 2.0.0
    */
   public String getName() {
     return name;
@@ -122,7 +122,7 @@ enum CalypsoCardCommand implements CardCommand {
    * Gets the instruction byte (INS).
    *
    * @return A byte
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte getInstructionByte() {
     return instructionByte;
@@ -133,7 +133,7 @@ enum CalypsoCardCommand implements CardCommand {
    *
    * @param calypsoCard The {@link CalypsoCard}.
    * @return Returned command
-   * @since 2.0
+   * @since 2.0.0
    */
   public static CalypsoCardCommand getOpenSessionForRev(CalypsoCard calypsoCard) {
     switch (calypsoCard.getProductType()) {

@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Defines all supported Calypso SAM APDU commands.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 enum CalypsoSamCommand implements CardCommand {
 
@@ -87,7 +87,7 @@ enum CalypsoSamCommand implements CardCommand {
    *
    * @param name the name.
    * @param instructionByte the instruction byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamCommand(String name, byte instructionByte) {
     this.name = name;
@@ -98,7 +98,7 @@ enum CalypsoSamCommand implements CardCommand {
    * Gets the name.
    *
    * @return A String
-   * @since 2.0
+   * @since 2.0.0
    */
   public String getName() {
     return name;
@@ -108,7 +108,7 @@ enum CalypsoSamCommand implements CardCommand {
    * Gets the instruction byte (INS).
    *
    * @return A byte
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte getInstructionByte() {
     return instructionByte;

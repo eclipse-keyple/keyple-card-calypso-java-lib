@@ -31,7 +31,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Implementation of {@link CalypsoCardSelection}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSelectionSpi {
 
@@ -47,7 +47,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * (package-private)<br>
    * Creates an instance of {@link CalypsoCardSelection}.
    *
-   * @since 2.0
+   * @since 2.0.0
    * @throws IllegalArgumentException If cardSelector is null.
    */
   CalypsoCardSelectionAdapter() {
@@ -61,7 +61,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection filterByCardProtocol(String cardProtocol) {
@@ -75,7 +75,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection filterByPowerOnData(String powerOnDataRegex) {
@@ -96,7 +96,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection filterByDfName(byte[] aid) {
@@ -112,7 +112,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection filterByDfName(String aid) {
@@ -126,7 +126,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection setFileOccurrence(FileOccurrence fileOccurrence) {
@@ -153,7 +153,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection setFileControlInformation(
@@ -175,7 +175,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection addSuccessfulStatusWord(int statusWord) {
@@ -189,7 +189,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection acceptInvalidatedCard() {
@@ -200,7 +200,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
@@ -224,7 +224,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection prepareGetData(GetDataTag tag) {
@@ -248,7 +248,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
@@ -262,7 +262,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(short lid) {
@@ -277,7 +277,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
@@ -292,7 +292,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
@@ -312,7 +312,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {

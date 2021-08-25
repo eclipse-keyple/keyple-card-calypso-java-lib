@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Implementation of {@link SvLoadLogRecord}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   final int offset;
@@ -29,7 +29,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    *
    * @param cardResponse the Sv Get or Read Record (SV Debit log file) response data.
    * @param offset the load log offset in the response (may change from a card to another).
-   * @since 2.0
+   * @since 2.0.0
    */
   public SvLoadLogRecordAdapter(byte[] cardResponse, int offset) {
     this.cardResponse = cardResponse;
@@ -39,7 +39,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getRawData() {
@@ -49,7 +49,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getAmount() {
@@ -59,7 +59,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getBalance() {
@@ -69,7 +69,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getLoadTime() {
@@ -82,7 +82,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getLoadDate() {
@@ -95,7 +95,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getFreeData() {
@@ -108,7 +108,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte getKvc() {
@@ -118,7 +118,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getSamId() {
@@ -130,7 +130,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getSvTNum() {
@@ -143,7 +143,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getSamTNum() {
@@ -156,7 +156,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

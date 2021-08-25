@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * This abstract class defines the parser used to handle APDU's response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractApduResponseParser {
 
@@ -27,7 +27,7 @@ abstract class AbstractApduResponseParser {
    * This Map stores expected status that could be . By default inited with sw1=90 and sw2=00
    * (Success)
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   protected static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -40,7 +40,7 @@ abstract class AbstractApduResponseParser {
   /**
    * the {@link ApduResponseApi} containing response.
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   protected final ApduResponseApi response;
 
@@ -49,7 +49,7 @@ abstract class AbstractApduResponseParser {
    * between the builder and the parser in order to allow the parser to access the builder
    * parameters that were used to create the command (e.g. SFI, registration number, etc.).
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   protected final AbstractApduCommandBuilder builder;
 
@@ -60,7 +60,7 @@ abstract class AbstractApduResponseParser {
    * @param response {@link ApduResponseApi} response to parse (should not be null).
    * @param builder {@link AbstractApduCommandBuilder} the reference of the builder that created
    *     the. parser
-   * @since 2.0
+   * @since 2.0.0
    */
   protected AbstractApduResponseParser(
       ApduResponseApi response, AbstractApduCommandBuilder builder) {
@@ -72,7 +72,7 @@ abstract class AbstractApduResponseParser {
    * Returns the internal status table
    *
    * @return A not null reference
-   * @since 2.0
+   * @since 2.0.0
    */
   protected Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
@@ -88,7 +88,7 @@ abstract class AbstractApduResponseParser {
    * @param commandRef {@link CardCommand} the command reference.
    * @param statusWord the status word.
    * @return A not null value
-   * @since 2.0
+   * @since 2.0.0
    */
   protected CalypsoApduCommandException buildCommandException(
       Class<? extends CalypsoApduCommandException> exceptionClass,
@@ -102,7 +102,7 @@ abstract class AbstractApduResponseParser {
    * Gets {@link ApduResponseApi}
    *
    * @return A not null reference
-   * @since 2.0
+   * @since 2.0.0
    */
   public final ApduResponseApi getApduResponse() {
     return response;
@@ -112,7 +112,7 @@ abstract class AbstractApduResponseParser {
    * Gets {@link AbstractApduCommandBuilder}, the associated builder reference
    *
    * @return A nullable reference
-   * @since 2.0
+   * @since 2.0.0
    */
   public AbstractApduCommandBuilder getBuilder() {
     return builder;
@@ -127,7 +127,7 @@ abstract class AbstractApduResponseParser {
    * code.
    *
    * @return A value
-   * @since 2.0
+   * @since 2.0.0
    */
   public boolean isSuccessful() {
     StatusProperties props = getStatusWordProperties();
@@ -139,7 +139,7 @@ abstract class AbstractApduResponseParser {
    * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CalypsoApduCommandException if status is not successful.
-   * @since 2.0
+   * @since 2.0.0
    */
   public void checkStatus() throws CalypsoApduCommandException {
 
@@ -171,7 +171,7 @@ abstract class AbstractApduResponseParser {
    * By default, the command reference is retrieved from the associated builder.
    *
    * @return A nullable command reference
-   * @since 2.0
+   * @since 2.0.0
    */
   protected CardCommand getCommandRef() {
     return builder != null ? builder.getCommandRef() : null;
@@ -181,7 +181,7 @@ abstract class AbstractApduResponseParser {
    * Gets he ASCII message from the statusTable for the current status word.
    *
    * @return A nullable value
-   * @since 2.0
+   * @since 2.0.0
    */
   public final String getStatusInformation() {
     StatusProperties props = getStatusWordProperties();
@@ -191,7 +191,7 @@ abstract class AbstractApduResponseParser {
   /**
    * This internal class provides status word properties
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   protected static class StatusProperties {
 
@@ -205,7 +205,7 @@ abstract class AbstractApduResponseParser {
      * Creates a successful status.
      *
      * @param information the status information.
-     * @since 2.0
+     * @since 2.0.0
      */
     public StatusProperties(String information) {
       this.information = information;
@@ -219,7 +219,7 @@ abstract class AbstractApduResponseParser {
      *
      * @param information the status information.
      * @param exceptionClass the associated exception class.
-     * @since 2.0
+     * @since 2.0.0
      */
     public StatusProperties(
         String information, Class<? extends CalypsoApduCommandException> exceptionClass) {
@@ -232,7 +232,7 @@ abstract class AbstractApduResponseParser {
      * Gets information
      *
      * @return A nullable reference
-     * @since 2.0
+     * @since 2.0.0
      */
     public String getInformation() {
       return information;
@@ -242,7 +242,7 @@ abstract class AbstractApduResponseParser {
      * Gets successful indicator
      *
      * @return The successful indicator
-     * @since 2.0
+     * @since 2.0.0
      */
     public boolean isSuccessful() {
       return successful;
@@ -252,7 +252,7 @@ abstract class AbstractApduResponseParser {
      * Gets Exception Class
      *
      * @return A nullable reference
-     * @since 2.0
+     * @since 2.0.0
      */
     public Class<? extends CalypsoApduCommandException> getExceptionClass() {
       return exceptionClass;

@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * <p>It also will integrate the SAM commands used for Stored Value and PIN/key management. In
  * session, these commands need to be carefully synchronized with the digest calculation.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class SamCommandProcessor {
   private static final Logger logger = LoggerFactory.getLogger(SamCommandProcessor.class);
@@ -70,7 +70,7 @@ class SamCommandProcessor {
    *
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting the security settings from the application layer.
-   * @since 2.0
+   * @since 2.0.0
    */
   SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
 
@@ -103,7 +103,7 @@ class SamCommandProcessor {
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync
-   * @since 2.0
+   * @since 2.0.0
    */
   byte[] getSessionTerminalChallenge()
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
@@ -177,7 +177,7 @@ class SamCommandProcessor {
    * @param writeAccessLevel The write access level.
    * @param kvc The card KVC value.
    * @return Null if the card did not provided a KVC value and if there's no default KVC value.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte computeKvc(WriteAccessLevel writeAccessLevel, Byte kvc) {
     if (kvc != null) {
@@ -194,7 +194,7 @@ class SamCommandProcessor {
    * @param kif The card KIF value.
    * @param kvc The previously computed KVC value.
    * @return Null if the card did not provided a KIF value and if there's no default KIF value.
-   * @since 2.0
+   * @since 2.0.0
    */
   Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
     if ((kif != null && kif != KIF_UNDEFINED) || (kvc == null)) {
@@ -222,7 +222,7 @@ class SamCommandProcessor {
    * @param kif the KIF.
    * @param kvc the KVC.
    * @param digestData a first packet of data to digest.
-   * @since 2.0
+   * @since 2.0.0
    */
   void initializeDigester(
       boolean sessionEncryption, boolean verificationMode, byte kif, byte kvc, byte[] digestData) {
@@ -265,7 +265,7 @@ class SamCommandProcessor {
    *
    * @param request card request.
    * @param response card response.
-   * @since 2.0
+   * @since 2.0.0
    */
   private void pushCardExchangedData(ApduRequestSpi request, ApduResponseApi response) {
 
@@ -296,7 +296,7 @@ class SamCommandProcessor {
    * @param requests card request list.
    * @param responses card response list.
    * @param startIndex starting point in the list.
-   * @since 2.0
+   * @since 2.0.0
    */
   void pushCardExchangedData(
       List<ApduRequestSpi> requests, List<ApduResponseApi> responses, int startIndex) {
@@ -320,7 +320,7 @@ class SamCommandProcessor {
    *
    * @param addDigestClose indicates whether to add the Digest Close command.
    * @return a list of commands to send to the SAM
-   * @since 2.0
+   * @since 2.0.0
    */
   private List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
       getPendingSamCommands(boolean addDigestClose) {
@@ -394,7 +394,7 @@ class SamCommandProcessor {
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync
-   * @since 2.0
+   * @since 2.0.0
    */
   byte[] getTerminalSignature()
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
@@ -457,7 +457,7 @@ class SamCommandProcessor {
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync
-   * @since 2.0
+   * @since 2.0.0
    */
   void authenticateCardSignature(byte[] cardSignatureLo)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
@@ -497,7 +497,7 @@ class SamCommandProcessor {
    *
    * @param samCommands a list of SAM commands.
    * @return the ApduRequestAdapter list
-   * @since 2.0
+   * @since 2.0.0
    */
   private List<ApduRequestSpi> getApduRequests(
       List<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>> samCommands) {
@@ -521,7 +521,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   byte[] getCipheredPinData(byte[] poChallenge, byte[] currentPin, byte[] newPin)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
@@ -618,7 +618,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   private byte[] getSvComplementaryData(
       AbstractSamCommandBuilder<? extends AbstractSamResponseParser> samSvPrepareBuilder)
@@ -696,7 +696,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   byte[] getSvReloadComplementaryData(
       CardSvReloadBuilder cardSvReloadBuilder, byte[] svGetHeader, byte[] svGetData)
@@ -725,7 +725,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   byte[] getSvDebitComplementaryData(
       CardSvDebitBuilder cardSvDebitBuilder, byte[] svGetHeader, byte[] svGetData)
@@ -754,7 +754,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSvUndebitComplementaryData(
       CardSvUndebitBuilder cardSvUndebitBuilder, byte[] svGetHeader, byte[] svGetData)
@@ -777,7 +777,7 @@ class SamCommandProcessor {
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0
+   * @since 2.0.0
    */
   void checkSvStatus(byte[] svOperationResponseData)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,

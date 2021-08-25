@@ -44,7 +44,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * 8,388,607           %01111111.11111111.11111111
  * </pre>
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvReloadParser extends AbstractCardResponseParser {
 
@@ -82,7 +82,7 @@ final class CardSvReloadParser extends AbstractCardResponseParser {
    *
    * @param response response to parse.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvReloadParser(ApduResponseApi response, CardSvReloadBuilder builder) {
     super(response, builder);
@@ -100,7 +100,7 @@ final class CardSvReloadParser extends AbstractCardResponseParser {
    * signature is postponed until the end of the session.
    *
    * @return A byte array containing the signature
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSignatureLo() {
     return getApduResponse().getDataOut();
@@ -109,7 +109,7 @@ final class CardSvReloadParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

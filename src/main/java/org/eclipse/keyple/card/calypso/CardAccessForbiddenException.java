@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Indicates that the access is forbidden (e.g. Never access mode, DF is invalidated,...).
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardAccessForbiddenException extends CardCommandException {
 
@@ -25,7 +25,7 @@ final class CardAccessForbiddenException extends CardCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardAccessForbiddenException(String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);

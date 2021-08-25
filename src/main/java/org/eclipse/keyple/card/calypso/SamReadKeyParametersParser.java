@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the read key parameters response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamReadKeyParametersParser extends AbstractSamResponseParser {
 
@@ -44,7 +44,7 @@ final class SamReadKeyParametersParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -56,7 +56,7 @@ final class SamReadKeyParametersParser extends AbstractSamResponseParser {
    *
    * @param response of the SamReadKeyParametersParser.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamReadKeyParametersParser(ApduResponseApi response, SamReadKeyParametersBuilder builder) {
     super(response, builder);
@@ -66,7 +66,7 @@ final class SamReadKeyParametersParser extends AbstractSamResponseParser {
    * Gets the key parameters.
    *
    * @return The key parameters
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getKeyParameters() {
     return isSuccessful() ? response.getDataOut() : null;

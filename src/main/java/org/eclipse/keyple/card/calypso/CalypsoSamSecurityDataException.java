@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  * This can occur, for example, during the digest authenticate operation when the card's signature
  * is incorrect.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamSecurityDataException extends CalypsoSamCommandException {
 
@@ -27,7 +27,7 @@ final class CalypsoSamSecurityDataException extends CalypsoSamCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamSecurityDataException(String message, CalypsoSamCommand command, Integer statusWord) {
     super(message, command, statusWord);

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Implementation of {@link org.calypsonet.terminal.calypso.transaction.CardTransactionManager}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class CardTransactionManagerAdapter implements CardTransactionManager {
 
@@ -102,7 +102,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardTransactionManagerAdapter(
       CardReader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
@@ -120,7 +120,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardTransactionManagerAdapter(CardReader cardReader, CalypsoCard calypsoCard) {
     this.cardReader = (ProxyReaderApi) cardReader;
@@ -139,7 +139,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardReader getCardReader() {
@@ -149,7 +149,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCard getCalypsoCard() {
@@ -159,7 +159,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSecuritySetting getCardSecuritySetting() {
@@ -169,7 +169,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getTransactionAuditData() {
@@ -653,7 +653,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager processOpening(WriteAccessLevel writeAccessLevel) {
@@ -805,7 +805,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager processCardCommands() {
@@ -820,7 +820,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager processClosing() {
@@ -903,7 +903,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager processCancel() {
@@ -945,7 +945,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager processVerifyPin(byte[] pin) {
@@ -1008,7 +1008,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardTransactionManager processChangePin(byte[] newPin) {
@@ -1347,7 +1347,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareReleaseCardChannel() {
@@ -1359,7 +1359,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSelectFile(byte[] lid) {
@@ -1376,7 +1376,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSelectFile(SelectFileControl selectFileControl) {
@@ -1393,7 +1393,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardTransactionManager prepareGetData(GetDataTag tag) {
@@ -1418,7 +1418,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareReadRecordFile(byte sfi, int recordNumber) {
@@ -1446,7 +1446,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareReadRecordFile(
@@ -1509,7 +1509,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareReadCounterFile(byte sfi, int countersNumber) {
@@ -1521,7 +1521,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareAppendRecord(byte sfi, byte[] recordData) {
@@ -1539,7 +1539,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareUpdateRecord(
@@ -1563,7 +1563,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareWriteRecord(
@@ -1586,7 +1586,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareIncreaseCounter(
@@ -1614,7 +1614,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareDecreaseCounter(
@@ -1642,7 +1642,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSetCounter(byte sfi, int counterNumber, int newValue) {
@@ -1689,7 +1689,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareCheckPinStatus() {
@@ -1705,7 +1705,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvGet(SvOperation svOperation, SvAction svAction) {
@@ -1734,7 +1734,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvReload(
@@ -1771,7 +1771,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvReload(int amount) {
@@ -1852,7 +1852,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
@@ -1880,7 +1880,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvDebit(int amount) {
@@ -1893,7 +1893,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareSvReadAllLogs() {
@@ -1920,7 +1920,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareInvalidate() {
@@ -1935,7 +1935,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CardTransactionManager prepareRehabilitate() {

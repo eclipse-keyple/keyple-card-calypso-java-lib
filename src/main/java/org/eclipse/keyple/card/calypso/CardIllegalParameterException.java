@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Indicates that some input parameter is not accepted by the card.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardIllegalParameterException extends CardCommandException {
 
@@ -25,7 +25,7 @@ final class CardIllegalParameterException extends CardCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardIllegalParameterException(String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);

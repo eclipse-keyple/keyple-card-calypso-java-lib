@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>Note: {@link CardSvUndebitBuilder} and {@link CardSvDebitBuilder} shares the same parser
  * {@link CardSvDebitParser}
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebitParser> {
 
@@ -42,7 +42,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvUndebitBuilder(
       CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time) {
@@ -95,7 +95,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
    * <p>5 or 10 byte signature (hi part)
    *
    * @param undebitComplementaryData the data out from the SvPrepareDebit SAM command.
-   * @since 2.0
+   * @since 2.0.0
    */
   public void finalizeBuilder(byte[] undebitComplementaryData) {
     if ((calypsoCard.isExtendedModeSupported() && undebitComplementaryData.length != 20)
@@ -129,7 +129,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
    * Gets the SV Debit part of the data to include in the SAM SV Prepare Debit command
    *
    * @return A byte array containing the SV undebit data
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSvUndebitData() {
     byte[] svUndebitData = new byte[12];
@@ -154,7 +154,7 @@ final class CardSvUndebitBuilder extends AbstractCardCommandBuilder<CardSvUndebi
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

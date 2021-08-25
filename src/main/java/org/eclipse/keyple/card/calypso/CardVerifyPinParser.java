@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Verify PIN response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardVerifyPinParser extends AbstractCardResponseParser {
 
@@ -64,7 +64,7 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
    *
    * @param response the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardVerifyPinParser(ApduResponseApi response, CardVerifyPinBuilder builder) {
     super(response, builder);
@@ -74,7 +74,7 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
    * Determine the value of the attempt counter from the status word
    *
    * @return The remaining attempt counter value (0, 1, 2 or 3)
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getRemainingAttemptCounter() {
     int attemptCounter;
@@ -101,7 +101,7 @@ final class CardVerifyPinParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

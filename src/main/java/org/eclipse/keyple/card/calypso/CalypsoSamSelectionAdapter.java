@@ -31,7 +31,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * <p>If not specified, the SAM product type used for unlocking is {@link
  * org.calypsonet.terminal.calypso.sam.CalypsoSam.ProductType#SAM_C1}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
 
@@ -46,7 +46,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    * (package-private)<br>
    * Creates a {@link CalypsoSamSelection}.
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamSelectionAdapter() {
     samCardSelector = new CardSelectorAdapter();
@@ -57,7 +57,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
@@ -85,7 +85,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
@@ -112,7 +112,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoSamSelection filterByProductType(CalypsoSam.ProductType productType) {
@@ -126,7 +126,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoSamSelection filterBySerialNumber(String serialNumberRegex) {
@@ -147,7 +147,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoSamSelection setUnlockData(String unlockData) {

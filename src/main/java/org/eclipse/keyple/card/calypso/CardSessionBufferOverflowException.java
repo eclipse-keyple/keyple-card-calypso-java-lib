@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Indicates during a secure session that the card session buffer will overflow.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSessionBufferOverflowException extends CardCommandException {
 
@@ -25,7 +25,7 @@ final class CardSessionBufferOverflowException extends CardCommandException {
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardSessionBufferOverflowException(
       String message, CalypsoCardCommand command, Integer statusWord) {

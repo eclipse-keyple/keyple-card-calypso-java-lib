@@ -14,7 +14,7 @@ package org.eclipse.keyple.card.calypso;
 /**
  * This exception indicates that the status word is not referenced.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class CardCommandUnknownStatusException extends CalypsoApduCommandException {
 
@@ -24,7 +24,7 @@ class CardCommandUnknownStatusException extends CalypsoApduCommandException {
    * @param message the message to identify the exception context (Should not be null).
    * @param command the card command (Should not be null).
    * @param statusWord the status word (Should not be null).
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardCommandUnknownStatusException(
       String message, CardCommand command, Integer statusWord) {

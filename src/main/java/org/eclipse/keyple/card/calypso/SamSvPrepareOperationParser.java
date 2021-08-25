@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private) <br>
  * Parses the Sv Prepare response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamSvPrepareOperationParser extends AbstractSamResponseParser {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
@@ -49,7 +49,7 @@ final class SamSvPrepareOperationParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -61,7 +61,7 @@ final class SamSvPrepareOperationParser extends AbstractSamResponseParser {
    *
    * @param response from the SAM.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamSvPrepareOperationParser(ApduResponseApi response, AbstractSamCommandBuilder builder) {
     super(response, builder);

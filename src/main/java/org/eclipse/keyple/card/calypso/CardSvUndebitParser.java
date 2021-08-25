@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the SV Undebit response.
  *
- * @since 2.0
+ * @since 2.0.0
  *     <p>See specs: Calypso Stored Value balance (signed binaries' coding based on the two's
  *     complement method)
  *     <p>balance - 3 bytes signed binary - Integer from -8,388,608 to 8,388,607
@@ -53,7 +53,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * Notice: -32768 (%10000000.00000000) is not allowed.
  * </pre>
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvUndebitParser extends AbstractCardResponseParser {
 
@@ -91,7 +91,7 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
    *
    * @param response response to parse.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvUndebitParser(ApduResponseApi response, CardSvUndebitBuilder builder) {
     super(response, builder);
@@ -109,7 +109,7 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
    * signature is postponed until the end of the session.
    *
    * @return a byte array containing the signature
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSignatureLo() {
     return getApduResponse().getDataOut();
@@ -118,7 +118,7 @@ final class CardSvUndebitParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

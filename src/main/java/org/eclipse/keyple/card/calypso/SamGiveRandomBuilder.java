@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Give Random APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandomParser> {
 
@@ -33,7 +33,7 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
    * @param random the random data.
    * @throws IllegalArgumentException - if the random data is null or has a length not equal to 8
    *     TODO implement specific settings for rev less than 3
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamGiveRandomBuilder(CalypsoSam.ProductType revision, byte[] random) {
     super(command);
@@ -56,7 +56,7 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamGiveRandomParser createResponseParser(ApduResponseApi apduResponse) {

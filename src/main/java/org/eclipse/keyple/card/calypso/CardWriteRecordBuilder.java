@@ -40,7 +40,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
    * @param newRecordData the new record data to write.
    * @throws IllegalArgumentException - if record number is &lt; 1
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardWriteRecordBuilder(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
@@ -67,7 +67,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardWriteRecordParser createResponseParser(ApduResponseApi apduResponse) {
@@ -80,7 +80,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -89,7 +89,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
 
   /**
    * @return the SFI of the accessed file
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getSfi() {
     return sfi;
@@ -97,7 +97,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
 
   /**
    * @return the number of the accessed record
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getRecordNumber() {
     return recordNumber;
@@ -105,7 +105,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
 
   /**
    * @return the data sent to the card
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getData() {
     return data;

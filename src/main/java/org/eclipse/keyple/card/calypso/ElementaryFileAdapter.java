@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * (package-private)<br>
  * Implementation of {@link ElementaryFile}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class ElementaryFileAdapter implements ElementaryFile {
 
@@ -33,7 +33,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * Constructor
    *
    * @param sfi the associated SFI.
-   * @since 2.0
+   * @since 2.0.0
    */
   ElementaryFileAdapter(byte sfi) {
     this.sfi = sfi;
@@ -45,7 +45,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * Constructor used to create a clone of the provided EF.
    *
    * @param source the EF to be cloned.
-   * @since 2.0
+   * @since 2.0.0
    */
   ElementaryFileAdapter(ElementaryFile source) {
     this.sfi = source.getSfi();
@@ -61,7 +61,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    *
    * @param header the file header (should be not null).
    * @return the current instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   ElementaryFile setHeader(FileHeader header) {
     this.header = header;
@@ -71,7 +71,7 @@ class ElementaryFileAdapter implements ElementaryFile {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte getSfi() {
@@ -81,7 +81,7 @@ class ElementaryFileAdapter implements ElementaryFile {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public FileHeader getHeader() {
@@ -91,7 +91,7 @@ class ElementaryFileAdapter implements ElementaryFile {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public FileData getData() {
@@ -103,7 +103,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    *
    * @param o the object to compare.
    * @return the comparison evaluation
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean equals(Object o) {
@@ -119,7 +119,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * Comparison is based on field "sfi".
    *
    * @return the hashcode
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int hashCode() {
@@ -130,7 +130,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

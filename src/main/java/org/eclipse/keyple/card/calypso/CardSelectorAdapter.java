@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Implementation of {@link CardSelectorSpi}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSelectorAdapter implements CardSelectorSpi {
 
@@ -39,7 +39,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * <p>Initialize default values.
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   CardSelectorAdapter() {
     fileOccurrence = FileOccurrence.FIRST;
@@ -55,7 +55,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param cardProtocol A not empty String.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi filterByCardProtocol(String cardProtocol) {
     this.cardProtocol = cardProtocol;
@@ -71,7 +71,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param powerOnDataRegex A valid regular expression
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi filterByPowerOnData(String powerOnDataRegex) {
     this.powerOnDataRegex = powerOnDataRegex;
@@ -86,7 +86,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param aid A byte array containing 5 to 16 bytes.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi filterByDfName(byte[] aid) {
     this.aid = aid;
@@ -102,7 +102,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param aid A hexadecimal string representation of 5 to 16 bytes.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi filterByDfName(String aid) {
     return filterByDfName(ByteArrayUtil.fromHex(aid));
@@ -115,7 +115,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param fileOccurrence The {@link FileOccurrence}.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi setFileOccurrence(FileOccurrence fileOccurrence) {
     this.fileOccurrence = fileOccurrence;
@@ -129,7 +129,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param fileControlInformation The {@link FileControlInformation}.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi setFileControlInformation(FileControlInformation fileControlInformation) {
     this.fileControlInformation = fileControlInformation;
@@ -144,7 +144,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    *
    * @param statusWord A positive int &le; {@code FFFFh}.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectorSpi addSuccessfulStatusWord(int statusWord) {
     this.successfulSelectionStatusWords.add(statusWord);
@@ -154,7 +154,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final String getCardProtocol() {
@@ -164,7 +164,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getPowerOnDataRegex() {
@@ -174,7 +174,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getAid() {
@@ -184,7 +184,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public FileOccurrence getFileOccurrence() {
@@ -194,7 +194,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public FileControlInformation getFileControlInformation() {
@@ -204,7 +204,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public Set<Integer> getSuccessfulSelectionStatusWords() {

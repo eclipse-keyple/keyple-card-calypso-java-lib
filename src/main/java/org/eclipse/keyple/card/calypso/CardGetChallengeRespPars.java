@@ -17,7 +17,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the card Get challenge response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardGetChallengeRespPars extends AbstractCardResponseParser {
 
@@ -26,7 +26,7 @@ final class CardGetChallengeRespPars extends AbstractCardResponseParser {
    *
    * @param response the response from Card Get Challenge APDU Command.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardGetChallengeRespPars(ApduResponseApi response, CardGetChallengeBuilder builder) {
     super(response, builder);
@@ -36,7 +36,7 @@ final class CardGetChallengeRespPars extends AbstractCardResponseParser {
    * Gets the card challenge
    *
    * @return An array of bytes
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getCardChallenge() {
     return getApduResponse().getDataOut();

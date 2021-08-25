@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Invalidate response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardInvalidateParser extends AbstractCardResponseParser {
 
@@ -50,7 +50,7 @@ final class CardInvalidateParser extends AbstractCardResponseParser {
    *
    * @param response the response from Invalidate APDU Command.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardInvalidateParser(ApduResponseApi response, CardInvalidateBuilder builder) {
     super(response, builder);
@@ -59,7 +59,7 @@ final class CardInvalidateParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

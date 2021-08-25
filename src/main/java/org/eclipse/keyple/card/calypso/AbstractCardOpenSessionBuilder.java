@@ -17,7 +17,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
  * (package-private)<br>
  * Builds the Open Secure Session APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponseParser>
     extends AbstractCardCommandBuilder<T> {
@@ -30,7 +30,7 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
    * @param calypsoCard the {@link CalypsoCard}.
    * @throws IllegalArgumentException - if the key index is 0 and rev is 2.4
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   AbstractCardOpenSessionBuilder(CalypsoCard calypsoCard) {
     super(CalypsoCardCommand.getOpenSessionForRev(calypsoCard));

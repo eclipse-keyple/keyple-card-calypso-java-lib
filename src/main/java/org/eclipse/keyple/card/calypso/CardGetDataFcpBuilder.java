@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>This command can not be sent in session because it would generate a 6Cxx status in contact
  * mode and thus make calculation of the digest impossible.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardGetDataFcpBuilder extends AbstractCardCommandBuilder<CardGetDataFcpParser> {
 
@@ -31,7 +31,7 @@ final class CardGetDataFcpBuilder extends AbstractCardCommandBuilder<CardGetData
    * Instantiates a new CardGetDataFciBuilder.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardGetDataFcpBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
@@ -50,7 +50,7 @@ final class CardGetDataFcpBuilder extends AbstractCardCommandBuilder<CardGetData
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardGetDataFcpParser createResponseParser(ApduResponseApi apduResponse) {
@@ -64,7 +64,7 @@ final class CardGetDataFcpBuilder extends AbstractCardCommandBuilder<CardGetData
    * buffer.
    *
    * @return False
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

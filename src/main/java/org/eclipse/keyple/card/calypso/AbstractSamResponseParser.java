@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private) <br>
  * Superclass for all SAM command parsers.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
 
@@ -40,7 +40,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -62,7 +62,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final AbstractSamCommandBuilder<AbstractSamResponseParser> getBuilder() {
@@ -72,7 +72,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected final CalypsoApduCommandException buildCommandException(
@@ -106,7 +106,7 @@ abstract class AbstractSamResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public void checkStatus() throws CalypsoSamCommandException {

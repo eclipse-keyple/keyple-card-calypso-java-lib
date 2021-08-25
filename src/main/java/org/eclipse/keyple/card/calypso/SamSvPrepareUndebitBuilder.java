@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the SV Undebit APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamSvPrepareUndebitBuilder
     extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
@@ -34,7 +34,7 @@ final class SamSvPrepareUndebitBuilder
    * @param svGetHeader the SV Get command header.
    * @param svGetData a byte array containing the data from the SV get command and response.
    * @param svUndebitCmdBuildDebitCmdBuildData the SV undebit command builder data.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamSvPrepareUndebitBuilder(
       CalypsoSam.ProductType samProductType,
@@ -65,7 +65,7 @@ final class SamSvPrepareUndebitBuilder
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamSvPrepareOperationParser createResponseParser(ApduResponseApi apduResponse) {

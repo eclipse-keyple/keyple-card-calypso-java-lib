@@ -21,7 +21,7 @@ import org.calypsonet.terminal.card.CardResponseApi;
  * indicators related to the status of the channel and the completion of the card request.
  *
  * @see org.calypsonet.terminal.card.spi.CardRequestSpi
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardResponseAdapter implements CardResponseApi {
 
@@ -35,7 +35,7 @@ final class CardResponseAdapter implements CardResponseApi {
    *
    * @param apduResponses A not null list.
    * @param isLogicalChannelOpen true if the logical channel is open, false if not.
-   * @since 2.0
+   * @since 2.0.0
    */
   CardResponseAdapter(List<ApduResponseApi> apduResponses, boolean isLogicalChannelOpen) {
 
@@ -46,7 +46,7 @@ final class CardResponseAdapter implements CardResponseApi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public List<ApduResponseApi> getApduResponses() {
@@ -56,7 +56,7 @@ final class CardResponseAdapter implements CardResponseApi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isLogicalChannelOpen() {

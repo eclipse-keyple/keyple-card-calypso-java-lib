@@ -20,7 +20,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Close Secure Session response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardCloseSessionParser extends AbstractCardResponseParser {
 
@@ -47,7 +47,7 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -67,7 +67,7 @@ final class CardCloseSessionParser extends AbstractCardResponseParser {
    *
    * @param response from CardCloseSessionBuilder.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardCloseSessionParser(ApduResponseApi response, CardCloseSessionBuilder builder) {
     super(response, builder);

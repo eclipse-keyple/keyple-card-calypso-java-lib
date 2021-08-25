@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SV Reload command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadParser> {
 
@@ -43,7 +43,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * @param time debit time (not checked by the card).
    * @param free 2 free bytes stored in the log but not processed by the card.
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvReloadBuilder(
       CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time, byte[] free) {
@@ -95,7 +95,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    *
    * @param reloadComplementaryData the sam id and the data out from the SvPrepareReload SAM
    *     command.
-   * @since 2.0
+   * @since 2.0.0
    */
   public void finalizeBuilder(byte[] reloadComplementaryData) {
     if ((calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 20)
@@ -128,7 +128,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * Gets the SV Reload part of the data to include in the SAM SV Prepare Load command
    *
    * @return a byte array containing the SV reload data
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSvReloadData() {
     byte[] svReloadData = new byte[15];
@@ -149,7 +149,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    *
    * @param apduResponse the response data from the the card.
    * @return a {@link CardSvReloadParser} object
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSvReloadParser createResponseParser(ApduResponseApi apduResponse) {
@@ -162,7 +162,7 @@ final class CardSvReloadBuilder extends AbstractCardCommandBuilder<CardSvReloadP
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Select File APDU commands.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectFileParser> {
   private static final Logger logger = LoggerFactory.getLogger(CardSelectFileBuilder.class);
@@ -39,7 +39,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectFileBuilder(
       CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
@@ -85,7 +85,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param selectionPath the file identifier path.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectFileBuilder(CalypsoCardClass calypsoCardClass, byte[] selectionPath) {
     super(command);
@@ -114,7 +114,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSelectFileParser createResponseParser(ApduResponseApi apduResponse) {
@@ -128,7 +128,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    * buffer.
    *
    * @return False
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -139,7 +139,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    * The selection path can be null if the chosen constructor targets the current EF
    *
    * @return The selection path or null
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getPath() {
     return path;
@@ -149,7 +149,7 @@ final class CardSelectFileBuilder extends AbstractCardCommandBuilder<CardSelectF
    * The file selection control can be null if the chosen constructor targets an explicit path
    *
    * @return The select file control or null
-   * @since 2.0
+   * @since 2.0.0
    */
   public SelectFileControl getSelectFileControl() {
     return selectFileControl;

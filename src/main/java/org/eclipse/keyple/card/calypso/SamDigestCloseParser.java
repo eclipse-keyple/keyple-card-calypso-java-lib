@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Digest close response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamDigestCloseParser extends AbstractSamResponseParser {
 
@@ -37,7 +37,7 @@ final class SamDigestCloseParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -49,7 +49,7 @@ final class SamDigestCloseParser extends AbstractSamResponseParser {
    *
    * @param response from the SamDigestCloseBuilder.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamDigestCloseParser(ApduResponseApi response, SamDigestCloseBuilder builder) {
     super(response, builder);
@@ -59,7 +59,7 @@ final class SamDigestCloseParser extends AbstractSamResponseParser {
    * Gets the sam signature.
    *
    * @return The sam half session signature
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSignature() {
     return isSuccessful() ? response.getDataOut() : null;

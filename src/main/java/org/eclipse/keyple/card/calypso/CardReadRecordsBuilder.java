@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Read Records APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRecordsParser> {
 
@@ -52,7 +52,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
    * @param expectedLength the expected length of the record(s).
    * @throws IllegalArgumentException - if record number &lt; 1
    * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardReadRecordsBuilder(
       CalypsoCardClass calypsoCardClass,
@@ -94,7 +94,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardReadRecordsParser createResponseParser(ApduResponseApi apduResponse) {
@@ -108,7 +108,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
    * buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -117,7 +117,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
 
   /**
    * @return the SFI of the accessed file
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getSfi() {
     return sfi;
@@ -125,7 +125,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
 
   /**
    * @return the number of the first record to read
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getFirstRecordNumber() {
     return firstRecordNumber;
@@ -133,7 +133,7 @@ final class CardReadRecordsBuilder extends AbstractCardCommandBuilder<CardReadRe
 
   /**
    * @return the readJustOneRecord flag
-   * @since 2.0
+   * @since 2.0.0
    */
   public ReadMode getReadMode() {
     return readMode;

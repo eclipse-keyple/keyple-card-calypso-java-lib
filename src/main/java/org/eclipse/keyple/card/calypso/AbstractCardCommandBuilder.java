@@ -17,7 +17,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Superclass for all card command builders
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
     extends AbstractApduCommandBuilder {
@@ -26,7 +26,7 @@ abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
-   * @since 2.0
+   * @since 2.0.0
    */
   protected AbstractCardCommandBuilder(CalypsoCardCommand commandRef) {
     super(commandRef);
@@ -43,7 +43,7 @@ abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoCardCommand getCommandRef() {
@@ -56,7 +56,7 @@ abstract class AbstractCardCommandBuilder<T extends AbstractCardResponseParser>
    * <p>Allows the management of the overflow of this buffer.
    *
    * @return True if this command uses the session buffer
-   * @since 2.0
+   * @since 2.0.0
    */
   public abstract boolean isSessionBufferUsed();
 }

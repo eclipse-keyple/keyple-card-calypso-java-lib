@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso;
  * Indicates that an event counter number authorized by the SAM has reached its limit.<br>
  * This may occur, for example, during the digest init operation.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamCounterOverflowException extends CalypsoSamCommandException {
 
@@ -26,7 +26,7 @@ final class CalypsoSamCounterOverflowException extends CalypsoSamCommandExceptio
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamCounterOverflowException(
       String message, CalypsoSamCommand command, Integer statusWord) {

@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Rehabilitate command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardRehabilitateBuilder extends AbstractCardCommandBuilder<CardRehabilitateParser> {
 
@@ -28,7 +28,7 @@ final class CardRehabilitateBuilder extends AbstractCardCommandBuilder<CardRehab
    * Instantiates a new CardRehabilitateBuilder.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardRehabilitateBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
@@ -45,7 +45,7 @@ final class CardRehabilitateBuilder extends AbstractCardCommandBuilder<CardRehab
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardRehabilitateParser createResponseParser(ApduResponseApi apduResponse) {
@@ -58,7 +58,7 @@ final class CardRehabilitateBuilder extends AbstractCardCommandBuilder<CardRehab
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

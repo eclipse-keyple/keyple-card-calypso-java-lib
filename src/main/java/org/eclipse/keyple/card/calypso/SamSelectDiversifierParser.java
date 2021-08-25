@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Select diversifier response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamSelectDiversifierParser extends AbstractSamResponseParser {
 
@@ -39,7 +39,7 @@ final class SamSelectDiversifierParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -51,7 +51,7 @@ final class SamSelectDiversifierParser extends AbstractSamResponseParser {
    *
    * @param response the response.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamSelectDiversifierParser(ApduResponseApi response, SamSelectDiversifierBuilder builder) {
     super(response, builder);

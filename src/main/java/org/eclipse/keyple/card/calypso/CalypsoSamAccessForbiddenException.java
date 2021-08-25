@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Indicates that preconditions are not satisfied (e.g. session not active,...).
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandException {
 
@@ -25,7 +25,7 @@ final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandExceptio
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
    * @param statusWord the status word.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamAccessForbiddenException(
       String message, CalypsoSamCommand command, Integer statusWord) {

@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Unlock APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> {
   /** The command reference. */
@@ -30,7 +30,7 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
    *
    * @param revision the SAM revision.
    * @param unlockData the unlock data.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamUnlockBuilder(CalypsoSam.ProductType revision, byte[] unlockData) {
     super(command);
@@ -57,7 +57,7 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamUnlockParser createResponseParser(ApduResponseApi apduResponse) {

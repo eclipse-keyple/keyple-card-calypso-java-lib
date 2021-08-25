@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * (package-private)<br>
  * Implementation of {@link FileHeader}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class FileHeaderAdapter implements FileHeader {
 
@@ -49,7 +49,7 @@ class FileHeaderAdapter implements FileHeader {
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder pattern
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   static final class FileHeaderBuilder {
 
@@ -71,7 +71,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param lid the LID.
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder lid(short lid) {
       this.lid = lid;
@@ -84,7 +84,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param recordsNumber the number of records (should be {@code >=} 1).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder recordsNumber(int recordsNumber) {
       this.recordsNumber = recordsNumber;
@@ -97,7 +97,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param recordSize the size of a record (should be {@code >=} 1).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder recordSize(int recordSize) {
       this.recordSize = recordSize;
@@ -110,7 +110,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param type the file type (should be not null).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder type(ElementaryFile.Type type) {
       this.type = type;
@@ -123,7 +123,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param accessConditions the access conditions (should be not null and 4 bytes length).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder accessConditions(byte[] accessConditions) {
       this.accessConditions = accessConditions;
@@ -136,7 +136,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param keyIndexes the key indexes (should be not null and 4 bytes length).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder keyIndexes(byte[] keyIndexes) {
       this.keyIndexes = keyIndexes;
@@ -149,7 +149,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param dfStatus the DF status (byte).
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder dfStatus(byte dfStatus) {
       this.dfStatus = dfStatus;
@@ -162,7 +162,7 @@ class FileHeaderAdapter implements FileHeader {
      *
      * @param sharedReference the shared reference.
      * @return The builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeaderBuilder sharedReference(short sharedReference) {
       this.sharedReference = sharedReference;
@@ -174,7 +174,7 @@ class FileHeaderAdapter implements FileHeader {
      * Build a new {@code FileHeader}.
      *
      * @return A new instance
-     * @since 2.0
+     * @since 2.0.0
      */
     FileHeader build() {
       return new FileHeaderAdapter(this);
@@ -184,7 +184,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public short getLid() {
@@ -194,7 +194,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getRecordsNumber() {
@@ -204,7 +204,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int getRecordSize() {
@@ -214,7 +214,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public ElementaryFile.Type getEfType() {
@@ -224,7 +224,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getAccessConditions() {
@@ -234,7 +234,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getKeyIndexes() {
@@ -244,7 +244,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte getDfStatus() {
@@ -254,7 +254,7 @@ class FileHeaderAdapter implements FileHeader {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public Short getSharedReference() {
@@ -266,7 +266,7 @@ class FileHeaderAdapter implements FileHeader {
    * Gets a new builder.
    *
    * @return A new builder instance
-   * @since 2.0
+   * @since 2.0.0
    */
   static FileHeaderBuilder builder() {
     return new FileHeaderBuilder();
@@ -277,7 +277,7 @@ class FileHeaderAdapter implements FileHeader {
    * Constructor used to create a clone of the provided file header.
    *
    * @param source the header to be cloned.
-   * @since 2.0
+   * @since 2.0.0
    */
   FileHeaderAdapter(FileHeader source) {
     this.lid = source.getLid();
@@ -296,7 +296,7 @@ class FileHeaderAdapter implements FileHeader {
    *
    * @param o the object to compare.
    * @return The comparison evaluation
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean equals(Object o) {
@@ -312,7 +312,7 @@ class FileHeaderAdapter implements FileHeader {
    * Comparison is based on field "lid".
    *
    * @return The hashcode
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int hashCode() {
@@ -323,7 +323,7 @@ class FileHeaderAdapter implements FileHeader {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

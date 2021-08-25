@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * <p>This flag is set when invoking the method notifyCommandsProcessed and reset when a new
  * AbstractCardCommandBuilder is added or when a attempt
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class CardCommandManager {
   private static final Logger logger = LoggerFactory.getLogger(CardCommandManager.class);

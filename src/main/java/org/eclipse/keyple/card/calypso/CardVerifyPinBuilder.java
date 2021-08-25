@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Verify PIN command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPinParser> {
   private static final Logger logger = LoggerFactory.getLogger(CardVerifyPinBuilder.class);
@@ -37,7 +37,7 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
    * @param encryptPinTransmission true if the PIN transmission has to be encrypted.
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of a encrypted.
    *     transmission (@see setCipheredPinData).
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardVerifyPinBuilder(
       CalypsoCardClass calypsoCardClass, boolean encryptPinTransmission, byte[] pin) {
@@ -89,7 +89,7 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardVerifyPinParser createResponseParser(ApduResponseApi apduResponse) {
@@ -103,7 +103,7 @@ final class CardVerifyPinBuilder extends AbstractCardCommandBuilder<CardVerifyPi
    * buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

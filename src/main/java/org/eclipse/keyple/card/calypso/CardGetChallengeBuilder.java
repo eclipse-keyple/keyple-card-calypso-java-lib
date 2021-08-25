@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Get Challenge APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetChallengeRespPars> {
 
@@ -28,7 +28,7 @@ final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetCh
    * Instantiates a new CardGetChallengeBuilder.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardGetChallengeBuilder(CalypsoCardClass calypsoCardClass) {
     super(command);
@@ -46,7 +46,7 @@ final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetCh
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardGetChallengeRespPars createResponseParser(ApduResponseApi apduResponse) {
@@ -60,7 +60,7 @@ final class CardGetChallengeBuilder extends AbstractCardCommandBuilder<CardGetCh
    * buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Open session response from a card revision 3.X.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
 
@@ -29,7 +29,7 @@ final class CardOpenSession3Parser extends AbstractCardOpenSessionParser {
    *
    * @param response from CardOpenSession3Parser.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardOpenSession3Parser(ApduResponseApi response, CardOpenSession3Builder builder) {
     super(response, builder);

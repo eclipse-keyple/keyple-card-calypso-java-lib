@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * (package-private)<br>
  * Implementation of {@link DirectoryHeader}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class DirectoryHeaderAdapter implements DirectoryHeader {
 
@@ -47,7 +47,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder pattern
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   static final class DirectoryHeaderBuilder {
 
@@ -69,7 +69,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      *
      * @param lid the LID.
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder lid(short lid) {
       this.lid = lid;
@@ -82,7 +82,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      *
      * @param accessConditions the access conditions (should be not null and 4 bytes length).
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder accessConditions(byte[] accessConditions) {
       this.accessConditions = accessConditions;
@@ -95,7 +95,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      *
      * @param keyIndexes the key indexes (should be not null and 4 bytes length).
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder keyIndexes(byte[] keyIndexes) {
       this.keyIndexes = keyIndexes;
@@ -108,7 +108,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      *
      * @param dfStatus the DF status (byte).
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder dfStatus(byte dfStatus) {
       this.dfStatus = dfStatus;
@@ -122,7 +122,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @param level the KIF session access level (should be not null).
      * @param kif the KIF value.
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder kif(WriteAccessLevel level, byte kif) {
       this.kif.put(level, kif);
@@ -136,7 +136,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * @param level the KVC session access level (should be not null).
      * @param kvc the KVC value.
      * @return the builder instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeaderBuilder kvc(WriteAccessLevel level, byte kvc) {
       this.kvc.put(level, kvc);
@@ -148,7 +148,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
      * Build a new {@code DirectoryHeader}.
      *
      * @return a new instance
-     * @since 2.0
+     * @since 2.0.0
      */
     DirectoryHeader build() {
       return new DirectoryHeaderAdapter(this);
@@ -196,7 +196,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
    * Gets a new builder.
    *
    * @return a new builder instance
-   * @since 2.0
+   * @since 2.0.0
    */
   static DirectoryHeaderBuilder builder() {
     return new DirectoryHeaderBuilder();
@@ -207,7 +207,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
    *
    * @param o the object to compare.
    * @return the comparison evaluation
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean equals(Object o) {
@@ -223,7 +223,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
    * Comparison is based on field "lid".
    *
    * @return the hashcode
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public int hashCode() {
@@ -234,7 +234,7 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

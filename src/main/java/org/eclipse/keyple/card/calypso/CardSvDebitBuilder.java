@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>Note: {@link CardSvDebitBuilder} and {@link CardSvUndebitBuilder} shares the same parser
  * {@link CardSvDebitParser}
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitParser> {
 
@@ -42,7 +42,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvDebitBuilder(
       CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time) {
@@ -92,7 +92,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * <p>5 or 10 byte signature (hi part)
    *
    * @param debitComplementaryData the data out from the SvPrepareDebit SAM command.
-   * @since 2.0
+   * @since 2.0.0
    */
   public void finalizeBuilder(byte[] debitComplementaryData) {
     if ((calypsoCard.isExtendedModeSupported() && debitComplementaryData.length != 20)
@@ -125,7 +125,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * Gets the SV Debit part of the data to include in the SAM SV Prepare Debit command
    *
    * @return a byte array containing the SV debit data
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSvDebitData() {
     byte[] svDebitData = new byte[12];
@@ -141,7 +141,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardSvDebitParser createResponseParser(ApduResponseApi apduResponse) {
@@ -154,7 +154,7 @@ final class CardSvDebitBuilder extends AbstractCardCommandBuilder<CardSvDebitPar
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Write Key APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyParser> {
   /** The command reference. */
@@ -32,7 +32,7 @@ final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyPars
    * @param writingMode the writing mode (P1).
    * @param keyReference the key reference (P2).
    * @param keyData the key data.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamWriteKeyBuilder(
       CalypsoSam.ProductType revision, byte writingMode, byte keyReference, byte[] keyData) {
@@ -59,7 +59,7 @@ final class SamWriteKeyBuilder extends AbstractSamCommandBuilder<SamWriteKeyPars
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamWriteKeyParser createResponseParser(ApduResponseApi apduResponse) {

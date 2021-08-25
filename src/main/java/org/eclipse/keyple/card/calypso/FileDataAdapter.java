@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * (package-private)<br>
  * Implementation of {@link FileData}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class FileDataAdapter implements FileData {
 
@@ -31,7 +31,7 @@ class FileDataAdapter implements FileData {
    * (package-private)<br>
    * Constructor
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   FileDataAdapter() {}
 
@@ -40,7 +40,7 @@ class FileDataAdapter implements FileData {
    * Constructor used to create a clone of the provided file file data.
    *
    * @param source the header to be cloned.
-   * @since 2.0
+   * @since 2.0.0
    */
   FileDataAdapter(FileData source) {
     SortedMap<Integer, byte[]> sourceContent = source.getAllRecordsContent();
@@ -52,7 +52,7 @@ class FileDataAdapter implements FileData {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SortedMap<Integer, byte[]> getAllRecordsContent() {
@@ -62,7 +62,7 @@ class FileDataAdapter implements FileData {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getContent() {
@@ -72,7 +72,7 @@ class FileDataAdapter implements FileData {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getContent(int numRecord) {
@@ -86,7 +86,7 @@ class FileDataAdapter implements FileData {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getContent(int numRecord, int dataOffset, int dataLength) {
@@ -151,7 +151,7 @@ class FileDataAdapter implements FileData {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SortedMap<Integer, Integer> getAllCountersValue() {
@@ -173,7 +173,7 @@ class FileDataAdapter implements FileData {
    *
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
-   * @since 2.0
+   * @since 2.0.0
    */
   void setContent(int numRecord, byte[] content) {
     records.put(numRecord, content);
@@ -185,7 +185,7 @@ class FileDataAdapter implements FileData {
    *
    * @param numCounter the counter number (should be {@code >=} 1).
    * @param content the counter value (should be not null and 3 bytes length).
-   * @since 2.0
+   * @since 2.0.0
    */
   void setCounter(int numCounter, byte[] content) {
     setContent(1, content, (numCounter - 1) * 3);
@@ -201,7 +201,7 @@ class FileDataAdapter implements FileData {
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
    * @param offset the offset (should be {@code >=} 0).
-   * @since 2.0
+   * @since 2.0.0
    */
   void setContent(int numRecord, byte[] content, int offset) {
     byte[] newContent;
@@ -231,7 +231,7 @@ class FileDataAdapter implements FileData {
    *
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
-   * @since 2.0
+   * @since 2.0.0
    */
   void fillContent(int numRecord, byte[] content) {
     byte[] actualContent = records.get(numRecord);
@@ -257,7 +257,7 @@ class FileDataAdapter implements FileData {
    * Note that records are infinitely shifted.
    *
    * @param content the content (should be not empty).
-   * @since 2.0
+   * @since 2.0.0
    */
   void addCyclicContent(byte[] content) {
     ArrayList<Integer> descendingKeys = new ArrayList<Integer>(records.descendingKeySet());
@@ -271,7 +271,7 @@ class FileDataAdapter implements FileData {
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

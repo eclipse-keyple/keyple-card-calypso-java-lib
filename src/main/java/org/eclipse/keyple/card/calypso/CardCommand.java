@@ -17,7 +17,7 @@ import java.io.Serializable;
  * (package-private)<br>
  * Provides the API to get CardCommand's name and instruction byte (INS).
  *
- * @since 2.0
+ * @since 2.0.0
  */
 interface CardCommand extends Serializable {
 
@@ -25,7 +25,7 @@ interface CardCommand extends Serializable {
    * Gets command's name.
    *
    * @return A String
-   * @since 2.0
+   * @since 2.0.0
    */
   String getName();
 
@@ -33,7 +33,7 @@ interface CardCommand extends Serializable {
    * Gets Instruction Byte (INS)
    *
    * @return A byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   byte getInstructionByte();
 }

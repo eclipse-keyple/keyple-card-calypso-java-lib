@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Superclass for all SAM command builders.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
     extends AbstractApduCommandBuilder {
@@ -40,7 +40,7 @@ abstract class AbstractSamCommandBuilder<T extends AbstractSamResponseParser>
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CalypsoSamCommand getCommandRef() {

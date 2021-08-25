@@ -28,7 +28,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * Helper class used to update the {@link org.calypsonet.terminal.calypso.card.CalypsoCard} with the
  * responses received from the card.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoCardUtilAdapter {
 
@@ -580,7 +580,7 @@ final class CalypsoCardUtilAdapter {
    * @param apduResponse the APDU response returned by the card to the command.
    * @return The parser associated to the command or null if not relevant.
    * @throws CardCommandException if a response from the card was unexpected
-   * @since 2.0
+   * @since 2.0.0
    */
   static AbstractCardResponseParser updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,
@@ -660,7 +660,7 @@ final class CalypsoCardUtilAdapter {
    * @param commandBuilders the list of builders that get the responses.
    * @param apduResponses the APDU responses returned by the card to all commands.
    * @throws CardCommandException if a response from the card was unexpected
-   * @since 2.0
+   * @since 2.0.0
    */
   static void updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,

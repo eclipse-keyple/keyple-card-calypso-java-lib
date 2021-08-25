@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  * (package-private)<br>
  * Parses the Open session response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser {
 
@@ -73,7 +73,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -88,7 +88,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
    *
    * @param response the response from Open secure session APDU command.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   AbstractCardOpenSessionParser(
       ApduResponseApi response,
@@ -186,7 +186,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      *     command
      * @param secureSessionData the secure session data from the response of open secure session.
      *     APDU command
-     * @since 2.0
+     * @since 2.0.0
      */
     public SecureSession(
         byte[] challengeTransactionCounter,
@@ -219,7 +219,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Checks if is previous session ratified.
      *
      * @return The boolean
-     * @since 2.0
+     * @since 2.0.0
      */
     public boolean isPreviousSessionRatified() {
       return previousSessionRatified;
@@ -229,7 +229,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Checks if is manage secure session authorized.
      *
      * @return True if the secure session is authorized
-     * @since 2.0
+     * @since 2.0.0
      */
     public boolean isManageSecureSessionAuthorized() {
       return manageSecureSessionAuthorized;
@@ -239,7 +239,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Gets the kif.
      *
      * @return A byte
-     * @since 2.0
+     * @since 2.0.0
      */
     public Byte getKIF() {
       return kif;
@@ -249,7 +249,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Gets the kvc.
      *
      * @return A byte
-     * @since 2.0
+     * @since 2.0.0
      */
     public Byte getKVC() {
       return kvc;
@@ -259,7 +259,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Gets the original data.
      *
      * @return An array of bytes
-     * @since 2.0
+     * @since 2.0.0
      */
     public byte[] getOriginalData() {
       return originalData;
@@ -269,7 +269,7 @@ abstract class AbstractCardOpenSessionParser extends AbstractCardResponseParser 
      * Gets the secure session data.
      *
      * @return An array of bytes
-     * @since 2.0
+     * @since 2.0.0
      */
     public byte[] getSecureSessionData() {
       return secureSessionData;

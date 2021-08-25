@@ -15,7 +15,7 @@ package org.eclipse.keyple.card.calypso;
  * (package-private)<br>
  * Indicates that the input user data do not allow to build a syntactically correct command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamIllegalArgumentException extends CalypsoSamCommandException {
 
@@ -24,7 +24,7 @@ final class CalypsoSamIllegalArgumentException extends CalypsoSamCommandExceptio
    *
    * @param message the message to identify the exception context.
    * @param command the Calypso SAM command.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamIllegalArgumentException(String message, CalypsoSamCommand command) {
     super(message, command, null);

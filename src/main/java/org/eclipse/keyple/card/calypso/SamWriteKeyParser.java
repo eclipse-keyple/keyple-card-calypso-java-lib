@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Write Key response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamWriteKeyParser extends AbstractSamResponseParser {
 
@@ -60,7 +60,7 @@ final class SamWriteKeyParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -72,7 +72,7 @@ final class SamWriteKeyParser extends AbstractSamResponseParser {
    *
    * @param response the response.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamWriteKeyParser(ApduResponseApi response, SamWriteKeyBuilder builder) {
     super(response, builder);

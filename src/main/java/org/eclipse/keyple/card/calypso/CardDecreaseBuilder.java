@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Decrease APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseParser> {
 
@@ -45,7 +45,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
    *     [FFFFFFh])
    * @throws IllegalArgumentException - if the decrement value is out of range
    * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardDecreaseBuilder(
       CalypsoCardClass calypsoCardClass, byte sfi, int counterNumber, int decValue) {
@@ -85,7 +85,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardDecreaseParser createResponseParser(ApduResponseApi apduResponse) {
@@ -98,7 +98,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {
@@ -107,7 +107,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
 
   /**
    * @return the SFI of the accessed file
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getSfi() {
     return sfi;
@@ -115,7 +115,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
 
   /**
    * @return the counter number
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getCounterNumber() {
     return counterNumber;
@@ -123,7 +123,7 @@ final class CardDecreaseBuilder extends AbstractCardCommandBuilder<CardDecreaseP
 
   /**
    * @return the decrement value
-   * @since 2.0
+   * @since 2.0.0
    */
   public int getDecValue() {
     return decValue;

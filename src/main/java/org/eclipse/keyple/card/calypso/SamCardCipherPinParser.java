@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the Card Cipher Pin response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamCardCipherPinParser extends AbstractSamResponseParser {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
@@ -48,7 +48,7 @@ final class SamCardCipherPinParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -60,7 +60,7 @@ final class SamCardCipherPinParser extends AbstractSamResponseParser {
    *
    * @param response from the SAM.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamCardCipherPinParser(ApduResponseApi response, SamCardCipherPinBuilder builder) {
     super(response, builder);
@@ -70,7 +70,7 @@ final class SamCardCipherPinParser extends AbstractSamResponseParser {
    * Gets the 8 bytes of ciphered data.
    *
    * @return The ciphered data byte array
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getCipheredData() {
     return response.getDataOut();

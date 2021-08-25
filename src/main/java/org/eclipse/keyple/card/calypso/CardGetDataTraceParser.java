@@ -21,7 +21,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  *
  * <p>Provides getter methods for all relevant information.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardGetDataTraceParser extends AbstractCardResponseParser {
 
@@ -52,7 +52,7 @@ final class CardGetDataTraceParser extends AbstractCardResponseParser {
    *
    * @param response the Traceability Data response from Get Data APDU command.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardGetDataTraceParser(ApduResponseApi response, CardGetDataTraceBuilder builder) {
     super(response, builder);
@@ -61,7 +61,7 @@ final class CardGetDataTraceParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {

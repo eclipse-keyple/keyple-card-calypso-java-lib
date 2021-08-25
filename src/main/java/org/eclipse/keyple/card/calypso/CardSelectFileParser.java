@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.BerTlvUtil;
  * (package-private)<br>
  * Parses the response to a Select File command.
  *
- * @since 2.0
+ * @since 2.0.0
  *     <p>The value of the Proprietary Information tag is extracted from the Select File response
  *     and made available using the corresponding getter.
  */
@@ -44,7 +44,7 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -58,7 +58,7 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
    *
    * @param response the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSelectFileParser(ApduResponseApi response, CardSelectFileBuilder builder) {
     super(response, builder);
@@ -68,7 +68,7 @@ final class CardSelectFileParser extends AbstractCardResponseParser {
   /**
    * @return The content of the proprietary information tag present in the response to the Select
    *     File command
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getProprietaryInformation() {
     if (proprietaryInformation == null) {

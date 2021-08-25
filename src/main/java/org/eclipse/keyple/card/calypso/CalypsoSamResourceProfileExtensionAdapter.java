@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Implementation of {@link CardResourceProfileExtension} dedicated to SAM identification.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileExtension {
   private static final Logger logger =
@@ -35,7 +35,7 @@ class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileEx
    * (package-private)<br>
    *
    * @param calypsoSamSelection The {@link CalypsoSamSelection}.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamResourceProfileExtensionAdapter(CalypsoSamSelection calypsoSamSelection) {
     this.calypsoSamSelection = calypsoSamSelection;
@@ -44,7 +44,7 @@ class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileEx
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SmartCard matches(CardReader reader, CardSelectionManager samCardSelectionManager) {

@@ -19,7 +19,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Parses the Update records response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardAppendRecordParser extends AbstractCardResponseParser {
 
@@ -60,7 +60,7 @@ final class CardAppendRecordParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -72,7 +72,7 @@ final class CardAppendRecordParser extends AbstractCardResponseParser {
    *
    * @param response the response from the card.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardAppendRecordParser(ApduResponseApi response, CardAppendRecordBuilder builder) {
     super(response, builder);

@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private) <br>
  * Builds the Get Challenge APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChallengeParser> {
 
@@ -32,7 +32,7 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
    * @param revision of the SAM (SAM).
    * @param expectedResponseLength the expected response length.
    * @throws IllegalArgumentException - if the expected response length has wrong value.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamGetChallengeBuilder(CalypsoSam.ProductType revision, byte expectedResponseLength) {
     super(command);
@@ -56,7 +56,7 @@ final class SamGetChallengeBuilder extends AbstractSamCommandBuilder<SamGetChall
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public SamGetChallengeParser createResponseParser(ApduResponseApi apduResponse) {

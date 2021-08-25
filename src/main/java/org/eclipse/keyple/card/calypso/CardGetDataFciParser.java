@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Provides getter methods for all relevant information.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardGetDataFciParser extends AbstractCardResponseParser {
   private static final Logger logger = LoggerFactory.getLogger(CardGetDataFciParser.class);
@@ -55,7 +55,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -103,7 +103,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    *
    * @param response the select application response from Get Data APDU command.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardGetDataFciParser(ApduResponseApi response, CardGetDataFciBuilder builder) {
     super(response, builder);
@@ -175,7 +175,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * Tells if the FCI is valid
    *
    * @return True if the FCI is valid, false if not
-   * @since 2.0
+   * @since 2.0.0
    */
   public boolean isValidCalypsoFCI() {
     return isValidCalypsoFCI;
@@ -185,7 +185,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * Gets the DF name
    *
    * @return An array of bytes
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getDfName() {
     return dfName;
@@ -195,7 +195,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * Gets the application serial number
    *
    * @return An array of bytes
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getApplicationSerialNumber() {
     return applicationSN;
@@ -205,7 +205,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * Gets the discretionary data
    *
    * @return An array of bytes
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getDiscretionaryData() {
     return discretionaryData;
@@ -215,7 +215,7 @@ final class CardGetDataFciParser extends AbstractCardResponseParser {
    * Tells if the DF is invalidated
    *
    * @return True if the DF is invalidated, false if not
-   * @since 2.0
+   * @since 2.0.0
    */
   public boolean isDfInvalidated() {
     return isDfInvalidated;

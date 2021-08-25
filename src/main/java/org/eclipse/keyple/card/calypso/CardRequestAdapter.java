@@ -21,7 +21,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * This POJO contains an ordered list of {@link ApduRequestSpi} and the associated status code check
  * policy.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardRequestAdapter implements CardRequestSpi {
 
@@ -37,7 +37,7 @@ final class CardRequestAdapter implements CardRequestSpi {
    *
    * @param apduRequests A not empty list.
    * @param isStatusCodesVerificationEnabled true or false.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardRequestAdapter(
       List<ApduRequestSpi> apduRequests, boolean isStatusCodesVerificationEnabled) {
@@ -48,7 +48,7 @@ final class CardRequestAdapter implements CardRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public List<ApduRequestSpi> getApduRequests() {
@@ -58,7 +58,7 @@ final class CardRequestAdapter implements CardRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean stopOnUnsuccessfulStatusWord() {
@@ -69,7 +69,7 @@ final class CardRequestAdapter implements CardRequestSpi {
    * Converts the card request into a string where the data is encoded in a json format.
    *
    * @return A not empty String
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

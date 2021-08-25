@@ -17,7 +17,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * (package-private)<br>
  * Superclass for all card command parsers.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
 
@@ -26,7 +26,7 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
    *
    * @param response response to parse.
    * @param builder the reference of the builder that created the parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   protected AbstractCardResponseParser(
       ApduResponseApi response, AbstractCardCommandBuilder builder) {
@@ -36,7 +36,7 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final AbstractCardCommandBuilder<AbstractCardResponseParser> getBuilder() {
@@ -46,7 +46,7 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected final CalypsoApduCommandException buildCommandException(
@@ -86,7 +86,7 @@ abstract class AbstractCardResponseParser extends AbstractApduResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public void checkStatus() throws CardCommandException {

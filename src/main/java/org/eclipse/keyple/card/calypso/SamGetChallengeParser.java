@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the get challenge response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamGetChallengeParser extends AbstractSamResponseParser {
 
@@ -34,7 +34,7 @@ final class SamGetChallengeParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -46,7 +46,7 @@ final class SamGetChallengeParser extends AbstractSamResponseParser {
    *
    * @param response of the SamGetChallengeBuilder.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamGetChallengeParser(ApduResponseApi response, SamGetChallengeBuilder builder) {
     super(response, builder);
@@ -56,7 +56,7 @@ final class SamGetChallengeParser extends AbstractSamResponseParser {
    * Gets the challenge.
    *
    * @return the challenge
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getChallenge() {
     return isSuccessful() ? response.getDataOut() : null;

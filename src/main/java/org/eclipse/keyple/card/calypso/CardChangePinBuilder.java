@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Change PIN APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardChangePinBuilder extends AbstractCardCommandBuilder<CardChangePinParser> {
   private static final CalypsoCardCommand command = CalypsoCardCommand.CHANGE_PIN;
@@ -29,7 +29,7 @@ final class CardChangePinBuilder extends AbstractCardCommandBuilder<CardChangePi
    * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param isNewPinEncrypted True if the new PIN is sent encrypted.
    * @param newPinData The new PIN data either plain or encrypted. @
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardChangePinBuilder(
       CalypsoCardClass calypsoCardClass, boolean isNewPinEncrypted, byte[] newPinData) {
@@ -51,7 +51,7 @@ final class CardChangePinBuilder extends AbstractCardCommandBuilder<CardChangePi
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardChangePinParser createResponseParser(ApduResponseApi apduResponse) {
@@ -64,7 +64,7 @@ final class CardChangePinBuilder extends AbstractCardCommandBuilder<CardChangePi
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Change key APDU command.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKeyParser> {
   private static final CalypsoCardCommand command = CalypsoCardCommand.CHANGE_KEY;
@@ -29,7 +29,7 @@ final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKe
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param keyIndex index of the key of the current DF to change.
    * @param cryptogram key encrypted with Issuer key (key #1).
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardChangeKeyBuilder(CalypsoCardClass calypsoCardClass, byte keyIndex, byte[] cryptogram) {
     super(command);
@@ -50,7 +50,7 @@ final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKe
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public CardChangeKeyParser createResponseParser(ApduResponseApi apduResponse) {
@@ -63,7 +63,7 @@ final class CardChangeKeyBuilder extends AbstractCardCommandBuilder<CardChangeKe
    * <p>This command can't be executed in session and therefore doesn't uses the session buffer.
    *
    * @return false
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public boolean isSessionBufferUsed() {

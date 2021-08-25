@@ -18,7 +18,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 /**
  * Parses the SV Check response.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class SamSvCheckParser extends AbstractSamResponseParser {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
@@ -40,7 +40,7 @@ final class SamSvCheckParser extends AbstractSamResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
@@ -52,7 +52,7 @@ final class SamSvCheckParser extends AbstractSamResponseParser {
    *
    * @param response from the SAM.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public SamSvCheckParser(ApduResponseApi response, SamSvCheckBuilder builder) {
     super(response, builder);

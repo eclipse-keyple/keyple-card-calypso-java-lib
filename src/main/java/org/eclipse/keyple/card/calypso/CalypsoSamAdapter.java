@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Implementation of {@link CalypsoSam}.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
@@ -46,7 +46,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * <p>Create the initial content from the data received in response to the card selection.
    *
    * @param cardSelectionResponse the response to the selection command.
-   * @since 2.0
+   * @since 2.0.0
    */
   CalypsoSamAdapter(CardSelectionResponseApi cardSelectionResponse) {
 
@@ -121,7 +121,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * Gets the class byte to use for the provided product type.
    *
    * @return A byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   static byte getClassByte(CalypsoSam.ProductType type) {
     if (type == CalypsoSam.ProductType.SAM_S1DX || type == CalypsoSam.ProductType.CSAM_F) {
@@ -135,7 +135,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * Gets the class byte to use for the current product type.
    *
    * @return A byte.
-   * @since 2.0
+   * @since 2.0.0
    */
   byte getClassByte() {
     return getClassByte(samProductType);
@@ -146,7 +146,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * Gets the maximum length allowed for digest commands.
    *
    * @return An positive int.
-   * @since 2.0
+   * @since 2.0.0
    */
   int getMaxDigestDataLength() {
     switch (samProductType) {
@@ -167,7 +167,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * {@inheritDoc}<br>
    * No select application for a SAM.
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getSelectApplicationResponse() {
@@ -177,7 +177,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getPowerOnData() {
@@ -187,7 +187,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final CalypsoSam.ProductType getProductType() {
@@ -207,7 +207,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte[] getSerialNumber() {
@@ -217,7 +217,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getPlatform() {
@@ -227,7 +227,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getApplicationType() {
@@ -237,7 +237,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getApplicationSubType() {
@@ -247,7 +247,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getSoftwareIssuer() {
@@ -257,7 +257,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getSoftwareVersion() {
@@ -267,7 +267,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public final byte getSoftwareRevision() {

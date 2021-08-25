@@ -29,7 +29,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * Attaching an optional name to the request facilitates the enhancement of the application logs
  * using the toString method.
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class ApduRequestAdapter implements ApduRequestSpi {
 
@@ -45,7 +45,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
    * <p>The default status words list is initialized with the standard successful code 9000h.
    *
    * @param apdu The bytes of the APDU's body.
-   * @since 2.0
+   * @since 2.0.0
    */
   public ApduRequestAdapter(byte[] apdu) {
     this.apdu = apdu;
@@ -60,7 +60,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
    *
    * @param successfulStatusWord A positive int &le; {@code FFFFh}.
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public ApduRequestAdapter addSuccessfulStatusWord(int successfulStatusWord) {
     this.successfulStatusWords.add(successfulStatusWord);
@@ -70,7 +70,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public Set<Integer> getSuccessfulStatusWords() {
@@ -85,7 +85,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
    *
    * @param info The request name (free text).
    * @return The object instance.
-   * @since 2.0
+   * @since 2.0.0
    */
   public ApduRequestAdapter setInfo(final String info) {
     this.info = info;
@@ -95,7 +95,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String getInfo() {
@@ -105,7 +105,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public byte[] getApdu() {
@@ -116,7 +116,7 @@ final class ApduRequestAdapter implements ApduRequestSpi {
    * Converts the APDU request into a string where the data is encoded in a json format.
    *
    * @return A not empty String
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   public String toString() {

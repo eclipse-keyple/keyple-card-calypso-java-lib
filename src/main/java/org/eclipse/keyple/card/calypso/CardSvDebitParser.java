@@ -57,7 +57,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * Notice: -32768 (%10000000.00000000) is not allowed.
  * </pre>
  *
- * @since 2.0
+ * @since 2.0.0
  */
 final class CardSvDebitParser extends AbstractCardResponseParser {
 
@@ -95,7 +95,7 @@ final class CardSvDebitParser extends AbstractCardResponseParser {
    *
    * @param response response to parse.
    * @param builder the reference to the builder that created this parser.
-   * @since 2.0
+   * @since 2.0.0
    */
   public CardSvDebitParser(ApduResponseApi response, CardSvDebitBuilder builder) {
     super(response, builder);
@@ -113,7 +113,7 @@ final class CardSvDebitParser extends AbstractCardResponseParser {
    * signature is postponed until the end of the session.
    *
    * @return a byte array containing the signature
-   * @since 2.0
+   * @since 2.0.0
    */
   public byte[] getSignatureLo() {
     return getApduResponse().getDataOut();
@@ -122,7 +122,7 @@ final class CardSvDebitParser extends AbstractCardResponseParser {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0
+   * @since 2.0.0
    */
   @Override
   protected Map<Integer, StatusProperties> getStatusTable() {
