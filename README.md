@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Keyple Card Calypso Java Library** is an addon to allow an application using Keyple to interact with Calypso card products through high level functional commands.
+The **Keyple Card Calypso Java Library** is an add-on to allow an application using Keyple to interact with Calypso card products through high level functional commands.
 
 ## Documentation & Contribution Guide
 
