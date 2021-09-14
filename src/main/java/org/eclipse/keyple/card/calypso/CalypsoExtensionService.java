@@ -13,6 +13,11 @@ package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.calypso.card.DirectoryHeader;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.card.FileHeader;
+import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
+import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
@@ -23,6 +28,7 @@ import org.eclipse.keyple.core.common.CommonApiProperties;
 import org.eclipse.keyple.core.common.KeypleCardExtension;
 import org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * Card extension dedicated to the management of Calypso cards.
@@ -35,6 +41,19 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
   public static final String PRODUCT_TYPE = "productType";
+
+  static {
+    // Register additional JSON adapters.
+    JsonUtil.registerTypeAdapter(
+        DirectoryHeader.class, new DirectoryHeaderJsonDeserializerAdapter(), false);
+    JsonUtil.registerTypeAdapter(
+        ElementaryFile.class, new ElementaryFileJsonDeserializerAdapter(), false);
+    JsonUtil.registerTypeAdapter(FileHeader.class, new FileHeaderJsonDeserializerAdapter(), false);
+    JsonUtil.registerTypeAdapter(
+        SvLoadLogRecord.class, new SvLoadLogRecordJsonDeserializerAdapter(), false);
+    JsonUtil.registerTypeAdapter(
+        SvDebitLogRecord.class, new SvDebitLogRecordJsonDeserializerAdapter(), false);
+  }
 
   /** Private constructor. */
   private CalypsoExtensionService() {}
@@ -159,7 +178,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates a card transaction manager to handle non secured operations.
+   * Creates a card transaction manager to handle non-secured operations.
    *
    * @param reader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.

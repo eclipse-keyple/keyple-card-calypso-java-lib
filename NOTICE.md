@@ -50,3 +50,8 @@ SLF4J API (1.7.32)
 
 * License: [MIT](https://spdx.org/licenses/MIT.html)
 * Project: http://www.slf4j.org
+
+GSON (2.8.8)
+
+* License: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
+* Project: https://github.com/google/gson/gson
