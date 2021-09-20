@@ -47,6 +47,24 @@ pipeline {
         junit testResults: 'build/test-results/test/*.xml', allowEmptyResults: true
       } }
     }
+    stage('Update GitHub Pages') {
+      when { expression { deploySnapshot || deployRelease } }
+      steps { container('java-builder') {
+        sh "./scripts/prepare_javadoc.sh ${env.KEYPLE_VERSION} ${deploySnapshot}"
+        dir("${env.PROJECT_NAME}") {
+          withCredentials([usernamePassword(credentialsId: 'github-bot', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+            sh '''
+            git add -A
+            git config user.email "${PROJECT_NAME}-bot@eclipse.org"
+            git config user.name "${PROJECT_BOT_NAME}"
+            git commit -m "docs: update documentation ${JOB_NAME}-${BUILD_NUMBER}"
+            git log --graph --abbrev-commit --date=relative -n 5
+            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/eclipse/${PROJECT_NAME}.git" HEAD:gh-pages
+            '''
+          }
+        }
+      } }
+    }
     stage('Publish Code Quality') {
       when { expression { env.GIT_URL.startsWith('https://github.com/eclipse/keyple-') } }
       steps { container('java-builder') {

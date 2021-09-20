@@ -8,9 +8,9 @@ The **Keyple Card Calypso Java Library** is an add-on to allow an application us
 
 The full documentation, including the **user guide**, **download information** and **contribution guide**, is available on the Keyple website [keyple.org](https://keyple.org).
 
-## Javadoc
+## API documentation
 
-The javadoc is available online: [eclipse.github.io/keyple-card-calypso-java-lib/](https://eclipse.github.io/keyple-card-calypso-java-lib/)
+API documentation & class diagram is available online: [eclipse.github.io/keyple-card-calypso-java-lib](https://eclipse.github.io/keyple-card-calypso-java-lib)
 
 ## Examples
 
