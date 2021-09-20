@@ -50,7 +50,7 @@ pipeline {
     stage('Update GitHub Pages') {
       when { expression { deploySnapshot || deployRelease } }
       steps { container('java-builder') {
-        sh "./scripts/prepare_javadoc.sh ${env.KEYPLE_VERSION} ${deploySnapshot}"
+        sh "./scripts/prepare_javadoc.sh ${env.PROJECT_NAME} ${env.KEYPLE_VERSION} ${deploySnapshot}"
         dir("${env.PROJECT_NAME}") {
           withCredentials([usernamePassword(credentialsId: 'github-bot', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
             sh '''

@@ -2,17 +2,16 @@
 
 echo "Compute the current API version..."
 
-version=$1
+repository_name=$1
+version=$2
+is_snapshot=$3
 
-if [ "$2" = true ]
+if [ "$is_snapshot" = true ]
 then
   version="$version-SNAPSHOT"
 fi
 
 echo "Computed current API version: $version"
-
-repository_name=`git rev-parse --show-toplevel | xargs basename | cut -f2 -d'_'`
-echo $repository_name
 
 echo "Clone $repository_name..."
 git clone https://github.com/eclipse/$repository_name.git
