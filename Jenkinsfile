@@ -57,7 +57,7 @@ pipeline {
             git add -A
             git config user.email "${PROJECT_NAME}-bot@eclipse.org"
             git config user.name "${PROJECT_BOT_NAME}"
-            git commit -m "docs: update documentation ${JOB_NAME}-${BUILD_NUMBER}"
+            git commit --allow-empty -m "docs: update documentation ${JOB_NAME}-${BUILD_NUMBER}"
             git log --graph --abbrev-commit --date=relative -n 5
             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/eclipse/${PROJECT_NAME}.git" HEAD:gh-pages
             '''
