@@ -640,13 +640,15 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   /**
    * (package-private)<br>
-   * Sets the DF metadata.
+   * Sets the DF metadata.<br>
+   * Updates the invalidation flag.
    *
    * @param directoryHeader the DF metadata (should be not null).
    * @return the current instance.
    */
   CalypsoCard setDirectoryHeader(DirectoryHeader directoryHeader) {
     this.directoryHeader = directoryHeader;
+    this.isDfInvalidated = (directoryHeader.getDfStatus() & (byte) 0x01) != 0;
     return this;
   }
 
