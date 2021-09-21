@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% seo %}
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    {% include head-custom.html %}
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <p><img src="https://keyple.org/media/logo3.png" width="50%" alt="Logo" /></p>
+        <p>
+          <strong>API DOCUMENTATION</strong><br>
+          {{ site.title }}
+        </p>
+      </header>
+      <section>
+        <h2>{{ site.title }}</h2>
+        {{ content }}
+      </section>
+      <footer>
+        <p>Maintainer:<br><a href="https://projects.eclipse.org/projects/iot.keyple">Eclipse Keyple™</a></p>
+        <p>Project Website:<br><a href="https://keyple.org">keyple.org</a></p>
+        <p>GitHub repository:<br><a href="{{ site.github.repository_url }}">{{ site.github.repository_name }}</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="{{ "/assets/js/scale.fix.js" | relative_url }}"></script>
+  </body>
+</html>
