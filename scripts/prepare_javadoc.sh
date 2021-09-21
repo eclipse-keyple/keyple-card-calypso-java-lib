@@ -37,7 +37,7 @@ cp -rf ../src/main/uml/api_*.svg $version/
 echo "Update versions list..."
 echo "| Version | Documents |" > list_versions.md
 echo "|:---:|---|" >> list_versions.md
-for directory in `ls -rd */ | cut -f1 -d'/'`
+for directory in `ls -rd [0-9]*/ | cut -f1 -d'/'`
 do
   diagrams=""
   for diagram in `ls $directory/api_*.svg | cut -f2 -d'/'`
