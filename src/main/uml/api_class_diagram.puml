@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple 2.0 - Calypso Card Extension - 2.0.0 (24/06/2021)
+    Keyple - keyple-card-calypso-java-lib - 2.0.+ (24/06/2021)
 end title
 
 ' == THEME ==
