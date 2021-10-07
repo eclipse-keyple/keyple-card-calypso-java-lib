@@ -22,6 +22,11 @@ pipeline {
         deploySnapshot = !deployRelease && env.GIT_URL == "https://github.com/eclipse/${env.PROJECT_NAME}.git" && (env.GIT_BRANCH == "main" || env.GIT_BRANCH == "release-${env.KEYPLE_VERSION}") && env.CHANGE_ID == null
       }
     } } }
+    stage('Check version') {
+      steps { container('java-builder') {
+        sh "./scripts/check_version.sh ${env.KEYPLE_VERSION}"
+      } }
+    }
     stage('Build and Test') {
       when { expression { !deploySnapshot && !deployRelease } }
       steps { container('java-builder') {
