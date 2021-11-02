@@ -74,7 +74,7 @@ final class CardOpenSession3Builder
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.ISO.getValue(),
-                CalypsoCardCommand.getOpenSessionForRev(calypsoCard).getInstructionByte(),
+                CalypsoCardCommand.OPEN_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 dataIn,

@@ -1531,7 +1531,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
-        new CardAppendRecordBuilder(calypsoCard.getCardClass(), sfi, recordData));
+        new CmdCardAppendRecord(calypsoCard.getCardClass(), sfi, recordData));
 
     return this;
   }
@@ -1578,7 +1578,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // create the builder and add it to the list of commands
     cardCommandManager.addRegularCommand(
-        new CardWriteRecordBuilder(calypsoCard.getCardClass(), sfi, recordNumber, recordData));
+        new CmdCardWriteRecord(calypsoCard.getCardClass(), sfi, recordNumber, recordData));
 
     return this;
   }

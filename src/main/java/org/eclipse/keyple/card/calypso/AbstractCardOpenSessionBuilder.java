@@ -33,7 +33,7 @@ abstract class AbstractCardOpenSessionBuilder<T extends AbstractCardResponsePars
    * @since 2.0.0
    */
   AbstractCardOpenSessionBuilder(CalypsoCard calypsoCard) {
-    super(CalypsoCardCommand.getOpenSessionForRev(calypsoCard));
+    super(CalypsoCardCommand.OPEN_SESSION);
   }
 
   public static AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> create(

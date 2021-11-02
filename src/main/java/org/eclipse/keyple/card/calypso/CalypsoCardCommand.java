@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
-
 /**
  * (package-private)<br>
  * Defines all supported Calypso card APDU commands.
@@ -25,13 +23,7 @@ enum CalypsoCardCommand implements CardCommand {
   GET_DATA("Get Data", (byte) 0xCA),
 
   /** open session. */
-  OPEN_SESSION_10("Open Secure Session V1", (byte) 0x8A),
-
-  /** open session. */
-  OPEN_SESSION_24("Open Secure Session V2.4", (byte) 0x8A),
-
-  /** open session. */
-  OPEN_SESSION_3X("Open Secure Session V3", (byte) 0x8A),
+  OPEN_SESSION("Open Secure Session", (byte) 0x8A),
 
   /** close session. */
   CLOSE_SESSION("Close Secure Session", (byte) 0x8E),
@@ -126,27 +118,5 @@ enum CalypsoCardCommand implements CardCommand {
    */
   public byte getInstructionByte() {
     return instructionByte;
-  }
-
-  /**
-   * Get the open session command for a given {@link CalypsoCard.ProductType}
-   *
-   * @param calypsoCard The {@link CalypsoCard}.
-   * @return Returned command
-   * @since 2.0.0
-   */
-  public static CalypsoCardCommand getOpenSessionForRev(CalypsoCard calypsoCard) {
-    switch (calypsoCard.getProductType()) {
-      case PRIME_REVISION_1:
-        return OPEN_SESSION_10;
-      case PRIME_REVISION_2:
-        return OPEN_SESSION_24;
-      case PRIME_REVISION_3:
-      case LIGHT:
-      case BASIC:
-        return OPEN_SESSION_3X;
-      default:
-        throw new IllegalStateException("Any revision should have a matching command");
-    }
   }
 }

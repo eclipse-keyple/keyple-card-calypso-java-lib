@@ -16,15 +16,69 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * (package-private)<br>
  * Builds the Write Record APDU command.
+ *
+ * @since 2.0.0
  */
-final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteRecordParser> {
-  private static final Logger logger = LoggerFactory.getLogger(CardWriteRecordBuilder.class);
+final class CmdCardWriteRecord extends AbstractCardCommand {
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardWriteRecord.class);
 
   /** The command. */
   private static final CalypsoCardCommand command = CalypsoCardCommand.WRITE_RECORD;
+
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+  static {
+    Map<Integer, StatusProperties> m =
+            new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+    m.put(
+            0x6400,
+            new StatusProperties(
+                    "Too many modifications in session", CardSessionBufferOverflowException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
+    m.put(
+            0x6981,
+            new StatusProperties(
+                    "Wrong EF type (not a Linear EF, or Cyclic EF with Record Number 01h).",
+                    CardDataAccessException.class));
+    m.put(
+            0x6982,
+            new StatusProperties(
+                    "Security conditions not fulfilled (no session, wrong key, encryption required)",
+                    CardSecurityContextException.class));
+    m.put(
+            0x6985,
+            new StatusProperties(
+                    "Access forbidden (Never access mode, DF is invalidated, etc..)",
+                    CardAccessForbiddenException.class));
+    m.put(
+            0x6986,
+            new StatusProperties("Command not allowed (no current EF)", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
+    m.put(
+            0x6A83,
+            new StatusProperties(
+                    "Record is not found (record index is 0 or above NumRec)",
+                    CardDataAccessException.class));
+    m.put(
+            0x6B00,
+            new StatusProperties("P2 value not supported", CardIllegalParameterException.class));
+    STATUS_TABLE = m;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  protected Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
 
   /* Construction arguments */
   private final int sfi;
@@ -32,7 +86,8 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
   private final byte[] data;
 
   /**
-   * Instantiates a new CardWriteRecordBuilder.
+   * (package-private)<br>
+   * Instantiates a new CmdCardWriteRecord.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param sfi the sfi to select.
@@ -42,7 +97,7 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
    * @throws IllegalArgumentException - if the request is inconsistent
    * @since 2.0.0
    */
-  public CardWriteRecordBuilder(
+  CmdCardWriteRecord(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
     super(command);
 
@@ -67,47 +122,38 @@ final class CardWriteRecordBuilder extends AbstractCardCommandBuilder<CardWriteR
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
-   */
-  @Override
-  public CardWriteRecordParser createResponseParser(ApduResponseApi apduResponse) {
-    return new CardWriteRecordParser(apduResponse, this);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>This command modified the contents of the card and therefore uses the session buffer.
-   *
    * @return True
    * @since 2.0.0
    */
   @Override
-  public boolean isSessionBufferUsed() {
+  boolean isSessionBufferUsed() {
     return true;
   }
 
   /**
+   * (package-private)<br>
    * @return the SFI of the accessed file
    * @since 2.0.0
    */
-  public int getSfi() {
+  int getSfi() {
     return sfi;
   }
 
   /**
+   * (package-private)<br>
    * @return the number of the accessed record
    * @since 2.0.0
    */
-  public int getRecordNumber() {
+  int getRecordNumber() {
     return recordNumber;
   }
 
   /**
+   * (package-private)<br>
    * @return the data sent to the card
    * @since 2.0.0
    */
-  public byte[] getData() {
+  byte[] getData() {
     return data;
   }
 }

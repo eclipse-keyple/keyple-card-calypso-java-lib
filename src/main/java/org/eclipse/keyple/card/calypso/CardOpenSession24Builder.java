@@ -67,7 +67,7 @@ final class CardOpenSession24Builder
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.LEGACY.getValue(),
-                CalypsoCardCommand.getOpenSessionForRev(calypsoCard).getInstructionByte(),
+                CalypsoCardCommand.OPEN_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,
