@@ -55,16 +55,6 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamReadCeilings.
    *
@@ -115,5 +105,15 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    */
   byte[] getCeilingsData() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

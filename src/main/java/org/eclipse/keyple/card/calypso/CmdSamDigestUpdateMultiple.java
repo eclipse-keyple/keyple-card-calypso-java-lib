@@ -47,16 +47,6 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdateMultiple.
    *
@@ -80,5 +70,15 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, digestData, null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

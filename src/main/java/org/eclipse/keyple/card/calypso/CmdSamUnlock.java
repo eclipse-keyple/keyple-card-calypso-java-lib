@@ -44,16 +44,6 @@ final class CmdSamUnlock extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
@@ -78,5 +68,15 @@ final class CmdSamUnlock extends AbstractSamCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, unlockData, null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

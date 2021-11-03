@@ -40,16 +40,6 @@ final class CmdSamDigestClose extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamDigestClose .
    *
@@ -85,5 +75,15 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    */
   byte[] getSignature() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

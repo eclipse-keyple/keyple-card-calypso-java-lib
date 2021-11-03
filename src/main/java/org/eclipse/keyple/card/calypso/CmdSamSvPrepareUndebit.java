@@ -51,16 +51,6 @@ final class CmdSamSvPrepareUndebit extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamSvPrepareUndebit to prepare a transaction to cancel a previous debit
    * transaction.
@@ -95,5 +85,15 @@ final class CmdSamSvPrepareUndebit extends AbstractSamCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

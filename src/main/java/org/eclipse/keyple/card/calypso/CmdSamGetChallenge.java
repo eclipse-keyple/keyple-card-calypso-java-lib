@@ -37,16 +37,6 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamGetChallenge.
    *
@@ -81,5 +71,15 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    */
   byte[] getChallenge() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

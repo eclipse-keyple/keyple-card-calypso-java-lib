@@ -51,16 +51,6 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamCardCipherPin and generate the ciphered data for a Verify PIN or
    * Change PIN card command.
@@ -131,5 +121,15 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
    */
   byte[] getCipheredData() {
     return getApduResponse().getDataOut();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

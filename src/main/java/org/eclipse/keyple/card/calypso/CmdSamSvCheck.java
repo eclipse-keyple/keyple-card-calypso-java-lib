@@ -43,16 +43,6 @@ final class CmdSamSvCheck extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamSvCheck to authenticate a card SV transaction.
    *
@@ -83,5 +73,15 @@ final class CmdSamSvCheck extends AbstractSamCommand {
           new ApduRequestAdapter(
               ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

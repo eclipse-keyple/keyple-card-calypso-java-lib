@@ -64,16 +64,6 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the null key.
    *
@@ -240,5 +230,15 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    */
   byte[] getKeyParameters() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

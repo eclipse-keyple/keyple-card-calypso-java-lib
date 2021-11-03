@@ -62,16 +62,6 @@ final class CmdSamWriteKey extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
@@ -98,5 +88,15 @@ final class CmdSamWriteKey extends AbstractSamCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 cla, command.getInstructionByte(), writingMode, keyReference, keyData, null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

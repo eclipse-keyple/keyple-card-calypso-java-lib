@@ -53,16 +53,6 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiate a new CmdSamReadEventCounter
    *
@@ -108,5 +98,15 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    */
   byte[] getCounterData() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

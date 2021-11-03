@@ -53,16 +53,6 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
-  /**
    * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate and generate the ciphered data for a key ciphered by
    * another.
@@ -126,5 +116,15 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
    */
   byte[] getCipheredData() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }
