@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Digest Authenticate APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamDigestAuthenticate extends AbstractSamCommand {
 
@@ -49,8 +49,8 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param signature the signature.
-   * @throws IllegalArgumentException - if the signature is null or has a wrong length.
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the signature is null or has a wrong length.
+   * @since 2.0.1
    */
   CmdSamDigestAuthenticate(CalypsoSam.ProductType productType, byte[] signature) {
     super(command);
@@ -74,7 +74,7 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -19,9 +19,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the Append Record APDU command.
+ * Builds the "Append Record" APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdCardAppendRecord extends AbstractCardCommand {
 
@@ -64,32 +64,24 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
-  }
-
   /* Construction arguments */
   private final int sfi;
   private final byte[] data;
 
   /**
    * (package-private)<br>
-   * Instantiates a new CardUpdateRecordBuilder.
+   * Instantiates a new CmdCardUpdateRecord.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param sfi the sfi to select.
    * @param newRecordData the new record data to write.
-   * @throws IllegalArgumentException - if the command is inconsistent
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the command is inconsistent
+   * @since 2.0.1
    */
   CmdCardAppendRecord(CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
+
     super(command);
+
     byte cla = calypsoCardClass.getValue();
 
     this.sfi = sfi;
@@ -104,7 +96,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI:%02X", sfi);
-      this.addSubName(extraInfo);
+      addSubName(extraInfo);
     }
   }
 
@@ -112,7 +104,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return True
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -123,7 +115,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The SFI of the accessed file
-   * @since 2.0.0
+   * @since 2.0.1
    */
   int getSfi() {
     return sfi;
@@ -133,9 +125,19 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The data sent to the card
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getData() {
     return data;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.1
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
   }
 }

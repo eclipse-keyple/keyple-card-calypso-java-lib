@@ -20,13 +20,13 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Read Key Parameters APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamReadKeyParameters extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.READ_KEY_PARAMETERS;
 
-  static final int MAX_WORK_KEY_REC_NUMB = 126;
+  private static final int MAX_WORK_KEY_REC_NUMB = 126;
 
   /** Source reference */
   enum SourceRef {
@@ -68,7 +68,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * Instantiates a new CmdSamReadKeyParameters for the null key.
    *
    * @param productType the SAM product type.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType) {
 
@@ -91,7 +91,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param kif the kif
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif) {
 
@@ -117,7 +117,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param kif the kif
    * @param kvc the kvc
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, byte kvc) {
 
@@ -144,7 +144,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param sourceKeyRef the source key reference
    * @param recordNumber the record number
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadKeyParameters(
       CalypsoSam.ProductType productType, SourceRef sourceKeyRef, int recordNumber) {
@@ -171,8 +171,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
         break;
 
       default:
-        throw new IllegalStateException(
-            "Unsupported SourceRef parameter " + sourceKeyRef.toString());
+        throw new IllegalStateException("Unsupported SourceRef parameter " + sourceKeyRef);
     }
 
     setApduRequest(
@@ -188,7 +187,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param kif the kif
    * @param navControl the navigation control flag
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, NavControl navControl) {
 
@@ -209,8 +208,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
         break;
 
       default:
-        throw new IllegalStateException(
-            "Unsupported NavControl parameter " + navControl.toString());
+        throw new IllegalStateException("Unsupported NavControl parameter " + navControl);
     }
 
     sourceKeyId[0] = kif;
@@ -226,7 +224,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * Gets the key parameters.
    *
    * @return The key parameters
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getKeyParameters() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
@@ -235,7 +233,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Digest Close APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamDigestClose extends AbstractSamCommand {
 
@@ -45,8 +45,8 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param expectedResponseLength the expected response length.
-   * @throws IllegalArgumentException - if the expected response length is wrong.
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the expected response length is wrong.
+   * @since 2.0.1
    */
   CmdSamDigestClose(CalypsoSam.ProductType productType, byte expectedResponseLength) {
     super(command);
@@ -71,7 +71,7 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    * Gets the sam signature.
    *
    * @return The sam half session signature
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getSignature() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
@@ -80,7 +80,7 @@ final class CmdSamDigestClose extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

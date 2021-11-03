@@ -95,8 +95,8 @@ class SamCommandProcessor {
    *
    * <p>If the key diversification is already done, the Select Diversifier command is omitted.
    *
-   * <p>The length of the challenge varies from one card revision to another. This information can
-   * be found in the CardResource class field.
+   * <p>The length of the challenge varies from one card product type to another. This information
+   * can be found in the CardResource class field.
    *
    * @return the terminal challenge as an array of bytes
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
@@ -147,9 +147,7 @@ class SamCommandProcessor {
 
     int numberOfSamCmd = apduRequests.size();
     if (samApduResponses.size() == numberOfSamCmd) {
-      ((AbstractSamCommand)
-              (samGetChallengeCmd.setApduResponse(samApduResponses.get(numberOfSamCmd - 1))))
-          .checkStatus();
+      samGetChallengeCmd.setApduResponse(samApduResponses.get(numberOfSamCmd - 1)).checkStatus();
       sessionTerminalChallenge = samGetChallengeCmd.getChallenge();
       if (logger.isDebugEnabled()) {
         logger.debug(
@@ -172,7 +170,7 @@ class SamCommandProcessor {
    *
    * @param writeAccessLevel The write access level.
    * @param kvc The card KVC value.
-   * @return Null if the card did not provided a KVC value and if there's no default KVC value.
+   * @return Null if the card did not provide a KVC value and if there's no default KVC value.
    * @since 2.0.0
    */
   Byte computeKvc(WriteAccessLevel writeAccessLevel, Byte kvc) {
@@ -189,7 +187,7 @@ class SamCommandProcessor {
    * @param writeAccessLevel The write access level.
    * @param kif The card KIF value.
    * @param kvc The previously computed KVC value.
-   * @return Null if the card did not provided a KIF value and if there's no default KIF value.
+   * @return Null if the card did not provide a KIF value and if there's no default KIF value.
    * @since 2.0.0
    */
   Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
@@ -355,9 +353,8 @@ class SamCommandProcessor {
     }
 
     // Build and append Digest Update commands
-    for (int i = 0; i < cardDigestDataCache.size(); i++) {
-      samCommands.add(
-          new CmdSamDigestUpdate(samProductType, sessionEncryption, cardDigestDataCache.get(i)));
+    for (byte[] bytes : cardDigestDataCache) {
+      samCommands.add(new CmdSamDigestUpdate(samProductType, sessionEncryption, bytes));
     }
 
     // clears cached commands once they have been processed
@@ -420,8 +417,7 @@ class SamCommandProcessor {
 
     // check all responses status
     for (int i = 0; i < samApduResponses.size(); i++) {
-      ((AbstractSamCommand) (samCommands.get(i).setApduResponse(samApduResponses.get(i))))
-          .checkStatus();
+      samCommands.get(i).setApduResponse(samApduResponses.get(i)).checkStatus();
     }
 
     // Get Terminal Signature from the latest response
@@ -479,8 +475,7 @@ class SamCommandProcessor {
       throw new DesynchronizedExchangesException("No response to Digest Authenticate command.");
     }
 
-    ((AbstractSamCommand) (cmdSamDigestAuthenticate.setApduResponse(samApduResponses.get(0))))
-        .checkStatus();
+    cmdSamDigestAuthenticate.setApduResponse(samApduResponses.get(0)).checkStatus();
   }
 
   /**
@@ -577,8 +572,7 @@ class SamCommandProcessor {
         samCardResponse.getApduResponses().get(cardCipherPinCmdIndex);
 
     // check execution status
-    ((AbstractSamCommand) (cmdSamCardCipherPin.setApduResponse(cardCipherPinResponse)))
-        .checkStatus();
+    cmdSamCardCipherPin.setApduResponse(cardCipherPinResponse).checkStatus();
 
     return cmdSamCardCipherPin.getCipheredData();
   }
@@ -608,6 +602,7 @@ class SamCommandProcessor {
   private byte[] getSvComplementaryData(AbstractSamCommand cmdSamSvPrepare)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
+
     List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
 
     if (!isDiversificationDone) {
@@ -641,7 +636,7 @@ class SamCommandProcessor {
         samCardResponse.getApduResponses().get(svPrepareOperationCmdIndex);
 
     // check execution status
-    ((AbstractSamCommand) (cmdSamSvPrepare.setApduResponse(svPrepareResponse))).checkStatus();
+    cmdSamSvPrepare.setApduResponse(svPrepareResponse).checkStatus();
 
     byte[] prepareOperationData = cmdSamSvPrepare.getApduResponse().getDataOut();
 
@@ -667,7 +662,7 @@ class SamCommandProcessor {
    *
    * <p>The returned data will be used to finalize the card SvReload command.
    *
-   * @param cmdCardSvReload the SvDebit builder providing the SvReload partial data.
+   * @param cmdCardSvReload the SvDebit command providing the SvReload partial data.
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvReload card command (sam ID + SV
@@ -678,7 +673,7 @@ class SamCommandProcessor {
    * @since 2.0.0
    */
   byte[] getSvReloadComplementaryData(
-      CardSvReloadBuilder cmdCardSvReload, byte[] svGetHeader, byte[] svGetData)
+      CmdCardSvReload cmdCardSvReload, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     // get the complementary data from the SAM
@@ -707,7 +702,7 @@ class SamCommandProcessor {
    * @since 2.0.0
    */
   byte[] getSvDebitComplementaryData(
-      CardSvDebitBuilder cmdCardSvDebit, byte[] svGetHeader, byte[] svGetData)
+      CmdCardSvDebit cmdCardSvDebit, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     // get the complementary data from the SAM
@@ -736,7 +731,7 @@ class SamCommandProcessor {
    * @since 2.0.0
    */
   public byte[] getSvUndebitComplementaryData(
-      CardSvUndebitBuilder cmdCardSvUndebit, byte[] svGetHeader, byte[] svGetData)
+      CmdCardSvUndebit cmdCardSvUndebit, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     // get the complementary data from the SAM
@@ -780,6 +775,6 @@ class SamCommandProcessor {
     ApduResponseApi svCheckResponse = samCardResponse.getApduResponses().get(0);
 
     // check execution status
-    ((AbstractSamCommand) (cmdSamSvCheck.setApduResponse(svCheckResponse))).checkStatus();
+    cmdSamSvCheck.setApduResponse(svCheckResponse).checkStatus();
   }
 }

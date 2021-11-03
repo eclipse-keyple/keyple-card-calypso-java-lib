@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SAM Select Diversifier APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamSelectDiversifier extends AbstractSamCommand {
 
@@ -47,8 +47,8 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param diversifier the application serial number.
-   * @throws IllegalArgumentException - if the diversifier is null or has a wrong length
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the diversifier is null or has a wrong length
+   * @since 2.0.1
    */
   CmdSamSelectDiversifier(CalypsoSam.ProductType productType, byte[] diversifier) {
     super(command);
@@ -69,7 +69,7 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

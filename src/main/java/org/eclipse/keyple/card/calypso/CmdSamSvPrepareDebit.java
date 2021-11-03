@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SV Prepare Debit APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamSvPrepareDebit extends AbstractSamCommand {
   /** The command reference. */
@@ -54,20 +54,20 @@ final class CmdSamSvPrepareDebit extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamSvPrepareDebit to prepare a debit transaction.
    *
-   * @param samProductType the SAM revision.
+   * @param productType the SAM product type.
    * @param svGetHeader the SV Get command header.
    * @param svGetData a byte array containing the data from the SV get command and response.
-   * @param svDebitCmdBuildData the SV debit command builder data.
-   * @since 2.0.0
+   * @param svDebitCmdBuildData the SV debit command data.
+   * @since 2.0.1
    */
   CmdSamSvPrepareDebit(
-      CalypsoSam.ProductType samProductType,
+      CalypsoSam.ProductType productType,
       byte[] svGetHeader,
       byte[] svGetData,
       byte[] svDebitCmdBuildData) {
     super(command);
 
-    byte cla = SamUtilAdapter.getClassByte(samProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x01;
     byte p2 = (byte) 0xFF;
     byte[] data = new byte[16 + svGetData.length]; // header(4) + SvDebit data (12) = 16 bytes
@@ -85,7 +85,7 @@ final class CmdSamSvPrepareDebit extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

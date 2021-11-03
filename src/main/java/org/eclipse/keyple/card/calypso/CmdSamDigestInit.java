@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Digest Init APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamDigestInit extends AbstractSamCommand {
 
@@ -56,13 +56,13 @@ final class CmdSamDigestInit extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param verificationMode the verification mode.
    * @param confidentialSessionMode the confidential session mode (rev 3.2).
-   * @param workKif from the AbstractCardOpenSessionBuilder response.
-   * @param workKvc from the AbstractCardOpenSessionBuilder response.
-   * @param digestData all data out from the AbstractCardOpenSessionBuilder response.
-   * @throws IllegalArgumentException - if the work key record number
-   * @throws IllegalArgumentException - if the digest data is null
-   * @throws IllegalArgumentException - if the request is inconsistent
-   * @since 2.0.0
+   * @param workKif from the card response.
+   * @param workKvc from the card response.
+   * @param digestData all data out from the card response.
+   * @throws IllegalArgumentException If the work key record number
+   * @throws IllegalArgumentException If the digest data is null
+   * @throws IllegalArgumentException If the request is inconsistent
+   * @since 2.0.1
    */
   CmdSamDigestInit(
       CalypsoSam.ProductType productType,
@@ -103,7 +103,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

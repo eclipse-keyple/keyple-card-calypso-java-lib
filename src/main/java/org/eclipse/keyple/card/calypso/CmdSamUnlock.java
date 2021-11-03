@@ -18,9 +18,9 @@ import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
- * Builds the Unlock APDU command.
+ * Builds the "Unlock" APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamUnlock extends AbstractSamCommand {
   /** The command reference. */
@@ -47,13 +47,13 @@ final class CmdSamUnlock extends AbstractSamCommand {
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
-   * @param revision the SAM revision.
-   * @param unlockData the unlock data.
-   * @since 2.0.0
+   * @param productType the SAM product type.
+   * @param unlockData the unlocked data.
+   * @since 2.0.1
    */
-  CmdSamUnlock(CalypsoSam.ProductType revision, byte[] unlockData) {
+  CmdSamUnlock(CalypsoSam.ProductType productType, byte[] unlockData) {
     super(command);
-    byte cla = SamUtilAdapter.getClassByte(revision);
+    byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -73,7 +73,7 @@ final class CmdSamUnlock extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

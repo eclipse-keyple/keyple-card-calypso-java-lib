@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Get Challenge APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamGetChallenge extends AbstractSamCommand {
 
@@ -42,8 +42,8 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param expectedResponseLength the expected response length.
-   * @throws IllegalArgumentException - if the expected response length has wrong value.
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the expected response length has wrong value.
+   * @since 2.0.1
    */
   CmdSamGetChallenge(CalypsoSam.ProductType productType, byte expectedResponseLength) {
     super(command);
@@ -67,7 +67,7 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    * Gets the challenge.
    *
    * @return the challenge
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getChallenge() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
@@ -76,7 +76,7 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

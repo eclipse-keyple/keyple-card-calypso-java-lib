@@ -51,6 +51,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private static final int SI_SOFTWARE_ISSUER = 4;
   private static final int SI_SOFTWARE_VERSION = 5;
   private static final int SI_SOFTWARE_REVISION = 6;
+  private static final int PAY_LOAD_CAPACITY = 250;
 
   // Application type bitmasks features
   private static final byte APP_TYPE_WITH_CALYPSO_PIN = 0x01;
@@ -164,16 +165,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
 
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
-    CardGetDataFciParser cardFciParser = new CardGetDataFciParser(selectApplicationResponse, null);
+    CmdCardGetDataFci cmdCardGetDataFci =
+        new CmdCardGetDataFci().setApduResponse(selectApplicationResponse);
 
-    if (!cardFciParser.isValidCalypsoFCI()) {
+    if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");
     }
-    isDfInvalidated = cardFciParser.isDfInvalidated();
+    isDfInvalidated = cmdCardGetDataFci.isDfInvalidated();
 
-    dfName = cardFciParser.getDfName();
-    calypsoSerialNumber = cardFciParser.getApplicationSerialNumber();
-    startupInfo = cardFciParser.getDiscretionaryData();
+    dfName = cmdCardGetDataFci.getDfName();
+    calypsoSerialNumber = cmdCardGetDataFci.getApplicationSerialNumber();
+    startupInfo = cmdCardGetDataFci.getDiscretionaryData();
 
     applicationType = startupInfo[SI_APPLICATION_TYPE];
     productType = computeProductType(applicationType & 0xFF);
@@ -322,7 +324,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   int getPayloadCapacity() {
     // TODO make this value dependent on the type of card identified
-    return 250;
+    return PAY_LOAD_CAPACITY;
   }
 
   /**
@@ -330,7 +332,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Tells if the change counter allowed in session is established in number of operations or number
    * of bytes modified.
    *
-   * <p>This varies depending on the revision of the card.
+   * <p>This varies depending on the product type of the card.
    *
    * @return True if the counter is number of bytes
    * @since 2.0.0
@@ -902,7 +904,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public byte[] getSelectApplicationResponse() {
     if (selectApplicationResponse == null) {
-      return null;
+      return new byte[0];
     }
     return selectApplicationResponse.getApdu();
   }
@@ -932,7 +934,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Gets the challenge received from the card
    *
    * @return An array of bytes containing the challenge bytes (variable length according to the
-   *     revision of the card). May be null if the challenge is not available.
+   *     product type of the card). May be null if the challenge is not available.
    * @since 2.0.0
    */
   byte[] getCardChallenge() {

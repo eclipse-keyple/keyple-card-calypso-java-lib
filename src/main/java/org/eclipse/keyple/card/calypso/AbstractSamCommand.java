@@ -13,12 +13,13 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
  * (package-private)<br>
  * Superclass for all SAM command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 abstract class AbstractSamCommand extends AbstractApduCommand {
 
@@ -26,7 +27,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * (package-private)<br>
    * Default SAM product type.
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -45,7 +46,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
@@ -57,7 +58,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   AbstractSamCommand(CalypsoSamCommand commandRef) {
     super(commandRef);
@@ -66,7 +67,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   CalypsoSamCommand getCommandRef() {
@@ -76,7 +77,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   final CalypsoApduCommandException buildCommandException(
@@ -110,7 +111,17 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
+   */
+  @Override
+  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
+    return (AbstractSamCommand) super.setApduResponse(apduResponse);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.1
    */
   @Override
   void checkStatus() throws CalypsoSamCommandException {

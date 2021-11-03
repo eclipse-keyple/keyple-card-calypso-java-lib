@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Give Random APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamGiveRandom extends AbstractSamCommand {
 
@@ -42,9 +42,9 @@ final class CmdSamGiveRandom extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param random the random data.
-   * @throws IllegalArgumentException - if the random data is null or has a length not equal to 8
-   *     TODO implement specific settings for rev less than 3
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the random data is null or has a length not equal to 8 TODO
+   *     implement specific settings for rev less than 3
+   * @since 2.0.1
    */
   CmdSamGiveRandom(CalypsoSam.ProductType productType, byte[] random) {
     super(command);
@@ -65,7 +65,7 @@ final class CmdSamGiveRandom extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

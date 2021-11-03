@@ -97,7 +97,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       // check the SAM response to the unlock command
       try {
-        ((AbstractSamCommand) (samCommands.get(0).setApduResponse(apduResponse))).checkStatus();
+        samCommands.get(0).setApduResponse(apduResponse).checkStatus();
       } catch (CalypsoSamCommandException e) {
         throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
@@ -165,7 +165,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    *
    * <p>Both argument are optional and can be null.
    *
-   * @param productType The target SAM revision.
+   * @param productType The target SAM product type.
    * @param samSerialNumberRegex A regular expression matching the SAM serial number.
    * @return A not empty string containing a regular
    */

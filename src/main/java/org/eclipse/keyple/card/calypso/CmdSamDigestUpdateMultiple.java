@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SAM Digest Update Multiple APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
 
@@ -53,7 +53,7 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
    * @param productType the product type.
    * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData the digest data.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamDigestUpdateMultiple(
       CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
@@ -75,7 +75,7 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

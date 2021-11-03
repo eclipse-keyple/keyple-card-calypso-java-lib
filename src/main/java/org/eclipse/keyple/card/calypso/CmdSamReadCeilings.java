@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Read Ceilings APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamReadCeilings extends AbstractSamCommand {
   /** The command reference. */
@@ -61,7 +61,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param operationType the counter operation type.
    * @param index the counter index.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamReadCeilings(
       CalypsoSam.ProductType productType, CeilingsOperationType operationType, int index) {
@@ -100,8 +100,8 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * (package-private)<br>
    * Gets the key parameters.
    *
-   * @return The ceilings data (Value or Record)
-   * @since 2.0.0
+   * @return The ceiling data (Value or Record)
+   * @since 2.0.1
    */
   byte[] getCeilingsData() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
@@ -110,7 +110,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

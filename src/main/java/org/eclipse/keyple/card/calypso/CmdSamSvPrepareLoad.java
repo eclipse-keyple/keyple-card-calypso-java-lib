@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SV Prepare Load APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamSvPrepareLoad extends AbstractSamCommand {
   /** The command reference. */
@@ -57,20 +57,20 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
    * <p>Build the SvPrepareLoad APDU from the SvGet command and response, the SvReload partial
    * command
    *
-   * @param samProductType the SAM revision.
+   * @param productType the SAM product type.
    * @param svGetHeader the SV Get command header.
    * @param svGetData a byte array containing the data from the SV get command and response.
-   * @param svReloadCmdBuildData the SV reload command builder data.
-   * @since 2.0.0
+   * @param svReloadCmdBuildData the SV reload command data.
+   * @since 2.0.1
    */
   CmdSamSvPrepareLoad(
-      CalypsoSam.ProductType samProductType,
+      CalypsoSam.ProductType productType,
       byte[] svGetHeader,
       byte[] svGetData,
       byte[] svReloadCmdBuildData) {
     super(command);
 
-    byte cla = SamUtilAdapter.getClassByte(samProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x01;
     byte p2 = (byte) 0xFF;
     byte[] data = new byte[19 + svGetData.length]; // header(4) + SvReload data (15) = 19 bytes
@@ -88,7 +88,7 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

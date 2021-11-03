@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Card Cipher PIN APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamCardCipherPin extends AbstractSamCommand {
   /** The command reference. */
@@ -52,7 +52,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdSamCardCipherPin and generate the ciphered data for a Verify PIN or
+   * Instantiates a new CmdSamCardCipherPin and generate the ciphered data for a "Verify PIN" or
    * Change PIN card command.
    *
    * <p>In the case of a PIN verification, only the current PIN must be provided (newPin must be set
@@ -66,7 +66,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
    * @param currentPin the current PIN (a 4-byte byte array).
    * @param newPin the new PIN (a 4-byte byte array if the operation in progress is a PIN update,
    *     null if the operation in progress is a PIN verification)
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamCardCipherPin(
       CalypsoSam.ProductType productType,
@@ -117,7 +117,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
    * Gets the 8 bytes of ciphered data.
    *
    * @return The ciphered data byte array
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getCipheredData() {
     return getApduResponse().getDataOut();
@@ -126,7 +126,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

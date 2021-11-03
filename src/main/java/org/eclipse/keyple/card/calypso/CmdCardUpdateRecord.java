@@ -19,16 +19,16 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the "Write Record" APDU command.
+ * Builds the Update Record APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardWriteRecord extends AbstractCardCommand {
+final class CmdCardUpdateRecord extends AbstractCardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardWriteRecord.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardUpdateRecord.class);
 
   /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.WRITE_RECORD;
+  private static final CalypsoCardCommand command = CalypsoCardCommand.UPDATE_RECORD;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -43,7 +43,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
     m.put(
         0x6981,
         new StatusProperties(
-            "Wrong EF type (not a Linear EF, or Cyclic EF with Record Number 01h).",
+            "Command forbidden on cyclic files when the record exists and is not record 01h and on binary files",
             CardDataAccessException.class));
     m.put(
         0x6982,
@@ -77,17 +77,17 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdCardWriteRecord.
+   * Instantiates a new CmdCardUpdateRecord.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param sfi the sfi to select.
-   * @param recordNumber the record number to write.
+   * @param recordNumber the record number to update.
    * @param newRecordData the new record data to write.
    * @throws IllegalArgumentException If record number is &lt; 1
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0.1
    */
-  CmdCardWriteRecord(
+  CmdCardUpdateRecord(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
 
     super(command);
@@ -113,6 +113,8 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * <p>This command modified the contents of the card and therefore uses the session buffer.
+   *
    * @return True
    * @since 2.0.1
    */
@@ -124,7 +126,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the SFI of the accessed file
+   * @return The SFI of the accessed file
    * @since 2.0.1
    */
   int getSfi() {
@@ -134,7 +136,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the number of the accessed record
+   * @return The number of the accessed record
    * @since 2.0.1
    */
   int getRecordNumber() {
@@ -144,7 +146,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the data sent to the card
+   * @return The data sent to the card
    * @since 2.0.1
    */
   byte[] getData() {

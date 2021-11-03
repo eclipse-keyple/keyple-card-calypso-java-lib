@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the SV Check APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamSvCheck extends AbstractSamCommand {
   /** The command reference. */
@@ -49,7 +49,7 @@ final class CmdSamSvCheck extends AbstractSamCommand {
    * @param productType the SAM product type.
    * @param svCardSignature null if the operation is to abort the SV transaction, a 3 or 6-byte
    *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamSvCheck(CalypsoSam.ProductType productType, byte[] svCardSignature) {
     super(command);
@@ -78,7 +78,7 @@ final class CmdSamSvCheck extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Give Random APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamCardGenerateKey extends AbstractSamCommand {
   /** The command reference. */
@@ -65,7 +65,7 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
    * @param cipheringKvc The KVC of the ciphering key.
    * @param sourceKif The KIF of the source key.
    * @param sourceKvc The KVC of the source key.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamCardGenerateKey(
       CalypsoSam.ProductType productType,
@@ -112,7 +112,7 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
    * Gets the 32 bytes of ciphered data.
    *
    * @return the ciphered data byte array or null if the operation failed
-   * @since 2.0.0
+   * @since 2.0.1
    */
   byte[] getCipheredData() {
     return isSuccessful() ? getApduResponse().getDataOut() : null;
@@ -121,7 +121,7 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

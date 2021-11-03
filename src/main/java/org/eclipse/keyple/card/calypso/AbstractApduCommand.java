@@ -28,7 +28,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  *   <li>the parsed {@link org.calypsonet.terminal.card.ApduResponseApi}.
  * </ul>
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 abstract class AbstractApduCommand {
 
@@ -37,7 +37,7 @@ abstract class AbstractApduCommand {
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
    * (Success)
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -57,7 +57,7 @@ abstract class AbstractApduCommand {
    * Constructor
    *
    * @param commandRef The command reference.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   AbstractApduCommand(CardCommand commandRef) {
     this.commandRef = commandRef;
@@ -73,7 +73,7 @@ abstract class AbstractApduCommand {
    *
    * @param subName The string to append.
    * @throws NullPointerException If the request is not set.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final void addSubName(String subName) {
     this.name = this.name + " - " + subName;
@@ -85,7 +85,7 @@ abstract class AbstractApduCommand {
    * Gets {@link CardCommand} the current command identification
    *
    * @return A not null reference.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CardCommand getCommandRef() {
     return commandRef;
@@ -96,7 +96,7 @@ abstract class AbstractApduCommand {
    * Gets the name of this APDU command.
    *
    * @return A not empty string.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final String getName() {
     return this.name;
@@ -107,13 +107,11 @@ abstract class AbstractApduCommand {
    * Sets the command {@link ApduRequestAdapter}.
    *
    * @param apduRequest The APDU request.
-   * @return The object instance.
-   * @since 2.0.0
+   * @since 2.0.1
    */
-  final AbstractApduCommand setApduRequest(ApduRequestAdapter apduRequest) {
+  final void setApduRequest(ApduRequestAdapter apduRequest) {
     this.apduRequest = apduRequest;
     this.apduRequest.setInfo(this.name);
-    return this;
   }
 
   /**
@@ -121,7 +119,7 @@ abstract class AbstractApduCommand {
    * Gets the {@link ApduRequestAdapter}.
    *
    * @return Null if the request is not set.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final ApduRequestAdapter getApduRequest() {
     return apduRequest;
@@ -132,10 +130,10 @@ abstract class AbstractApduCommand {
    * Sets the command {@link ApduResponseApi}.
    *
    * @param apduResponse The APDU response.
-   * @return The object instance.
-   * @since 2.0.0
+   * @return The current instance.
+   * @since 2.0.1
    */
-  final AbstractApduCommand setApduResponse(ApduResponseApi apduResponse) {
+  AbstractApduCommand setApduResponse(ApduResponseApi apduResponse) {
     this.apduResponse = apduResponse;
     return this;
   }
@@ -145,7 +143,7 @@ abstract class AbstractApduCommand {
    * Gets {@link ApduResponseApi}
    *
    * @return Null if the response is not set.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final ApduResponseApi getApduResponse() {
     return apduResponse;
@@ -156,7 +154,7 @@ abstract class AbstractApduCommand {
    * Returns the internal status table
    *
    * @return A not null reference
-   * @since 2.0.0
+   * @since 2.0.1
    */
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
@@ -173,7 +171,7 @@ abstract class AbstractApduCommand {
    * @param commandRef {@link CardCommand} the command reference.
    * @param statusWord the status word.
    * @return A not null value
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CalypsoApduCommandException buildCommandException(
       Class<? extends CalypsoApduCommandException> exceptionClass,
@@ -199,7 +197,7 @@ abstract class AbstractApduCommand {
    * code.
    *
    * @return A value
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final boolean isSuccessful() {
     StatusProperties props = getStatusWordProperties();
@@ -212,7 +210,7 @@ abstract class AbstractApduCommand {
    * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CalypsoApduCommandException if status is not successful.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   void checkStatus() throws CalypsoApduCommandException {
 
@@ -241,7 +239,7 @@ abstract class AbstractApduCommand {
    * Gets the ASCII message from the statusTable for the current status word.
    *
    * @return A nullable value
-   * @since 2.0.0
+   * @since 2.0.1
    */
   final String getStatusInformation() {
     StatusProperties props = getStatusWordProperties();
@@ -252,7 +250,7 @@ abstract class AbstractApduCommand {
    * (package-private)<br>
    * This internal class provides status word properties
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   static class StatusProperties {
 
@@ -267,7 +265,7 @@ abstract class AbstractApduCommand {
      * Creates a successful status.
      *
      * @param information the status information.
-     * @since 2.0.0
+     * @since 2.0.1
      */
     StatusProperties(String information) {
       this.information = information;
@@ -282,7 +280,7 @@ abstract class AbstractApduCommand {
      *
      * @param information the status information.
      * @param exceptionClass the associated exception class.
-     * @since 2.0.0
+     * @since 2.0.1
      */
     StatusProperties(
         String information, Class<? extends CalypsoApduCommandException> exceptionClass) {
@@ -296,7 +294,7 @@ abstract class AbstractApduCommand {
      * Gets information
      *
      * @return A nullable reference
-     * @since 2.0.0
+     * @since 2.0.1
      */
     String getInformation() {
       return information;
@@ -307,7 +305,7 @@ abstract class AbstractApduCommand {
      * Gets successful indicator
      *
      * @return The successful indicator
-     * @since 2.0.0
+     * @since 2.0.1
      */
     boolean isSuccessful() {
       return successful;
@@ -318,7 +316,7 @@ abstract class AbstractApduCommand {
      * Gets Exception Class
      *
      * @return A nullable reference
-     * @since 2.0.0
+     * @since 2.0.1
      */
     Class<? extends CalypsoApduCommandException> getExceptionClass() {
       return exceptionClass;

@@ -11,11 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
+
 /**
  * (package-private)<br>
  * Superclass for all card commands.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 abstract class AbstractCardCommand extends AbstractApduCommand {
 
@@ -24,7 +26,7 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   AbstractCardCommand(CalypsoCardCommand commandRef) {
     super(commandRef);
@@ -33,7 +35,7 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   CalypsoCardCommand getCommandRef() {
@@ -47,14 +49,14 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
    * <p>Allows the management of the overflow of this buffer.
    *
    * @return True if this command uses the session buffer
-   * @since 2.0.0
+   * @since 2.0.1
    */
   abstract boolean isSessionBufferUsed();
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   final CalypsoApduCommandException buildCommandException(
@@ -94,7 +96,17 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
+   */
+  @Override
+  AbstractCardCommand setApduResponse(ApduResponseApi apduResponse) {
+    return (AbstractCardCommand) super.setApduResponse(apduResponse);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.1
    */
   @Override
   void checkStatus() throws CardCommandException {

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - "CHANGELOG.md" file (issue [eclipse/keyple#6]).
 - CI: Forbid the publication of a version already released (issue [#20]).
+### Changed
+- Merging of internal builders and parsers of APDU commands (issue [#24]).
 ### Fixed
 - Take into account the last DF status for `isDfInvalidated()` method (issue [#22]).
 
@@ -19,7 +21,8 @@ It also brings many major API changes.
 [unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...HEAD
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
-[#20]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/20
+[#24]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/24
 [#22]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/22
+[#20]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/20
 
 [eclipse/keyple#6]: https://github.com/eclipse/keyple/issues/6

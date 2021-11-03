@@ -36,55 +36,42 @@ final class CalypsoCardUtilAdapter {
   private CalypsoCardUtilAdapter() {}
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to a Open Secure Session
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Open Secure Session
    * command received from the card <br>
    * The ratification status and the data read at the time of the session opening are added to the
    * CalypsoCard.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param openSessionCmdBuild the Open Secure Session command.
+   * @param cmdCardOpenSession the command.
    * @param apduResponse the response received.
-   * @return The created response parser
    */
-  private static AbstractCardOpenSessionParser updateCalypsoCardOpenSession(
+  private static void updateCalypsoCardOpenSession(
       CalypsoCardAdapter calypsoCard,
-      AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser> openSessionCmdBuild,
+      CmdCardOpenSession cmdCardOpenSession,
       ApduResponseApi apduResponse) {
-    // create parser
-    AbstractCardOpenSessionParser openSessionRespPars =
-        openSessionCmdBuild.createResponseParser(apduResponse);
 
-    calypsoCard.setDfRatified(openSessionRespPars.wasRatified());
+    cmdCardOpenSession.setApduResponse(apduResponse);
+    calypsoCard.setDfRatified(cmdCardOpenSession.wasRatified());
 
-    byte[] recordDataRead = openSessionRespPars.getRecordDataRead();
+    byte[] recordDataRead = cmdCardOpenSession.getRecordDataRead();
 
     if (recordDataRead.length > 0) {
       calypsoCard.setContent(
-          (byte) openSessionCmdBuild.getSfi(),
-          openSessionCmdBuild.getRecordNumber(),
-          recordDataRead);
+          (byte) cmdCardOpenSession.getSfi(), cmdCardOpenSession.getRecordNumber(), recordDataRead);
     }
-
-    return openSessionRespPars;
   }
 
   /**
    * Checks the response to a Close Session command
    *
-   * @param cardCloseSessionBuilder the Close Session command.
+   * @param cmdCardCloseSession the command.
    * @param apduResponse the response received.
-   * @return The created response parser
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardCloseSessionParser updateCalypsoCardCloseSession(
-      CardCloseSessionBuilder cardCloseSessionBuilder, ApduResponseApi apduResponse)
+  private static void updateCalypsoCardCloseSession(
+      CmdCardCloseSession cmdCardCloseSession, ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardCloseSessionParser cardCloseSessionParser =
-        cardCloseSessionBuilder.createResponseParser(apduResponse);
-
-    cardCloseSessionParser.checkStatus();
-
-    return cardCloseSessionParser;
+    cmdCardCloseSession.setApduResponse(apduResponse).checkStatus();
   }
 
   /**
@@ -93,28 +80,22 @@ final class CalypsoCardUtilAdapter {
    * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardReadRecordsBuilder the Read Records command.
+   * @param cmdCardReadRecords the command.
    * @param apduResponse the response received.
-   * @return The created response parser
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardReadRecordsParser updateCalypsoCardReadRecords(
+  private static void updateCalypsoCardReadRecords(
       CalypsoCardAdapter calypsoCard,
-      CardReadRecordsBuilder cardReadRecordsBuilder,
+      CmdCardReadRecords cmdCardReadRecords,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    // create parser
-    CardReadRecordsParser cardReadRecordsParser =
-        cardReadRecordsBuilder.createResponseParser(apduResponse);
 
-    cardReadRecordsParser.checkStatus();
+    cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
 
     // iterate over read records to fill the CalypsoCard
-    for (Map.Entry<Integer, byte[]> entry : cardReadRecordsParser.getRecords().entrySet()) {
-      calypsoCard.setContent(
-          (byte) cardReadRecordsBuilder.getSfi(), entry.getKey(), entry.getValue());
+    for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecords.getRecords().entrySet()) {
+      calypsoCard.setContent((byte) cmdCardReadRecords.getSfi(), entry.getKey(), entry.getValue());
     }
-    return cardReadRecordsParser;
   }
 
   /**
@@ -124,17 +105,22 @@ final class CalypsoCardUtilAdapter {
    * DirectoryHeader} is updated
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param command The command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardSelectFileParser updateCalypsoCardWithFcp(
-      CalypsoCardAdapter calypsoCard, ApduResponseApi apduResponse) throws CardCommandException {
+  private static void updateCalypsoCardWithFcp(
+      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      throws CardCommandException {
 
-    CardSelectFileParser cardSelectFileParser = new CardSelectFileParser(apduResponse, null);
+    command.setApduResponse(apduResponse).checkStatus();
 
-    cardSelectFileParser.checkStatus();
-
-    byte[] proprietaryInformation = cardSelectFileParser.getProprietaryInformation();
+    byte[] proprietaryInformation;
+    if (command.getCommandRef() == CalypsoCardCommand.SELECT_FILE) {
+      proprietaryInformation = ((CmdCardSelectFile) command).getProprietaryInformation();
+    } else {
+      proprietaryInformation = ((CmdCardGetDataFcp) command).getProprietaryInformation();
+    }
     byte sfi = proprietaryInformation[SEL_SFI_OFFSET];
     byte fileType = proprietaryInformation[SEL_TYPE_OFFSET];
     switch (fileType) {
@@ -150,63 +136,55 @@ final class CalypsoCardUtilAdapter {
       default:
         throw new IllegalStateException(String.format("Unknown file type: 0x%02X", fileType));
     }
-    return cardSelectFileParser;
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to a Update Record command sent
-   * and received from the card <br>
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Update Record command
+   * sent and received from the card <br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardUpdateRecordBuilder the Update Record command.
+   * @param cmdCardUpdateRecord the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardUpdateRecordParser updateCalypsoCardUpdateRecord(
+  private static void updateCalypsoCardUpdateRecord(
       CalypsoCardAdapter calypsoCard,
-      CardUpdateRecordBuilder cardUpdateRecordBuilder,
+      CmdCardUpdateRecord cmdCardUpdateRecord,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardUpdateRecordParser cardUpdateRecordParser =
-        cardUpdateRecordBuilder.createResponseParser(apduResponse);
 
-    cardUpdateRecordParser.checkStatus();
+    cmdCardUpdateRecord.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.setContent(
-        (byte) cardUpdateRecordBuilder.getSfi(),
-        cardUpdateRecordBuilder.getRecordNumber(),
-        cardUpdateRecordBuilder.getData());
-
-    return cardUpdateRecordParser;
+        (byte) cmdCardUpdateRecord.getSfi(),
+        cmdCardUpdateRecord.getRecordNumber(),
+        cmdCardUpdateRecord.getData());
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to a Write Record command sent
-   * and received from the card <br>
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Write Record" command
+   * sent and received from the card <br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure using the dedicated
    * {@link CalypsoCardAdapter#fillContent } method.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cmdCardWriteRecord the Write Record command.
+   * @param cmdCardWriteRecord the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CmdCardWriteRecord updateCalypsoCardWriteRecord(
+  private static void updateCalypsoCardWriteRecord(
       CalypsoCardAdapter calypsoCard,
       CmdCardWriteRecord cmdCardWriteRecord,
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardWriteRecord.setApduResponse(apduResponse);
-    cmdCardWriteRecord.checkStatus();
+    cmdCardWriteRecord.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.fillContent(
         (byte) cmdCardWriteRecord.getSfi(),
         cmdCardWriteRecord.getRecordNumber(),
         cmdCardWriteRecord.getData());
-
-    return cmdCardWriteRecord;
   }
 
   /**
@@ -214,24 +192,21 @@ final class CalypsoCardUtilAdapter {
    * received from the card <br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure
    *
-   * @param cmdCardAppendRecord the Append Records command.
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardAppendRecord the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CmdCardAppendRecord updateCalypsoCardAppendRecord(
+  private static void updateCalypsoCardAppendRecord(
       CalypsoCardAdapter calypsoCard,
       CmdCardAppendRecord cmdCardAppendRecord,
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardAppendRecord.setApduResponse(apduResponse);
-    cmdCardAppendRecord.checkStatus();
+    cmdCardAppendRecord.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.addCyclicContent(
         (byte) cmdCardAppendRecord.getSfi(), cmdCardAppendRecord.getData());
-
-    return cmdCardAppendRecord;
   }
 
   /**
@@ -239,27 +214,22 @@ final class CalypsoCardUtilAdapter {
    * from the card <br>
    * The counter value is updated in the {@link CalypsoCardAdapter} file structure
    *
-   * @param cardDecreaseBuilder the Decrease command.
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardDecrease the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardDecreaseParser updateCalypsoCardDecrease(
-      CalypsoCardAdapter calypsoCard,
-      CardDecreaseBuilder cardDecreaseBuilder,
-      ApduResponseApi apduResponse)
+  private static void updateCalypsoCardDecrease(
+      CalypsoCardAdapter calypsoCard, CmdCardDecrease cmdCardDecrease, ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardDecreaseParser cardDecreaseParser = cardDecreaseBuilder.createResponseParser(apduResponse);
 
-    cardDecreaseParser.checkStatus();
+    cmdCardDecrease.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.setContent(
-        (byte) cardDecreaseBuilder.getSfi(),
+        (byte) cmdCardDecrease.getSfi(),
         1,
         apduResponse.getDataOut(),
-        3 * (cardDecreaseBuilder.getCounterNumber() - 1));
-
-    return cardDecreaseParser;
+        3 * (cmdCardDecrease.getCounterNumber() - 1));
   }
 
   /**
@@ -267,27 +237,22 @@ final class CalypsoCardUtilAdapter {
    * from the card <br>
    * The counter value is updated in the {@link CalypsoCardAdapter} file structure
    *
-   * @param cardIncreaseBuilder the Increase command.
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardIncrease the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardIncreaseParser updateCalypsoCardIncrease(
-      CalypsoCardAdapter calypsoCard,
-      CardIncreaseBuilder cardIncreaseBuilder,
-      ApduResponseApi apduResponse)
+  private static void updateCalypsoCardIncrease(
+      CalypsoCardAdapter calypsoCard, CmdCardIncrease cmdCardIncrease, ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardIncreaseParser cardIncreaseParser = cardIncreaseBuilder.createResponseParser(apduResponse);
 
-    cardIncreaseParser.checkStatus();
+    cmdCardIncrease.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.setContent(
-        (byte) cardIncreaseBuilder.getSfi(),
+        (byte) cmdCardIncrease.getSfi(),
         1,
         apduResponse.getDataOut(),
-        3 * (cardIncreaseBuilder.getCounterNumber() - 1));
-
-    return cardIncreaseParser;
+        3 * (cmdCardIncrease.getCounterNumber() - 1));
   }
 
   /**
@@ -295,79 +260,63 @@ final class CalypsoCardUtilAdapter {
    * The card challenge value is stored in {@link CalypsoCardAdapter}.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardGetChallengeBuilder the Get Challenge command.
+   * @param cmdCardGetChallenge the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardGetChallengeRespPars updateCalypsoCardGetChallenge(
+  private static void updateCalypsoCardGetChallenge(
       CalypsoCardAdapter calypsoCard,
-      CardGetChallengeBuilder cardGetChallengeBuilder,
+      CmdCardGetChallenge cmdCardGetChallenge,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardGetChallengeRespPars cardGetChallengeRespPars =
-        cardGetChallengeBuilder.createResponseParser(apduResponse);
 
-    cardGetChallengeRespPars.checkStatus();
-
-    calypsoCard.setCardChallenge(apduResponse.getDataOut());
-
-    return cardGetChallengeRespPars;
+    cmdCardGetChallenge.setApduResponse(apduResponse).checkStatus();
+    calypsoCard.setCardChallenge(cmdCardGetChallenge.getCardChallenge());
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to an Verify Pin command
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Verify Pin" command
    * received from the card <br>
    * The PIN attempt counter value is stored in the {@link CalypsoCardAdapter}<br>
    * CardPinException are filtered when the initial command targets the reading of the attempt
    * counter.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardVerifyPinBuilder the Verify PIN command.
+   * @param cmdCardVerifyPin the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardVerifyPinParser updateCalypsoVerifyPin(
+  private static void updateCalypsoVerifyPin(
       CalypsoCardAdapter calypsoCard,
-      CardVerifyPinBuilder cardVerifyPinBuilder,
+      CmdCardVerifyPin cmdCardVerifyPin,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardVerifyPinParser cardVerifyPinParser =
-        cardVerifyPinBuilder.createResponseParser(apduResponse);
 
-    calypsoCard.setPinAttemptRemaining(cardVerifyPinParser.getRemainingAttemptCounter());
+    cmdCardVerifyPin.setApduResponse(apduResponse);
+    calypsoCard.setPinAttemptRemaining(cmdCardVerifyPin.getRemainingAttemptCounter());
 
     try {
-      cardVerifyPinParser.checkStatus();
+      cmdCardVerifyPin.checkStatus();
     } catch (CardPinException ex) {
       // forward the exception if the operation do not target the reading of the attempt
       // counter.
       // catch it silently otherwise
-      if (!cardVerifyPinBuilder.isReadCounterOnly()) {
+      if (!cmdCardVerifyPin.isReadCounterOnly()) {
         throw ex;
       }
     }
-
-    return cardVerifyPinParser;
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to an Change Pin command
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Change Pin" command
    * received from the card
    *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardChangePinBuilder the Change PIN command.
+   * @param cmdCardChangePin the command.
    * @param apduResponse the response received.
-   * @return The command parser.
    */
-  private static CardChangePinParser updateCalypsoChangePin(
-      CalypsoCardAdapter calypsoCard,
-      CardChangePinBuilder cardChangePinBuilder,
-      ApduResponseApi apduResponse)
-      throws CardCommandException {
-    CardChangePinParser cardChangePinParser =
-        cardChangePinBuilder.createResponseParser(apduResponse);
-    cardChangePinParser.checkStatus();
-    return cardChangePinParser;
+  private static void updateCalypsoChangePin(
+      CmdCardChangePin cmdCardChangePin, ApduResponseApi apduResponse) throws CardCommandException {
+    cmdCardChangePin.setApduResponse(apduResponse).checkStatus();
   }
 
   /**
@@ -377,29 +326,24 @@ final class CalypsoCardUtilAdapter {
    * CalypsoCardUtilAdapter} and made available through a dedicated getters for later use<br>
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cardSvGetBuilder the SV Get command.
+   * @param cmdCardSvGet the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static CardSvGetParser updateCalypsoCardSvGet(
-      CalypsoCardAdapter calypsoCard,
-      CardSvGetBuilder cardSvGetBuilder,
-      ApduResponseApi apduResponse)
+  private static void updateCalypsoCardSvGet(
+      CalypsoCardAdapter calypsoCard, CmdCardSvGet cmdCardSvGet, ApduResponseApi apduResponse)
       throws CardCommandException {
-    CardSvGetParser cardSvGetParser = cardSvGetBuilder.createResponseParser(apduResponse);
 
-    cardSvGetParser.checkStatus();
+    cmdCardSvGet.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.setSvData(
-        cardSvGetParser.getCurrentKVC(),
-        cardSvGetParser.getSvGetCommandHeader(),
-        cardSvGetParser.getApduResponse().getApdu(),
-        cardSvGetParser.getBalance(),
-        cardSvGetParser.getTransactionNumber(),
-        cardSvGetParser.getLoadLog(),
-        cardSvGetParser.getDebitLog());
-
-    return cardSvGetParser;
+        cmdCardSvGet.getCurrentKVC(),
+        cmdCardSvGet.getSvGetCommandHeader(),
+        cmdCardSvGet.getApduResponse().getApdu(),
+        cmdCardSvGet.getBalance(),
+        cmdCardSvGet.getTransactionNumber(),
+        cmdCardSvGet.getLoadLog(),
+        cmdCardSvGet.getDebitLog());
   }
 
   /**
@@ -409,44 +353,32 @@ final class CalypsoCardUtilAdapter {
    * CalypsoCardAdapter}.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param svOperationCmdBuild the SV Operation command (CardSvReloadBuilder, CardSvDebitBuilder or
-   *     CardSvUndebitBuilder)
+   * @param cmdCardSvOperation the SV Operation command (CmdCardSvReload, CmdCardSvDebit or
+   *     CmdCardSvUndebit)
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static AbstractCardResponseParser updateCalypsoCardSvOperation(
+  private static void updateCalypsoCardSvOperation(
       CalypsoCardAdapter calypsoCard,
-      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> svOperationCmdBuild,
+      AbstractCardCommand cmdCardSvOperation,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    AbstractCardResponseParser svOperationRespPars =
-        svOperationCmdBuild.createResponseParser(apduResponse);
 
-    svOperationRespPars.checkStatus();
-
-    calypsoCard.setSvOperationSignature(svOperationRespPars.getApduResponse().getDataOut());
-
-    return svOperationRespPars;
+    cmdCardSvOperation.setApduResponse(apduResponse).checkStatus();
+    calypsoCard.setSvOperationSignature(cmdCardSvOperation.getApduResponse().getDataOut());
   }
 
   /**
    * Checks the response to Invalidate/Rehabilitate commands
    *
-   * @param invalidateRehabilitateCmdBuild the Invalidate or Rehabilitate response parser.
+   * @param cmdCardInvalidateRehabilitate the Invalidate or Rehabilitate command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static AbstractCardResponseParser updateCalypsoInvalidateRehabilitate(
-      AbstractCardCommandBuilder<? extends AbstractCardResponseParser>
-          invalidateRehabilitateCmdBuild,
-      ApduResponseApi apduResponse)
+  private static void updateCalypsoInvalidateRehabilitate(
+      AbstractCardCommand cmdCardInvalidateRehabilitate, ApduResponseApi apduResponse)
       throws CardCommandException {
-    AbstractCardResponseParser invalidateRehabilitateRespPars =
-        invalidateRehabilitateCmdBuild.createResponseParser(apduResponse);
-
-    invalidateRehabilitateRespPars.checkStatus();
-
-    return invalidateRehabilitateRespPars;
+    cmdCardInvalidateRehabilitate.setApduResponse(apduResponse).checkStatus();
   }
 
   /**
@@ -572,73 +504,74 @@ final class CalypsoCardUtilAdapter {
    * (package-private)<br>
    * Fills the CalypsoCard with the card's response to a single command
    *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to fill with the. provided response
-   *     from the card
-   * @param commandBuilder the builder of the command that get the response.
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to fill with the provided response
+   *     from the card.
+   * @param command the command that get the response.
    * @param apduResponse the APDU response returned by the card to the command.
-   * @return The parser associated to the command or null if not relevant.
    * @throws CardCommandException if a response from the card was unexpected
    * @since 2.0.0
    */
-  static AbstractCardResponseParser updateCalypsoCard(
-      CalypsoCardAdapter calypsoCard,
-      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder,
-      ApduResponseApi apduResponse)
+  static void updateCalypsoCard(
+      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
       throws CardCommandException {
-    switch (commandBuilder.getCommandRef()) {
+
+    switch (command.getCommandRef()) {
       case READ_RECORDS:
-        return updateCalypsoCardReadRecords(
-            calypsoCard, (CardReadRecordsBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardReadRecords(calypsoCard, (CmdCardReadRecords) command, apduResponse);
+        break;
       case GET_DATA:
-        if (commandBuilder instanceof CardGetDataFciBuilder) {
+        if (command instanceof CmdCardGetDataFci) {
           calypsoCard.initializeWithFci(apduResponse);
-          return null;
         } else {
-          return updateCalypsoCardWithFcp(calypsoCard, apduResponse);
+          // GetData FCP
+          updateCalypsoCardWithFcp(calypsoCard, command, apduResponse);
         }
+        break;
       case SELECT_FILE:
-        return updateCalypsoCardWithFcp(calypsoCard, apduResponse);
+        updateCalypsoCardWithFcp(calypsoCard, command, apduResponse);
+        break;
       case UPDATE_RECORD:
-        return updateCalypsoCardUpdateRecord(
-            calypsoCard, (CardUpdateRecordBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardUpdateRecord(calypsoCard, (CmdCardUpdateRecord) command, apduResponse);
+        break;
       case WRITE_RECORD:
-        return updateCalypsoCardWriteRecord(
-            calypsoCard, (CmdCardWriteRecord) commandBuilder, apduResponse);
+        updateCalypsoCardWriteRecord(calypsoCard, (CmdCardWriteRecord) command, apduResponse);
+        break;
       case APPEND_RECORD:
-        return updateCalypsoCardAppendRecord(
-            calypsoCard, (CmdCardAppendRecord) commandBuilder, apduResponse);
+        updateCalypsoCardAppendRecord(calypsoCard, (CmdCardAppendRecord) command, apduResponse);
+        break;
       case DECREASE:
-        return updateCalypsoCardDecrease(
-            calypsoCard, (CardDecreaseBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardDecrease(calypsoCard, (CmdCardDecrease) command, apduResponse);
+        break;
       case INCREASE:
-        return updateCalypsoCardIncrease(
-            calypsoCard, (CardIncreaseBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardIncrease(calypsoCard, (CmdCardIncrease) command, apduResponse);
+        break;
       case OPEN_SESSION:
-        return updateCalypsoCardOpenSession(
-            calypsoCard,
-            (AbstractCardOpenSessionBuilder<AbstractCardOpenSessionParser>) commandBuilder,
-            apduResponse);
+        updateCalypsoCardOpenSession(calypsoCard, (CmdCardOpenSession) command, apduResponse);
+        break;
       case CLOSE_SESSION:
-        return updateCalypsoCardCloseSession(
-            (CardCloseSessionBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardCloseSession((CmdCardCloseSession) command, apduResponse);
+        break;
       case GET_CHALLENGE:
-        return updateCalypsoCardGetChallenge(
-            calypsoCard, (CardGetChallengeBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardGetChallenge(calypsoCard, (CmdCardGetChallenge) command, apduResponse);
+        break;
       case VERIFY_PIN:
-        return updateCalypsoVerifyPin(
-            calypsoCard, (CardVerifyPinBuilder) commandBuilder, apduResponse);
+        updateCalypsoVerifyPin(calypsoCard, (CmdCardVerifyPin) command, apduResponse);
+        break;
       case SV_GET:
-        return updateCalypsoCardSvGet(calypsoCard, (CardSvGetBuilder) commandBuilder, apduResponse);
+        updateCalypsoCardSvGet(calypsoCard, (CmdCardSvGet) command, apduResponse);
+        break;
       case SV_RELOAD:
       case SV_DEBIT:
       case SV_UNDEBIT:
-        return updateCalypsoCardSvOperation(calypsoCard, commandBuilder, apduResponse);
+        updateCalypsoCardSvOperation(calypsoCard, command, apduResponse);
+        break;
       case INVALIDATE:
       case REHABILITATE:
-        return updateCalypsoInvalidateRehabilitate(commandBuilder, apduResponse);
+        updateCalypsoInvalidateRehabilitate(command, apduResponse);
+        break;
       case CHANGE_PIN:
-        return updateCalypsoChangePin(
-            calypsoCard, (CardChangePinBuilder) commandBuilder, apduResponse);
+        updateCalypsoChangePin((CmdCardChangePin) command, apduResponse);
+        break;
       case CHANGE_KEY:
       case GET_DATA_TRACE:
         throw new IllegalStateException("Shouldn't happen for now!");
@@ -651,25 +584,25 @@ final class CalypsoCardUtilAdapter {
    * (package-private)<br>
    * Fills the CalypsoCard with the card's responses to a list of commands
    *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to fill with the. provided response
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to fill with the provided response
    *     from the card
-   * @param commandBuilders the list of builders that get the responses.
+   * @param commands the list of commands that get the responses.
    * @param apduResponses the APDU responses returned by the card to all commands.
    * @throws CardCommandException if a response from the card was unexpected
    * @since 2.0.0
    */
   static void updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,
-      List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> commandBuilders,
+      List<AbstractCardCommand> commands,
       List<ApduResponseApi> apduResponses)
       throws CardCommandException {
+
     Iterator<ApduResponseApi> responseIterator = apduResponses.iterator();
 
-    if (commandBuilders != null && !commandBuilders.isEmpty()) {
-      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
-          commandBuilders) {
+    if (commands != null && !commands.isEmpty()) {
+      for (AbstractCardCommand command : commands) {
         ApduResponseApi apduResponse = responseIterator.next();
-        updateCalypsoCard(calypsoCard, commandBuilder, apduResponse);
+        updateCalypsoCard(calypsoCard, command, apduResponse);
       }
     }
   }

@@ -297,8 +297,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSelectApplicationResponse_whenNotSet_shouldReturnNull() {
-    assertThat(calypsoCardAdapter.getSelectApplicationResponse()).isNull();
+  public void getSelectApplicationResponse_whenNotSet_shouldReturnEmpty() {
+    assertThat(calypsoCardAdapter.getSelectApplicationResponse()).isEmpty();
   }
 
   @Test

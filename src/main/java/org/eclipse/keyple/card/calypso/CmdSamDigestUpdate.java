@@ -20,8 +20,10 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Digest Update APDU command.
  *
- * @since 2.0.0 This command have to be sent twice for each command executed during a session. First
- *     time for the command sent and second time for the answer received
+ * <p>This command have to be sent twice for each command executed during a session. First time for
+ * the command sent and second time for the answer received.
+ *
+ * @since 2.0.1
  */
 final class CmdSamDigestUpdate extends AbstractSamCommand {
 
@@ -56,8 +58,8 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
    * @param productType of the SAM.
    * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData all bytes from command sent by the card or response from the command.
-   * @throws IllegalArgumentException - if the digest data is null or has a length &gt; 255
-   * @since 2.0.0
+   * @throws IllegalArgumentException If the digest data is null or has a length &gt; 255
+   * @since 2.0.1
    */
   CmdSamDigestUpdate(
       CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
@@ -79,7 +81,7 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

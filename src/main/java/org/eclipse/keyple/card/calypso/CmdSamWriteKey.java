@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Write Key APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 final class CmdSamWriteKey extends AbstractSamCommand {
   /** The command reference. */
@@ -65,16 +65,16 @@ final class CmdSamWriteKey extends AbstractSamCommand {
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
-   * @param revision the SAM revision.
+   * @param productType the SAM product type.
    * @param writingMode the writing mode (P1).
    * @param keyReference the key reference (P2).
    * @param keyData the key data.
-   * @since 2.0.0
+   * @since 2.0.1
    */
   CmdSamWriteKey(
-      CalypsoSam.ProductType revision, byte writingMode, byte keyReference, byte[] keyData) {
+      CalypsoSam.ProductType productType, byte writingMode, byte keyReference, byte[] keyData) {
     super(command);
-    byte cla = SamUtilAdapter.getClassByte(revision);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     if (keyData == null) {
       throw new IllegalArgumentException("Key data null!");
@@ -93,7 +93,7 @@ final class CmdSamWriteKey extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
