@@ -11,36 +11,55 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Give Random APDU command.
  *
  * @since 2.0.0
  */
-final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandomParser> {
+final class CmdSamGiveRandom extends AbstractSamCommand {
 
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.GIVE_RANDOM;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamDigestUpdateBuilder.
+   * {@inheritDoc}
    *
-   * @param revision of the SAM.
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamDigestUpdate.
+   *
+   * @param productType the SAM product type.
    * @param random the random data.
    * @throws IllegalArgumentException - if the random data is null or has a length not equal to 8
    *     TODO implement specific settings for rev less than 3
    * @since 2.0.0
    */
-  public SamGiveRandomBuilder(CalypsoSam.ProductType revision, byte[] random) {
+  CmdSamGiveRandom(CalypsoSam.ProductType productType, byte[] random) {
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+
+    byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -51,15 +70,5 @@ final class SamGiveRandomBuilder extends AbstractSamCommandBuilder<SamGiveRandom
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, random, null)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  public SamGiveRandomParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamGiveRandomParser(apduResponse, this);
   }
 }

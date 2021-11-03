@@ -11,39 +11,63 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the SV Check APDU command.
  *
  * @since 2.0.0
  */
-final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamResponseParser> {
+final class CmdSamSvCheck extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.SV_CHECK;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "No active SV transaction.", CalypsoSamAccessForbiddenException.class));
+    m.put(
+        0x6988,
+        new StatusProperties("Incorrect SV signature.", CalypsoSamSecurityDataException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamSvCheckBuilder to authenticate a card SV transaction.
+   * {@inheritDoc}
    *
-   * @param revision of the SAM.
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamSvCheck to authenticate a card SV transaction.
+   *
+   * @param productType the SAM product type.
    * @param svCardSignature null if the operation is to abort the SV transaction, a 3 or 6-byte
    *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
    * @since 2.0.0
    */
-  public SamSvCheckBuilder(CalypsoSam.ProductType revision, byte[] svCardSignature) {
+  CmdSamSvCheck(CalypsoSam.ProductType productType, byte[] svCardSignature) {
     super(command);
     if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svCardSignature.");
     }
 
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
-
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -59,15 +83,5 @@ final class SamSvCheckBuilder extends AbstractSamCommandBuilder<AbstractSamRespo
           new ApduRequestAdapter(
               ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  public SamSvCheckParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamSvCheckParser(apduResponse, this);
   }
 }

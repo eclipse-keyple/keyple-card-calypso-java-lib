@@ -11,12 +11,11 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * (package-private)<br>
@@ -35,32 +34,32 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-            new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
     m.put(
-            0x6B00,
-            new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
+        0x6B00,
+        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
     m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
     m.put(
-            0x6400,
-            new StatusProperties(
-                    "Too many modifications in session.", CardSessionBufferOverflowException.class));
+        0x6400,
+        new StatusProperties(
+            "Too many modifications in session.", CardSessionBufferOverflowException.class));
     m.put(
-            0x6981,
-            new StatusProperties("The current EF is not a Cyclic EF.", CardDataAccessException.class));
+        0x6981,
+        new StatusProperties("The current EF is not a Cyclic EF.", CardDataAccessException.class));
     m.put(
-            0x6982,
-            new StatusProperties(
-                    "Security conditions not fulfilled (no session, wrong key).",
-                    CardSecurityContextException.class));
+        0x6982,
+        new StatusProperties(
+            "Security conditions not fulfilled (no session, wrong key).",
+            CardSecurityContextException.class));
     m.put(
-            0x6985,
-            new StatusProperties(
-                    "Access forbidden (Never access mode, DF is invalidated, etc..).",
-                    CardAccessForbiddenException.class));
+        0x6985,
+        new StatusProperties(
+            "Access forbidden (Never access mode, DF is invalidated, etc..).",
+            CardAccessForbiddenException.class));
     m.put(
-            0x6986,
-            new StatusProperties(
-                    "Command not allowed (no current EF).", CardDataAccessException.class));
+        0x6986,
+        new StatusProperties(
+            "Command not allowed (no current EF).", CardDataAccessException.class));
     m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
@@ -71,7 +70,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * @since 2.0.0
    */
   @Override
-  protected Map<Integer, StatusProperties> getStatusTable() {
+  Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
 
@@ -89,8 +88,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * @throws IllegalArgumentException - if the command is inconsistent
    * @since 2.0.0
    */
-  CmdCardAppendRecord(
-      CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
+  CmdCardAppendRecord(CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
     super(command);
     byte cla = calypsoCardClass.getValue();
 
@@ -123,6 +121,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
+   *
    * @return The SFI of the accessed file
    * @since 2.0.0
    */
@@ -132,6 +131,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
+   *
    * @return The data sent to the card
    * @since 2.0.0
    */

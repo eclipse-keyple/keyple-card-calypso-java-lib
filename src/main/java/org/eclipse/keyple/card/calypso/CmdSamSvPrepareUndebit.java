@@ -11,24 +11,59 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the SV Undebit APDU command.
  *
  * @since 2.0.0
  */
-final class SamSvPrepareUndebitBuilder
-    extends AbstractSamCommandBuilder<SamSvPrepareOperationParser> {
+final class CmdSamSvPrepareUndebit extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_UNDEBIT;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+    m.put(
+        0x6A00,
+        new StatusProperties("Incorrect P1 or P2", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6A80,
+        new StatusProperties(
+            "Incorrect incoming data.", CalypsoSamIncorrectInputDataException.class));
+    m.put(
+        0x6A83,
+        new StatusProperties(
+            "Record not found: ciphering key not found", CalypsoSamDataAccessException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamSvPrepareUndebitBuilder to prepare a transaction to cancel a previous
-   * debit transaction.
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamSvPrepareUndebit to prepare a transaction to cancel a previous debit
+   * transaction.
    *
    * @param samProductType the SAM revision.
    * @param svGetHeader the SV Get command header.
@@ -36,7 +71,7 @@ final class SamSvPrepareUndebitBuilder
    * @param svUndebitCmdBuildDebitCmdBuildData the SV undebit command builder data.
    * @since 2.0.0
    */
-  public SamSvPrepareUndebitBuilder(
+  CmdSamSvPrepareUndebit(
       CalypsoSam.ProductType samProductType,
       byte[] svGetHeader,
       byte[] svGetData,
@@ -60,15 +95,5 @@ final class SamSvPrepareUndebitBuilder
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  public SamSvPrepareOperationParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamSvPrepareOperationParser(apduResponse, this);
   }
 }

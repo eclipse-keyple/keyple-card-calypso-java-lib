@@ -11,25 +11,25 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Read Key Parameters APDU command.
  *
  * @since 2.0.0
  */
-final class SamReadKeyParametersBuilder
-    extends AbstractSamCommandBuilder<SamReadKeyParametersParser> {
+final class CmdSamReadKeyParameters extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.READ_KEY_PARAMETERS;
 
-  public static final int MAX_WORK_KEY_REC_NUMB = 126;
+  static final int MAX_WORK_KEY_REC_NUMB = 126;
 
   /** Source reference */
-  public enum SourceRef {
+  enum SourceRef {
     /** Work key */
     WORK_KEY,
     /** System key */
@@ -37,21 +37,54 @@ final class SamReadKeyParametersBuilder
   }
 
   /** Navigation control */
-  public enum NavControl {
+  enum NavControl {
     /** First */
     FIRST,
     /** Next */
     NEXT
   }
 
-  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision) {
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6900,
+        new StatusProperties(
+            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+    m.put(0x6A00, new StatusProperties("Incorrect P2.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6A83,
+        new StatusProperties(
+            "Record not found: key to read not found.", CalypsoSamDataAccessException.class));
+    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed.", null));
+    STATUS_TABLE = m;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadKeyParameters for the null key.
+   *
+   * @param productType the SAM product type.
+   * @since 2.0.0
+   */
+  CmdSamReadKeyParameters(CalypsoSam.ProductType productType) {
 
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p2 = (byte) 0xE0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -62,14 +95,19 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision, byte kif) {
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadKeyParameters for the provided kif.
+   *
+   * @param productType the SAM product type.
+   * @param kif the kif
+   * @since 2.0.0
+   */
+  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif) {
 
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p2 = (byte) 0xC0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -82,14 +120,20 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(CalypsoSam.ProductType revision, byte kif, byte kvc) {
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadKeyParameters for the provided kif and kvc.
+   *
+   * @param productType the SAM product type.
+   * @param kif the kif
+   * @param kvc the kvc
+   * @since 2.0.0
+   */
+  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, byte kvc) {
 
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p2 = (byte) 0xF0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -103,21 +147,26 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(
-      CalypsoSam.ProductType revision, SourceRef sourceKeyRef, int recordNumber) {
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadKeyParameters for the provided key reference and record number.
+   *
+   * @param productType the SAM product type.
+   * @param sourceKeyRef the source key reference
+   * @param recordNumber the record number
+   * @since 2.0.0
+   */
+  CmdSamReadKeyParameters(
+      CalypsoSam.ProductType productType, SourceRef sourceKeyRef, int recordNumber) {
 
     super(command);
-
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
     if (recordNumber < 1 || recordNumber > MAX_WORK_KEY_REC_NUMB) {
       throw new IllegalArgumentException(
           "Record Number must be between 1 and " + MAX_WORK_KEY_REC_NUMB + ".");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -142,15 +191,20 @@ final class SamReadKeyParametersBuilder
                 cla, command.getInstructionByte(), (byte) 0x00, p2, sourceKeyId, (byte) 0x00)));
   }
 
-  public SamReadKeyParametersBuilder(
-      CalypsoSam.ProductType revision, byte kif, NavControl navControl) {
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadKeyParameters for the provided kif and navigation control flag.
+   *
+   * @param productType the SAM product type.
+   * @param kif the kif
+   * @param navControl the navigation control flag
+   * @since 2.0.0
+   */
+  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, NavControl navControl) {
 
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -178,12 +232,13 @@ final class SamReadKeyParametersBuilder
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the key parameters.
    *
+   * @return The key parameters
    * @since 2.0.0
    */
-  @Override
-  public SamReadKeyParametersParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamReadKeyParametersParser(apduResponse, this);
+  byte[] getKeyParameters() {
+    return isSuccessful() ? getApduResponse().getDataOut() : null;
   }
 }

@@ -11,46 +11,34 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the SAM Select Diversifier APDU command.
  *
  * @since 2.0.0
  */
-final class SamSelectDiversifierBuilder
-    extends AbstractSamCommandBuilder<SamSelectDiversifierParser> {
+final class CmdSamSelectDiversifier extends AbstractSamCommand {
 
   /** The command. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.SELECT_DIVERSIFIER;
 
-  /**
-   * Instantiates a new SamSelectDiversifierBuilder.
-   *
-   * @param productType the SAM product type.
-   * @param diversifier the application serial number.
-   * @throws IllegalArgumentException - if the diversifier is null or has a wrong length
-   * @since 2.0.0
-   */
-  public SamSelectDiversifierBuilder(CalypsoSam.ProductType productType, byte[] diversifier) {
-    super(command);
-    if (productType != null) {
-      this.defaultProductType = productType;
-    }
-    if (diversifier == null || (diversifier.length != 4 && diversifier.length != 8)) {
-      throw new IllegalArgumentException("Bad diversifier value!");
-    }
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
-    byte p1 = 0x00;
-    byte p2 = 0x00;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, diversifier, null)));
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "Preconditions not satisfied: the SAM is locked.",
+            CalypsoSamAccessForbiddenException.class));
+    STATUS_TABLE = m;
   }
 
   /**
@@ -59,7 +47,32 @@ final class SamSelectDiversifierBuilder
    * @since 2.0.0
    */
   @Override
-  public SamSelectDiversifierParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamSelectDiversifierParser(apduResponse, this);
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamSelectDiversifier.
+   *
+   * @param productType the SAM product type.
+   * @param diversifier the application serial number.
+   * @throws IllegalArgumentException - if the diversifier is null or has a wrong length
+   * @since 2.0.0
+   */
+  CmdSamSelectDiversifier(CalypsoSam.ProductType productType, byte[] diversifier) {
+    super(command);
+
+    if (diversifier == null || (diversifier.length != 4 && diversifier.length != 8)) {
+      throw new IllegalArgumentException("Bad diversifier value!");
+    }
+
+    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte p1 = 0x00;
+    byte p2 = 0x00;
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, diversifier, null)));
   }
 }

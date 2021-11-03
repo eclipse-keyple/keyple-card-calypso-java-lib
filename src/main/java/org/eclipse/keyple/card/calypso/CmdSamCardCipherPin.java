@@ -11,22 +11,58 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Card Cipher PIN APDU command.
  *
  * @since 2.0.0
  */
-final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCipherPinParser> {
+final class CmdSamCardCipherPin extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_CIPHER_PIN;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6900,
+        new StatusProperties(
+            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+    m.put(
+        0x6A00,
+        new StatusProperties("Incorrect P1 or P2", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6A83,
+        new StatusProperties(
+            "Record not found: ciphering key not found", CalypsoSamDataAccessException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamCardCipherPinBuilder and generate the ciphered data for a Verify PIN or
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamCardCipherPin and generate the ciphered data for a Verify PIN or
    * Change PIN card command.
    *
    * <p>In the case of a PIN verification, only the current PIN must be provided (newPin must be set
@@ -34,7 +70,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    *
    * <p>In the case of a PIN update, the current and new PINs must be provided.
    *
-   * @param revision of the SAM.
+   * @param productType the SAM product type.
    * @param cipheringKif the KIF of the key used to encipher the PIN data.
    * @param cipheringKvc the KVC of the key used to encipher the PIN data.
    * @param currentPin the current PIN (a 4-byte byte array).
@@ -42,17 +78,14 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
    *     null if the operation in progress is a PIN verification)
    * @since 2.0.0
    */
-  public SamCardCipherPinBuilder(
-      CalypsoSam.ProductType revision,
+  CmdSamCardCipherPin(
+      CalypsoSam.ProductType productType,
       byte cipheringKif,
       byte cipheringKvc,
       byte[] currentPin,
       byte[] newPin) {
     super(command);
 
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
     if (currentPin == null || currentPin.length != 4) {
       throw new IllegalArgumentException("Bad current PIN value.");
     }
@@ -61,7 +94,7 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
       throw new IllegalArgumentException("Bad new PIN value.");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p1;
     byte p2;
@@ -90,12 +123,13 @@ final class SamCardCipherPinBuilder extends AbstractSamCommandBuilder<SamCardCip
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the 8 bytes of ciphered data.
    *
+   * @return The ciphered data byte array
    * @since 2.0.0
    */
-  @Override
-  public SamCardCipherPinParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamCardCipherPinParser(apduResponse, this);
+  byte[] getCipheredData() {
+    return getApduResponse().getDataOut();
   }
 }

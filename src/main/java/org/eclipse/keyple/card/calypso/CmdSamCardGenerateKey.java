@@ -11,46 +11,81 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Give Random APDU command.
  *
  * @since 2.0.0
  */
-final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardGenerateKeyParser> {
+final class CmdSamCardGenerateKey extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_GENERATE_KEY;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+    m.put(
+        0x6A00,
+        new StatusProperties("Incorrect P1 or P2", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6A80,
+        new StatusProperties(
+            "Incorrect incoming data: unknown or incorrect format",
+            CalypsoSamIncorrectInputDataException.class));
+    m.put(
+        0x6A83,
+        new StatusProperties(
+            "Record not found: ciphering key or key to cipher not found",
+            CalypsoSamDataAccessException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamDigestUpdateBuilder and generate the ciphered data for a key ciphered by
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamDigestUpdate and generate the ciphered data for a key ciphered by
    * another.
    *
    * <p>If bot KIF and KVC of the ciphering are equal to 0, the source key is ciphered with the null
    * key.
    *
-   * @param samProductType The SAM samProductType.
+   * @param productType the SAM product type.
    * @param cipheringKif The KIF of the ciphering key.
    * @param cipheringKvc The KVC of the ciphering key.
    * @param sourceKif The KIF of the source key.
    * @param sourceKvc The KVC of the source key.
    * @since 2.0.0
    */
-  public SamCardGenerateKeyBuilder(
-      CalypsoSam.ProductType samProductType,
+  CmdSamCardGenerateKey(
+      CalypsoSam.ProductType productType,
       byte cipheringKif,
       byte cipheringKvc,
       byte sourceKif,
       byte sourceKvc) {
     super(command);
-    if (samProductType != null) {
-      this.defaultProductType = samProductType;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p1;
     byte p2;
@@ -83,12 +118,13 @@ final class SamCardGenerateKeyBuilder extends AbstractSamCommandBuilder<SamCardG
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the 32 bytes of ciphered data.
    *
+   * @return the ciphered data byte array or null if the operation failed
    * @since 2.0.0
    */
-  @Override
-  public SamCardGenerateKeyParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamCardGenerateKeyParser(apduResponse, this);
+  byte[] getCipheredData() {
+    return isSuccessful() ? getApduResponse().getDataOut() : null;
   }
 }

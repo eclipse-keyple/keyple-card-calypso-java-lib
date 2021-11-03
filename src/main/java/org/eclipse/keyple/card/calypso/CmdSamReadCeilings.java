@@ -11,49 +11,74 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Read Ceilings APDU command.
  *
  * @since 2.0.0
  */
-final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeilingsParser> {
+final class CmdSamReadCeilings extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.READ_CEILINGS;
 
-  public static final int MAX_CEILING_NUMB = 26;
+  private static final int MAX_CEILING_NUMB = 26;
 
-  public static final int MAX_CEILING_REC_NUMB = 3;
+  private static final int MAX_CEILING_REC_NUMB = 3;
 
   /** Ceiling operation type */
-  public enum CeilingsOperationType {
+  enum CeilingsOperationType {
     /** Ceiling record */
     CEILING_RECORD,
     /** Single ceiling */
     SINGLE_CEILING
   }
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(
+        0x6900,
+        new StatusProperties(
+            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+    m.put(
+        0x6A00,
+        new StatusProperties("Incorrect P1 or P2.", CalypsoSamIllegalParameterException.class));
+    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed.", null));
+    STATUS_TABLE = m;
+  }
+
   /**
-   * Instantiates a new SamReadCeilingsBuilder.
+   * {@inheritDoc}
    *
-   * @param revision revision of the SAM.
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdSamReadCeilings.
+   *
+   * @param productType the SAM product type.
    * @param operationType the counter operation type.
    * @param index the counter index.
    * @since 2.0.0
    */
-  public SamReadCeilingsBuilder(
-      CalypsoSam.ProductType revision, CeilingsOperationType operationType, int index) {
+  CmdSamReadCeilings(
+      CalypsoSam.ProductType productType, CeilingsOperationType operationType, int index) {
 
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
 
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(productType);
 
     byte p1;
     byte p2;
@@ -82,12 +107,13 @@ final class SamReadCeilingsBuilder extends AbstractSamCommandBuilder<SamReadCeil
   }
 
   /**
-   * {@inheritDoc}
+   * (package-private)<br>
+   * Gets the key parameters.
    *
+   * @return The ceilings data (Value or Record)
    * @since 2.0.0
    */
-  @Override
-  public SamReadCeilingsParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamReadCeilingsParser(apduResponse, this);
+  byte[] getCeilingsData() {
+    return isSuccessful() ? getApduResponse().getDataOut() : null;
   }
 }

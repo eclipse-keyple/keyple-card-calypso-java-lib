@@ -11,33 +11,59 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
+ * (package-private)<br>
  * Builds the Unlock APDU command.
  *
  * @since 2.0.0
  */
-final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> {
+final class CmdSamUnlock extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.UNLOCK;
 
+  private static final Map<Integer, StatusProperties> STATUS_TABLE;
+
+  static {
+    Map<Integer, StatusProperties> m =
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+    m.put(
+        0x6985,
+        new StatusProperties(
+            "Preconditions not satisfied (SAM not locked?).",
+            CalypsoSamAccessForbiddenException.class));
+    m.put(
+        0x6988,
+        new StatusProperties("Incorrect UnlockData.", CalypsoSamSecurityDataException.class));
+    STATUS_TABLE = m;
+  }
+
   /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
    * @param revision the SAM revision.
    * @param unlockData the unlock data.
    * @since 2.0.0
    */
-  public SamUnlockBuilder(CalypsoSam.ProductType revision, byte[] unlockData) {
+  CmdSamUnlock(CalypsoSam.ProductType revision, byte[] unlockData) {
     super(command);
-    if (revision != null) {
-      this.defaultProductType = revision;
-    }
-    byte cla = SamUtilAdapter.getClassByte(this.defaultProductType);
+    byte cla = SamUtilAdapter.getClassByte(revision);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -52,15 +78,5 @@ final class SamUnlockBuilder extends AbstractSamCommandBuilder<SamUnlockParser> 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, unlockData, null)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  public SamUnlockParser createResponseParser(ApduResponseApi apduResponse) {
-    return new SamUnlockParser(apduResponse, this);
   }
 }

@@ -13,20 +13,24 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private) <br>
- * Parses the Sv Prepare response.
+ * (package-private)<br>
+ * Builds the SV Prepare Debit APDU command.
  *
  * @since 2.0.0
  */
-final class SamSvPrepareOperationParser extends AbstractSamResponseParser {
+final class CmdSamSvPrepareDebit extends AbstractSamCommand {
+  /** The command reference. */
+  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_DEBIT;
+
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamResponseParser.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
     m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
     m.put(
         0x6985,
@@ -52,18 +56,39 @@ final class SamSvPrepareOperationParser extends AbstractSamResponseParser {
    * @since 2.0.0
    */
   @Override
-  protected Map<Integer, StatusProperties> getStatusTable() {
+  Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
 
   /**
-   * Instantiates a new SamSvPrepareOperationParser.
+   * (package-private)<br>
+   * Instantiates a new CmdSamSvPrepareDebit to prepare a debit transaction.
    *
-   * @param response from the SAM.
-   * @param builder the reference to the builder that created this parser.
+   * @param samProductType the SAM revision.
+   * @param svGetHeader the SV Get command header.
+   * @param svGetData a byte array containing the data from the SV get command and response.
+   * @param svDebitCmdBuildData the SV debit command builder data.
    * @since 2.0.0
    */
-  public SamSvPrepareOperationParser(ApduResponseApi response, AbstractSamCommandBuilder builder) {
-    super(response, builder);
+  CmdSamSvPrepareDebit(
+      CalypsoSam.ProductType samProductType,
+      byte[] svGetHeader,
+      byte[] svGetData,
+      byte[] svDebitCmdBuildData) {
+    super(command);
+
+    byte cla = SamUtilAdapter.getClassByte(samProductType);
+    byte p1 = (byte) 0x01;
+    byte p2 = (byte) 0xFF;
+    byte[] data = new byte[16 + svGetData.length]; // header(4) + SvDebit data (12) = 16 bytes
+
+    System.arraycopy(svGetHeader, 0, data, 0, 4);
+    System.arraycopy(svGetData, 0, data, 4, svGetData.length);
+    System.arraycopy(
+        svDebitCmdBuildData, 0, data, 4 + svGetData.length, svDebitCmdBuildData.length);
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
   }
 }

@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 
 /**
  * (package-private)<br>
@@ -29,8 +28,6 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    *
    * @since 2.0.0
    */
-  CalypsoSam.ProductType defaultProductType = CalypsoSam.ProductType.SAM_C1;
-
   static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
@@ -51,7 +48,7 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * @since 2.0.0
    */
   @Override
-  protected Map<Integer, StatusProperties> getStatusTable() {
+  Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
 

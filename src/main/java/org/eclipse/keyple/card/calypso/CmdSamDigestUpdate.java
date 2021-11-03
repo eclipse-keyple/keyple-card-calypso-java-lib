@@ -13,20 +13,26 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * Parses the Digest update response parser.
+ * (package-private)<br>
+ * Builds the Digest Update APDU command.
  *
- * @since 2.0.0
+ * @since 2.0.0 This command have to be sent twice for each command executed during a session. First
+ *     time for the command sent and second time for the answer received
  */
-final class SamDigestUpdateParser extends AbstractSamResponseParser {
+final class CmdSamDigestUpdate extends AbstractSamCommand {
+
+  /** The command reference. */
+  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamResponseParser.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
     m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
     m.put(
         0x6985,
@@ -49,18 +55,34 @@ final class SamDigestUpdateParser extends AbstractSamResponseParser {
    * @since 2.0.0
    */
   @Override
-  protected Map<Integer, StatusProperties> getStatusTable() {
+  Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
 
   /**
-   * Instantiates a new SamDigestUpdateParser.
+   * (package-private)<br>
+   * Instantiates a new CmdSamDigestUpdate.
    *
-   * @param response the response.
-   * @param builder the reference to the builder that created this parser.
+   * @param productType of the SAM.
+   * @param encryptedSession the encrypted session flag, true if encrypted.
+   * @param digestData all bytes from command sent by the card or response from the command.
+   * @throws IllegalArgumentException - if the digest data is null or has a length &gt; 255
    * @since 2.0.0
    */
-  public SamDigestUpdateParser(ApduResponseApi response, SamDigestUpdateBuilder builder) {
-    super(response, builder);
+  CmdSamDigestUpdate(
+      CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
+    super(command);
+
+    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte p1 = (byte) 0x00;
+    byte p2 = encryptedSession ? (byte) 0x80 : (byte) 0x00;
+
+    if (digestData == null || digestData.length > 255) {
+      throw new IllegalArgumentException("Digest data null or too long!");
+    }
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, digestData, null)));
   }
 }

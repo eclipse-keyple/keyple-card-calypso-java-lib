@@ -197,7 +197,7 @@ final class CalypsoCardUtilAdapter {
       CmdCardWriteRecord cmdCardWriteRecord,
       ApduResponseApi apduResponse)
       throws CardCommandException {
-    
+
     cmdCardWriteRecord.setApduResponse(apduResponse);
     cmdCardWriteRecord.checkStatus();
 
@@ -409,8 +409,8 @@ final class CalypsoCardUtilAdapter {
    * CalypsoCardAdapter}.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param svOperationCmdBuild the SV Operation command (CardSvReloadBuilder,
-   *     CardSvDebitBuilder or CardSvUndebitBuilder)
+   * @param svOperationCmdBuild the SV Operation command (CardSvReloadBuilder, CardSvDebitBuilder or
+   *     CardSvUndebitBuilder)
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */

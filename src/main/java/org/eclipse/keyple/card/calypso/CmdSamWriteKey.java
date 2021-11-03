@@ -13,20 +13,24 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * Parses the Write Key response.
+ * (package-private)<br>
+ * Builds the Write Key APDU command.
  *
  * @since 2.0.0
  */
-final class SamWriteKeyParser extends AbstractSamResponseParser {
+final class CmdSamWriteKey extends AbstractSamCommand {
+  /** The command reference. */
+  private static final CalypsoSamCommand command = CalypsoSamCommand.WRITE_KEY;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamResponseParser.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
     m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
     m.put(
         0x6900,
@@ -63,18 +67,36 @@ final class SamWriteKeyParser extends AbstractSamResponseParser {
    * @since 2.0.0
    */
   @Override
-  protected Map<Integer, StatusProperties> getStatusTable() {
+  Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
 
   /**
-   * Instantiates a new {@link SamUnlockParser}.
+   * (package-private)<br>
+   * CalypsoSamCardSelectorBuilder constructor
    *
-   * @param response the response.
-   * @param builder the reference to the builder that created this parser.
+   * @param revision the SAM revision.
+   * @param writingMode the writing mode (P1).
+   * @param keyReference the key reference (P2).
+   * @param keyData the key data.
    * @since 2.0.0
    */
-  public SamWriteKeyParser(ApduResponseApi response, SamWriteKeyBuilder builder) {
-    super(response, builder);
+  CmdSamWriteKey(
+      CalypsoSam.ProductType revision, byte writingMode, byte keyReference, byte[] keyData) {
+    super(command);
+    byte cla = SamUtilAdapter.getClassByte(revision);
+
+    if (keyData == null) {
+      throw new IllegalArgumentException("Key data null!");
+    }
+
+    if (keyData.length < 48 || keyData.length > 80) {
+      throw new IllegalArgumentException("Key data should be between 40 and 80 bytes long!");
+    }
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                cla, command.getInstructionByte(), writingMode, keyReference, keyData, null)));
   }
 }

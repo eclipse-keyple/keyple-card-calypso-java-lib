@@ -107,11 +107,13 @@ abstract class AbstractApduCommand {
    * Sets the command {@link ApduRequestAdapter}.
    *
    * @param apduRequest The APDU request.
+   * @return The object instance.
    * @since 2.0.0
    */
-  final void setApduRequest(ApduRequestAdapter apduRequest) {
+  final AbstractApduCommand setApduRequest(ApduRequestAdapter apduRequest) {
     this.apduRequest = apduRequest;
     this.apduRequest.setInfo(this.name);
+    return this;
   }
 
   /**
@@ -130,10 +132,12 @@ abstract class AbstractApduCommand {
    * Sets the command {@link ApduResponseApi}.
    *
    * @param apduResponse The APDU response.
+   * @return The object instance.
    * @since 2.0.0
    */
-  final void setApduResponse(ApduResponseApi apduResponse) {
+  final AbstractApduCommand setApduResponse(ApduResponseApi apduResponse) {
     this.apduResponse = apduResponse;
+    return this;
   }
 
   /**
