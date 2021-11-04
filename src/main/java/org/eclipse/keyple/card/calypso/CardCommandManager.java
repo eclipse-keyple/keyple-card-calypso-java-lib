@@ -20,17 +20,17 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Handles a list {@link AbstractCardCommandBuilder} updated by the "prepare" methods of
+ * Handles a list of {@link AbstractCardCommand} updated by the "prepare" methods of
  * CardTransactionManager.
  *
- * <p>Keeps builders between the time the commands are created and the time their responses are
+ * <p>Keeps commands between the time the commands are created and the time their responses are
  * parsed.
  *
  * <p>A flag (preparedCommandsProcessed) is used to manage the reset of the command list. It allows
- * the builders to be kept until the application creates a new list of commands.
+ * the commands to be kept until the application creates a new list of commands.
  *
  * <p>This flag is set when invoking the method notifyCommandsProcessed and reset when a new
- * AbstractCardCommandBuilder is added or when a attempt
+ * AbstractCardCommand is added.
  *
  * @since 2.0.0
  */
@@ -38,9 +38,7 @@ class CardCommandManager {
   private static final Logger logger = LoggerFactory.getLogger(CardCommandManager.class);
 
   /** The list to contain the prepared commands */
-  private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
-      cardCommands =
-          new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
+  private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
 
   private CalypsoCardCommand svLastCommand;
   private SvOperation svOperation;
@@ -54,18 +52,18 @@ class CardCommandManager {
 
   /**
    * (package-private)<br>
-   * Add a regular command to the builders and parsers list.
+   * Add a regular command to the list.
    *
-   * @param commandBuilder the command builder.
+   * @param command the command.
+   * @since 2.0.0
    */
-  void addRegularCommand(
-      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder) {
-    cardCommands.add(commandBuilder);
+  void addRegularCommand(AbstractCardCommand command) {
+    cardCommands.add(command);
   }
 
   /**
    * (package-private)<br>
-   * Add a StoredValue command to the builders and parsers list.
+   * Add a StoredValue command to the list.
    *
    * <p>Set up a mini state machine to manage the scheduling of Stored Value commands.
    *
@@ -75,16 +73,15 @@ class CardCommandManager {
    * <p>The svOperationPending flag is set when an SV operation (Reload/Debit/Undebit) command is
    * added.
    *
-   * @param commandBuilder the StoredValue command builder.
-   * @param svOperation the type of the current SV operation (Realod/Debit/Undebit).
+   * @param command the StoredValue command.
+   * @param svOperation the type of the current SV operation (Reload/Debit/Undebit).
    * @throws IllegalStateException if the provided command is not an SV command or not properly
    *     used.
+   * @since 2.0.0
    */
-  void addStoredValueCommand(
-      AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder,
-      SvOperation svOperation) {
+  void addStoredValueCommand(AbstractCardCommand command, SvOperation svOperation) {
     // Check the logic of the SV command sequencing
-    switch (commandBuilder.getCommandRef()) {
+    switch (command.getCommandRef()) {
       case SV_GET:
         this.svOperation = svOperation;
         break;
@@ -101,20 +98,19 @@ class CardCommandManager {
           throw new IllegalStateException("This SV command must follow an SV Get command");
         }
 
-        // here, we expect the builder and the SV operation to be consistent
+        // here, we expect the command and the SV operation to be consistent
         if (svOperation != this.svOperation) {
           logger.error("Sv operation = {}, current command = {}", this.svOperation, svOperation);
           throw new IllegalStateException("Inconsistent SV operation.");
         }
-        this.svOperation = svOperation;
         svOperationComplete = true;
         break;
       default:
         throw new IllegalStateException("An SV command is expected.");
     }
-    svLastCommand = commandBuilder.getCommandRef();
+    svLastCommand = command.getCommandRef();
 
-    cardCommands.add(commandBuilder);
+    cardCommands.add(command);
   }
 
   /**
@@ -122,7 +118,9 @@ class CardCommandManager {
    * Informs that the commands have been processed.
    *
    * <p>Just record the information. The initialization of the list of commands will be done only
-   * the next time a command is added, this allows access to the parsers contained in the list..
+   * the next time a command is added, this allows access to the commands contained in the list.
+   *
+   * @since 2.0.0
    */
   void notifyCommandsProcessed() {
     cardCommands.clear();
@@ -131,9 +129,10 @@ class CardCommandManager {
   /**
    * (package-private)<br>
    *
-   * @return The current AbstractCardCommandBuilder list
+   * @return The current AbstractCardCommand list
+   * @since 2.0.0
    */
-  List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>> getCardCommandBuilders() {
+  List<AbstractCardCommand> getCardCommands() {
     return cardCommands;
   }
 
@@ -141,6 +140,7 @@ class CardCommandManager {
    * (package-private)<br>
    *
    * @return True if the {@link CardCommandManager} has commands
+   * @since 2.0.0
    */
   boolean hasCommands() {
     return !cardCommands.isEmpty();
@@ -153,7 +153,8 @@ class CardCommandManager {
    * been executed. It is a single-use method, as the flag is systematically reset to false after it
    * is called.
    *
-   * @return True if a reload or debit command has been requested
+   * @return True if a "reload" or "debit" command has been requested
+   * @since 2.0.0
    */
   boolean isSvOperationCompleteOneTime() {
     boolean flag = svOperationComplete;

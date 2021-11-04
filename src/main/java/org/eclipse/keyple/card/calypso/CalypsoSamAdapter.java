@@ -69,7 +69,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       applicationType = atrSubElements[1];
       applicationSubType = atrSubElements[2];
 
-      // determine SAM revision from Application Subtype
+      // determine SAM product type from Application Subtype
       switch (applicationSubType) {
         case (byte) 0xC1:
           samProductType = ProductType.SAM_C1;
@@ -171,7 +171,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    */
   @Override
   public byte[] getSelectApplicationResponse() {
-    return null;
+    return new byte[0];
   }
 
   /**

@@ -36,8 +36,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
 
   private final CardSelectorAdapter samCardSelector;
-  private final ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>
-      commandBuilders;
+  private final ArrayList<AbstractSamCommand> samCommands;
   private CalypsoSam.ProductType productType;
   private String serialNumberRegex;
   private String unlockData;
@@ -50,8 +49,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    */
   CalypsoSamSelectionAdapter() {
     samCardSelector = new CardSelectorAdapter();
-    this.commandBuilders =
-        new ArrayList<AbstractSamCommandBuilder<? extends AbstractSamResponseParser>>();
+    this.samCommands = new ArrayList<AbstractSamCommand>();
   }
 
   /**
@@ -65,10 +63,9 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
 
     // prepare the UNLOCK command if unlock data has been defined
     if (unlockData != null) {
-      commandBuilders.add(new SamUnlockBuilder(productType, ByteArrayUtil.fromHex(unlockData)));
-      for (AbstractSamCommandBuilder<? extends AbstractSamResponseParser> commandBuilder :
-          commandBuilders) {
-        cardSelectionApduRequests.add(commandBuilder.getApduRequest());
+      samCommands.add(new CmdSamUnlock(productType, ByteArrayUtil.fromHex(unlockData)));
+      for (AbstractSamCommand samCommand : samCommands) {
+        cardSelectionApduRequests.add(samCommand.getApduRequest());
       }
     }
 
@@ -90,7 +87,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   @Override
   public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
 
-    if (commandBuilders.size() == 1) {
+    if (samCommands.size() == 1) {
       // an unlock command has been requested
       if (cardSelectionResponse.getCardResponse() == null
           || cardSelectionResponse.getCardResponse().getApduResponses().isEmpty()) {
@@ -100,7 +97,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       // check the SAM response to the unlock command
       try {
-        commandBuilders.get(0).createResponseParser(apduResponse).checkStatus();
+        samCommands.get(0).setApduResponse(apduResponse).checkStatus();
       } catch (CalypsoSamCommandException e) {
         throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
@@ -168,7 +165,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    *
    * <p>Both argument are optional and can be null.
    *
-   * @param productType The target SAM revision.
+   * @param productType The target SAM product type.
    * @param samSerialNumberRegex A regular expression matching the SAM serial number.
    * @return A not empty string containing a regular
    */

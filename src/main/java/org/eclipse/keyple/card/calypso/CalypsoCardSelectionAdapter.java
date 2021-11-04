@@ -39,8 +39,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   private static final int AID_MAX_LENGTH = 16;
   private static final int SW_CARD_INVALIDATED = 0x6283;
 
-  private final List<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>
-      commandBuilders;
+  private final List<AbstractCardCommand> commands;
   private final CardSelectorAdapter cardSelector;
 
   /**
@@ -54,8 +53,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     cardSelector = new CardSelectorAdapter();
 
-    this.commandBuilders =
-        new ArrayList<AbstractCardCommandBuilder<? extends AbstractCardResponseParser>>();
+    this.commands = new ArrayList<AbstractCardCommand>();
   }
 
   /**
@@ -161,13 +159,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(fileControlInformation, "fileControlInformation");
 
-    switch (fileControlInformation) {
-      case FCI:
-        cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.FCI);
-        break;
-      case NO_RESPONSE:
-        cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.NO_RESPONSE);
-        break;
+    if (fileControlInformation == FileControlInformation.FCI) {
+      cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.FCI);
+    } else if (fileControlInformation == FileControlInformation.NO_RESPONSE) {
+      cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.NO_RESPONSE);
     }
     return this;
   }
@@ -213,10 +208,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
             CalypsoCardConstant.NB_REC_MAX,
             "recordNumber");
 
-    CardReadRecordsBuilder cardReadRecordsBuilder =
-        new CardReadRecordsBuilder(
-            CalypsoCardClass.ISO, sfi, recordNumber, CardReadRecordsBuilder.ReadMode.ONE_RECORD, 0);
-    commandBuilders.add(cardReadRecordsBuilder);
+    CmdCardReadRecords cmdCardReadRecords =
+        new CmdCardReadRecords(
+            CalypsoCardClass.ISO, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0);
+    commands.add(cmdCardReadRecords);
 
     return this;
   }
@@ -230,13 +225,13 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   public CalypsoCardSelection prepareGetData(GetDataTag tag) {
     Assert.getInstance().notNull(tag, "tag");
 
-    // create the builder and add it to the list of commands
+    // create the command and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        commandBuilders.add(new CardGetDataFciBuilder(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataFci(CalypsoCardClass.ISO));
         break;
       case FCP_FOR_CURRENT_FILE:
-        commandBuilders.add(new CardGetDataFcpBuilder(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataFcp(CalypsoCardClass.ISO));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -255,7 +250,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
 
-    commandBuilders.add(new CardSelectFileBuilder(CalypsoCardClass.ISO, lid));
+    commands.add(new CmdCardSelectFile(CalypsoCardClass.ISO, lid));
     return this;
   }
 
@@ -284,7 +279,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(selectControl, "selectControl");
 
-    commandBuilders.add(new CardSelectFileBuilder(CalypsoCardClass.ISO, selectControl));
+    commands.add(new CmdCardSelectFile(CalypsoCardClass.ISO, selectControl));
 
     return this;
   }
@@ -297,10 +292,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
     List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
-    if (!commandBuilders.isEmpty()) {
-      for (AbstractCardCommandBuilder<? extends AbstractCardResponseParser> commandBuilder :
-          commandBuilders) {
-        cardSelectionApduRequests.add(commandBuilder.getApduRequest());
+    if (!commands.isEmpty()) {
+      for (AbstractCardCommand command : commands) {
+        cardSelectionApduRequests.add(command.getApduRequest());
       }
       return new CardSelectionRequestAdapter(
           cardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
@@ -327,7 +321,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
       apduResponses = Collections.emptyList();
     }
 
-    if (commandBuilders.size() != apduResponses.size()) {
+    if (commands.size() != apduResponses.size()) {
       throw new ParseException("Mismatch in the number of requests/responses.");
     }
 
@@ -340,8 +334,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         calypsoCard.initializeWithPowerOnData(cardSelectionResponse.getPowerOnData());
       }
 
-      if (!commandBuilders.isEmpty()) {
-        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commandBuilders, apduResponses);
+      if (!commands.isEmpty()) {
+        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commands, apduResponses);
       }
     } catch (Exception e) {
       throw new ParseException("Invalid card response: " + e.getMessage(), e);
