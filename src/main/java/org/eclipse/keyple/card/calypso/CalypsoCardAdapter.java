@@ -212,14 +212,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
     }
 
-    if (productType == ProductType.PRIME_REVISION_2
-        || productType == ProductType.PRIME_REVISION_3) {
+    if (productType == ProductType.PRIME_REVISION_3) {
       isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
       isRatificationOnDeselectSupported =
           (applicationType & APP_TYPE_RATIFICATION_COMMAND_REQUIRED) == 0;
+      isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
+    }
+
+    if (productType == ProductType.PRIME_REVISION_3
+        || productType == ProductType.PRIME_REVISION_2) {
       isSvFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_SV) != 0;
       isPinFeatureAvailable = (applicationType & APP_TYPE_WITH_CALYPSO_PIN) != 0;
-      isPkiModeSupported = (applicationType & APP_TYPE_WITH_PUBLIC_AUTHENTICATION) != 0;
     }
 
     isHce = (calypsoSerialNumber[3] & (byte) 0x80) == (byte) 0x80;
