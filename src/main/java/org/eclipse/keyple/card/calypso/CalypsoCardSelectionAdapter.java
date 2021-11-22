@@ -171,8 +171,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated Use {@link #acceptInvalidatedCard()} method instead.
    */
   @Override
+  @Deprecated
   public CalypsoCardSelection addSuccessfulStatusWord(int statusWord) {
 
     Assert.getInstance().isInRange(statusWord, 0, 0xFFFF, "statusWord");

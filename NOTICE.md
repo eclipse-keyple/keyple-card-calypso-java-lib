@@ -36,7 +36,7 @@ Calypsonet Terminal Reader API (1.0.0)
 * License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
 * Sources: https://github.com/calypsonet/calypsonet-terminal-reader-java-api
 
-Calypsonet Terminal Calypso API (1.0.0)
+Calypsonet Terminal Calypso API (1.0.2)
 
 * License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
 * Sources: https://github.com/calypsonet/calypsonet-terminal-calypso-java-api
