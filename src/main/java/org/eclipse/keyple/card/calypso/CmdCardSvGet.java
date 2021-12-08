@@ -90,6 +90,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
         calypsoCardClass == CalypsoCardClass.LEGACY
             ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
             : CalypsoCardClass.ISO.getValue();
+    // CL-SV-CMDMODE.1 Requirement fullfilled only for SAM C1.
     byte p1 = calypsoCard.isExtendedModeSupported() ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 

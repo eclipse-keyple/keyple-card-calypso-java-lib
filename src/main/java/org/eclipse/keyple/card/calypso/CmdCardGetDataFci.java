@@ -143,6 +143,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
     Map<Integer, byte[]> tags;
 
     /* check the command status to determine if the DF has been invalidated */
+    // CL-INV-STATUS.1
     if (getApduResponse().getStatusWord() == 0x6283) {
       logger.debug(
           "The response to the select application command status word indicates that the DF has been invalidated.");
@@ -153,6 +154,9 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
     try {
       /* init TLV object with the raw data and extract the FCI Template */
       final byte[] responseData = getApduResponse().getDataOut();
+      // CL-SEL-TLVDATA.1
+      // CL-TLV-VAR.1
+      // CL-TLV-ORDER.1
       tags = BerTlvUtil.parseSimple(responseData, true);
 
       dfName = tags.get(TAG_DF_NAME);
@@ -173,6 +177,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
         logger.error("Serial Number tag (C7h) not found.");
         return this;
       }
+      // CL-SEL-CSN.1
       if (applicationSN.length != 8) {
         logger.error(
             "Invalid application serial number length: {}. Should be 8.", applicationSN.length);

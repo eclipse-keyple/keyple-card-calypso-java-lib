@@ -165,6 +165,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
 
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
+    // CL-SEL-TLVSTRUC.1
     CmdCardGetDataFci cmdCardGetDataFci =
         new CmdCardGetDataFci().setApduResponse(selectApplicationResponse);
 
@@ -173,13 +174,21 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
     isDfInvalidated = cmdCardGetDataFci.isDfInvalidated();
 
+    // CL-SEL-DATA.1
     dfName = cmdCardGetDataFci.getDfName();
     calypsoSerialNumber = cmdCardGetDataFci.getApplicationSerialNumber();
+    // CL-SI-OTHER.1
     startupInfo = cmdCardGetDataFci.getDiscretionaryData();
 
+    // CL-SI-ATRFU.1
+    // CL-SI-ATPRIME.1
+    // CL-SI-ATB6B5.1
+    // CL-SI-ATLIGHT.1
+    // CL-SI-ATBASIC.1
     applicationType = startupInfo[SI_APPLICATION_TYPE];
     productType = computeProductType(applicationType & 0xFF);
 
+    // CL-SI-ASRFU.1
     applicationSubType = startupInfo[SI_APPLICATION_SUBTYPE];
     if (applicationSubType == (byte) 0x00 || applicationSubType == (byte) 0xFF) {
       throw new IllegalArgumentException(
@@ -193,6 +202,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       isModificationCounterInBytes = false;
       modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
     } else if (productType == ProductType.BASIC) {
+      // CL-SI-SMBASIC.1
       if (sessionModification < 0x04 || sessionModification > 0x37) {
         throw new IllegalArgumentException(
             "Wrong session modification value for a Basic type (should be between 04h and 37h): "
@@ -204,6 +214,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
       // session buffer size
+      // CL-SI-SM.1
       if (sessionModification < (byte) 0x06 || sessionModification > (byte) 0x37) {
         throw new IllegalArgumentException(
             "Session modifications byte should be in range 06h to 47h. Was: "
@@ -212,6 +223,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
     }
 
+    // CL-SI-ATOPT.1
     if (productType == ProductType.PRIME_REVISION_3) {
       isExtendedModeSupported = (applicationType & APP_TYPE_CALYPSO_REV_32_MODE) != 0;
       isRatificationOnDeselectSupported =

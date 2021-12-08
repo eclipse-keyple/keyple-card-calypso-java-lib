@@ -113,6 +113,7 @@ class SamCommandProcessor {
     // diversify only if this has not already been done.
     if (!isDiversificationDone) {
       // build the SAM Select Diversifier command to provide the SAM with the card S/N
+      // CL-SAM-CSN.1
       CmdSamSelectDiversifier selectDiversifierCmd =
           new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull());
 
@@ -191,9 +192,11 @@ class SamCommandProcessor {
    * @since 2.0.0
    */
   Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
+    // CL-KEY-KIF.1
     if ((kif != null && kif != KIF_UNDEFINED) || (kvc == null)) {
       return kif;
     }
+    // CL-KEY-KIFUNK.1
     Byte result = ((CardSecuritySettingAdapter) cardSecuritySettings).getKif(writeAccessLevel, kvc);
     if (result == null) {
       result = ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKif(writeAccessLevel);
@@ -269,6 +272,7 @@ class SamCommandProcessor {
     // be
     // excluded from the digest computation. In this cas, we remove here the last byte of the
     // command buffer.
+    // CL-C4-MAC.1
     if (ApduUtil.isCase4(request.getApdu())) {
       cardDigestDataCache.add(
           Arrays.copyOfRange(request.getApdu(), 0, request.getApdu().length - 1));
@@ -339,6 +343,7 @@ class SamCommandProcessor {
       // process. The Digest Init command comes from the Open Secure Session response from the
       // card. Once added to the ApduRequestAdapter list, the data is remove from the cache to keep
       // only couples of card request/response
+      // CL-SAM-DINIT.1
       samCommands.add(
           new CmdSamDigestInit(
               samProductType,
@@ -353,6 +358,7 @@ class SamCommandProcessor {
     }
 
     // Build and append Digest Update commands
+    // CL-SAM-DUPDATE.1
     for (byte[] bytes : cardDigestDataCache) {
       samCommands.add(new CmdSamDigestUpdate(samProductType, sessionEncryption, bytes));
     }
@@ -362,6 +368,7 @@ class SamCommandProcessor {
 
     if (addDigestClose) {
       // Build and append Digest Close command
+      // CL-SAM-DCLOSE.1
       samCommands.add(
           (new CmdSamDigestClose(
               samProductType,
@@ -537,6 +544,7 @@ class SamCommandProcessor {
 
     if (!isDiversificationDone) {
       /* Build the SAM Select Diversifier command to provide the SAM with the card S/N */
+      // CL-SAM-CSN.1
       samCommands.add(
           new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull()));
       isDiversificationDone = true;
@@ -607,6 +615,7 @@ class SamCommandProcessor {
 
     if (!isDiversificationDone) {
       /* Build the SAM Select Diversifier command to provide the SAM with the card S/N */
+      // CL-SAM-CSN.1
       samCommands.add(
           new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull()));
       isDiversificationDone = true;

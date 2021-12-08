@@ -100,6 +100,7 @@ final class CmdCardIncrease extends AbstractCardCommand {
     this.incValue = incValue;
 
     // convert the integer value into a 3-byte buffer
+    // CL-COUN-DATAIN.1
     byte[] incValueBuffer = new byte[3];
     incValueBuffer[0] = (byte) ((incValue >> 16) & 0xFF);
     incValueBuffer[1] = (byte) ((incValue >> 8) & 0xFF);

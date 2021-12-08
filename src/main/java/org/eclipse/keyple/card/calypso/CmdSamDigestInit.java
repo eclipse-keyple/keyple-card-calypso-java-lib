@@ -59,7 +59,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
    * @param workKif from the card response.
    * @param workKvc from the card response.
    * @param digestData all data out from the card response.
-   * @throws IllegalArgumentException If the work key record number
+   * @throws IllegalArgumentException If the KIF or KVC is 0
    * @throws IllegalArgumentException If the digest data is null
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0.1
@@ -74,7 +74,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
     super(command);
 
     if (workKif == 0x00 || workKvc == 0x00) {
-      throw new IllegalArgumentException("Bad key record number, kif or kvc!");
+      throw new IllegalArgumentException("Bad kif or kvc!");
     }
     if (digestData == null) {
       throw new IllegalArgumentException("Digest data is null!");

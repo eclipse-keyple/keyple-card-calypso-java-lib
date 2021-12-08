@@ -116,6 +116,7 @@ final class CmdCardSvDebit extends AbstractCardCommand {
     super(command);
 
     /* @see Calypso Layer ID 8.02 (200108) */
+    // CL-SV-DEBITVAL.1
     if (amount < 0 || amount > 32767) {
       throw new IllegalArgumentException(
           "Amount is outside allowed boundaries (0 <= amount <= 32767)");

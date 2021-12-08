@@ -101,6 +101,7 @@ final class CmdCardDecrease extends AbstractCardCommand {
     this.decValue = decValue;
 
     // convert the integer value into a 3-byte buffer
+    // CL-COUN-DATAIN.1
     byte[] decValueBuffer = new byte[3];
     decValueBuffer[0] = (byte) ((decValue >> 16) & 0xFF);
     decValueBuffer[1] = (byte) ((decValue >> 8) & 0xFF);

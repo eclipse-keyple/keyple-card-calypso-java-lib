@@ -143,6 +143,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     byte p2;
     byte[] dataIn;
 
+    // CL-CSS-OSSMODE.1 fullfilled only for SAM C1
     if (!calypsoCard.isExtendedModeSupported()) {
       p2 = (byte) ((sfi * 8) + 1);
       dataIn = samChallenge;
@@ -329,6 +330,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     boolean manageSecureSessionAuthorized;
     int offset;
 
+    // CL-CSS-OSSRFU.1
     if (!calypsoCard.isExtendedModeSupported()) {
       offset = 0;
       previousSessionRatified = (apduResponseData[4] == (byte) 0x00);

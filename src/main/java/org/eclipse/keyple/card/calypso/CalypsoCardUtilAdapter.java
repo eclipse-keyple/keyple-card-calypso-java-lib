@@ -51,6 +51,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse) {
 
     cmdCardOpenSession.setApduResponse(apduResponse);
+    // CL-CSS-INFORAT.1
     calypsoCard.setDfRatified(cmdCardOpenSession.wasRatified());
 
     byte[] recordDataRead = cmdCardOpenSession.getRecordDataRead();

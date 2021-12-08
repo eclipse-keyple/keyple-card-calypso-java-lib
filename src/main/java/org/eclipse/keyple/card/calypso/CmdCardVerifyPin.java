@@ -90,6 +90,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
 
     cla = calypsoCardClass.getValue();
 
+    // CL-PIN-PP1P2.1
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

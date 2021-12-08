@@ -80,6 +80,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
         p2 = (byte) 0x02;
         break;
       case CURRENT_DF:
+        // CL-KEY-KIFSF.1
         p1 = (byte) 0x09;
         p2 = (byte) 0x00;
         break;
@@ -110,6 +111,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
     super(command);
 
     // handle the REV1 case
+    // CL-KEY-KIFSF.1
     byte p1 = (byte) (calypsoCardClass == CalypsoCardClass.LEGACY ? 0x08 : 0x09);
 
     setApduRequest(

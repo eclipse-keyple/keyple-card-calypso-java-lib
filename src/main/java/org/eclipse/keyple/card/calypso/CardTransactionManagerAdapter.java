@@ -36,6 +36,27 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Implementation of {@link org.calypsonet.terminal.calypso.transaction.CardTransactionManager}.
  *
+ * <ul>
+ *   <li>CL-APP-ISOL.1
+ *   <li>CL-CMD-SEND.1
+ *   <li>CL-CMD-RECV.1
+ *   <li>CL-CMD-CASE.1
+ *   <li>CL-CMD-LCLE.1
+ *   <li>CL-CMD-DATAIN.1
+ *   <li>CL-C1-5BYTE.1
+ *   <li>CL-C1-MAC.1
+ *   <li>CL-C4-LE.1
+ *   <li>CL-CLA-CMD.1
+ *   <li>CL-RFU-FIELDCMD.1
+ *   <li>CL-RFU-VALUECMD.1
+ *   <li>CL-RFU-FIELDRSP.1
+ *   <li>CL-SW-ANALYSIS.1
+ *   <li>CL-SW-SUCCESS.1
+ *   <li>CL-SF-SFI.1
+ *   <li>CL-PERF-HFLOW.1
+ *   <li>CL-CSS-INFOEND.1
+ * </ul>
+ *
  * @since 2.0.0
  */
 class CardTransactionManagerAdapter implements CardTransactionManager {
@@ -477,6 +498,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Add the card Ratification command if any
     boolean ratificationCommandAdded;
     if (isRatificationMechanismEnabled && ((CardReader) cardReader).isContactless()) {
+      // CL-RAT-CMD.1
+      // CL-RAT-DELAY.1
+      // CL-RAT-NXTCLOSE.1
       apduRequests.add(CmdCardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
       ratificationCommandAdded = true;
     } else {
@@ -536,10 +560,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
 
     // Check the card signature
+    // CL-CSS-MACVERIF.1
     checkCardSignature(cmdCardCloseSession.getSignatureLo());
 
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
+    // CL-SV-POSTPON.1
     if (cardCommandManager.isSvOperationCompleteOneTime()) {
       checkSvOperationStatus(cmdCardCloseSession.getPostponedData());
     }
@@ -655,6 +681,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager processOpening(WriteAccessLevel writeAccessLevel) {
 
+    // CL-KEY-INDEXPO.1
     currentWriteAccessLevel = writeAccessLevel;
 
     // create a sublist of AbstractCardCommand to be sent atomically
@@ -951,8 +978,11 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           "No commands should have been prepared prior to a PIN submission.");
     }
 
+    // CL-PIN-PENCRYPT.1
     if (cardSecuritySettings != null
         && !((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
+
+      // CL-PIN-GETCHAL.1
       cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
 
       // transmit and receive data with the card
@@ -1013,6 +1043,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       throw new IllegalStateException("Change PIN not allowed when a secure session is open.");
     }
 
+    // CL-PIN-MENCRYPT.1
     if (((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
       // transmission in plain mode
       if (calypsoCard.getPinAttemptRemaining() >= 0) {
@@ -1020,6 +1051,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             new CmdCardChangePin(calypsoCard.getCardClass(), newPin));
       }
     } else {
+      // CL-PIN-GETCHAL.1
       cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
 
       // transmit and receive data with the card
@@ -1236,6 +1268,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
               - APDU_HEADER_LENGTH);
       if (isSessionBufferOverflowed(neededSessionBufferSpace.get())) {
         // raise an exception if in atomic mode
+        // CL-CSS-REQUEST.1
+        // CL-CSS-SMEXCEED.1
+        // CL-CSS-INFOCSS.1
         if (!((CardSecuritySettingAdapter) cardSecuritySettings).isMultipleSessionEnabled()) {
           throw new AtomicTransactionException(
               "ATOMIC mode error! This command would overflow the card modifications buffer: "
@@ -1675,6 +1710,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         && (!calypsoCard.isExtendedModeSupported())) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
+      // CL-SV-GETNUMBER.1
       SvOperation operation1 =
           SvOperation.RELOAD.equals(svOperation) ? SvOperation.DEBIT : SvOperation.RELOAD;
       cardCommandManager.addStoredValueCommand(

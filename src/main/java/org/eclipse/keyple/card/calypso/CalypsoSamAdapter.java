@@ -59,6 +59,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
     serialNumber = new byte[4];
 
     /* extract the historical bytes from T3 to T12 */
+    // CL-SAM-ATR.1
     String extractRegex = "3B(.{6}|.{10})805A(.{20})829000";
     Pattern pattern = Pattern.compile(extractRegex); // NOSONAR: hex strings here, regex is safe
     // to use
@@ -124,6 +125,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   static byte getClassByte(CalypsoSam.ProductType type) {
+    // CL-CLA-SAM.1
     if (type == CalypsoSam.ProductType.SAM_S1DX || type == CalypsoSam.ProductType.CSAM_F) {
       return (byte) 0x94;
     }
