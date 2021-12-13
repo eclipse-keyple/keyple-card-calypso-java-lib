@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.calypsonet.terminal.calypso.GetDataTag;
@@ -280,7 +279,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // The updateCalypsoCard method fills the CalypsoCard object with the command data.
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cmdCardOpenSession, cardApduResponses.get(0));
+          calypsoCard,
+          cmdCardOpenSession,
+          cardApduResponses.get(0),
+          sessionState == SessionState.SESSION_OPEN);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
@@ -332,7 +334,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // update CalypsoCard with the received data
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, cardApduResponses);
+      CalypsoCardUtilAdapter.updateCalypsoCard(
+          calypsoCard, cardCommands, cardApduResponses, sessionState == SessionState.SESSION_OPEN);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
@@ -404,7 +407,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cardCommands, cardResponse.getApduResponses());
+          calypsoCard,
+          cardCommands,
+          cardResponse.getApduResponses(),
+          sessionState == SessionState.SESSION_OPEN);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing responses to card commands: " + e.getCommand(), e);
@@ -539,7 +545,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // commands will be taken into account)
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cardModificationCommands, apduResponses);
+          calypsoCard,
+          cardModificationCommands,
+          apduResponses,
+          sessionState == SessionState.SESSION_OPEN);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR
@@ -551,7 +560,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Check the card's response to Close Secure Session
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cmdCardCloseSession, apduResponses.get(closeCommandIndex));
+          calypsoCard,
+          cmdCardCloseSession,
+          apduResponses.get(closeCommandIndex),
+          sessionState == SessionState.SESSION_OPEN);
     } catch (CardSecurityDataException e) {
       throw new CardCloseSecureSessionException("Invalid card session", e);
     } catch (CardCommandException e) {
@@ -602,16 +614,18 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @return The value of the counter
    */
   private int getCounterValue(int sfi, int counter) {
-    try {
-      ElementaryFile ef = calypsoCard.getFileBySfi((byte) sfi);
-      return ef.getData().getContentAsCounterValue(counter);
-    } catch (NoSuchElementException e) {
-      throw new IllegalStateException(
-          "Anticipated response. Unable to determine anticipated value of counter "
-              + counter
-              + " in EF sfi "
-              + sfi);
+    ElementaryFile ef = calypsoCard.getFileBySfi((byte) sfi);
+    if (ef != null) {
+      Integer counterValue = ef.getData().getContentAsCounterValue(counter);
+      if (counterValue != null) {
+        return counterValue;
+      }
     }
+    throw new IllegalStateException(
+        "Anticipated response. Unable to determine anticipated value of counter "
+            + counter
+            + " in EF sfi "
+            + sfi);
   }
 
   /**
@@ -1422,6 +1436,11 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             CalypsoCardConstant.NB_REC_MAX,
             RECORD_NUMBER);
 
+    if (sessionState == SessionState.SESSION_OPEN && !((CardReader) cardReader).isContactless()) {
+      throw new IllegalStateException(
+          "Explicit record size is expected inside a secure session in contact mode.");
+    }
+
     CmdCardReadRecords cmdCardReadRecords =
         new CmdCardReadRecords(
             calypsoCard.getCardClass(),
@@ -1637,15 +1656,16 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager prepareSetCounter(byte sfi, int counterNumber, int newValue) {
-    int delta;
-    try {
-      delta =
-          newValue
-              - calypsoCard.getFileBySfi(sfi).getData().getContentAsCounterValue(counterNumber);
-    } catch (NoSuchElementException ex) {
+    Integer oldValue = null;
+    ElementaryFile ef = calypsoCard.getFileBySfi(sfi);
+    if (ef != null) {
+      oldValue = ef.getData().getContentAsCounterValue(counterNumber);
+    }
+    if (oldValue == null) {
       throw new IllegalStateException(
           "The value for counter " + counterNumber + " in file " + sfi + " is not available");
     }
+    int delta = newValue - oldValue;
     if (delta > 0) {
       if (logger.isTraceEnabled()) {
         logger.trace(

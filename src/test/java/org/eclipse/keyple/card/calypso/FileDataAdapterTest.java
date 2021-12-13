@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.junit.Before;
@@ -47,9 +46,9 @@ public class FileDataAdapterTest {
     assertThat(copy1.get(1)).isSameAs(copy2.get(1));
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getContent_whenRecord1IsNotSet_shouldThrowNSEE() {
-    file.getContent();
+  @Test
+  public void getContent_whenRecord1IsNotSet_shouldReturnAnEmptyArray() {
+    assertThat(file.getContent()).isEmpty();
   }
 
   @Test
@@ -66,9 +65,9 @@ public class FileDataAdapterTest {
     assertThat(copy).isEqualTo(data1);
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getContentP1_whenRecordIsNotSet_shouldThrowNSEE() {
-    file.getContent(1);
+  @Test
+  public void getContentP1_whenRecordIsNotSet_shouldReturnAnEmptyArray() {
+    assertThat(file.getContent(1)).isEmpty();
   }
 
   @Test
@@ -95,9 +94,9 @@ public class FileDataAdapterTest {
     file.getContent(1, 0, 0);
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getContentP3_whenRecordIsNotSet_shouldThrowNSEE() {
-    file.getContent(1, 0, 1);
+  @Test
+  public void getContentP3_whenRecordIsNotSet_shouldReturnAnEmptyArray() {
+    assertThat(file.getContent(1, 0, 1)).isEmpty();
   }
 
   @Test(expected = IndexOutOfBoundsException.class)
@@ -131,15 +130,15 @@ public class FileDataAdapterTest {
     file.getContentAsCounterValue(0);
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getContentAsCounterValue_whenRecordIsNotSet_shouldThrowNSEE() {
-    file.getContentAsCounterValue(1);
+  @Test
+  public void getContentAsCounterValue_whenRecordIsNotSet_shouldReturnNull() {
+    assertThat(file.getContentAsCounterValue(1)).isNull();
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getContentAsCounterValue_whenCounterIsNotSet_shouldThrowNSEE() {
+  @Test
+  public void getContentAsCounterValue_whenCounterIsNotSet_shouldReturnNull() {
     file.setContent(1, data3);
-    file.getContentAsCounterValue(2);
+    assertThat(file.getContentAsCounterValue(2)).isNull();
   }
 
   @Test(expected = IndexOutOfBoundsException.class)
@@ -155,9 +154,9 @@ public class FileDataAdapterTest {
     assertThat(val).isEqualTo(0x333333);
   }
 
-  @Test(expected = NoSuchElementException.class)
-  public void getAllCountersValue_whenRecordIsNotSet_shouldThrowNSEE() {
-    file.getAllCountersValue();
+  @Test
+  public void getAllCountersValue_whenRecordIsNotSet_shouldReturnAnEmptyMap() {
+    assertThat(file.getAllCountersValue()).isEmpty();
   }
 
   @Test

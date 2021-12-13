@@ -337,7 +337,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
       }
 
       if (!commands.isEmpty()) {
-        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commands, apduResponses);
+        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commands, apduResponses, false);
       }
     } catch (Exception e) {
       throw new ParseException("Invalid card response: " + e.getMessage(), e);

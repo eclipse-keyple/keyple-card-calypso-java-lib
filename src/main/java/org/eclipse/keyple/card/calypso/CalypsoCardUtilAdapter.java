@@ -83,15 +83,29 @@ final class CalypsoCardUtilAdapter {
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardReadRecords the command.
    * @param apduResponse the response received.
+   * @param isSessionOpen true when a secure session is open.
    * @throws CardCommandException if a response from the card was unexpected
    */
   private static void updateCalypsoCardReadRecords(
       CalypsoCardAdapter calypsoCard,
       CmdCardReadRecords cmdCardReadRecords,
-      ApduResponseApi apduResponse)
+      ApduResponseApi apduResponse,
+      boolean isSessionOpen)
       throws CardCommandException {
 
-    cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
+    if (isSessionOpen) {
+      cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
+    } else {
+      try {
+        cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
+      } catch (CardDataAccessException e) {
+        // best effort mode, do not throw exception for "file not found" and "record not found"
+        // errors.
+        if (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83) {
+          throw e;
+        }
+      }
+    }
 
     // iterate over read records to fill the CalypsoCard
     for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecords.getRecords().entrySet()) {
@@ -509,16 +523,21 @@ final class CalypsoCardUtilAdapter {
    *     from the card.
    * @param command the command that get the response.
    * @param apduResponse the APDU response returned by the card to the command.
+   * @param isSessionOpen true when a secure session is open.
    * @throws CardCommandException if a response from the card was unexpected
    * @since 2.0.0
    */
   static void updateCalypsoCard(
-      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      CalypsoCardAdapter calypsoCard,
+      AbstractCardCommand command,
+      ApduResponseApi apduResponse,
+      boolean isSessionOpen)
       throws CardCommandException {
 
     switch (command.getCommandRef()) {
       case READ_RECORDS:
-        updateCalypsoCardReadRecords(calypsoCard, (CmdCardReadRecords) command, apduResponse);
+        updateCalypsoCardReadRecords(
+            calypsoCard, (CmdCardReadRecords) command, apduResponse, isSessionOpen);
         break;
       case GET_DATA:
         if (command instanceof CmdCardGetDataFci) {
@@ -589,13 +608,15 @@ final class CalypsoCardUtilAdapter {
    *     from the card
    * @param commands the list of commands that get the responses.
    * @param apduResponses the APDU responses returned by the card to all commands.
+   * @param isSessionOpen true when a secure session is open.
    * @throws CardCommandException if a response from the card was unexpected
    * @since 2.0.0
    */
   static void updateCalypsoCard(
       CalypsoCardAdapter calypsoCard,
       List<AbstractCardCommand> commands,
-      List<ApduResponseApi> apduResponses)
+      List<ApduResponseApi> apduResponses,
+      boolean isSessionOpen)
       throws CardCommandException {
 
     Iterator<ApduResponseApi> responseIterator = apduResponses.iterator();
@@ -603,7 +624,7 @@ final class CalypsoCardUtilAdapter {
     if (commands != null && !commands.isEmpty()) {
       for (AbstractCardCommand command : commands) {
         ApduResponseApi apduResponse = responseIterator.next();
-        updateCalypsoCard(calypsoCard, command, apduResponse);
+        updateCalypsoCard(calypsoCard, command, apduResponse, isSessionOpen);
       }
     }
   }
