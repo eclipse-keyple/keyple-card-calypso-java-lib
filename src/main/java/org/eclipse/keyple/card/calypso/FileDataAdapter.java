@@ -16,6 +16,8 @@ import org.calypsonet.terminal.calypso.card.FileData;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -24,6 +26,8 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * @since 2.0.0
  */
 class FileDataAdapter implements FileData {
+
+  private static final Logger logger = LoggerFactory.getLogger(FileDataAdapter.class);
 
   private final TreeMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 
@@ -78,7 +82,8 @@ class FileDataAdapter implements FileData {
   public byte[] getContent(int numRecord) {
     byte[] content = records.get(numRecord);
     if (content == null) {
-      throw new NoSuchElementException("Record #" + numRecord + " is not set.");
+      logger.warn("Record #{} is not set.", numRecord);
+      content = new byte[0];
     }
     return content;
   }
@@ -97,7 +102,8 @@ class FileDataAdapter implements FileData {
 
     byte[] content = records.get(numRecord);
     if (content == null) {
-      throw new NoSuchElementException("Record #" + numRecord + " is not set.");
+      logger.warn("Record #{} is not set.", numRecord);
+      return new byte[0];
     }
     if (dataOffset >= content.length) {
       throw new IndexOutOfBoundsException(
@@ -120,22 +126,20 @@ class FileDataAdapter implements FileData {
   }
 
   @Override
-  public int getContentAsCounterValue(int numCounter) {
+  public Integer getContentAsCounterValue(int numCounter) {
 
     Assert.getInstance().greaterOrEqual(numCounter, 1, "numCounter");
 
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      throw new NoSuchElementException("Record #1 is not set.");
+      logger.warn("Record #1 is not set.");
+      return null;
     }
     int counterIndex = (numCounter - 1) * 3;
     if (counterIndex >= rec1.length) {
-      throw new NoSuchElementException(
-          "Counter #"
-              + numCounter
-              + " is not set (nb of actual counters = "
-              + (rec1.length / 3)
-              + ").");
+      logger.warn(
+          "Counter #{} is not set (nb of actual counters = {}).", numCounter, rec1.length / 3);
+      return null;
     }
     if (counterIndex + 3 > rec1.length) {
       throw new IndexOutOfBoundsException(
@@ -158,7 +162,8 @@ class FileDataAdapter implements FileData {
     SortedMap<Integer, Integer> result = new TreeMap<Integer, Integer>();
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      throw new NoSuchElementException("Record #1 is not set.");
+      logger.warn("Record #1 is not set.");
+      return result;
     }
     int length = rec1.length - (rec1.length % 3);
     for (int i = 0, c = 1; i < length; i += 3, c++) {

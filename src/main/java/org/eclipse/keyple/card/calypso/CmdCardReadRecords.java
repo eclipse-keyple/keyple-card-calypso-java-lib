@@ -190,7 +190,9 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   SortedMap<Integer, byte[]> getRecords() {
     SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
     if (getReadMode() == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-      records.put(getFirstRecordNumber(), getApduResponse().getDataOut());
+      if (getApduResponse().getDataOut().length != 0) {
+        records.put(getFirstRecordNumber(), getApduResponse().getDataOut());
+      }
     } else {
       byte[] apdu = getApduResponse().getDataOut();
       int apduLen = apdu.length;

@@ -18,6 +18,8 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -26,6 +28,8 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
  * @since 2.0.0
  */
 final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
+
+  private static final Logger logger = LoggerFactory.getLogger(CalypsoCardAdapter.class);
 
   private ApduResponseApi selectApplicationResponse;
   private String powerOnData;
@@ -588,9 +592,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public SvLoadLogRecord getSvLoadLogRecord() {
     if (svLoadLogRecord == null) {
       // try to get it from the file data
-      byte[] logRecord =
-          getFileBySfi(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI).getData().getContent();
-      svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
+      ElementaryFile ef = getFileBySfi(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI);
+      if (ef != null) {
+        byte[] logRecord = ef.getData().getContent();
+        svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
+      }
     }
     return svLoadLogRecord;
   }
@@ -617,10 +623,13 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public List<SvDebitLogRecord> getSvDebitLogAllRecords() {
-    // get the logs from the file data
-    SortedMap<Integer, byte[]> logRecords =
-        getFileBySfi(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI).getData().getAllRecordsContent();
     List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
+    // get the logs from the file data
+    ElementaryFile ef = getFileBySfi(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI);
+    if (ef == null) {
+      return svDebitLogRecords;
+    }
+    SortedMap<Integer, byte[]> logRecords = ef.getData().getAllRecordsContent();
     for (Map.Entry<Integer, byte[]> entry : logRecords.entrySet()) {
       svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));
     }
@@ -681,8 +690,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public ElementaryFile getFileBySfi(byte sfi) {
     ElementaryFile ef = efBySfi.get(sfi);
     if (ef == null) {
-      throw new NoSuchElementException(
-          "EF with SFI [0x" + Integer.toHexString(sfi & 0xFF) + "] is not found.");
+      String sfiString = Integer.toHexString(sfi & 0xFF);
+      logger.warn("EF with SFI [0x{}] is not found.", sfiString);
     }
     return ef;
   }
@@ -696,8 +705,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public ElementaryFile getFileByLid(short lid) {
     Byte sfi = sfiByLid.get(lid);
     if (sfi == null) {
-      throw new NoSuchElementException(
-          "EF with LID [" + Integer.toHexString(lid & 0xFFFF) + "] is not found.");
+      String lidString = Integer.toHexString(lid & 0xFFFF);
+      logger.warn("EF with LID [0x{}] is not found.", lidString);
+      return null;
     }
     return efBySfi.get(sfi);
   }
