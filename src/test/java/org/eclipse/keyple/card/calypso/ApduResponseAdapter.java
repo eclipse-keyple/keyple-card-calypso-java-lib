@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
 import org.calypsonet.terminal.card.ApduResponseApi;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
  * (private)<br>
@@ -45,6 +46,17 @@ class ApduResponseAdapter implements ApduResponseApi {
   @Override
   public int getStatusWord() {
     return statusWord;
+  }
+
+  /**
+   * Converts the APDU response into a string where the data is encoded in a json format.
+   *
+   * @return A not empty String
+   * @since 2.0.0
+   */
+  @Override
+  public String toString() {
+    return "APDU_RESPONSE = " + JsonUtil.toJson(this);
   }
 
   @Override

@@ -266,7 +266,9 @@ class SamCommandProcessor {
    */
   private void pushCardExchangedData(ApduRequestSpi request, ApduResponseApi response) {
 
-    logger.trace("pushCardExchangedData: REQUEST = {}", request);
+    if (logger.isTraceEnabled()) {
+      logger.trace("pushCardExchangedData: {}", request);
+    }
 
     // Add an ApduRequestAdapter to the digest computation: if the request is of case4 type, Le must
     // be
@@ -280,7 +282,9 @@ class SamCommandProcessor {
       cardDigestDataCache.add(request.getApdu());
     }
 
-    logger.trace("pushCardExchangedData: RESPONSE = {}", response);
+    if (logger.isTraceEnabled()) {
+      logger.trace("pushCardExchangedData: {}", response);
+    }
 
     // Add an ApduResponseApi to the digest computation
     cardDigestDataCache.add(response.getApdu());
