@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2021-12-17
+### Fixed
+- Commands anticipation management during "processClosing" method (issue [#30])
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.0.5`.
+
 ## [2.0.2] - 2021-12-15
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.0.3` (issue [#28]).
@@ -29,11 +35,13 @@ This is the initial release.
 It follows the extraction of Keyple 1.0 components contained in the `eclipse/keyple-java` repository to dedicated repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.2...HEAD
+[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.3...HEAD
+[2.0.3]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.2...2.0.3
 [2.0.2]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#30]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/30
 [#28]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/28
 [#24]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/24
 [#22]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/22
