@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="1220px" preserveAspectRatio="none" style="width:1972px;height:1220px;background:#FFFFFF;" version="1.1" viewBox="0 0 1972 1220" width="1972.5px" zoomAndPan="magnify"><defs><filter height="1" id="bmsyiq1bs5uf10" width="1" x="0" y="0"><feFlood flood-color="#FFFF00" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="bmsyiq1bs5uf11" width="1" x="0" y="0"><feFlood flood-color="#FFC0CB" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="bmsyiq1bs5uf12" width="1" x="0" y="0"><feFlood flood-color="#00FFFF" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="bmsyiq1bs5uf13" width="1" x="0" y="0"><feFlood flood-color="#FFA500" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="45" lengthAdjust="spacing" textLength="1145" x="397.5" y="46.7139">Keyple - keyple-card-calypso-java-lib - 2.0.+ (24/06/2021)</text><rect fill="#DDDDDD" height="289.1406" rx="12.5" ry="12.5" style="stroke:#000000;stroke-width:2.5;" width="735" x="601.25" y="76.6016"/><text fill="#000000" font-family="sans-serif" font-size="35" lengthAdjust="spacing" text-decoration="underline" textLength="220" x="616.25" y="125.4346">Colors legend</text><text fill="#000000" font-family="sans-serif" font-size="35" lengthAdjust="spacing" textLength="10" x="846.25" y="125.4346">:</text><ellipse cx="630" cy="158.3984" fill="#000000" rx="6.25" ry="6.25" style="stroke:#000000;stroke-width:0.0;"/><text fill="#000000" font-family="sans-serif" font-size="35" lengthAdjust="spacing" text-decoration="underline" textLength="370" x="648.75" y="169.458">External API references</text><text fill="#000000" font-family="sans-serif" font-size="35" lengthAdjust="spacing" textLength="10" x="1028.75" y="169.458">:</text><rect fill="#000000" height="8.75" style="stroke:#000000;stroke-width:0.0;" width="8.75" x="668.75" y="201.1719"/><text fill="#000000" filter="url(#bmsyiq1bs5uf10)" font-family="sans-serif" font-size="35" font-weight="bold" lengthAdjust="spacing" textLength="625" x="681.25" y="213.4814">calypsonet-terminal-reader-java-api</text><rect fill="#000000" height="8.75" style="stroke:#000000;stroke-width:0.0;" width="8.75" x="668.75" y="245.1953"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="35" font-weight="bold" lengthAdjust="spacing" textLength="640" x="681.25" y="257.5049">calypsonet-terminal-calypso-java-api</text><rect fill="#000000" height="8.75" style="stroke:#000000;stroke-width:0.0;" width="8.75" x="668.75" y="289.2188"/><text fill="#000000" filter="url(#bmsyiq1bs5uf12)" font-family="sans-serif" font-size="35" font-weight="bold" lengthAdjust="spacing" textLength="425" x="681.25" y="301.5283">keyple-common-java-api</text><rect fill="#000000" height="8.75" style="stroke:#000000;stroke-width:0.0;" width="8.75" x="668.75" y="333.2422"/><text fill="#000000" filter="url(#bmsyiq1bs5uf13)" font-family="sans-serif" font-size="35" font-weight="bold" lengthAdjust="spacing" textLength="572.5" x="681.25" y="345.5518">keyple-service-resource-java-lib</text><!--MD5=[d08f533e0a97815ebcffa7318f61e649]
+cluster calypso--><polygon fill="#F8F9F9" points="40,403.2422,607.5,403.2422,625,462.2656,1930,462.2656,1930,1203.2422,40,1203.2422,40,403.2422" style="stroke:#000000;stroke-width:3.75;"/><line style="stroke:#000000;stroke-width:3.75;" x1="40" x2="625" y1="462.2656" y2="462.2656"/><text fill="#000000" font-family="sans-serif" font-size="35" font-weight="bold" lengthAdjust="spacing" textLength="552.5" x="50" y="444.5752">org.eclipse.keyple.card.calypso</text><!--MD5=[1c98f2ddcf0ec237530a877de505d4bf]
+class CalypsoExtensionService--><rect codeLine="57" fill="#FEFECE" height="669.3164" id="CalypsoExtensionService" style="stroke:#D4AC0D;stroke-width:3.75;" width="1807.5" x="81.25" y="493.2422"/><ellipse cx="751.875" cy="543.4766" fill="#ADD1B2" rx="27.5" ry="27.5" style="stroke:#ADD1B2;stroke-width:2.5;"/><path d="M756.875,534.7266 Q757.3828,533.4766 757.9688,532.8516 Q758.5547,532.2266 759.2188,532.2266 Q760.3906,532.2266 761.1328,532.9297 Q761.875,533.6328 761.875,535.2734 L761.875,539.1797 Q761.875,540.8203 761.1719,541.5234 Q760.4688,542.2266 759.375,542.2266 Q758.3984,542.2266 757.7734,541.7969 Q757.1484,541.3672 756.875,540.2344 Q756.7578,539.4531 756.3281,539.0234 Q755.5469,538.2031 754.1406,537.7344 Q752.7344,537.2266 751.3281,537.2266 Q749.5703,537.2266 748.0859,537.9297 Q746.6406,538.6328 745.5078,540.1953 Q744.375,541.7578 744.375,543.9063 L744.375,546.2109 Q744.375,548.7891 746.4844,550.5078 Q748.5938,552.2266 752.3438,552.2266 Q754.5703,552.2266 756.1328,551.7188 Q757.0313,551.4453 758.0469,550.5469 Q758.7109,550.0391 759.0625,549.8828 Q759.4141,549.7266 759.8438,549.7266 Q760.6641,549.7266 761.25,550.3906 Q761.875,551.0156 761.875,551.9141 Q761.875,552.7734 761.0156,553.7891 Q759.7656,555.2734 757.7734,556.0938 Q755.1563,557.2266 751.9531,557.2266 Q748.2031,557.2266 745.1953,555.7422 Q742.7734,554.5703 741.0547,552.0313 Q739.375,549.4922 739.375,546.4844 L739.375,543.75 Q739.375,540.625 740.8594,537.8906 Q742.3828,535.1563 745,533.7109 Q747.6563,532.2266 750.625,532.2266 Q752.4219,532.2266 753.9844,532.8516 Q755.5469,533.4766 756.875,534.7266 Z " fill="#000000"/><ellipse cx="815.625" cy="542.2266" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" font-family="sans-serif" font-size="30" font-style="italic" lengthAdjust="spacing" textLength="35" x="855.625" y="536.8848">&lt;&lt;</text><text fill="#000000" filter="url(#bmsyiq1bs5uf12)" font-family="sans-serif" font-size="30" font-style="italic" lengthAdjust="spacing" textLength="297.5" x="890.625" y="536.8848">KeypleCardExtension</text><text fill="#000000" font-family="sans-serif" font-size="30" font-style="italic" lengthAdjust="spacing" textLength="35" x="1188.125" y="536.8848">&gt;&gt;</text><text fill="#000000" font-family="sans-serif" font-size="30" font-style="italic" font-weight="bold" lengthAdjust="spacing" textLength="60" x="830.625" y="574.6191">final</text><text fill="#000000" font-family="sans-serif" font-size="30" font-style="italic" lengthAdjust="spacing" textLength="350" x="898.125" y="574.6191">CalypsoExtensionService</text><line style="stroke:#D4AC0D;stroke-width:3.75;" x1="83.75" x2="1886.25" y1="593.7109" y2="593.7109"/><line style="stroke:#D4AC0D;stroke-width:2.5;" x1="83.75" x2="1886.25" y1="613.7109" y2="613.7109"/><ellipse cx="108.75" cy="641.2109" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" text-decoration="underline" textLength="482.5" x="131.25" y="652.2583">CalypsoExtensionService getInstance ()</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="0" x="138.75" y="686.8481"/><ellipse cx="108.75" cy="710.3906" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="265" x="131.25" y="721.438">CalypsoCardSelection</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="272.5" x="403.75" y="721.438">createCardSelection ()</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="0" x="138.75" y="756.0278"/><ellipse cx="108.75" cy="779.5703" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="260" x="131.25" y="790.6177">CalypsoSamSelection</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="267.5" x="398.75" y="790.6177">createSamSelection ()</text><ellipse cx="108.75" cy="814.1602" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf13)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="367.5" x="131.25" y="825.2075">CardResourceProfileExtension</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="457.5" x="506.25" y="825.2075">createSamResourceProfileExtension (</text><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="260" x="963.75" y="825.2075">CalypsoSamSelection</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="267.5" x="1231.25" y="825.2075">calypsoSamSelection)</text><ellipse cx="108.75" cy="848.75" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="240" x="131.25" y="859.7974">CardSecuritySetting</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="345" x="378.75" y="859.7974">createCardSecuritySetting ()</text><ellipse cx="108.75" cy="883.3398" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="305" x="131.25" y="894.3872">CardTransactionManager</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="295" x="443.75" y="894.3872">createCardTransaction (</text><text fill="#000000" filter="url(#bmsyiq1bs5uf10)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="145" x="738.75" y="894.3872">CardReader</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="150" x="891.25" y="894.3872">cardReader,</text><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="155" x="1048.75" y="894.3872">CalypsoCard</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="160" x="1211.25" y="894.3872">calypsoCard,</text><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="240" x="1378.75" y="894.3872">CardSecuritySetting</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="247.5" x="1626.25" y="894.3872">cardSecuritySetting)</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="0" x="138.75" y="928.9771"/><ellipse cx="108.75" cy="952.5195" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="305" x="131.25" y="963.5669">CardTransactionManager</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="485" x="443.75" y="963.5669">createCardTransactionWithoutSecurity (</text><text fill="#000000" filter="url(#bmsyiq1bs5uf10)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="145" x="928.75" y="963.5669">CardReader</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="150" x="1081.25" y="963.5669">cardReader,</text><text fill="#000000" filter="url(#bmsyiq1bs5uf11)" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="155" x="1238.75" y="963.5669">CalypsoCard</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="162.5" x="1401.25" y="963.5669">calypsoCard)</text><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="0" x="138.75" y="998.1567"/><ellipse cx="108.75" cy="1066.2891" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="380" x="131.25" y="1077.3364">String getCommonApiVersion ()</text><ellipse cx="108.75" cy="1100.8789" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="365" x="131.25" y="1111.9263">String getReaderApiVersion ()</text><ellipse cx="108.75" cy="1135.4688" fill="#84BE84" rx="7.5" ry="7.5" style="stroke:#038048;stroke-width:2.5;"/><text fill="#000000" font-family="sans-serif" font-size="27.5" lengthAdjust="spacing" textLength="335" x="131.25" y="1146.5161">String getCardApiVersion ()</text><line style="stroke:#D4AC0D;stroke-width:2.5;" x1="83.75" x2="838.75" y1="1031.4941" y2="1031.4941"/><text fill="#000000" font-family="sans-serif" font-size="27.5" font-weight="bold" lengthAdjust="spacing" textLength="292.5" x="838.75" y="1041.4966">KeypleCardExtension</text><line style="stroke:#D4AC0D;stroke-width:2.5;" x1="1131.25" x2="1886.25" y1="1031.4941" y2="1031.4941"/><!--MD5=[f3953c29d09cb9324cf70629f62a2116]
+@startuml
+title
+    Keyple - keyple-card-calypso-java-lib - 2.0.+ (24/06/2021)
+end title
+
+' == THEME ==
+
+'Couleurs issues de : https://htmlcolorcodes.com/fr/tableau-de-couleur/tableau-de-couleur-design-plat/
+!define C_GREY1 F8F9F9
+!define C_GREY2 F2F3F4
+!define C_GREY3 E5E7E9
+!define C_GREY4 D7DBDD
+!define C_GREY5 CACFD2
+!define C_GREY6 BDC3C7
+!define C_LINK 3498DB
+!define C_USE 27AE60
+
+skinparam Shadowing false
+skinparam ClassFontStyle italic
+skinparam ClassBorderColor #D4AC0D
+skinparam stereotypeABorderColor #A9DCDF
+skinparam stereotypeIBorderColor #B4A7E5
+skinparam stereotypeCBorderColor #ADD1B2
+skinparam stereotypeEBorderColor #EB93DF
+' Red
+skinparam ClassBackgroundColor<<red>> #FDEDEC
+skinparam ClassBorderColor<<red>> #E74C3C
+hide <<red>> stereotype
+' Purple
+skinparam ClassBackgroundColor<<purple>> #F4ECF7
+skinparam ClassBorderColor<<purple>> #8E44AD
+hide <<purple>> stereotype
+' blue
+skinparam ClassBackgroundColor<<blue>> #EBF5FB
+skinparam ClassBorderColor<<blue>> #3498DB
+hide <<blue>> stereotype
+' Green
+skinparam ClassBackgroundColor<<green>> #E9F7EF
+skinparam ClassBorderColor<<green>> #27AE60
+hide <<green>> stereotype
+' Grey
+skinparam ClassBackgroundColor<<grey>> #EAECEE
+skinparam ClassBorderColor<<grey>> #2C3E50
+hide <<grey>> stereotype
+
+' == CONTENT ==
+
+legend top
+    __Colors legend__ :
+    * __External API references__ :
+    ** <back:yellow>**calypsonet-terminal-reader-java-api**</back>
+    ** <back:pink>**calypsonet-terminal-calypso-java-api**</back>
+    ** <back:cyan>**keyple-common-java-api**</back>
+    ** <back:orange>**keyple-service-resource-java-lib**</back>
+end legend
+
+package "org.eclipse.keyple.card.calypso" as calypso {
+    +class "<<<back:cyan>KeypleCardExtension</back>>>\n**final** CalypsoExtensionService" as CalypsoExtensionService {
+        - -
+        +{static} CalypsoExtensionService getInstance ()
+
+        +<back:pink>CalypsoCardSelection</back> createCardSelection ()
+
+        +<back:pink>CalypsoSamSelection</back> createSamSelection ()
+        +<back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
+        +<back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
+        +<back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
+
+        +<back:pink>CardTransactionManager</back> createCardTransactionWithoutSecurity (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard)
+
+        - - **KeypleCardExtension** - -
+        +String getCommonApiVersion ()
+        +String getReaderApiVersion ()
+        +String getCardApiVersion ()
+    }
+}
+
+' Associations
+
+' == LAYOUT ==
+
+' == STYLE ==
+
+package calypso #C_GREY1 {}
+
+
+@enduml
+
+@startuml
+title
+    Keyple - keyple-card-calypso-java-lib - 2.0.+ (24/06/2021)
+end title
+
+
+
+skinparam Shadowing false
+skinparam ClassFontStyle italic
+skinparam ClassBorderColor #D4AC0D
+skinparam stereotypeABorderColor #A9DCDF
+skinparam stereotypeIBorderColor #B4A7E5
+skinparam stereotypeCBorderColor #ADD1B2
+skinparam stereotypeEBorderColor #EB93DF
+skinparam ClassBackgroundColor<<red>> #FDEDEC
+skinparam ClassBorderColor<<red>> #E74C3C
+hide <<red>> stereotype
+skinparam ClassBackgroundColor<<purple>> #F4ECF7
+skinparam ClassBorderColor<<purple>> #8E44AD
+hide <<purple>> stereotype
+skinparam ClassBackgroundColor<<blue>> #EBF5FB
+skinparam ClassBorderColor<<blue>> #3498DB
+hide <<blue>> stereotype
+skinparam ClassBackgroundColor<<green>> #E9F7EF
+skinparam ClassBorderColor<<green>> #27AE60
+hide <<green>> stereotype
+skinparam ClassBackgroundColor<<grey>> #EAECEE
+skinparam ClassBorderColor<<grey>> #2C3E50
+hide <<grey>> stereotype
+
+
+legend top
+    __Colors legend__ :
+    * __External API references__ :
+    ** <back:yellow>**calypsonet-terminal-reader-java-api**</back>
+    ** <back:pink>**calypsonet-terminal-calypso-java-api**</back>
+    ** <back:cyan>**keyple-common-java-api**</back>
+    ** <back:orange>**keyple-service-resource-java-lib**</back>
+end legend
+
+package "org.eclipse.keyple.card.calypso" as calypso {
+    +class "<<<back:cyan>KeypleCardExtension</back>>>\n**final** CalypsoExtensionService" as CalypsoExtensionService {
+        - -
+        +{static} CalypsoExtensionService getInstance ()
+
+        +<back:pink>CalypsoCardSelection</back> createCardSelection ()
+
+        +<back:pink>CalypsoSamSelection</back> createSamSelection ()
+        +<back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
+        +<back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
+        +<back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
+
+        +<back:pink>CardTransactionManager</back> createCardTransactionWithoutSecurity (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard)
+
+        - - **KeypleCardExtension** - -
+        +String getCommonApiVersion ()
+        +String getReaderApiVersion ()
+        +String getCardApiVersion ()
+    }
+}
+
+
+
+
+package calypso #F8F9F9 {}
+
+
+@enduml
+
+PlantUML version 1.2021.7(Sun May 23 14:40:07 CEST 2021)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: Cp1252
+Language: fr
+Country: FR
+--></g></svg>
