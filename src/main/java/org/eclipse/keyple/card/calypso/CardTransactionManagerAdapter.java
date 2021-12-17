@@ -28,6 +28,7 @@ import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -918,6 +919,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (sessionPreviouslyClosed) {
       // Reopen a session if necessary
       processAtomicOpening(currentWriteAccessLevel, null);
+    }
+
+    if (atLeastOneReadCommand) {
+      // execute the command
+      processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
+      cardAtomicCommands.clear();
     }
 
     // Finally, close the session as requested
@@ -1991,6 +1998,17 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     @Override
     public int getStatusWord() {
       return statusWord;
+    }
+
+    /**
+     * Converts the APDU response into a string where the data is encoded in a json format.
+     *
+     * @return A not empty String
+     * @since 2.0.0
+     */
+    @Override
+    public String toString() {
+      return "APDU_RESPONSE = " + JsonUtil.toJson(this);
     }
   }
 }
