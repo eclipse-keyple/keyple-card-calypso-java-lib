@@ -921,6 +921,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       processAtomicOpening(currentWriteAccessLevel, null);
     }
 
+    if (atLeastOneReadCommand) {
+      // execute the command
+      processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
+      cardAtomicCommands.clear();
+    }
+
     // Finally, close the session as requested
     processAtomicClosing(
         cardAtomicCommands,

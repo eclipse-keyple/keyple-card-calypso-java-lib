@@ -148,6 +148,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_RATIFICATION_RSP = "6B00";
 
   private static final String CARD_READ_REC_SFI7_REC1_CMD = "00B2013C00";
+  private static final String CARD_READ_REC_SFI7_REC1_L29_CMD = "00B2013C1D";
   private static final String CARD_READ_REC_SFI7_REC1_RSP = FILE7_REC1_29B + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI7_REC1_6B_COUNTER_CMD = "00B2013C06";
   private static final String CARD_READ_REC_SFI7_REC1_6B_COUNTER_RSP =
@@ -237,6 +238,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD =
       "808A00FF0A30790304909800307900";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_CMD = "808C00000500B2013C00";
+  private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_L29_CMD = "808C00000500B2013C1D";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP_CMD =
       "808C00001F\" + FILE7_REC1_29B+ \"9000";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI8_REC1_RSP_CMD =
@@ -506,11 +508,18 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
 
     samCardRequest =
-        createCardRequest(SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_CMD);
-    cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+        createCardRequest(
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_L29_CMD,
+            SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP,
+            SAM_DIGEST_CLOSE_CMD);
+    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
+    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
 
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
-    cardCardResponse = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
+    samCardResponse =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
 
     CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
     CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
@@ -519,14 +528,23 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseRead);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseClose);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
         .thenReturn(samCardResponse2);
 
+    cardTransactionManager.prepareReadRecordFile(FILE7, 1, 1, 29);
+
     cardTransactionManager.processClosing();
     inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
@@ -534,7 +552,7 @@ public class CardTransactionManagerAdapterTest {
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
