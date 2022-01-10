@@ -1382,7 +1382,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
 
     // create the command and add it to the list of commands
-    cardCommandManager.addRegularCommand(new CmdCardSelectFile(calypsoCard.getCardClass(), lid));
+    cardCommandManager.addRegularCommand(
+        new CmdCardSelectFile(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid));
 
     return this;
   }

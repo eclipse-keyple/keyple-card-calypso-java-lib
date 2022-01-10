@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.BerTlvUtil;
@@ -103,16 +104,29 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param selectionPath the file identifier path.
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param productType The target product type.
+   * @param selectionPath The file identifier path.
    * @since 2.0.1
    */
-  CmdCardSelectFile(CalypsoCardClass calypsoCardClass, byte[] selectionPath) {
+  CmdCardSelectFile(
+      CalypsoCardClass calypsoCardClass,
+      CalypsoCard.ProductType productType,
+      byte[] selectionPath) {
     super(command);
 
     // handle the REV1 case
     // CL-KEY-KIFSF.1
-    byte p1 = (byte) (calypsoCardClass == CalypsoCardClass.LEGACY ? 0x08 : 0x09);
+    // If legacy and rev2 then 02h else if legacy then 08h else 09h
+    byte p1;
+    if (calypsoCardClass == CalypsoCardClass.LEGACY
+        && productType == CalypsoCard.ProductType.PRIME_REVISION_2) {
+      p1 = (byte) 0x02;
+    } else if (calypsoCardClass == CalypsoCardClass.LEGACY) {
+      p1 = (byte) 0x08;
+    } else {
+      p1 = (byte) 0x09;
+    }
 
     setApduRequest(
         new ApduRequestAdapter(

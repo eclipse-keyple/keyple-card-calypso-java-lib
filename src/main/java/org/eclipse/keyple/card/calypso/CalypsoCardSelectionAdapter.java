@@ -287,7 +287,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
 
-    commands.add(new CmdCardSelectFile(CalypsoCardClass.ISO, lid));
+    commands.add(
+        new CmdCardSelectFile(CalypsoCardClass.ISO, CalypsoCard.ProductType.PRIME_REVISION_3, lid));
     return this;
   }
 

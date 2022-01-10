@@ -41,6 +41,8 @@ public class CardTransactionManagerAdapterTest {
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C21051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C22051410019000";
+  private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2 =
+      "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C02051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C12051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED =
@@ -179,6 +181,9 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_SELECT_FILE_NEXT_CMD = "00A4020202000000";
   private static final String CARD_SELECT_FILE_1234_CMD = "00A4090002123400";
   private static final String CARD_SELECT_FILE_1234_RSP =
+      "85170001000000" + ACCESS_CONDITIONS_1234 + KEY_INDEXES_1234 + "00777879616770003F009000";
+  private static final String CARD_SELECT_FILE_1234_CMD_PRIME_REV2 = "94A4020002123400";
+  private static final String CARD_SELECT_FILE_1234_RSP_PRIME_REV2 =
       "85170001000000" + ACCESS_CONDITIONS_1234 + KEY_INDEXES_1234 + "00777879616770003F009000";
 
   private static final String CARD_GET_DATA_FCI_CMD = "00CA006F00";
@@ -769,11 +774,33 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSelectFile_whenLidIs1234_shouldPrepareSelectFileApduWith1234()
-      throws Exception {
+  public void
+      prepareSelectFile_whenLidIs1234AndCardIsPrimeRevision3_shouldPrepareSelectFileApduWith1234()
+          throws Exception {
     byte[] lid = new byte[] {(byte) 0x12, (byte) 0x34};
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareSelectFile(lid);
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareSelectFile_whenLidIs1234AndCardIsPrimeRevision2_shouldPrepareSelectFileApduWith1234()
+          throws Exception {
+    byte[] lid = new byte[] {(byte) 0x12, (byte) 0x34};
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD_PRIME_REV2);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP_PRIME_REV2);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
