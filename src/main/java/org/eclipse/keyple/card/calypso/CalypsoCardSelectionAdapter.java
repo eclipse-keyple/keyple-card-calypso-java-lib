@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
+import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
@@ -200,7 +201,18 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0.0
    */
   @Override
+  @Deprecated
   public CalypsoCardSelection prepareReadRecordFile(byte sfi, int recordNumber) {
+    return prepareReadRecord(sfi, recordNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CalypsoCardSelection prepareReadRecord(byte sfi, int recordNumber) {
 
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
@@ -216,6 +228,29 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     commands.add(cmdCardReadRecords);
 
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CalypsoCardSelection prepareReadRecordMultiple(
+      byte sfi, int firstRecordNumber, int nbRecordsToRead, int offset, int nbBytesToRead) {
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CalypsoCardSelection prepareSearchRecordMultiple(SearchCommandData data) {
+    // TODO implementation
+    return null;
   }
 
   /**

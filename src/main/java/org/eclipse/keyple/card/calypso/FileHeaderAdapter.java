@@ -30,7 +30,7 @@ class FileHeaderAdapter implements FileHeader {
   private final ElementaryFile.Type type;
   private final byte[] accessConditions;
   private final byte[] keyIndexes;
-  private final byte dfStatus;
+  private final Byte dfStatus;
   private final Short sharedReference;
 
   /** Private constructor */
@@ -59,7 +59,7 @@ class FileHeaderAdapter implements FileHeader {
     private ElementaryFile.Type type;
     private byte[] accessConditions;
     private byte[] keyIndexes;
-    private byte dfStatus;
+    private Byte dfStatus;
     private Short sharedReference;
 
     /** Private constructor */
@@ -247,7 +247,7 @@ class FileHeaderAdapter implements FileHeader {
    * @since 2.0.0
    */
   @Override
-  public byte getDfStatus() {
+  public Byte getDfStatus() {
     return dfStatus;
   }
 
