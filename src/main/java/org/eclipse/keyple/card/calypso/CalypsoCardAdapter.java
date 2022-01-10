@@ -500,6 +500,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
+   * @since 2.0.4
+   */
+  @Override
+  public byte[] getTraceabilityInformation() {
+    // TODO implementation
+    return new byte[0];
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    */
   @Override

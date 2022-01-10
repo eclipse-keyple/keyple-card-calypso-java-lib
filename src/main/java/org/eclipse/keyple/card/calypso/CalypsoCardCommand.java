@@ -40,6 +40,9 @@ enum CalypsoCardCommand implements CardCommand {
   /** append record. */
   APPEND_RECORD("Append Record", (byte) 0xE2),
 
+  /** update binary. */
+  UPDATE_BINARY("Update Binary", (byte) 0xD6),
+
   /** get challenge. */
   GET_CHALLENGE("Get Challenge", (byte) 0x84),
 

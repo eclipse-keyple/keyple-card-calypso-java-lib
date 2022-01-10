@@ -30,6 +30,7 @@ final class CalypsoCardConstant {
   // SFI
   static final int SFI_MIN = 0;
   static final int SFI_MAX = MASK_5_BITS;
+
   // Record number
   static final int NB_REC_MIN = 1;
   static final int NB_REC_MAX = 255;
@@ -41,6 +42,11 @@ final class CalypsoCardConstant {
   // Counter value
   static final int CNT_VALUE_MIN = 0;
   static final int CNT_VALUE_MAX = 16777215;
+
+  // Offset
+  static final int OFFSET_MIN = 0;
+  static final int OFFSET_MAX = 255; // 0xFF
+  static final int OFFSET_BINARY_MAX = 32767; // 0x7FFF
 
   // Le max
   static final int LE_MAX = 255;

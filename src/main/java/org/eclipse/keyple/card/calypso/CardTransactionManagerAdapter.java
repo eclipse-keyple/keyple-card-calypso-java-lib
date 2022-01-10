@@ -14,9 +14,11 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.calypsonet.terminal.calypso.GetDataTag;
+import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
@@ -1433,7 +1435,41 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.0.0
    */
   @Override
+  @Deprecated
   public final CardTransactionManager prepareReadRecordFile(byte sfi, int recordNumber) {
+    return prepareReadRecord(sfi, recordNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  @Deprecated
+  public final CardTransactionManager prepareReadRecordFile(
+      byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize) {
+    return prepareReadRecord(sfi, firstRecordNumber, numberOfRecords, recordSize);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  @Deprecated
+  public final CardTransactionManager prepareReadCounterFile(byte sfi, int countersNumber) {
+    return prepareReadCounter(sfi, countersNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareReadRecord(byte sfi, int recordNumber) {
 
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
@@ -1463,11 +1499,11 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.4
    */
   @Override
-  public final CardTransactionManager prepareReadRecordFile(
-      byte sfi, int firstRecordNumber, int numberOfRecords, int recordSize) {
+  public CardTransactionManager prepareReadRecord(
+      byte sfi, int firstRecordNumber, int nbRecordsToRead, int recordSize) {
 
     Assert.getInstance() //
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi") //
@@ -1477,12 +1513,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             CalypsoCardConstant.NB_REC_MAX,
             "firstRecordNumber") //
         .isInRange(
-            numberOfRecords,
+            nbRecordsToRead,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX - firstRecordNumber,
-            "numberOfRecords");
+            "nbRecordsToRead");
 
-    if (numberOfRecords == 1) {
+    if (nbRecordsToRead == 1) {
       // create the command and add it to the list of commands
       cardCommandManager.addRegularCommand(
           new CmdCardReadRecords(
@@ -1497,7 +1533,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       // Multiple APDUs can be generated depending on record size and transmission capacity.
       int recordsPerApdu = calypsoCard.getPayloadCapacity() / (recordSize + 2);
       int maxSizeDataPerApdu = recordsPerApdu * (recordSize + 2);
-      int remainingRecords = numberOfRecords;
+      int remainingRecords = nbRecordsToRead;
       int startRecordNumber = firstRecordNumber;
       while (remainingRecords > 0) {
         int expectedLength;
@@ -1526,13 +1562,45 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
+   * @since 2.0.4
    */
   @Override
-  public final CardTransactionManager prepareReadCounterFile(byte sfi, int countersNumber) {
-    prepareReadRecordFile(sfi, 1, 1, countersNumber * 3);
+  public CardTransactionManager prepareReadRecordMultiple(
+      byte sfi, int firstRecordNumber, int nbRecordsToRead, int offset, int nbBytesToRead) {
+    // TODO implementation
+    return null;
+  }
 
-    return this;
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareReadCounter(byte sfi, int nbCountersToRead) {
+    return prepareReadRecord(sfi, 1, 1, nbCountersToRead * 3);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareSearchRecordMultiple(SearchCommandData data) {
+    // TODO implementation
+    return null;
   }
 
   /**
@@ -1603,6 +1671,47 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareUpdateBinary(byte sfi, int offset, byte[] data) {
+
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+      throw new UnsupportedOperationException(
+          "The 'Update Binary' command is not available for this card.");
+    }
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+        .notEmpty(data, "data");
+
+    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
+      throw new IllegalArgumentException(
+          "If the SFI is different from 0, then the offset must not be greater than 255.");
+    }
+
+    if (data.length > calypsoCard.getPayloadCapacity()) {}
+
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareWriteBinary(byte sfi, int offset, byte[] data) {
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    */
   @Override
@@ -1654,6 +1763,30 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         new CmdCardDecrease(calypsoCard.getCardClass(), sfi, counterNumber, decValue));
 
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareIncreaseMultipleCounters(
+      byte sfi, Map<Integer, Integer> counterNumberToIncValueMap) {
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareDecreaseMultipleCounters(
+      byte sfi, Map<Integer, Integer> counterNumberToDecValueMap) {
+    // TODO implementation
+    return null;
   }
 
   /**
@@ -1964,6 +2097,18 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     cardCommandManager.addRegularCommand(new CmdCardRehabilitate(calypsoCard.getCardClass()));
 
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareChangeKey(
+      int keyIndex, byte newKif, byte newKvc, byte issuerKif, byte issuerKvc) {
+    // TODO implementation
+    return null;
   }
 
   /**
