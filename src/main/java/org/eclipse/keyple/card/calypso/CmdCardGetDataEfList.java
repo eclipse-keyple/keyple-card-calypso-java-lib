@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -15,7 +15,6 @@ import java.util.*;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.Assert;
 
 /**
  * (package-private)<br>
@@ -24,13 +23,18 @@ import org.eclipse.keyple.core.util.Assert;
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
  * 6Cxx status and thus make calculation of the digest impossible.
  *
- * @since 2.0.1
+ * @since 2.0.4
  */
 final class CmdCardGetDataEfList extends AbstractCardCommand {
 
   private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
+  private static final int DESCRIPTORS_OFFSET = 2;
+  private static final int DESCRIPTOR_DATA_OFFSET = 2;
+  private static final int DESCRIPTOR_DATA_SFI_OFFSET = 2;
+  private static final int DESCRIPTOR_TAG_LENGTH = 8;
+  private static final int DESCRIPTOR_DATA_LENGTH = 6;
 
   static {
     Map<Integer, StatusProperties> m =
@@ -50,7 +54,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * Instantiates a new CmdCardGetDataEfList.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0.1
+   * @since 2.0.4
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
 
@@ -71,7 +75,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return False
-   * @since 2.0.1
+   * @since 2.0.4
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -81,7 +85,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 2.0.4
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
@@ -93,27 +97,27 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * Gets a reference to a map of all Elementary File headers by their associated SFI.
    *
    * @return A not empty map.
-   * @since 2.0.1
-   * @throws IllegalStateException If there is an error in the data or TLV structure.
-   * @throws IllegalArgumentException If one of the SFI is out of range.
+   * @since 2.0.4
    */
   Map<Byte, FileHeader> getEfHeaders() {
     byte[] rawList = getApduResponse().getDataOut();
-    if (rawList.length < 2
-        || rawList[0] != (byte) 0xC0
-        || rawList.length != rawList[1] + 2
-        || rawList[1] % 8 != 0) {
-      throw new IllegalStateException("Bad EF List TLV structure.");
-    }
     Map<Byte, FileHeader> efToFileHeaderMap = new HashMap<Byte, FileHeader>();
-    int nbFiles = rawList[1] / 8;
+    int nbFiles = rawList[1] / DESCRIPTOR_TAG_LENGTH;
     for (int i = 0; i < nbFiles; i++) {
-      if (rawList[2 + i * 8] != (byte) (0xC1) || rawList[2 + i * 8 + 1] != 6) {
-        throw new IllegalStateException("Bad EF descriptor tag.");
-      }
       efToFileHeaderMap.put(
-          rawList[4 + (i * 8) + 2],
-          createFileHeader(Arrays.copyOfRange(rawList, 4 + (i * 8), 4 + (i * 8) + 6)));
+          rawList[
+              DESCRIPTORS_OFFSET
+                  + (i * DESCRIPTOR_TAG_LENGTH)
+                  + DESCRIPTOR_DATA_OFFSET
+                  + DESCRIPTOR_DATA_SFI_OFFSET],
+          createFileHeader(
+              Arrays.copyOfRange(
+                  rawList,
+                  DESCRIPTORS_OFFSET + (i * DESCRIPTOR_TAG_LENGTH) + DESCRIPTOR_DATA_OFFSET,
+                  DESCRIPTORS_OFFSET
+                      + (i * DESCRIPTOR_TAG_LENGTH)
+                      + DESCRIPTOR_DATA_OFFSET
+                      + DESCRIPTOR_DATA_LENGTH)));
     }
     return efToFileHeaderMap;
   }
@@ -124,32 +128,24 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    *
    * @param efDescriptorByteArray A 6-byte array.
    * @return A not null {@link FileHeader}.
-   * @throws IllegalArgumentException If the SFI byte is out of range.
-   * @throws IllegalStateException If the EF type byte does not match a known EF type.
    */
   private FileHeader createFileHeader(byte[] efDescriptorByteArray) {
-    Assert.getInstance()
-        .isInRange(
-            (int) efDescriptorByteArray[2],
-            CalypsoCardConstant.SFI_MIN,
-            CalypsoCardConstant.SFI_MAX,
-            "SFI");
     ElementaryFile.Type efType;
     switch (efDescriptorByteArray[3]) {
-      case CalypsoCardConstant.EF_TYPE_BINARY:
-        efType = ElementaryFile.Type.BINARY;
-        break;
       case CalypsoCardConstant.EF_TYPE_LINEAR:
         efType = ElementaryFile.Type.LINEAR;
         break;
       case CalypsoCardConstant.EF_TYPE_CYCLIC:
         efType = ElementaryFile.Type.CYCLIC;
         break;
-      case CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS:
-        efType = ElementaryFile.Type.SIMULATED_COUNTERS;
-        break;
       case CalypsoCardConstant.EF_TYPE_COUNTERS:
         efType = ElementaryFile.Type.COUNTERS;
+        break;
+      case CalypsoCardConstant.EF_TYPE_BINARY:
+        efType = ElementaryFile.Type.BINARY;
+        break;
+      case CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS:
+        efType = ElementaryFile.Type.SIMULATED_COUNTERS;
         break;
       default:
         throw new IllegalStateException("Unexpected EF type");

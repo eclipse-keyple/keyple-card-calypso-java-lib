@@ -166,15 +166,16 @@ final class CalypsoCardUtilAdapter {
    * @throws CardCommandException If a response from the card was unexpected.
    */
   private static void updateCalypsoCardWithEfList(
-      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      CalypsoCardAdapter calypsoCard, CmdCardGetDataEfList command, ApduResponseApi apduResponse)
       throws CardCommandException {
 
     command.setApduResponse(apduResponse).checkStatus();
 
-    Map<Byte, FileHeader> sfiToFileHeaderMap = ((CmdCardGetDataEfList) command).getEfHeaders();
+    Map<Byte, FileHeader> sfiToFileHeaderMap = command.getEfHeaders();
 
     for (Map.Entry<Byte, FileHeader> entry : sfiToFileHeaderMap.entrySet()) {
-      if (calypsoCard.getFileBySfi(entry.getKey()).getHeader() == null) {
+      if (calypsoCard.getFileBySfi(entry.getKey()) == null
+          || calypsoCard.getFileBySfi(entry.getKey()).getHeader() == null) {
         calypsoCard.setFileHeader(entry.getKey(), entry.getValue());
       }
     }
@@ -191,7 +192,9 @@ final class CalypsoCardUtilAdapter {
    * @throws CardCommandException if a response from the card was unexpected.
    */
   private static void updateCalypsoCardWithTraceabilityInformation(
-      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      CalypsoCardAdapter calypsoCard,
+      CmdCardGetDataTraceabilityInformation command,
+      ApduResponseApi apduResponse)
       throws CardCommandException {
 
     command.setApduResponse(apduResponse).checkStatus();
@@ -637,9 +640,10 @@ final class CalypsoCardUtilAdapter {
         } else if (command instanceof CmdCardGetDataFcp) {
           updateCalypsoCardWithFcp(calypsoCard, command, apduResponse);
         } else if (command instanceof CmdCardGetDataEfList) {
-          updateCalypsoCardWithEfList(calypsoCard, command, apduResponse);
+          updateCalypsoCardWithEfList(calypsoCard, (CmdCardGetDataEfList) command, apduResponse);
         } else if (command instanceof CmdCardGetDataTraceabilityInformation) {
-          updateCalypsoCardWithTraceabilityInformation(calypsoCard, command, apduResponse);
+          updateCalypsoCardWithTraceabilityInformation(
+              calypsoCard, (CmdCardGetDataTraceabilityInformation) command, apduResponse);
         } else {
           throw new IllegalStateException("Unknown GET DATA command reference.");
         }

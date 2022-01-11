@@ -1423,6 +1423,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       case FCP_FOR_CURRENT_FILE:
         cardCommandManager.addRegularCommand(new CmdCardGetDataFcp(calypsoCard.getCardClass()));
         break;
+      case EF_LIST:
+        cardCommandManager.addRegularCommand(new CmdCardGetDataEfList(calypsoCard.getCardClass()));
+        break;
+      case TRACEABILITY_INFORMATION:
+        cardCommandManager.addRegularCommand(
+            new CmdCardGetDataTraceabilityInformation(calypsoCard.getCardClass()));
+        break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
     }

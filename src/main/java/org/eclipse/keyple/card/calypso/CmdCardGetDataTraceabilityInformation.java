@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
  * 6Cxx status and thus make calculation of the digest impossible.
  *
- * @since 2.0.1
+ * @since 2.0.4
  */
 final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
 
@@ -48,7 +48,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    * Instantiates a new CmdCardGetDataTrace.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0.1
+   * @since 2.0.4
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
 
@@ -69,7 +69,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return False
-   * @since 2.0.1
+   * @since 2.0.4
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -79,7 +79,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 2.0.4
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

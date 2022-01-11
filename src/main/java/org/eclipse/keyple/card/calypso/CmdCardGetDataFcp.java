@@ -44,6 +44,7 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
         0x6A88,
         new StatusProperties(
             "Data object not found (optional mode not available).", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));

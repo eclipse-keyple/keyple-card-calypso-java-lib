@@ -506,7 +506,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte[] getTraceabilityInformation() {
-    return traceabilityInformation;
+    return traceabilityInformation != null ? traceabilityInformation : new byte[0];
   }
 
   /**
@@ -979,6 +979,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
    *
    * @param traceabilityInformation A not empty array.
+   * @since 2.0.4
    */
   void setTraceabilityInformation(byte[] traceabilityInformation) {
     this.traceabilityInformation = traceabilityInformation;

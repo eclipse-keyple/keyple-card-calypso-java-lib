@@ -15,13 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.calypso.transaction.*;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -197,8 +196,14 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String CARD_GET_DATA_FCI_CMD = "00CA006F00";
   private static final String CARD_GET_DATA_FCP_CMD = "00CA006200";
+  private static final String CARD_GET_DATA_EF_LIST_CMD = "00CA00C000";
+  private static final String CARD_GET_DATA_TRACEABILITY_INFORMATION_CMD = "00CA018500";
   private static final String CARD_GET_DATA_FCI_RSP = SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3;
   private static final String CARD_GET_DATA_FCP_RSP = CARD_SELECT_FILE_1234_RSP;
+  private static final String CARD_GET_DATA_EF_LIST_RSP =
+      "C028C106200107021D01C10620FF09011D04C106F1231004F3F4C106F1241108F3F4C106F1251F09F3F49000";
+  private static final String CARD_GET_DATA_TRACEABILITY_INFORMATION_RSP =
+      "001122334455667788999000";
 
   private static final String CARD_VERIFY_PIN_PLAIN_OK_CMD =
       "0020000004" + ByteArrayUtil.toHex(PIN_OK.getBytes());
@@ -890,6 +895,91 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void prepareGetData_whenGetDataTagIsEF_LIST_shouldPopulateCalypsoCard() throws Exception {
+    // EF LIST
+    // C028
+    // C106 2001 07 02 1D 01
+    // C106 20FF 09 01 1D 04
+    // C106 F123 10 04 F3 F4
+    // C106 F124 11 08 F3 F4
+    // C106 F125 1F 09 F3 F4
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_EF_LIST_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_EF_LIST_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    assertThat(calypsoCard.getAllFiles()).isEmpty();
+
+    cardTransactionManager.prepareGetData(GetDataTag.EF_LIST);
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getAllFiles()).hasSize(5);
+
+    FileHeader fileHeader07 = calypsoCard.getFileBySfi((byte) 0x07).getHeader();
+    assertThat(fileHeader07.getLid()).isEqualTo((short) 0x2001);
+    assertThat(fileHeader07.getEfType()).isEqualTo(ElementaryFile.Type.LINEAR);
+    assertThat(fileHeader07.getRecordSize()).isEqualTo((byte) 0x1D);
+    assertThat(fileHeader07.getRecordsNumber()).isEqualTo((byte) 0x01);
+
+    FileHeader fileHeader09 = calypsoCard.getFileBySfi((byte) 0x09).getHeader();
+    assertThat(fileHeader09.getLid()).isEqualTo((short) 0x20FF);
+    assertThat(fileHeader09.getEfType()).isEqualTo(ElementaryFile.Type.BINARY);
+    assertThat(fileHeader09.getRecordSize()).isEqualTo((byte) 0x1D);
+    assertThat(fileHeader09.getRecordsNumber()).isEqualTo((byte) 0x04);
+
+    FileHeader fileHeader10 = calypsoCard.getFileBySfi((byte) 0x10).getHeader();
+    assertThat(fileHeader10.getLid()).isEqualTo((short) 0xF123);
+    assertThat(fileHeader10.getEfType()).isEqualTo(ElementaryFile.Type.CYCLIC);
+    assertThat(fileHeader10.getRecordSize()).isEqualTo((byte) 0xF3);
+    assertThat(fileHeader10.getRecordsNumber()).isEqualTo((byte) 0xF4);
+
+    FileHeader fileHeader11 = calypsoCard.getFileBySfi((byte) 0x11).getHeader();
+    assertThat(fileHeader11.getLid()).isEqualTo((short) 0xF124);
+    assertThat(fileHeader11.getEfType()).isEqualTo(ElementaryFile.Type.SIMULATED_COUNTERS);
+    assertThat(fileHeader11.getRecordSize()).isEqualTo((byte) 0xF3);
+    assertThat(fileHeader11.getRecordsNumber()).isEqualTo((byte) 0xF4);
+
+    FileHeader fileHeader1F = calypsoCard.getFileBySfi((byte) 0x1F).getHeader();
+    assertThat(fileHeader1F.getLid()).isEqualTo((short) 0xF125);
+    assertThat(fileHeader1F.getEfType()).isEqualTo(ElementaryFile.Type.COUNTERS);
+    assertThat(fileHeader1F.getRecordSize()).isEqualTo((byte) 0xF3);
+    assertThat(fileHeader1F.getRecordsNumber()).isEqualTo((byte) 0xF4);
+
+    assertThat(calypsoCard.getFileByLid((short) 0x20FF))
+        .isEqualTo(calypsoCard.getFileBySfi((byte) 0x09));
+  }
+
+  @Test
+  public void prepareGetData_whenGetDataTagIsTRACEABILITY_INFORMATION_shouldPopulateCalypsoCard()
+      throws Exception {
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_TRACEABILITY_INFORMATION_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_GET_DATA_TRACEABILITY_INFORMATION_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareGetData(GetDataTag.TRACEABILITY_INFORMATION);
+
+    assertThat(calypsoCard.getTraceabilityInformation()).isEmpty();
+
+    cardTransactionManager.processCardCommands();
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getTraceabilityInformation())
+        .isEqualTo(ByteArrayUtil.fromHex("00112233445566778899"));
   }
 
   @Test
