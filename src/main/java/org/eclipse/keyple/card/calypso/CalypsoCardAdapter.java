@@ -978,7 +978,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Sets the traceability information received in response to the GET DATA command for the tag
    * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
    *
-   * @param traceabilityInformation A not empty array.
+   * @param traceabilityInformation The traceability information.
    * @since 2.0.4
    */
   void setTraceabilityInformation(byte[] traceabilityInformation) {
