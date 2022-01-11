@@ -241,7 +241,7 @@ public class FileDataAdapterTest {
   }
 
   @Test
-  public void fillContentP3_whenRecordIsNotSet_shouldPutContentAndPadWith0() {
+  public void fillContent_whenRecordIsNotSet_shouldPutContentAndPadWith0() {
     file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
     assertThat(content).isEqualTo(ByteArrayUtil.fromHex("002222"));
@@ -249,7 +249,7 @@ public class FileDataAdapterTest {
 
   @Test
   public void
-      fillContentP3_whenLengthGtActualSize_shouldApplyBinaryOperationAndRightPadWithContent() {
+      fillContent_whenLengthGtActualSize_shouldApplyBinaryOperationAndRightPadWithContent() {
     file.setContent(1, data2);
     file.fillContent(1, data4, 1);
     byte[] content = file.getContent(1);
@@ -257,7 +257,7 @@ public class FileDataAdapterTest {
   }
 
   @Test
-  public void fillContentP3_whenLengthLeActualSize_shouldApplyBinaryOperation() {
+  public void fillContent_whenLengthLeActualSize_shouldApplyBinaryOperation() {
     file.setContent(1, data4);
     file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
