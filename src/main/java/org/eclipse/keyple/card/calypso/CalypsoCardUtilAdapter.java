@@ -154,9 +154,8 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to an Update Record command
-   * sent and received from the card <br>
-   * The records read are added to the {@link CalypsoCardAdapter} file structure
+   * Updates the {@link CalypsoCardAdapter} object with the response to an "Update Record" command
+   * sent and received from the card.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardUpdateRecord the command.
@@ -179,9 +178,7 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Write Record" command
-   * sent and received from the card <br>
-   * The records read are added to the {@link CalypsoCardAdapter} file structure using the dedicated
-   * {@link CalypsoCardAdapter#fillContent } method.
+   * sent and received from the card.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardWriteRecord the command.
@@ -199,7 +196,56 @@ final class CalypsoCardUtilAdapter {
     calypsoCard.fillContent(
         (byte) cmdCardWriteRecord.getSfi(),
         cmdCardWriteRecord.getRecordNumber(),
-        cmdCardWriteRecord.getData());
+        cmdCardWriteRecord.getData(),
+        0);
+  }
+
+  /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to an "Update Binary" command
+   * sent and received from the card.
+   *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardUpdateBinary the command.
+   * @param apduResponse the response received.
+   * @throws CardCommandException if a response from the card was unexpected
+   */
+  private static void updateCalypsoCardUpdateBinary(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardUpdateOrWriteBinary cmdCardUpdateBinary,
+      ApduResponseApi apduResponse)
+      throws CardCommandException {
+
+    cmdCardUpdateBinary.setApduResponse(apduResponse).checkStatus();
+
+    calypsoCard.setContent(
+        cmdCardUpdateBinary.getSfi(),
+        1,
+        cmdCardUpdateBinary.getData(),
+        cmdCardUpdateBinary.getOffset());
+  }
+
+  /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Write Binary" command
+   * sent and received from the card.
+   *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardWriteBinary the command.
+   * @param apduResponse the response received.
+   * @throws CardCommandException if a response from the card was unexpected
+   */
+  private static void updateCalypsoCardWriteBinary(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardUpdateOrWriteBinary cmdCardWriteBinary,
+      ApduResponseApi apduResponse)
+      throws CardCommandException {
+
+    cmdCardWriteBinary.setApduResponse(apduResponse).checkStatus();
+
+    calypsoCard.fillContent(
+        cmdCardWriteBinary.getSfi(),
+        1,
+        cmdCardWriteBinary.getData(),
+        cmdCardWriteBinary.getOffset());
   }
 
   /**
@@ -555,6 +601,14 @@ final class CalypsoCardUtilAdapter {
         break;
       case WRITE_RECORD:
         updateCalypsoCardWriteRecord(calypsoCard, (CmdCardWriteRecord) command, apduResponse);
+        break;
+      case UPDATE_BINARY:
+        updateCalypsoCardUpdateBinary(
+            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
+        break;
+      case WRITE_BINARY:
+        updateCalypsoCardWriteBinary(
+            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
         break;
       case APPEND_RECORD:
         updateCalypsoCardAppendRecord(calypsoCard, (CmdCardAppendRecord) command, apduResponse);

@@ -1434,6 +1434,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1445,6 +1446,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1457,6 +1459,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1676,10 +1679,36 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardTransactionManager prepareUpdateBinary(byte sfi, int offset, byte[] data) {
+    return prepareUpdateOrWriteBinary(true, sfi, offset, data);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.4
+   */
+  @Override
+  public CardTransactionManager prepareWriteBinary(byte sfi, int offset, byte[] data) {
+    return prepareUpdateOrWriteBinary(false, sfi, offset, data);
+  }
+
+  /**
+   * (private)<br>
+   * Prepare an "Update/Write Binary" command.
+   *
+   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
+   *     Binary" command.
+   * @param sfi The SFI.
+   * @param offset The offset.
+   * @param data The data to update/write.
+   * @return The current instance.
+   */
+  private CardTransactionManager prepareUpdateOrWriteBinary(
+      boolean isUpdateCommand, byte sfi, int offset, byte[] data) {
 
     if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
       throw new UnsupportedOperationException(
-          "The 'Update Binary' command is not available for this card.");
+          "The 'Update/Write Binary' command is not available for this card.");
     }
 
     Assert.getInstance()
@@ -1690,24 +1719,31 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
       throw new IllegalArgumentException(
-          "If the SFI is different from 0, then the offset must not be greater than 255.");
+          String.format(
+              "If the SFI is greater than 0, then the offset must be less or equal than %s.",
+              CalypsoCardConstant.OFFSET_MAX));
     }
 
-    if (data.length > calypsoCard.getPayloadCapacity()) {}
+    final int dataLength = data.length;
+    final int payloadCapacity = calypsoCard.getPayloadCapacity();
 
-    // TODO implementation
-    return null;
-  }
+    int currentLength;
+    int currentOffset = offset;
+    int currentIndex = 0;
+    do {
+      currentLength = Math.min(dataLength - currentIndex, payloadCapacity);
+      cardCommandManager.addRegularCommand(
+          new CmdCardUpdateOrWriteBinary(
+              isUpdateCommand,
+              calypsoCard.getCardClass(),
+              sfi,
+              currentOffset,
+              Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
+      currentOffset += currentLength;
+      currentIndex += currentLength;
+    } while (currentIndex < dataLength);
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.4
-   */
-  @Override
-  public CardTransactionManager prepareWriteBinary(byte sfi, int offset, byte[] data) {
-    // TODO implementation
-    return null;
+    return this;
   }
 
   /**

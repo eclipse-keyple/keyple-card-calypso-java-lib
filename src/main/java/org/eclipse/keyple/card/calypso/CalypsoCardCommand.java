@@ -43,6 +43,9 @@ enum CalypsoCardCommand implements CardCommand {
   /** update binary. */
   UPDATE_BINARY("Update Binary", (byte) 0xD6),
 
+  /** write binary. */
+  WRITE_BINARY("Write Binary", (byte) 0xD0),
+
   /** get challenge. */
   GET_CHALLENGE("Get Challenge", (byte) 0x84),
 

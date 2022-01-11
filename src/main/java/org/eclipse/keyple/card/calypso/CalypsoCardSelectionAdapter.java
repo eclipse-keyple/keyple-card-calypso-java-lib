@@ -172,7 +172,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * {@inheritDoc}
    *
    * @since 2.0.0
-   * @deprecated Use {@link #acceptInvalidatedCard()} method instead.
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -199,6 +199,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
