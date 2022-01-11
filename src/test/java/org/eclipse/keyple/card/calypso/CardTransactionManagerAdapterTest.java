@@ -178,9 +178,12 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET0_2B_CMD = "00D68100021122";
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET2_2B_CMD = "00D68102023344";
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD = "00D681040155";
+  private static final String CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD = "00D601000166";
   private static final String CARD_WRITE_BINARY_SFI1_OFFSET0_2B_CMD = "00D08100021122";
   private static final String CARD_WRITE_BINARY_SFI1_OFFSET2_2B_CMD = "00D08102023344";
   private static final String CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD = "00D081040155";
+  private static final String CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD = "00D001000166";
+  private static final String CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD = "00D081000100";
 
   private static final String CARD_SELECT_FILE_CURRENT_CMD = "00A4090002000000";
   private static final String CARD_SELECT_FILE_FIRST_CMD = "00A4020002000000";
@@ -1039,9 +1042,27 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[0]);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateBinary((byte) 1, 256, new byte[1]);
+  @Test
+  public void
+      prepareUpdateBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAWriteRecordCommand()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD, CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareUpdateBinary((byte) 1, 256, ByteArrayUtil.fromHex("66"));
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
   }
 
   @Test
@@ -1135,9 +1156,27 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[0]);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteBinary((byte) 1, 256, new byte[1]);
+  @Test
+  public void
+      prepareWriteBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAWriteRecordCommand()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD, CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareWriteBinary((byte) 1, 256, ByteArrayUtil.fromHex("66"));
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
   }
 
   @Test

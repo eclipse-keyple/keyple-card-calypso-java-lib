@@ -1718,10 +1718,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         .notEmpty(data, "data");
 
     if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
-      throw new IllegalArgumentException(
-          String.format(
-              "If the SFI is greater than 0, then the offset must be less or equal than %s.",
-              CalypsoCardConstant.OFFSET_MAX));
+      // Tips to select the file: add a "Write Binary" command with no effect on the content of the
+      // EF (write 00h at offset 0).
+      cardCommandManager.addRegularCommand(
+          new CmdCardUpdateOrWriteBinary(false, calypsoCard.getCardClass(), sfi, 0, new byte[1]));
     }
 
     final int dataLength = data.length;
@@ -1732,13 +1732,15 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     int currentIndex = 0;
     do {
       currentLength = Math.min(dataLength - currentIndex, payloadCapacity);
+
       cardCommandManager.addRegularCommand(
           new CmdCardUpdateOrWriteBinary(
               isUpdateCommand,
               calypsoCard.getCardClass(),
-              sfi,
+              currentOffset <= CalypsoCardConstant.OFFSET_MAX ? sfi : 0,
               currentOffset,
               Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
+
       currentOffset += currentLength;
       currentIndex += currentLength;
     } while (currentIndex < dataLength);
