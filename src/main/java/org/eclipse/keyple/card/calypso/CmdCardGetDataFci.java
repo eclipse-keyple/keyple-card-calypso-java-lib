@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the Get data APDU commands for the FCI tag.
  *
- * <p>This command can not be sent in session because it would generate a 6Cxx status in contact
- * mode and thus make calculation of the digest impossible.
+ * <p>In contact mode, this command can not be sent in a secure session because it would generate a
+ * 6Cxx status and thus make calculation of the digest impossible.
  *
  * @since 2.0.1
  */
@@ -46,10 +46,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
             "Data object not found (optional mode not available).", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties(
-            "P1 or P2 value not supported (<>004fh, 0062h, 006Fh, 00C0h, 00D0h, 0185h and 5F52h, according to "
-                + "available optional modes).",
-            CardIllegalParameterException.class));
+        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
     m.put(
         0x6283,
         new StatusProperties("Successful execution, FCI request and DF is invalidated.", null));

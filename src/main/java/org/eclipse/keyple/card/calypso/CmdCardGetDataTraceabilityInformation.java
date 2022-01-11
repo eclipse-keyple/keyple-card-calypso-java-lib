@@ -17,17 +17,16 @@ import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
- * Builds the Get data APDU commands.
+ * Builds the Get data APDU commands for the TRACEABILITY INFORMATION tag.
  *
- * <p>This command can not be sent in session because it would generate a 6Cxx status in contact
- * mode and thus make calculation of the digest impossible.
+ * <p>In contact mode, this command can not be sent in a secure session because it would generate a
+ * 6Cxx status and thus make calculation of the digest impossible.
  *
  * @since 2.0.1
  */
-// TODO not used
-final class CmdCardGetDataTrace extends AbstractCardCommand {
+final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
 
-  private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA_TRACE;
+  private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -40,13 +39,7 @@ final class CmdCardGetDataTrace extends AbstractCardCommand {
             "Data object not found (optional mode not available).", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties(
-            "P1 or P2 value not supported (<>004fh, 0062h, 006Fh, 00C0h, 00D0h, 0185h and 5F52h, according to "
-                + "available optional modes).",
-            CardIllegalParameterException.class));
-    m.put(
-        0x6283,
-        new StatusProperties("Successful execution, FCI request and DF is invalidated.", null));
+        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
 
@@ -57,7 +50,7 @@ final class CmdCardGetDataTrace extends AbstractCardCommand {
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.0.1
    */
-  CmdCardGetDataTrace(CalypsoCardClass calypsoCardClass) {
+  CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
 
     super(command);
 

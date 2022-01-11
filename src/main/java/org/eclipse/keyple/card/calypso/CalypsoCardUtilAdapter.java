@@ -119,10 +119,10 @@ final class CalypsoCardUtilAdapter {
    * Depending on the content of the response, either a {@link FileHeader} is added or the {@link
    * DirectoryHeader} is updated
    *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
    * @param command The command.
-   * @param apduResponse the response received.
-   * @throws CardCommandException if a response from the card was unexpected
+   * @param apduResponse The response received.
+   * @throws CardCommandException If a response from the card was unexpected.
    */
   private static void updateCalypsoCardWithFcp(
       CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
@@ -151,6 +151,52 @@ final class CalypsoCardUtilAdapter {
       default:
         throw new IllegalStateException(String.format("Unknown file type: 0x%02X", fileType));
     }
+  }
+
+  /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Get Data" command for
+   * {@link org.calypsonet.terminal.calypso.GetDataTag#EF_LIST} tag received from the card.
+   *
+   * <p>Non-existing file headers will be created for each received descriptor. Existing file
+   * headers will remain unchanged.
+   *
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
+   * @param command The command.
+   * @param apduResponse The response received.
+   * @throws CardCommandException If a response from the card was unexpected.
+   */
+  private static void updateCalypsoCardWithEfList(
+      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      throws CardCommandException {
+
+    command.setApduResponse(apduResponse).checkStatus();
+
+    Map<Byte, FileHeader> sfiToFileHeaderMap = ((CmdCardGetDataEfList) command).getEfHeaders();
+
+    for (Map.Entry<Byte, FileHeader> entry : sfiToFileHeaderMap.entrySet()) {
+      if (calypsoCard.getFileBySfi(entry.getKey()).getHeader() == null) {
+        calypsoCard.setFileHeader(entry.getKey(), entry.getValue());
+      }
+    }
+  }
+
+  /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to a "Get Data" command for
+   * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION} tag received from
+   * the card.
+   *
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
+   * @param command The command.
+   * @param apduResponse The response received.
+   * @throws CardCommandException if a response from the card was unexpected.
+   */
+  private static void updateCalypsoCardWithTraceabilityInformation(
+      CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
+      throws CardCommandException {
+
+    command.setApduResponse(apduResponse).checkStatus();
+
+    calypsoCard.setTraceabilityInformation(apduResponse.getDataOut());
   }
 
   /**
@@ -588,9 +634,14 @@ final class CalypsoCardUtilAdapter {
       case GET_DATA:
         if (command instanceof CmdCardGetDataFci) {
           calypsoCard.initializeWithFci(apduResponse);
-        } else {
-          // GetData FCP
+        } else if (command instanceof CmdCardGetDataFcp) {
           updateCalypsoCardWithFcp(calypsoCard, command, apduResponse);
+        } else if (command instanceof CmdCardGetDataEfList) {
+          updateCalypsoCardWithEfList(calypsoCard, command, apduResponse);
+        } else if (command instanceof CmdCardGetDataTraceabilityInformation) {
+          updateCalypsoCardWithTraceabilityInformation(calypsoCard, command, apduResponse);
+        } else {
+          throw new IllegalStateException("Unknown GET DATA command reference.");
         }
         break;
       case SELECT_FILE:
@@ -647,7 +698,6 @@ final class CalypsoCardUtilAdapter {
         updateCalypsoChangePin((CmdCardChangePin) command, apduResponse);
         break;
       case CHANGE_KEY:
-      case GET_DATA_TRACE:
         throw new IllegalStateException("Shouldn't happen for now!");
       default:
         throw new IllegalStateException("Unknown command reference.");

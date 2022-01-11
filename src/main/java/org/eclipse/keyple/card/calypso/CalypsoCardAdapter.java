@@ -88,6 +88,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private SvDebitLogRecord svDebitLogRecord;
   private boolean isHce;
   private byte[] cardChallenge;
+  private byte[] traceabilityInformation;
   private byte svKvc;
   private byte[] svGetHeader;
   private byte[] svGetData;
@@ -505,8 +506,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public byte[] getTraceabilityInformation() {
-    // TODO implementation
-    return new byte[0];
+    return traceabilityInformation;
   }
 
   /**
@@ -971,6 +971,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void setCardChallenge(byte[] cardChallenge) {
     this.cardChallenge = cardChallenge;
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the traceability information received in response to the GET DATA command for the tag
+   * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
+   *
+   * @param traceabilityInformation A not empty array.
+   */
+  void setTraceabilityInformation(byte[] traceabilityInformation) {
+    this.traceabilityInformation = traceabilityInformation;
   }
 
   /**
