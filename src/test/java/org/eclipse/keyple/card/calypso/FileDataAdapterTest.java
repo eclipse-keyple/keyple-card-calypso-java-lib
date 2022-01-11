@@ -22,10 +22,10 @@ import org.junit.Test;
 public class FileDataAdapterTest {
 
   private FileDataAdapter file;
-  private byte[] data1 = ByteArrayUtil.fromHex("11");
-  private byte[] data2 = ByteArrayUtil.fromHex("2222");
-  private byte[] data3 = ByteArrayUtil.fromHex("333333");
-  private byte[] data4 = ByteArrayUtil.fromHex("44444444");
+  private final byte[] data1 = ByteArrayUtil.fromHex("11");
+  private final byte[] data2 = ByteArrayUtil.fromHex("2222");
+  private final byte[] data3 = ByteArrayUtil.fromHex("333333");
+  private final byte[] data4 = ByteArrayUtil.fromHex("44444444");
 
   @Before
   public void setUp() {
@@ -241,27 +241,27 @@ public class FileDataAdapterTest {
   }
 
   @Test
-  public void fillContent_whenRecordIsNotSet_shouldPutContent() {
-    file.fillContent(1, data1);
+  public void fillContent_whenRecordIsNotSet_shouldPutContentAndPadWith0() {
+    file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(data1);
+    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("002222"));
   }
 
   @Test
   public void
       fillContent_whenLengthGtActualSize_shouldApplyBinaryOperationAndRightPadWithContent() {
-    file.setContent(1, data1);
-    file.fillContent(1, data2);
+    file.setContent(1, data2);
+    file.fillContent(1, data4, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("3322"));
+    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("2266444444"));
   }
 
   @Test
   public void fillContent_whenLengthLeActualSize_shouldApplyBinaryOperation() {
-    file.setContent(1, data2);
-    file.fillContent(1, data1);
+    file.setContent(1, data4);
+    file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("3322"));
+    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("44666644"));
   }
 
   @Test

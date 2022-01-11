@@ -125,6 +125,11 @@ class FileDataAdapter implements FileData {
     return Arrays.copyOfRange(content, dataOffset, toIndex);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
   @Override
   public Integer getContentAsCounterValue(int numCounter) {
 
@@ -174,7 +179,7 @@ class FileDataAdapter implements FileData {
 
   /**
    * (package-private)<br>
-   * Set or replace the entire content of the specified record #numRecord by the provided content.
+   * Sets or replaces the entire content of the specified record #numRecord by the provided content.
    *
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
@@ -198,7 +203,7 @@ class FileDataAdapter implements FileData {
 
   /**
    * (package-private)<br>
-   * Set or replace the content at the specified offset of record #numRecord by a copy of the
+   * Sets or replaces the content at the specified offset of record #numRecord by a copy of the
    * provided content.<br>
    * If actual record content is not set or has a size {@code <} offset, then missing data will be
    * padded with 0.
@@ -229,35 +234,41 @@ class FileDataAdapter implements FileData {
 
   /**
    * (package-private)<br>
-   * Fill the content of the specified #numRecord using a binary OR operation with the provided
-   * content.<br>
-   * If actual record content is not set or has a size {@code <} content size, then missing data
-   * will be completed by the provided content.
+   * Fills the content at the specified offset of the specified record using a binary OR operation
+   * with the provided content.<br>
+   * If actual record content is not set or has a size {@code <} offset + content size, then missing
+   * data will be completed by the provided content.
    *
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
+   * @param offset the offset (should be {@code >=} 0).
    * @since 2.0.0
    */
-  void fillContent(int numRecord, byte[] content) {
+  void fillContent(int numRecord, byte[] content, int offset) {
+    byte[] contentLeftPadded = content;
+    if (offset != 0) {
+      contentLeftPadded = new byte[offset + content.length];
+      System.arraycopy(content, 0, contentLeftPadded, offset, content.length);
+    }
     byte[] actualContent = records.get(numRecord);
     if (actualContent == null) {
-      records.put(numRecord, content);
-    } else if (actualContent.length < content.length) {
+      records.put(numRecord, contentLeftPadded);
+    } else if (actualContent.length < contentLeftPadded.length) {
       for (int i = 0; i < actualContent.length; i++) {
-        content[i] |= actualContent[i];
+        contentLeftPadded[i] |= actualContent[i];
       }
-      records.put(numRecord, content);
+      records.put(numRecord, contentLeftPadded);
     } else {
-      for (int i = 0; i < content.length; i++) {
-        actualContent[i] |= content[i];
+      for (int i = 0; i < contentLeftPadded.length; i++) {
+        actualContent[i] |= contentLeftPadded[i];
       }
     }
   }
 
   /**
    * (package-private)<br>
-   * Add cyclic content at record #1 by rolling previously all actual records contents (record #1 ->
-   * record #2, record #2 -> record #3,...).<br>
+   * Adds cyclic content at record #1 by rolling previously all actual records contents (record #1
+   * -> record #2, record #2 -> record #3,...).<br>
    * This is useful for cyclic files.<br>
    * Note that records are infinitely shifted.
    *

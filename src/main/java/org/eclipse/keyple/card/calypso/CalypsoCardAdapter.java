@@ -118,6 +118,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param powerOnData The card's power-on data.
    * @throws IllegalArgumentException If powerOnData is inconsistent.
+   * @since 2.0.0
    */
   void initializeWithPowerOnData(String powerOnData) {
 
@@ -652,6 +653,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Sets the ratification status
    *
    * @param dfRatified true if the session was ratified.
+   * @since 2.0.0
    */
   void setDfRatified(boolean dfRatified) {
     isDfRatified = dfRatified;
@@ -685,6 +687,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param directoryHeader the DF metadata (should be not null).
    * @return the current instance.
+   * @since 2.0.0
    */
   CalypsoCard setDirectoryHeader(DirectoryHeader directoryHeader) {
     this.directoryHeader = directoryHeader;
@@ -779,6 +782,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * and {@link #getPinAttemptRemaining}.
    *
    * @param pinAttemptCounter the number of remaining attempts to present the PIN code.
+   * @since 2.0.0
    */
   void setPinAttemptRemaining(int pinAttemptCounter) {
     this.pinAttemptCounter = pinAttemptCounter;
@@ -791,6 +795,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param sfi the SFI.
    * @param header the file header (should be not null).
+   * @since 2.0.0
    */
   void setFileHeader(byte sfi, FileHeader header) {
     ElementaryFileAdapter ef = getOrCreateFile(sfi);
@@ -807,6 +812,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param sfi the SFI.
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
+   * @since 2.0.0
    */
   void setContent(byte sfi, int numRecord, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
@@ -821,6 +827,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param sfi the SFI.
    * @param numCounter the counter number (should be {@code >=} 1).
    * @param content the counter value (should be not null and 3 bytes length).
+   * @since 2.0.0
    */
   void setCounter(byte sfi, int numCounter, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
@@ -839,6 +846,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
    * @param offset the offset (should be {@code >=} 0).
+   * @since 2.0.0
    */
   void setContent(byte sfi, int numRecord, byte[] content, int offset) {
     ElementaryFile ef = getOrCreateFile(sfi);
@@ -847,19 +855,20 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   /**
    * (package-private)<br>
-   * Fill the content of the specified #numRecord of the provided SFI using a binary OR operation
-   * with the provided content.<br>
+   * Fills the content at the specified offset of the specified record of the provided SFI using a
+   * binary OR operation with the provided content.<br>
    * If EF does not exist, then it is created.<br>
-   * If actual record content is not set or has a size {@code <} content size, then missing data
-   * will be completed by the provided content.
+   * If actual record content is not set or has a size {@code <} offset + content size, then missing
+   * data will be completed by the provided content.
    *
    * @param sfi the SFI.
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
+   * @since 2.0.4
    */
-  void fillContent(byte sfi, int numRecord, byte[] content) {
+  void fillContent(byte sfi, int numRecord, byte[] content, int offset) {
     ElementaryFile ef = getOrCreateFile(sfi);
-    ((FileDataAdapter) ef.getData()).fillContent(numRecord, content);
+    ((FileDataAdapter) ef.getData()).fillContent(numRecord, content, offset);
   }
 
   /**
@@ -872,6 +881,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param sfi the SFI.
    * @param content the content (should be not empty).
+   * @since 2.0.0
    */
   void addCyclicContent(byte sfi, byte[] content) {
     ElementaryFile ef = getOrCreateFile(sfi);
@@ -882,6 +892,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * (package-private)<br>
    * Make a backup of the Elementary Files.<br>
    * This method should be used before starting a card secure session.
+   *
+   * @since 2.0.0
    */
   void backupFiles() {
     copyMapFiles(efBySfi, efBySfiBackup);
@@ -893,6 +905,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Restore the last backup of Elementary Files.<br>
    * This method should be used when SW of the card close secure session command is unsuccessful or
    * if secure session is aborted.
+   *
+   * @since 2.0.0
    */
   void restoreFiles() {
     copyMapFiles(efBySfiBackup, efBySfi);
@@ -953,6 +967,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Sets the challenge received in response to the GET CHALLENGE command.
    *
    * @param cardChallenge A not empty array.
+   * @since 2.0.0
    */
   void setCardChallenge(byte[] cardChallenge) {
     this.cardChallenge = cardChallenge;
@@ -963,6 +978,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Sets the SV signature.
    *
    * @param svOperationSignature A not empty array.
+   * @since 2.0.0
    */
   void setSvOperationSignature(byte[] svOperationSignature) {
     this.svOperationSignature = svOperationSignature;

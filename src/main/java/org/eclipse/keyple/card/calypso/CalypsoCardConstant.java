@@ -23,33 +23,39 @@ final class CalypsoCardConstant {
   static final int MASK_4_BITS = 0xF; // 15
   static final int MASK_5_BITS = 0x1F; // 31
   static final int MASK_7_BITS = 0x7F; // 127
+  static final int MASK_15_BITS = 0x7FFF; // 32 767
+
   static final int MASK_1_BYTE = 0xFF; // 255
-  static final int MASK_2_BYTES = 0xFFFF;
-  static final int MASK_3_BYTES = 0xFFFFFF;
+  static final int MASK_2_BYTES = 0xFFFF; // 65 535
+  static final int MASK_3_BYTES = 0xFFFFFF; // 16 777 215
 
   // SFI
-  static final int SFI_MIN = 0;
+  static final int SFI_MIN = 1;
   static final int SFI_MAX = MASK_5_BITS;
 
   // Record number
   static final int NB_REC_MIN = 1;
-  static final int NB_REC_MAX = 255;
+  static final int NB_REC_MAX = MASK_1_BYTE;
 
   // Counter number
   static final int NB_CNT_MIN = 1;
-  static final int NB_CNT_MAX = 255;
+  static final int NB_CNT_MAX = MASK_1_BYTE;
 
   // Counter value
   static final int CNT_VALUE_MIN = 0;
-  static final int CNT_VALUE_MAX = 16777215;
+  static final int CNT_VALUE_MAX = MASK_3_BYTES;
 
   // Offset
   static final int OFFSET_MIN = 0;
-  static final int OFFSET_MAX = 255; // 0xFF
-  static final int OFFSET_BINARY_MAX = 32767; // 0x7FFF
+  static final int OFFSET_MAX = MASK_1_BYTE;
+  static final int OFFSET_BINARY_MAX = MASK_15_BITS;
+
+  // Data
+  static final int DATA_LENGTH_MIN = 1;
+  static final int DATA_LENGTH_MAX = MASK_1_BYTE;
 
   // Le max
-  static final int LE_MAX = 255;
+  static final int LE_MAX = MASK_1_BYTE;
 
   // File Type Values
   static final int FILE_TYPE_MF = 1;

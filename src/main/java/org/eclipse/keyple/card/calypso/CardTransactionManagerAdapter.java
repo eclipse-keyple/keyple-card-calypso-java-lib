@@ -1434,6 +1434,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1445,6 +1446,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1457,6 +1459,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
   @Deprecated
@@ -1676,27 +1679,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardTransactionManager prepareUpdateBinary(byte sfi, int offset, byte[] data) {
-
-    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      throw new UnsupportedOperationException(
-          "The 'Update Binary' command is not available for this card.");
-    }
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
-        .notEmpty(data, "data");
-
-    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
-      throw new IllegalArgumentException(
-          "If the SFI is different from 0, then the offset must not be greater than 255.");
-    }
-
-    if (data.length > calypsoCard.getPayloadCapacity()) {}
-
-    // TODO implementation
-    return null;
+    return prepareUpdateOrWriteBinary(true, sfi, offset, data);
   }
 
   /**
@@ -1706,8 +1689,63 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardTransactionManager prepareWriteBinary(byte sfi, int offset, byte[] data) {
-    // TODO implementation
-    return null;
+    return prepareUpdateOrWriteBinary(false, sfi, offset, data);
+  }
+
+  /**
+   * (private)<br>
+   * Prepare an "Update/Write Binary" command.
+   *
+   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
+   *     Binary" command.
+   * @param sfi The SFI.
+   * @param offset The offset.
+   * @param data The data to update/write.
+   * @return The current instance.
+   */
+  private CardTransactionManager prepareUpdateOrWriteBinary(
+      boolean isUpdateCommand, byte sfi, int offset, byte[] data) {
+
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+      throw new UnsupportedOperationException(
+          "The 'Update/Write Binary' command is not available for this card.");
+    }
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+        .notEmpty(data, "data");
+
+    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
+      // Tips to select the file: add a "Write Binary" command with no effect on the content of the
+      // EF (write 00h at offset 0).
+      cardCommandManager.addRegularCommand(
+          new CmdCardUpdateOrWriteBinary(false, calypsoCard.getCardClass(), sfi, 0, new byte[1]));
+    }
+
+    final int dataLength = data.length;
+    final int payloadCapacity = calypsoCard.getPayloadCapacity();
+
+    int currentLength;
+    int currentOffset = offset;
+    int currentIndex = 0;
+    do {
+      currentLength = Math.min(dataLength - currentIndex, payloadCapacity);
+
+      cardCommandManager.addRegularCommand(
+          new CmdCardUpdateOrWriteBinary(
+              isUpdateCommand,
+              calypsoCard.getCardClass(),
+              sfi,
+              currentOffset,
+              Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
+
+      currentOffset += currentLength;
+      currentIndex += currentLength;
+    } while (currentIndex < dataLength);
+
+    return this;
   }
 
   /**
