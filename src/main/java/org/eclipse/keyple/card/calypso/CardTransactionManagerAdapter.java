@@ -1737,7 +1737,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           new CmdCardUpdateOrWriteBinary(
               isUpdateCommand,
               calypsoCard.getCardClass(),
-              currentOffset <= CalypsoCardConstant.OFFSET_MAX ? sfi : 0,
+              sfi,
               currentOffset,
               Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
 

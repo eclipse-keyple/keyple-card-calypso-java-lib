@@ -30,7 +30,7 @@ final class CalypsoCardConstant {
   static final int MASK_3_BYTES = 0xFFFFFF; // 16 777 215
 
   // SFI
-  static final int SFI_MIN = 0;
+  static final int SFI_MIN = 1;
   static final int SFI_MAX = MASK_5_BITS;
 
   // Record number

@@ -1013,8 +1013,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateBinary_whenSfiIsNegative_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateBinary((byte) -1, 1, new byte[1]);
+  public void prepareUpdateBinary_whenSfiIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareUpdateBinary((byte) 0, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1127,8 +1127,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteBinary_whenSfiIsNegative_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteBinary((byte) -1, 1, new byte[1]);
+  public void prepareWriteBinary_whenSfiIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareWriteBinary((byte) 0, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
