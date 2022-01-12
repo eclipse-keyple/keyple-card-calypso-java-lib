@@ -105,7 +105,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
                 cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02X, REC:%d", sfi, recordNumber);
+      String extraInfo = String.format("SFI:%02Xh, REC:%d", sfi, recordNumber);
       addSubName(extraInfo);
     }
   }

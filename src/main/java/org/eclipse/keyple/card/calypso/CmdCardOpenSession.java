@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 final class CmdCardOpenSession extends AbstractCardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSession.class);
-  private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02X, REC:%d";
+  private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 

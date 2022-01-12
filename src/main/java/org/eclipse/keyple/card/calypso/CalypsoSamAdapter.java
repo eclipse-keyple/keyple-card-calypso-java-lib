@@ -95,8 +95,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       if (logger.isTraceEnabled()) {
         logger.trace(
             String.format(
-                "SAM %s PLATFORM = %02X, APPTYPE = %02X, APPSUBTYPE = %02X, SWISSUER = %02X, SWVERSION = "
-                    + "%02X, SWREVISION = %02X",
+                "SAM %s PLATFORM = %02Xh, APPTYPE = %02Xh, APPSUBTYPE = %02Xh, SWISSUER = %02Xh, SWVERSION = "
+                    + "%02Xh, SWREVISION = %02Xh",
                 samProductType.name(),
                 platform,
                 applicationType,

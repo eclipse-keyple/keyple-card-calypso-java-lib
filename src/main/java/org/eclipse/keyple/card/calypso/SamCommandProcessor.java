@@ -242,8 +242,8 @@ class SamCommandProcessor {
           calypsoCard.isExtendedModeSupported());
       logger.debug(
           "initialize: KIF = {}, KVC {}, DIGESTDATA = {}",
-          String.format("%02X", kif),
-          String.format("%02X", kvc),
+          String.format("%02Xh", kif),
+          String.format("%02Xh", kvc),
           ByteArrayUtil.toHex(digestData));
     }
 

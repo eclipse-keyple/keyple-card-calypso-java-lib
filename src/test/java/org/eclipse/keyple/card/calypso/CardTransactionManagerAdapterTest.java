@@ -174,6 +174,16 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
   private static final String CARD_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
   private static final String CARD_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD = "00B0810001";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP = "11" + SW1SW2_OK;
+  private static final String CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD = "00B0010001";
+  private static final String CARD_READ_BINARY_SFI0_OFFSET256_1B_RSP = "66" + SW1SW2_OK;
+  private static final String CARD_READ_BINARY_SFI1_OFFSET0_2B_CMD = "00B0810002";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET0_2B_RSP = "1122" + SW1SW2_OK;
+  private static final String CARD_READ_BINARY_SFI1_OFFSET2_2B_CMD = "00B0810202";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET2_2B_RSP = "3344" + SW1SW2_OK;
+  private static final String CARD_READ_BINARY_SFI1_OFFSET4_1B_CMD = "00B0810401";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET4_1B_RSP = "55" + SW1SW2_OK;
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET0_2B_CMD = "00D68100021122";
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET2_2B_CMD = "00D68102023344";
   private static final String CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD = "00D681040155";
@@ -182,7 +192,6 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_WRITE_BINARY_SFI1_OFFSET2_2B_CMD = "00D08102023344";
   private static final String CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD = "00D081040155";
   private static final String CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD = "00D001000166";
-  private static final String CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD = "00D081000100";
 
   private static final String CARD_SELECT_FILE_CURRENT_CMD = "00A4090002000000";
   private static final String CARD_SELECT_FILE_FIRST_CMD = "00A4020002000000";
@@ -1103,6 +1112,118 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenSfiIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 0, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenSfiIsHigherThan31_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 32, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenOffsetIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 1, -1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenOffsetIsHigherThan32767_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 1, 32768, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenNbBytesToReadIsLessThan1_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 1, 1, 0);
+  }
+
+  @Test
+  public void
+      prepareReadBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, CARD_READ_BINARY_SFI0_OFFSET256_1B_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareReadBinary((byte) 1, 256, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
+        .startsWith(ByteArrayUtil.fromHex("1100"))
+        .endsWith(ByteArrayUtil.fromHex("0066"))
+        .hasSize(257);
+  }
+
+  @Test
+  public void prepareReadBinary_whenNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
+      throws Exception {
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
+        .isEqualTo(ByteArrayUtil.fromHex("11"));
+  }
+
+  @Test
+  public void
+      prepareReadBinary_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_2B_CMD,
+            CARD_READ_BINARY_SFI1_OFFSET2_2B_CMD,
+            CARD_READ_BINARY_SFI1_OFFSET4_1B_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_READ_BINARY_SFI1_OFFSET0_2B_RSP,
+            CARD_READ_BINARY_SFI1_OFFSET2_2B_RSP,
+            CARD_READ_BINARY_SFI1_OFFSET4_1B_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager.prepareReadBinary((byte) 1, 0, 5);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
+        .isEqualTo(ByteArrayUtil.fromHex("1122334455"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void prepareUpdateBinary_whenSfiIsZero_shouldThrowIAE() {
     cardTransactionManager.prepareUpdateBinary((byte) 0, 1, new byte[1]);
   }
@@ -1134,13 +1255,14 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareUpdateBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAWriteRecordCommand()
+      prepareUpdateBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(
-            CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD, CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
@@ -1248,13 +1370,14 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareWriteBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAWriteRecordCommand()
+      prepareWriteBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(
-            CARD_WRITE_BINARY_SFI1_OFFSET0_00_CMD, CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))

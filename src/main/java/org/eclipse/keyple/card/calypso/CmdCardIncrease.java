@@ -121,7 +121,7 @@ final class CmdCardIncrease extends AbstractCardCommand {
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format("SFI:%02X, COUNTER:%d, INCREMENT:%d", sfi, counterNumber, incValue);
+          String.format("SFI:%02Xh, COUNTER:%d, INCREMENT:%d", sfi, counterNumber, incValue);
       addSubName(extraInfo);
     }
   }

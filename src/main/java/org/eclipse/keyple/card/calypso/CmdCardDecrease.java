@@ -122,7 +122,7 @@ final class CmdCardDecrease extends AbstractCardCommand {
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format("SFI:%02X, COUNTER:%d, DECREMENT:%d", sfi, counterNumber, decValue);
+          String.format("SFI:%02Xh, COUNTER:%d, DECREMENT:%d", sfi, counterNumber, decValue);
       addSubName(extraInfo);
     }
   }

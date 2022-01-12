@@ -19,83 +19,65 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the "Update/Write Binary" APDU command.
+ * Builds the "Read Binary" APDU command.
  *
  * @since 2.0.4
  */
-final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
+final class CmdCardReadBinary extends AbstractCardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardUpdateOrWriteBinary.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardReadBinary.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
         new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
     m.put(
-        0x6400,
-        new StatusProperties(
-            "Too many modifications in session", CardSessionBufferOverflowException.class));
-    m.put(
-        0x6700,
-        new StatusProperties(
-            "Lc value not supported, or Offset+Lc > file size", CardDataAccessException.class));
-    m.put(
         0x6981,
-        new StatusProperties("Incorrect EF type: not a Binary EF", CardDataAccessException.class));
+        new StatusProperties("Incorrect EF type: not a Binary EF.", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no secure session, incorrect key, encryption required, PKI mode and not Always access mode)",
+            "Security conditions not fulfilled (PIN code not presented, encryption required).",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, DF is invalidated, etc..)",
-            CardAccessForbiddenException.class));
+            "Access forbidden (Never access mode).", CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h.",
             CardDataAccessException.class));
     m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Offset not in the file (offset overflow)", CardDataAccessException.class));
+            "Offset not in the file (offset overflow).", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 value not supported", CardIllegalParameterException.class));
+        new StatusProperties("P1 value not supported.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   private final byte sfi;
   private final int offset;
-  private final byte[] data;
 
   /**
    * (package-private)<br>
    * Constructor.
    *
-   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
-   *     Binary" command.
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param sfi the sfi to select.
-   * @param offset the offset.
-   * @param data the data to write.
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param sfi The sfi to select.
+   * @param offset The offset.
+   * @param length The number of bytes to read.
    * @since 2.0.4
    */
-  CmdCardUpdateOrWriteBinary(
-      boolean isUpdateCommand,
-      CalypsoCardClass calypsoCardClass,
-      byte sfi,
-      int offset,
-      byte[] data) {
+  CmdCardReadBinary(CalypsoCardClass calypsoCardClass, byte sfi, int offset, byte length) {
 
-    super(isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY);
+    super(CalypsoCardCommand.READ_BINARY);
 
     this.sfi = sfi;
     this.offset = offset;
-    this.data = data;
 
     byte msb = (byte) (offset >> Byte.SIZE);
     byte lsb = (byte) (offset & 0xFF);
@@ -111,11 +93,11 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,
-                data,
-                null)));
+                null,
+                length)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d", sfi, offset);
+      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d, LENGTH:%d", sfi, offset, length);
       addSubName(extraInfo);
     }
   }
@@ -123,14 +105,12 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * <p>This command modified the contents of the card and therefore uses the session buffer.
-   *
-   * @return True
+   * @return false
    * @since 2.0.4
    */
   @Override
   boolean isSessionBufferUsed() {
-    return true;
+    return false;
   }
 
   /**
@@ -151,16 +131,6 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    */
   int getOffset() {
     return offset;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The data.
-   * @since 2.0.4
-   */
-  byte[] getData() {
-    return data;
   }
 
   /**
