@@ -223,10 +223,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
             CalypsoCardConstant.NB_REC_MAX,
             "recordNumber");
 
-    CmdCardReadRecords cmdCardReadRecords =
+    commands.add(
         new CmdCardReadRecords(
-            CalypsoCardClass.ISO, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0);
-    commands.add(cmdCardReadRecords);
+            CalypsoCardClass.ISO, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0));
 
     return this;
   }
@@ -270,6 +269,12 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         break;
       case FCP_FOR_CURRENT_FILE:
         commands.add(new CmdCardGetDataFcp(CalypsoCardClass.ISO));
+        break;
+      case EF_LIST:
+        commands.add(new CmdCardGetDataEfList(CalypsoCardClass.ISO));
+        break;
+      case TRACEABILITY_INFORMATION:
+        commands.add(new CmdCardGetDataTraceabilityInformation(CalypsoCardClass.ISO));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());

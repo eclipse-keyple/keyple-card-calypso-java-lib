@@ -198,7 +198,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     applicationSubType = startupInfo[SI_APPLICATION_SUBTYPE];
     if (applicationSubType == (byte) 0x00 || applicationSubType == (byte) 0xFF) {
       throw new IllegalArgumentException(
-          "Unexpected application subtype: " + String.format("%02X", applicationSubType));
+          "Unexpected application subtype: " + String.format("%02Xh", applicationSubType));
     }
     sessionModification = startupInfo[SI_BUFFER_SIZE_INDICATOR];
 
@@ -212,7 +212,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (sessionModification < 0x04 || sessionModification > 0x37) {
         throw new IllegalArgumentException(
             "Wrong session modification value for a Basic type (should be between 04h and 37h): "
-                + String.format("%02X", sessionModification));
+                + String.format("%02Xh", sessionModification));
       }
       calypsoCardClass = CalypsoCardClass.ISO;
       isModificationCounterInBytes = false;
@@ -224,7 +224,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (sessionModification < (byte) 0x06 || sessionModification > (byte) 0x37) {
         throw new IllegalArgumentException(
             "Session modifications byte should be in range 06h to 47h. Was: "
-                + String.format("%02X", sessionModification));
+                + String.format("%02Xh", sessionModification));
       }
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
     }

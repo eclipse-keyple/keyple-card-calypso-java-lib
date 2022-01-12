@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Implementation of `prepareUpdateBinary` and `prepareWriteBinary` methods (issue [#34])
+- Implementation of `EF_LIST` and `TRACEABILITY_INFORMATION` tags to `prepareGetData` methods (issue [#33]).
+- Implementation of `prepareUpdateBinary` and `prepareWriteBinary` methods (issue [#34]).
+- Implementation of `prepareReadBinary` method (issue [#35]).
 ### Fixed
 - Revision 2 case for `prepareSelectFile` method (issue [#32]).
 ### Upgraded
@@ -47,7 +49,9 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#35]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/35
 [#34]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/34
+[#33]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/33
 [#32]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/32
 [#30]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/30
 [#28]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/28

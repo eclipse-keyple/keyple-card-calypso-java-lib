@@ -76,9 +76,9 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
-   * Updates the {@link CalypsoCardAdapter} object with the response to a Read Records command
-   * received from the card <br>
-   * The records read are added to the {@link CalypsoCardAdapter} file structure
+   * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Records' command
+   * received from the card.<br>
+   * The records read are added to the {@link CalypsoCardAdapter} file structure.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardReadRecords the command.
@@ -114,8 +114,44 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Binary' command
+   * received from the card.<br>
+   * The records read are added to the {@link CalypsoCardAdapter} file structure.
+   *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardReadBinary the command.
+   * @param apduResponse the response received.
+   * @param isSessionOpen true when a secure session is open.
+   * @throws CardCommandException if a response from the card was unexpected
+   */
+  private static void updateCalypsoCardReadBinary(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardReadBinary cmdCardReadBinary,
+      ApduResponseApi apduResponse,
+      boolean isSessionOpen)
+      throws CardCommandException {
+
+    if (isSessionOpen) {
+      cmdCardReadBinary.setApduResponse(apduResponse).checkStatus();
+    } else {
+      try {
+        cmdCardReadBinary.setApduResponse(apduResponse).checkStatus();
+      } catch (CardDataAccessException e) {
+        // best effort mode, do not throw exception for "file not found" and "record not found"
+        // errors.
+        if (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83) {
+          throw e;
+        }
+      }
+    }
+
+    calypsoCard.setContent(
+        cmdCardReadBinary.getSfi(), 1, apduResponse.getDataOut(), cmdCardReadBinary.getOffset());
+  }
+
+  /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
-   * received from the card <br>
+   * received from the card.<br>
    * Depending on the content of the response, either a {@link FileHeader} is added or the {@link
    * DirectoryHeader} is updated
    *
@@ -149,7 +185,7 @@ final class CalypsoCardUtilAdapter {
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
       default:
-        throw new IllegalStateException(String.format("Unknown file type: 0x%02X", fileType));
+        throw new IllegalStateException(String.format("Unknown file type: %02Xh", fileType));
     }
   }
 
@@ -299,8 +335,8 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Read Records command
-   * received from the card <br>
-   * The records read are added to the {@link CalypsoCardAdapter} file structure
+   * received from the card.<br>
+   * The records read are added to the {@link CalypsoCardAdapter} file structure.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardAppendRecord the command.
@@ -322,7 +358,7 @@ final class CalypsoCardUtilAdapter {
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a Decrease command received
    * from the card <br>
-   * The counter value is updated in the {@link CalypsoCardAdapter} file structure
+   * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardDecrease the command.
@@ -345,7 +381,7 @@ final class CalypsoCardUtilAdapter {
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to an Increase command received
    * from the card <br>
-   * The counter value is updated in the {@link CalypsoCardAdapter} file structure
+   * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardIncrease the command.
@@ -366,7 +402,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
-   * Parses the response to a Get Challenge command received from the card <br>
+   * Parses the response to a Get Challenge command received from the card.<br>
    * The card challenge value is stored in {@link CalypsoCardAdapter}.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
@@ -386,7 +422,7 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Verify Pin" command
-   * received from the card <br>
+   * received from the card.<br>
    * The PIN attempt counter value is stored in the {@link CalypsoCardAdapter}<br>
    * CardPinException are filtered when the initial command targets the reading of the attempt
    * counter.
@@ -657,14 +693,6 @@ final class CalypsoCardUtilAdapter {
       case WRITE_RECORD:
         updateCalypsoCardWriteRecord(calypsoCard, (CmdCardWriteRecord) command, apduResponse);
         break;
-      case UPDATE_BINARY:
-        updateCalypsoCardUpdateBinary(
-            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
-        break;
-      case WRITE_BINARY:
-        updateCalypsoCardWriteBinary(
-            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
-        break;
       case APPEND_RECORD:
         updateCalypsoCardAppendRecord(calypsoCard, (CmdCardAppendRecord) command, apduResponse);
         break;
@@ -679,6 +707,18 @@ final class CalypsoCardUtilAdapter {
         break;
       case CLOSE_SESSION:
         updateCalypsoCardCloseSession((CmdCardCloseSession) command, apduResponse);
+        break;
+      case READ_BINARY:
+        updateCalypsoCardReadBinary(
+            calypsoCard, (CmdCardReadBinary) command, apduResponse, isSessionOpen);
+        break;
+      case UPDATE_BINARY:
+        updateCalypsoCardUpdateBinary(
+            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
+        break;
+      case WRITE_BINARY:
+        updateCalypsoCardWriteBinary(
+            calypsoCard, (CmdCardUpdateOrWriteBinary) command, apduResponse);
         break;
       case GET_CHALLENGE:
         updateCalypsoCardGetChallenge(calypsoCard, (CmdCardGetChallenge) command, apduResponse);

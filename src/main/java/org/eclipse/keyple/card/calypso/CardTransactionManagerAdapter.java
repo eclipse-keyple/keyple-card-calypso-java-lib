@@ -304,8 +304,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       logger.debug(
           "processAtomicOpening => opening: CARDCHALLENGE = {}, CARDKIF = {}, CARDKVC = {}",
           ByteArrayUtil.toHex(sessionCardChallenge),
-          cardKif != null ? String.format("%02X", cardKif) : null,
-          cardKvc != null ? String.format("%02X", cardKvc) : null);
+          cardKif != null ? String.format("%02Xh", cardKif) : null,
+          cardKvc != null ? String.format("%02Xh", cardKvc) : null);
     }
 
     Byte kvc = samCommandProcessor.computeKvc(writeAccessLevel, cardKvc);
@@ -1589,8 +1589,41 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardTransactionManager prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
-    // TODO implementation
-    return null;
+
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+      throw new UnsupportedOperationException(
+          "The 'Read Binary' command is not available for this card.");
+    }
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+        .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
+
+    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
+      // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
+      cardCommandManager.addRegularCommand(
+          new CmdCardReadBinary(calypsoCard.getCardClass(), sfi, 0, (byte) 1));
+    }
+
+    final int payloadCapacity = calypsoCard.getPayloadCapacity();
+    final CalypsoCardClass cardClass = calypsoCard.getCardClass();
+
+    int currentLength;
+    int currentOffset = offset;
+    int nbBytesRemainingToRead = nbBytesToRead;
+    do {
+      currentLength = Math.min(nbBytesRemainingToRead, payloadCapacity);
+
+      cardCommandManager.addRegularCommand(
+          new CmdCardReadBinary(cardClass, sfi, currentOffset, (byte) currentLength));
+
+      currentOffset += currentLength;
+      nbBytesRemainingToRead -= currentLength;
+    } while (nbBytesRemainingToRead > 0);
+
+    return this;
   }
 
   /**
@@ -1725,14 +1758,14 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         .notEmpty(data, "data");
 
     if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
-      // Tips to select the file: add a "Write Binary" command with no effect on the content of the
-      // EF (write 00h at offset 0).
+      // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
       cardCommandManager.addRegularCommand(
-          new CmdCardUpdateOrWriteBinary(false, calypsoCard.getCardClass(), sfi, 0, new byte[1]));
+          new CmdCardReadBinary(calypsoCard.getCardClass(), sfi, 0, (byte) 1));
     }
 
     final int dataLength = data.length;
     final int payloadCapacity = calypsoCard.getPayloadCapacity();
+    final CalypsoCardClass cardClass = calypsoCard.getCardClass();
 
     int currentLength;
     int currentOffset = offset;
@@ -1743,7 +1776,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       cardCommandManager.addRegularCommand(
           new CmdCardUpdateOrWriteBinary(
               isUpdateCommand,
-              calypsoCard.getCardClass(),
+              cardClass,
               sfi,
               currentOffset,
               Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));

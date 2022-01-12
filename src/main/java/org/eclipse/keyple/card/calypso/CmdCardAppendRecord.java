@@ -95,7 +95,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, newRecordData, null)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02X", sfi);
+      String extraInfo = String.format("SFI:%02Xh", sfi);
       addSubName(extraInfo);
     }
   }
