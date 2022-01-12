@@ -1261,7 +1261,8 @@ public class CardTransactionManagerAdapterTest {
     CardRequestSpi cardCardRequest =
         createCardRequest(
             CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
@@ -1375,7 +1376,8 @@ public class CardTransactionManagerAdapterTest {
     CardRequestSpi cardCardRequest =
         createCardRequest(
             CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
