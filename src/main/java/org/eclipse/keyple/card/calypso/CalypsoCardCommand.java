@@ -67,9 +67,6 @@ enum CalypsoCardCommand implements CardCommand {
   /** verify PIN */
   VERIFY_PIN("Verify PIN", (byte) 0x20),
 
-  /** get data for traceability */
-  GET_DATA_TRACE("Get Data'Trace'", (byte) 0xCA),
-
   /** SV Get */
   SV_GET("SV Get", (byte) 0x7C),
 

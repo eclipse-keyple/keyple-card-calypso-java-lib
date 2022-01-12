@@ -21,8 +21,8 @@ import org.eclipse.keyple.core.util.BerTlvUtil;
  * (package-private)<br>
  * Builds the Get data APDU commands for the FCP tag.
  *
- * <p>This command can not be sent in session because it would generate a 6Cxx status in contact
- * mode and thus make calculation of the digest impossible.
+ * <p>In contact mode, this command can not be sent in a secure session because it would generate a
+ * 6Cxx status and thus make calculation of the digest impossible.
  *
  * <p>The value of the Proprietary Information tag is extracted from the Select File response and
  * made available using the corresponding getter.
@@ -41,10 +41,13 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
     Map<Integer, StatusProperties> m =
         new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
     m.put(
-        0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        0x6A88,
+        new StatusProperties(
+            "Data object not found (optional mode not available).", CardDataAccessException.class));
     m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
-    m.put(0x6119, new StatusProperties("Correct execution (ISO7816 T=0).", null));
+    m.put(
+        0x6B00,
+        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
 
@@ -86,8 +89,8 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return The content of the proprietary information tag present in the response to the Select
-   *     File command
+   * @return The content of the proprietary information tag present in the response to the Get Data
+   *     (FCP) command
    * @since 2.0.1
    */
   byte[] getProprietaryInformation() {
