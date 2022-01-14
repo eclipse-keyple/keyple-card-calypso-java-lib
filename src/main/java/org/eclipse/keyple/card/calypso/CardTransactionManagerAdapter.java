@@ -90,6 +90,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
   private static final int APDU_HEADER_LENGTH = 5;
 
+  private static final String OFFSET = "offset";
+
   /** The reader for the card. */
   private final ProxyReaderApi cardReader;
   /** The card security settings used to manage the secure session */
@@ -1578,8 +1580,46 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public CardTransactionManager prepareReadRecordMultiple(
       byte sfi, int firstRecordNumber, int nbRecordsToRead, int offset, int nbBytesToRead) {
-    // TODO implementation
-    return null;
+
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+        && calypsoCard.getProductType() != CalypsoCard.ProductType.LIGHT) {
+      throw new UnsupportedOperationException(
+          "The 'Read Record Multiple' command is not available for this card.");
+    }
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            firstRecordNumber,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX,
+            "firstRecordNumber")
+        .isInRange(
+            nbRecordsToRead,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX - firstRecordNumber,
+            "nbRecordsToRead")
+        .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, OFFSET)
+        .isInRange(
+            nbBytesToRead,
+            CalypsoCardConstant.DATA_LENGTH_MIN,
+            CalypsoCardConstant.DATA_LENGTH_MAX - offset,
+            "nbBytesToRead");
+
+    final CalypsoCardClass cardClass = calypsoCard.getCardClass();
+    final int nbRecordsReadByCommand = calypsoCard.getPayloadCapacity() / nbBytesToRead;
+    final int lastRecordNumber = firstRecordNumber + nbRecordsToRead - 1;
+
+    int currentRecordNumber = firstRecordNumber;
+
+    while (currentRecordNumber <= lastRecordNumber) {
+      cardCommandManager.addRegularCommand(
+          new CmdCardReadRecordMultiple(
+              cardClass, sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
+      currentRecordNumber += nbRecordsReadByCommand;
+    }
+
+    return this;
   }
 
   /**
@@ -1598,7 +1638,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
-            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
         .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
 
     if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
@@ -1754,7 +1794,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
-            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
         .notEmpty(data, "data");
 
     if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
@@ -2137,9 +2177,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
     // reset SV data in CalypsoCard if any
     calypsoCard.setSvData((byte) 0, null, null, 0, 0, null, null);
-    prepareReadRecordFile(
+    prepareReadRecord(
         CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, CalypsoCardConstant.SV_RELOAD_LOG_FILE_NB_REC);
-    prepareReadRecordFile(
+    prepareReadRecord(
         CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI,
         1,
         CalypsoCardConstant.SV_DEBIT_LOG_FILE_NB_REC,

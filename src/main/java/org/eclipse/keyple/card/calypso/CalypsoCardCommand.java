@@ -49,6 +49,9 @@ enum CalypsoCardCommand implements CardCommand {
   /** write binary. */
   WRITE_BINARY("Write Binary", (byte) 0xD0),
 
+  /** read record multiple. */
+  READ_RECORD_MULTIPLE("Read Record Multiple", (byte) 0xB3),
+
   /** get challenge. */
   GET_CHALLENGE("Get Challenge", (byte) 0x84),
 

@@ -72,6 +72,7 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String SW1SW2_OK = "9000";
   private static final String SW1SW2_KO = "6700";
+  private static final String SW1SW2_6200 = "6200";
   private static final String SW1SW2_INCORRECT_SIGNATURE = "6988";
   private static final String SAM_CHALLENGE = "C1C2C3C4";
   private static final String CARD_CHALLENGE = "C1C2C3C4C5C6C7C8";
@@ -174,6 +175,17 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
   private static final String CARD_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
   private static final String CARD_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
+  private static final String CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD =
+      "00B3010D045402030100";
+  private static final String CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP =
+      "1122" + SW1SW2_6200;
+  private static final String CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_CMD =
+      "00B3030D045402030100";
+  private static final String CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_RSP =
+      "3344" + SW1SW2_6200;
+  private static final String CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_CMD =
+      "00B3050D045402030100";
+  private static final String CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_RSP = "55" + SW1SW2_OK;
   private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD = "00B0810001";
   private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP = "11" + SW1SW2_OK;
   private static final String CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD = "00B0010001";
@@ -1104,6 +1116,136 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
+  public void prepareReadRecordMultiple_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE() {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenSfiIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 0, 1, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenSfiIsHigherThan31_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 32, 1, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenFirstRecordNumberIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 0, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenFirstRecordNumberGreaterThan255_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 256, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenNbRecordsToReadIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 0, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareReadRecordMultiple_whenNbRecordsToReadGreaterThan255MinusFirstRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 2, 254, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenOffsetIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, -1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenOffsetGreaterThan255_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 256, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordMultiple_whenNbBytesToReadIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 1, 0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareReadRecordMultiple_whenNbBytesToReadIsGreaterThan255MinusOffset_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 3, 253);
+  }
+
+  @Test
+  public void
+      prepareReadRecordMultiple_whenNbRecordsToReadMultipliedByNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(3);
+
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 2, 3, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
+        .isEqualTo(ByteArrayUtil.fromHex("00000011"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
+        .isEqualTo(ByteArrayUtil.fromHex("00000022"));
+  }
+
+  @Test
+  public void
+      prepareReadRecordMultiple_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP,
+            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_RSP,
+            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 5, 3, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
+        .isEqualTo(ByteArrayUtil.fromHex("00000011"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
+        .isEqualTo(ByteArrayUtil.fromHex("00000022"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(3))
+        .isEqualTo(ByteArrayUtil.fromHex("00000033"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(4))
+        .isEqualTo(ByteArrayUtil.fromHex("00000044"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(5))
+        .isEqualTo(ByteArrayUtil.fromHex("00000055"));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
   public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
@@ -1195,23 +1337,15 @@ public class CardTransactionManagerAdapterTest {
       prepareReadBinary_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_BINARY_SFI1_OFFSET0_2B_CMD,
-            CARD_READ_BINARY_SFI1_OFFSET2_2B_CMD,
-            CARD_READ_BINARY_SFI1_OFFSET4_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_READ_BINARY_SFI1_OFFSET0_2B_RSP,
-            CARD_READ_BINARY_SFI1_OFFSET2_2B_RSP,
-            CARD_READ_BINARY_SFI1_OFFSET4_1B_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareReadBinary((byte) 1, 0, 5);
+    cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1220,7 +1354,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("1122334455"));
+        .isEqualTo(ByteArrayUtil.fromHex("11"));
   }
 
   @Test(expected = IllegalArgumentException.class)

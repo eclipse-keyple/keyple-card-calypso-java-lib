@@ -705,7 +705,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     ElementaryFile ef = efBySfi.get(sfi);
     if (ef == null) {
       String sfiString = Integer.toHexString(sfi & 0xFF);
-      logger.warn("EF with SFI [0x{}] is not found.", sfiString);
+      logger.warn("EF with SFI [{}h] is not found.", sfiString);
     }
     return ef;
   }
@@ -720,7 +720,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     Byte sfi = sfiByLid.get(lid);
     if (sfi == null) {
       String lidString = Integer.toHexString(lid & 0xFFFF);
-      logger.warn("EF with LID [0x{}] is not found.", lidString);
+      logger.warn("EF with LID [{}h] is not found.", lidString);
       return null;
     }
     return efBySfi.get(sfi);

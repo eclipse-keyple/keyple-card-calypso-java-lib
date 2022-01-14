@@ -238,8 +238,43 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection prepareReadRecordMultiple(
       byte sfi, int firstRecordNumber, int nbRecordsToRead, int offset, int nbBytesToRead) {
-    // TODO implementation
-    return null;
+
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            firstRecordNumber,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX,
+            "firstRecordNumber")
+        .isInRange(
+            nbRecordsToRead,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX - firstRecordNumber,
+            "nbRecordsToRead")
+        .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, "offset")
+        .isInRange(
+            nbBytesToRead,
+            CalypsoCardConstant.DATA_LENGTH_MIN,
+            CalypsoCardConstant.DATA_LENGTH_MAX - offset,
+            "nbBytesToRead");
+
+    final int nbRecordsReadByCommand = CalypsoCardConstant.PAYLOAD_CAPACITY / nbBytesToRead;
+    final int lastRecordNumber = firstRecordNumber + nbRecordsToRead - 1;
+
+    int currentRecordNumber = firstRecordNumber;
+
+    while (currentRecordNumber <= lastRecordNumber) {
+      commands.add(
+          new CmdCardReadRecordMultiple(
+              CalypsoCardClass.ISO,
+              sfi,
+              (byte) currentRecordNumber,
+              (byte) offset,
+              (byte) nbBytesToRead));
+      currentRecordNumber += nbRecordsReadByCommand;
+    }
+
+    return this;
   }
 
   /**

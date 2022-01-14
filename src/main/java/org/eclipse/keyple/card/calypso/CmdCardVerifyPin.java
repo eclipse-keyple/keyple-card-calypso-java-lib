@@ -178,7 +178,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
         break;
       default:
         throw new IllegalStateException(
-            "Incorrect status word: " + String.format("0x%04X", getApduResponse().getStatusWord()));
+            "Incorrect status word: " + String.format("%04Xh", getApduResponse().getStatusWord()));
     }
     return attemptCounter;
   }
