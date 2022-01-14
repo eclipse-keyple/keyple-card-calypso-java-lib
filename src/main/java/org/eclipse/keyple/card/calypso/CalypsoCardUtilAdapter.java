@@ -36,6 +36,7 @@ final class CalypsoCardUtilAdapter {
   private CalypsoCardUtilAdapter() {}
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to an Open Secure Session
    * command received from the card <br>
    * The ratification status and the data read at the time of the session opening are added to the
@@ -63,6 +64,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Checks the response to a Close Session command
    *
    * @param cmdCardCloseSession the command.
@@ -76,6 +78,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Records' command
    * received from the card.<br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure.
@@ -93,19 +96,8 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    if (isSessionOpen) {
-      cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
-    } else {
-      try {
-        cmdCardReadRecords.setApduResponse(apduResponse).checkStatus();
-      } catch (CardDataAccessException e) {
-        // best effort mode, do not throw exception for "file not found" and "record not found"
-        // errors.
-        if (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83) {
-          throw e;
-        }
-      }
-    }
+    cmdCardReadRecords.setApduResponse(apduResponse);
+    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecords, isSessionOpen);
 
     // iterate over read records to fill the CalypsoCard
     for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecords.getRecords().entrySet()) {
@@ -114,6 +106,64 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
+   * Sets the response to the command and check the status for strict and best effort mode.
+   *
+   * @param command The command.
+   * @param isSessionOpen Is session open?
+   * @throws CardCommandException If needed.
+   */
+  private static void checkResponseStatusForStrictAndBestEffortMode(
+      AbstractCardCommand command, boolean isSessionOpen) throws CardCommandException {
+    if (isSessionOpen) {
+      command.checkStatus();
+    } else {
+      try {
+        command.checkStatus();
+      } catch (CardDataAccessException e) {
+        // best effort mode, do not throw exception for "file not found" and "record not found"
+        // errors.
+        if (command.getApduResponse().getStatusWord() != 0x6A82
+            && command.getApduResponse().getStatusWord() != 0x6A83) {
+          throw e;
+        }
+      }
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Record Multiple'
+   * command received from the card.<br>
+   * The records read are added to the {@link CalypsoCardAdapter} file structure.
+   *
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardReadRecordMultiple The command.
+   * @param apduResponse The response received.
+   * @param isSessionOpen True when a secure session is open.
+   * @throws CardCommandException If a response from the card was unexpected.
+   */
+  private static void updateCalypsoCardReadRecordMultiple(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardReadRecordMultiple cmdCardReadRecordMultiple,
+      ApduResponseApi apduResponse,
+      boolean isSessionOpen)
+      throws CardCommandException {
+
+    cmdCardReadRecordMultiple.setApduResponse(apduResponse);
+    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecordMultiple, isSessionOpen);
+
+    for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecordMultiple.getResults().entrySet()) {
+      calypsoCard.setContent(
+          (byte) cmdCardReadRecordMultiple.getSfi(),
+          entry.getKey(),
+          entry.getValue(),
+          cmdCardReadRecordMultiple.getOffset());
+    }
+  }
+
+  /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Binary' command
    * received from the card.<br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure.
@@ -131,25 +181,15 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    if (isSessionOpen) {
-      cmdCardReadBinary.setApduResponse(apduResponse).checkStatus();
-    } else {
-      try {
-        cmdCardReadBinary.setApduResponse(apduResponse).checkStatus();
-      } catch (CardDataAccessException e) {
-        // best effort mode, do not throw exception for "file not found" and "record not found"
-        // errors.
-        if (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83) {
-          throw e;
-        }
-      }
-    }
+    cmdCardReadBinary.setApduResponse(apduResponse);
+    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadBinary, isSessionOpen);
 
     calypsoCard.setContent(
         cmdCardReadBinary.getSfi(), 1, apduResponse.getDataOut(), cmdCardReadBinary.getOffset());
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the card.<br>
    * Depending on the content of the response, either a {@link FileHeader} is added or the {@link
@@ -190,6 +230,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Get Data" command for
    * {@link org.calypsonet.terminal.calypso.GetDataTag#EF_LIST} tag received from the card.
    *
@@ -218,6 +259,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Get Data" command for
    * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION} tag received from
    * the card.
@@ -239,6 +281,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to an "Update Record" command
    * sent and received from the card.
    *
@@ -262,6 +305,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Write Record" command
    * sent and received from the card.
    *
@@ -286,6 +330,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to an "Update Binary" command
    * sent and received from the card.
    *
@@ -310,6 +355,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Write Binary" command
    * sent and received from the card.
    *
@@ -334,6 +380,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a Read Records command
    * received from the card.<br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure.
@@ -356,6 +403,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a Decrease command received
    * from the card <br>
    * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
@@ -379,6 +427,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to an Increase command received
    * from the card <br>
    * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
@@ -402,6 +451,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Parses the response to a Get Challenge command received from the card.<br>
    * The card challenge value is stored in {@link CalypsoCardAdapter}.
    *
@@ -421,6 +471,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Verify Pin" command
    * received from the card.<br>
    * The PIN attempt counter value is stored in the {@link CalypsoCardAdapter}<br>
@@ -454,6 +505,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a "Change Pin" command
    * received from the card
    *
@@ -466,6 +518,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to an SV Get command received
    * from the card <br>
    * The SV Data values (KVC, command header, response data) are stored in {@link
@@ -493,6 +546,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Checks the response to a SV Operation command (reload, debit or undebit) response received from
    * the card<br>
    * Stores the card SV signature if any (command executed outside a secure session) in the {@link
@@ -515,6 +569,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Checks the response to Invalidate/Rehabilitate commands
    *
    * @param cmdCardInvalidateRehabilitate the Invalidate or Rehabilitate command.
@@ -528,6 +583,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Parses the proprietaryInformation field of a file identified as an DF and create a {@link
    * DirectoryHeader}
    *
@@ -563,6 +619,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Converts the EF type value from the card into a {@link ElementaryFile.Type} enum
    *
    * @param efType the value returned by the card.
@@ -593,6 +650,7 @@ final class CalypsoCardUtilAdapter {
   }
 
   /**
+   * (private)<br>
    * Parses the proprietaryInformation field of a file identified as an EF and create a {@link
    * FileHeader}
    *
@@ -683,6 +741,10 @@ final class CalypsoCardUtilAdapter {
         } else {
           throw new IllegalStateException("Unknown GET DATA command reference.");
         }
+        break;
+      case READ_RECORD_MULTIPLE:
+        updateCalypsoCardReadRecordMultiple(
+            calypsoCard, (CmdCardReadRecordMultiple) command, apduResponse, isSessionOpen);
         break;
       case SELECT_FILE:
         updateCalypsoCardWithFcp(calypsoCard, command, apduResponse);

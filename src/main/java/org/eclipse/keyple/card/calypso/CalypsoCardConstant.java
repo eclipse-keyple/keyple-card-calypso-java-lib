@@ -97,6 +97,9 @@ final class CalypsoCardConstant {
   static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
   static final int SV_LOG_FILE_REC_LENGTH = 29;
 
+  // Payload capacity
+  static final int PAYLOAD_CAPACITY_PRIME_REV3 = 250;
+
   /** (private) */
   private CalypsoCardConstant() {}
 }
