@@ -1573,7 +1573,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       if (currentRecordNumber == toRecordNumber) {
         cardCommandManager.addRegularCommand(
             new CmdCardReadRecords(
-                calypsoCard.getCardClass(),
+                cardClass,
                 sfi,
                 currentRecordNumber,
                 CmdCardReadRecords.ReadMode.ONE_RECORD,
