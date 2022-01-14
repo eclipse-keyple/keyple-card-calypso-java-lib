@@ -237,20 +237,17 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareReadRecordMultiple(
-      byte sfi, int firstRecordNumber, int nbRecordsToRead, int offset, int nbBytesToRead) {
+      byte sfi, int fromRecordNumber, int toRecordNumber, int offset, int nbBytesToRead) {
 
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
-            firstRecordNumber,
+            fromRecordNumber,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
-            "firstRecordNumber")
+            "fromRecordNumber")
         .isInRange(
-            nbRecordsToRead,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX - firstRecordNumber,
-            "nbRecordsToRead")
+            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
         .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, "offset")
         .isInRange(
             nbBytesToRead,
@@ -258,12 +255,11 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
             CalypsoCardConstant.DATA_LENGTH_MAX - offset,
             "nbBytesToRead");
 
-    final int nbRecordsReadByCommand = CalypsoCardConstant.PAYLOAD_CAPACITY / nbBytesToRead;
-    final int lastRecordNumber = firstRecordNumber + nbRecordsToRead - 1;
+    final int nbRecordsPerApdu = CalypsoCardConstant.PAYLOAD_CAPACITY_PRIME_REV3 / nbBytesToRead;
 
-    int currentRecordNumber = firstRecordNumber;
+    int currentRecordNumber = fromRecordNumber;
 
-    while (currentRecordNumber <= lastRecordNumber) {
+    while (currentRecordNumber <= toRecordNumber) {
       commands.add(
           new CmdCardReadRecordMultiple(
               CalypsoCardClass.ISO,
@@ -271,7 +267,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
               (byte) currentRecordNumber,
               (byte) offset,
               (byte) nbBytesToRead));
-      currentRecordNumber += nbRecordsReadByCommand;
+      currentRecordNumber += nbRecordsPerApdu;
     }
 
     return this;

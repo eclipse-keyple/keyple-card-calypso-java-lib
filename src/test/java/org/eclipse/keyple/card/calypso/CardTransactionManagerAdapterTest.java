@@ -164,6 +164,12 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_READ_REC_SFI10_REC1_RSP = FILE10_REC1_COUNTER + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI11_REC1_CMD = "00B2018C00";
   private static final String CARD_READ_REC_SFI11_REC1_RSP = FILE11_REC1_COUNTER + SW1SW2_OK;
+  private static final String CARD_READ_RECORDS_FROM1_TO2_CMD = "00B2010D06";
+  private static final String CARD_READ_RECORDS_FROM1_TO2_RSP = "010111020122" + SW1SW2_OK;
+  private static final String CARD_READ_RECORDS_FROM3_TO4_CMD = "00B2030D06";
+  private static final String CARD_READ_RECORDS_FROM3_TO4_RSP = "030133040144" + SW1SW2_OK;
+  private static final String CARD_READ_RECORDS_FROM5_TO5_CMD = "00B2050C01";
+  private static final String CARD_READ_RECORDS_FROM5_TO5_RSP = "55" + SW1SW2_OK;
   private static final String CARD_UPDATE_REC_SFI7_REC1_4B_CMD = "00DC013C0400112233";
   private static final String CARD_UPDATE_REC_SFI8_REC1_29B_CMD = "00DC01441D" + FILE8_REC1_29B;
   private static final String CARD_UPDATE_REC_SFI8_REC1_5B_CMD = "00DC014405" + FILE8_REC1_5B;
@@ -577,7 +583,7 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
         .thenReturn(samCardResponse2);
 
-    cardTransactionManager.prepareReadRecord(FILE7, 1, 1, 29);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
 
     cardTransactionManager.processClosing();
     inOrder = inOrder(samReader, cardReader);
@@ -1051,28 +1057,96 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_api2_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord((byte) 32, 1, 1, 1);
+  public void prepareReadRecords_whenSfiIsHigherThan31_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords((byte) 32, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_api2_whenFirstRecordNumberIsLessThan0_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord(FILE7, -1, 1, 1);
+  public void prepareReadRecords_whenFromRecordNumberIs0_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 0, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_api2_whenFirstRecordNumberIsMoreThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 256, 1, 1);
+  public void prepareReadRecords_whenFromRecordNumberIsGreaterThan255_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 256, 256, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_api2_whenNumberOfRecordsIsLessThan0_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 1, -1, 1);
+  public void prepareReadRecords_whenToRecordNumberIsLessThanFromRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 2, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_api2_whenNumberOfRecordIsMoreThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 1, 256, 1);
+  public void prepareReadRecords_whenToRecordNumberIsGreaterThan255_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 256, 1);
+  }
+
+  @Test
+  public void
+      prepareReadRecords_whenNbRecordsToReadMultipliedByRecSize2IsLessThanPayLoad_shouldPrepareOneCommand()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_RECORDS_FROM1_TO2_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_RECORDS_FROM1_TO2_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(7);
+
+    cardTransactionManager.prepareReadRecords((byte) 1, 1, 2, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
+        .isEqualTo(ByteArrayUtil.fromHex("11"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
+        .isEqualTo(ByteArrayUtil.fromHex("22"));
+  }
+
+  @Test
+  public void
+      prepareReadRecords_whenNbRecordsToReadMultipliedByRecSize2IsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+          throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_READ_RECORDS_FROM1_TO2_CMD,
+            CARD_READ_RECORDS_FROM3_TO4_CMD,
+            CARD_READ_RECORDS_FROM5_TO5_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_READ_RECORDS_FROM1_TO2_RSP,
+            CARD_READ_RECORDS_FROM3_TO4_RSP,
+            CARD_READ_RECORDS_FROM5_TO5_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(7);
+
+    cardTransactionManager.prepareReadRecords((byte) 1, 1, 5, 1);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
+        .isEqualTo(ByteArrayUtil.fromHex("11"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
+        .isEqualTo(ByteArrayUtil.fromHex("22"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(3))
+        .isEqualTo(ByteArrayUtil.fromHex("33"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(4))
+        .isEqualTo(ByteArrayUtil.fromHex("44"));
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(5))
+        .isEqualTo(ByteArrayUtil.fromHex("55"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1134,24 +1208,25 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenFirstRecordNumberIsZero_shouldThrowIAE() {
+  public void prepareReadRecordMultiple_whenFromRecordNumberIsZero_shouldThrowIAE() {
     cardTransactionManager.prepareReadRecordMultiple((byte) 1, 0, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenFirstRecordNumberGreaterThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 256, 1, 1, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenNbRecordsToReadIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 0, 1, 1);
+  public void prepareReadRecordMultiple_whenFromRecordNumberGreaterThan255_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 256, 256, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void
-      prepareReadRecordMultiple_whenNbRecordsToReadGreaterThan255MinusFirstRecordNumber_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 2, 254, 1, 1);
+      prepareReadRecordMultiple_whenToRecordNumberLessThanFromRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 2, 1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareReadRecordMultiple_whenToRecordNumberGreaterThan255MinusFromRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 256, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1206,7 +1281,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareReadRecordMultiple_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+      prepareReadRecordMultiple_whenNbRecordsToReadMultipliedByNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
