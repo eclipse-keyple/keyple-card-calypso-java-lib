@@ -506,8 +506,7 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * (private)<br>
-   * Updates the {@link CalypsoCardAdapter} object with the response to a "Change Pin" command
-   * received from the card
+   * Checks the status of the response to a "Change Pin" command received from the card
    *
    * @param cmdCardChangePin the command.
    * @param apduResponse the response received.
@@ -515,6 +514,18 @@ final class CalypsoCardUtilAdapter {
   private static void updateCalypsoChangePin(
       CmdCardChangePin cmdCardChangePin, ApduResponseApi apduResponse) throws CardCommandException {
     cmdCardChangePin.setApduResponse(apduResponse).checkStatus();
+  }
+
+  /**
+   * (private)<br>
+   * Checks the status of the response to a "Change Key" command received from the card
+   *
+   * @param cmdCardChangeKey the command.
+   * @param apduResponse the response received.
+   */
+  private static void updateCalypsoChangeKey(
+      CmdCardChangeKey cmdCardChangeKey, ApduResponseApi apduResponse) throws CardCommandException {
+    cmdCardChangeKey.setApduResponse(apduResponse).checkStatus();
   }
 
   /**
@@ -804,7 +815,8 @@ final class CalypsoCardUtilAdapter {
         updateCalypsoChangePin((CmdCardChangePin) command, apduResponse);
         break;
       case CHANGE_KEY:
-        throw new IllegalStateException("Shouldn't happen for now!");
+        updateCalypsoChangeKey((CmdCardChangeKey) command, apduResponse);
+        break;
       default:
         throw new IllegalStateException("Unknown command reference.");
     }

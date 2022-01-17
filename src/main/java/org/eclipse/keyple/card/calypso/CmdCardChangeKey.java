@@ -19,7 +19,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * (package-private)<br>
  * Builds the Change key APDU command.
  *
- * @since 2.0.1
+ * @since 2.1.0
  */
 final class CmdCardChangeKey extends AbstractCardCommand {
 
@@ -66,15 +66,11 @@ final class CmdCardChangeKey extends AbstractCardCommand {
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param keyIndex index of the key of the current DF to change.
    * @param cryptogram key encrypted with Issuer key (key #1).
-   * @since 2.0.1
+   * @since 2.1.0
    */
   CmdCardChangeKey(CalypsoCardClass calypsoCardClass, byte keyIndex, byte[] cryptogram) {
 
     super(command);
-
-    if (cryptogram == null || (cryptogram.length != 0x18 && cryptogram.length != 0x20)) {
-      throw new IllegalArgumentException("Bad cryptogram value.");
-    }
 
     byte cla = calypsoCardClass.getValue();
     byte p1 = (byte) 0x00;
@@ -88,7 +84,7 @@ final class CmdCardChangeKey extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return false
-   * @since 2.0.1
+   * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -98,7 +94,7 @@ final class CmdCardChangeKey extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -1065,7 +1065,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
 
     if (sessionState == SessionState.SESSION_OPEN) {
-      throw new IllegalStateException("Change PIN not allowed when a secure session is open.");
+      throw new IllegalStateException("'Change PIN' not allowed when a secure session is open.");
     }
 
     // CL-PIN-MENCRYPT.1
@@ -1116,6 +1116,72 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.0
+   */
+  @Override
+  public CardTransactionManager processChangeKey(
+      int keyIndex, byte newKif, byte newKvc, byte issuerKif, byte issuerKvc) {
+
+    if (calypsoCard.getProductType() == CalypsoCard.ProductType.BASIC) {
+      throw new UnsupportedOperationException(
+          "The 'Change Key' command is not available for this card.");
+    }
+
+    if (sessionState == SessionState.SESSION_OPEN) {
+      throw new IllegalStateException("'Change Key' not allowed when a secure session is open.");
+    }
+
+    Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");
+
+    // CL-KEY-CHANGE.1
+    cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
+
+    // transmit and receive data with the card
+    processAtomicCardCommands(cardCommandManager.getCardCommands(), ChannelControl.KEEP_OPEN);
+
+    // sets the flag indicating that the commands have been executed
+    cardCommandManager.notifyCommandsProcessed();
+
+    // Get the encrypted key with the help of the SAM
+    try {
+      byte[] encryptedKey =
+          samCommandProcessor.getEncryptedKey(
+              calypsoCard.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
+      cardCommandManager.addRegularCommand(
+          new CmdCardChangeKey(calypsoCard.getCardClass(), (byte) keyIndex, encryptedKey));
+    } catch (CalypsoSamCommandException e) {
+      throw new SamAnomalyException(
+          SAM_COMMAND_ERROR + "generating the encrypted key: " + e.getCommand().getName(), e);
+    } catch (ReaderBrokenCommunicationException e) {
+      throw new SamIOException(
+          SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+    } catch (CardBrokenCommunicationException e) {
+      throw new SamIOException(
+          SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+    }
+
+    // transmit and receive data with the card
+    processAtomicCardCommands(cardCommandManager.getCardCommands(), channelControl);
+
+    // sets the flag indicating that the commands have been executed
+    cardCommandManager.notifyCommandsProcessed();
+
+    return this;
+  }
+
+  /**
+   * Transmits a card request, processes and converts any exceptions.
+   *
+   * @param cardRequest The card request to transmit.
+   * @param channelControl The channel control.
+   * @return The card response.
+   * @throws ReaderBrokenCommunicationException If the communication with the card or the card
+   *     reader failed.
+   * @throws UnexpectedStatusWordException If the card returned an unexpected response.
+   */
   private CardResponseApi safeTransmit(CardRequestSpi cardRequest, ChannelControl channelControl) {
     try {
       return cardReader.transmitCardRequest(cardRequest, channelControl);
@@ -2227,18 +2293,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     cardCommandManager.addRegularCommand(new CmdCardRehabilitate(calypsoCard.getCardClass()));
 
     return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.4
-   */
-  @Override
-  public CardTransactionManager prepareChangeKey(
-      int keyIndex, byte newKif, byte newKvc, byte issuerKif, byte issuerKvc) {
-    // TODO implementation
-    return null;
   }
 
   /**

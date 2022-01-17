@@ -127,6 +127,9 @@ public class CardTransactionManagerAdapterTest {
   private static final String ACCESS_CONDITIONS_0003 = "01100000";
   private static final String KEY_INDEXES_0003 = "01020101";
 
+  private static final String CIPHERED_KEY =
+      "000102030405060708090A0B0C0D0E0FF0E0D0C0B0A090807060504030201000";
+
   private static final String SW1SW2_OK_RSP = SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
       "008A0B3904" + SAM_CHALLENGE + "00";
@@ -276,6 +279,8 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_GET_CHALLENGE_CMD = "0084000008";
   private static final String CARD_GET_CHALLENGE_RSP = CARD_CHALLENGE + SW1SW2_OK;
 
+  private static final String CARD_CHANGE_KEY_CMD = "00D8000120" + CIPHERED_KEY;
+
   private static final String SAM_SELECT_DIVERSIFIER_CMD = "8014000008" + CARD_DIVERSIFIER;
   private static final String SAM_GET_CHALLENGE_CMD = "8084000004";
   private static final String SAM_GET_CHALLENGE_RSP = SAM_CHALLENGE + SW1SW2_OK;
@@ -341,6 +346,9 @@ public class CardTransactionManagerAdapterTest {
           + "FFFE0000000079123456780000DD00001600729000BC0000140000020000000079";
   private static final String SAM_PREPARE_UNDEBIT_RSP = "CD00340000DF0C9437AABB" + SW1SW2_OK;
   private static final String SAM_SV_CHECK_CMD = "8058000003A54BC9";
+
+  private static final String SAM_CARD_GENERATE_KEY_CMD = "8012FFFF050405020390";
+  private static final String SAM_CARD_GENERATE_KEY_RSP = CIPHERED_KEY + SW1SW2_OK;
 
   private CardTransactionManager cardTransactionManager;
   private CalypsoCardAdapter calypsoCard;
@@ -794,6 +802,129 @@ public class CardTransactionManagerAdapterTest {
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void processChangePin_shouldSendApdusToTheCardAndTheSAM() throws Exception {
+    /*    TO BE UPDATED */
+    //    cardSecuritySetting =
+    //        CalypsoExtensionService.getInstance()
+    //            .createCardSecuritySetting()
+    //            .setSamResource(samReader, calypsoSam)
+    //            .enablePinPlainTransmission();
+    //    cardTransactionManager =
+    //        CalypsoExtensionService.getInstance()
+    //            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    //    calypsoCard.initializeWithFci(
+    //        new ApduResponseAdapter(
+    //            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    //
+    //    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
+    //    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
+    //
+    //    CardRequestSpi samCardRequest =
+    //        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD,
+    // SAM_CARD_CIPHER_PIN_CMD);
+    //    CardResponseApi samCardResponse =
+    //        createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_GENERATE_KEY_RSP);
+    //
+    //    CardRequestSpi cardChangeKeyCardRequest = createCardRequest(CARD_CHANGE_KEY_CMD);
+    //    CardResponseApi cardChangeKeyCardResponse = createCardResponse(SW1SW2_OK);
+    //
+    //    when(cardReader.transmitCardRequest(
+    //            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+    //            any(ChannelControl.class)))
+    //        .thenReturn(cardGetChallengeCardResponse);
+    //
+    //    when(samReader.transmitCardRequest(
+    //            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+    //        .thenReturn(samCardResponse);
+    //
+    //    when(cardReader.transmitCardRequest(
+    //            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)),
+    // any(ChannelControl.class)))
+    //        .thenReturn(cardChangeKeyCardResponse);
+    //
+    //    cardTransactionManager.processChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5);
+    //
+    //    InOrder inOrder = inOrder(cardReader, samReader);
+    //
+    //    inOrder
+    //        .verify(cardReader)
+    //        .transmitCardRequest(
+    //            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+    //            any(ChannelControl.class));
+    //    inOrder
+    //        .verify(samReader)
+    //        .transmitCardRequest(
+    //            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    //    inOrder
+    //        .verify(cardReader)
+    //        .transmitCardRequest(
+    //            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)),
+    // any(ChannelControl.class));
+    //
+    //    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void processChangeKey_shouldSendApdusToTheCardAndTheSAM() throws Exception {
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samReader, calypsoSam)
+            .enablePinPlainTransmission();
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+
+    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
+    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD, SAM_CARD_GENERATE_KEY_CMD);
+    CardResponseApi samCardResponse =
+        createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_GENERATE_KEY_RSP);
+
+    CardRequestSpi cardChangeKeyCardRequest = createCardRequest(CARD_CHANGE_KEY_CMD);
+    CardResponseApi cardChangeKeyCardResponse = createCardResponse(SW1SW2_OK);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class)))
+        .thenReturn(cardGetChallengeCardResponse);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardChangeKeyCardResponse);
+
+    cardTransactionManager.processChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
+
     verifyNoMoreInteractions(samReader, cardReader);
   }
 

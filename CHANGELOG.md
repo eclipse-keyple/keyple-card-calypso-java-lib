@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of `prepareUpdateBinary` and `prepareWriteBinary` methods (issue [#34]).
 - Implementation of `prepareReadBinary` method (issue [#35]).
 - Implementation of `prepareReadRecordMultiple` methods (issue [#36]).
+- Implementation of `processChangeKey` methods (issue [#39]).
 ### Fixed
 - Revision 2 case for `prepareSelectFile` method (issue [#32]).
 ### Upgraded
@@ -50,6 +51,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
 [#36]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/36
 [#35]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/35
 [#34]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/34

@@ -507,6 +507,65 @@ class SamCommandProcessor {
   }
 
   /**
+   * (package-private)<br>
+   * Compute the encrypted key data for the "Change Key" command.
+   *
+   * @param poChallenge The challenge from the card.
+   * @param cipheringKif The KIF of the key used for encryption.
+   * @param cipheringKvc The KVC of the key used for encryption.
+   * @param sourceKif The KIF of the key to encrypt.
+   * @param sourceKvc The KVC of the key to encrypt.
+   * @return An array of 32 bytes containing the encrypted key.
+   * @throws CalypsoSamCommandException if the SAM has responded with an error status
+   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
+   * @since 2.1.0
+   */
+  byte[] getEncryptedKey(
+      byte[] poChallenge, byte cipheringKif, byte cipheringKvc, byte sourceKif, byte sourceKvc)
+      throws CalypsoSamCommandException, CardBrokenCommunicationException,
+          ReaderBrokenCommunicationException {
+    List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
+
+    if (!isDiversificationDone) {
+      // Build the SAM Select Diversifier command to provide the SAM with the card S/N
+      // CL-SAM-CSN.1
+      samCommands.add(
+          new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull()));
+      isDiversificationDone = true;
+    }
+
+    samCommands.add(new CmdSamGiveRandom(samProductType, poChallenge));
+
+    int cardGenerateKeyCmdIndex = samCommands.size();
+
+    CmdSamCardGenerateKey cmdSamCardGenerateKey =
+        new CmdSamCardGenerateKey(samProductType, cipheringKif, cipheringKvc, sourceKif, sourceKvc);
+
+    samCommands.add(cmdSamCardGenerateKey);
+
+    // build a SAM CardRequest
+    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
+
+    // execute the command
+    CardResponseApi samCardResponse;
+    try {
+      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusWordException e) {
+      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    }
+
+    ApduResponseApi cmdSamCardGenerateKeyResponse =
+        samCardResponse.getApduResponses().get(cardGenerateKeyCmdIndex);
+
+    // check execution status
+    cmdSamCardGenerateKey.setApduResponse(cmdSamCardGenerateKeyResponse).checkStatus();
+
+    return cmdSamCardGenerateKey.getCipheredData();
+  }
+
+  /**
+   * (package-private)<br>
    * Compute the PIN ciphered data for the encrypted PIN verification or PIN update commands
    *
    * @param poChallenge the challenge from the card.
@@ -547,7 +606,7 @@ class SamCommandProcessor {
     }
 
     if (!isDiversificationDone) {
-      /* Build the SAM Select Diversifier command to provide the SAM with the card S/N */
+      // Build the SAM Select Diversifier command to provide the SAM with the card S/N
       // CL-SAM-CSN.1
       samCommands.add(
           new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull()));
