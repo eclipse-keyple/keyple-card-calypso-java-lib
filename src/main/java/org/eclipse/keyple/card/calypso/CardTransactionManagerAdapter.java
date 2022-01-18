@@ -80,7 +80,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   private static final String GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR =
       "generating of the PIN ciphered data.";
   private static final String GENERATING_OF_THE_KEY_CIPHERED_DATA_ERROR =
-          "generating of the key ciphered data.";
+      "generating of the key ciphered data.";
   private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
