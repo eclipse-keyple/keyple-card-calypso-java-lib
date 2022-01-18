@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
@@ -96,6 +97,24 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   @Override
   public String getCommonApiVersion() {
     return CommonApiProperties.VERSION;
+  }
+
+  /**
+   * Creates an instance of {@link SearchCommandData} to be used to define the parameters of the
+   * "Search Record Multiple" card command.
+   *
+   * <p>See methods:
+   *
+   * <ul>
+   *   <li>{@link CalypsoCardSelection#prepareSearchRecordMultiple(SearchCommandData)}
+   *   <li>{@link CardTransactionManager#prepareSearchRecordMultiple(SearchCommandData)}
+   * </ul>
+   *
+   * @return A not null reference.
+   * @since 2.1.0
+   */
+  public SearchCommandData createSearchCommandData() {
+    return new SearchCommandDataAdapter();
   }
 
   /**

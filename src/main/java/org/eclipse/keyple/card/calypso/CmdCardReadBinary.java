@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the "Read Binary" APDU command.
  *
- * @since 2.0.4
+ * @since 2.1.0
  */
 final class CmdCardReadBinary extends AbstractCardCommand {
 
@@ -70,7 +70,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * @param sfi The sfi to select.
    * @param offset The offset.
    * @param length The number of bytes to read.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   CmdCardReadBinary(CalypsoCardClass calypsoCardClass, byte sfi, int offset, byte length) {
 
@@ -106,7 +106,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return false
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -117,7 +117,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The SFI.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   byte getSfi() {
     return sfi;
@@ -127,7 +127,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The offset.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   int getOffset() {
     return offset;
@@ -136,7 +136,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

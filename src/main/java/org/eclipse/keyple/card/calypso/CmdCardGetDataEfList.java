@@ -23,7 +23,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
  * 6Cxx status and thus make calculation of the digest impossible.
  *
- * @since 2.0.4
+ * @since 2.1.0
  */
 final class CmdCardGetDataEfList extends AbstractCardCommand {
 
@@ -54,7 +54,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * Instantiates a new CmdCardGetDataEfList.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
 
@@ -75,7 +75,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return False
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -85,7 +85,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
@@ -97,7 +97,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * Gets a reference to a map of all Elementary File headers by their associated SFI.
    *
    * @return A not empty map.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   Map<Byte, FileHeader> getEfHeaders() {
     byte[] rawList = getApduResponse().getDataOut();

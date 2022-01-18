@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.0.+ (24/06/2021)
+    Keyple - keyple-card-calypso-java-lib - 2.1.+ (17/01/2022)
 end title
 
 ' == THEME ==
@@ -59,10 +59,13 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         --
         +{static} CalypsoExtensionService getInstance ()
 
+        +<back:pink>SearchCommandData</back> createSearchCommandData ()
+
         +<back:pink>CalypsoCardSelection</back> createCardSelection ()
 
         +<back:pink>CalypsoSamSelection</back> createSamSelection ()
         +<back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
+
         +<back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
         +<back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
 

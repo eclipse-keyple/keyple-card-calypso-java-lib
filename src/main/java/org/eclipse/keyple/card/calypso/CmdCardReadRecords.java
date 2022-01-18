@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,7 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   private final int sfi;
   private final int firstRecordNumber;
   private final ReadMode readMode;
+  private final SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -146,6 +148,43 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.1
+   */
+  @Override
+  Map<Integer, StatusProperties> getStatusTable() {
+    return STATUS_TABLE;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.0
+   */
+  @Override
+  CmdCardReadRecords setApduResponse(ApduResponseApi apduResponse) {
+    super.setApduResponse(apduResponse);
+    if (apduResponse.getDataOut().length > 0) {
+      if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
+        records.put(firstRecordNumber, apduResponse.getDataOut());
+      } else {
+        byte[] apdu = apduResponse.getDataOut();
+        int apduLen = apdu.length;
+        int index = 0;
+        while (apduLen > 0) {
+          byte recordNb = apdu[index++];
+          byte len = apdu[index++];
+          records.put((int) recordNb, Arrays.copyOfRange(apdu, index, index + len));
+          index = index + len;
+          apduLen = apduLen - 2 - len;
+        }
+      }
+    }
+    return this;
+  }
+
+  /**
    * (package-private)<br>
    *
    * @return the SFI of the accessed file
@@ -177,44 +216,12 @@ final class CmdCardReadRecords extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Parses the Apdu response as a data record (single or multiple), retrieves the records and place
-   * it in a map.
    *
-   * <p>The map index follows the card specification, i.e. starts at 1 for the first record.
-   *
-   * <p>An empty map is returned if no data is available.
-   *
-   * @return a map of records
+   * @return A not empty map of records content by record numbers, or an empty map if no data is
+   *     available.
    * @since 2.0.1
    */
   SortedMap<Integer, byte[]> getRecords() {
-    SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
-    if (getReadMode() == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-      if (getApduResponse().getDataOut().length != 0) {
-        records.put(getFirstRecordNumber(), getApduResponse().getDataOut());
-      }
-    } else {
-      byte[] apdu = getApduResponse().getDataOut();
-      int apduLen = apdu.length;
-      int index = 0;
-      while (apduLen > 0) {
-        byte recordNb = apdu[index++];
-        byte len = apdu[index++];
-        records.put((int) recordNb, Arrays.copyOfRange(apdu, index, index + len));
-        index = index + len;
-        apduLen = apduLen - 2 - len;
-      }
-    }
     return records;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.1
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
   }
 }

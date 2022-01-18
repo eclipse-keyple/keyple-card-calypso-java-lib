@@ -1549,7 +1549,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareReadRecord(byte sfi, int recordNumber) {
@@ -1582,7 +1582,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareReadRecords(
@@ -1656,7 +1656,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareReadRecordMultiple(
@@ -1702,7 +1702,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
@@ -1746,7 +1746,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareReadCounter(byte sfi, int nbCountersToRead) {
@@ -1756,12 +1756,29 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareSearchRecordMultiple(SearchCommandData data) {
-    // TODO implementation
-    return null;
+
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+      throw new UnsupportedOperationException(
+          "The 'Search Record Multiple' command is not available for this card.");
+    }
+
+    if (!(data instanceof SearchCommandDataAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided data must be an instance of 'SearchCommandDataAdapter' class.");
+    }
+
+    Assert.getInstance().notNull(data, "data");
+    ((SearchCommandDataAdapter) data).checkInputData();
+
+    cardCommandManager.addRegularCommand(
+        new CmdCardSearchRecordMultiple(
+            calypsoCard.getCardClass(), (SearchCommandDataAdapter) data));
+
+    return this;
   }
 
   /**
@@ -1771,7 +1788,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager prepareAppendRecord(byte sfi, byte[] recordData) {
-    Assert.getInstance() //
+    Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .notNull(recordData, "recordData");
 
@@ -1832,7 +1849,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareUpdateBinary(byte sfi, int offset, byte[] data) {
@@ -1842,7 +1859,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareWriteBinary(byte sfi, int offset, byte[] data) {
@@ -1964,7 +1981,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareIncreaseMultipleCounters(
@@ -1976,7 +1993,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CardTransactionManager prepareDecreaseMultipleCounters(

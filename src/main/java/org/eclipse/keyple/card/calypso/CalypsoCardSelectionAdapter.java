@@ -210,7 +210,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CalypsoCardSelection prepareReadRecord(byte sfi, int recordNumber) {
@@ -233,7 +233,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CalypsoCardSelection prepareReadRecordMultiple(
@@ -276,12 +276,23 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public CalypsoCardSelection prepareSearchRecordMultiple(SearchCommandData data) {
-    // TODO implementation
-    return null;
+
+    if (!(data instanceof SearchCommandDataAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided data must be an instance of 'SearchCommandDataAdapter' class.");
+    }
+
+    Assert.getInstance().notNull(data, "data");
+    ((SearchCommandDataAdapter) data).checkInputData();
+
+    commands.add(
+        new CmdCardSearchRecordMultiple(CalypsoCardClass.ISO, (SearchCommandDataAdapter) data));
+
+    return this;
   }
 
   /**
