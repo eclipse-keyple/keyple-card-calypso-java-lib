@@ -79,6 +79,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   private static final String PIN_NOT_AVAILABLE_ERROR = "PIN is not available for this card.";
   private static final String GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR =
       "generating of the PIN ciphered data.";
+  private static final String GENERATING_OF_THE_KEY_CIPHERED_DATA_ERROR =
+          "generating of the key ciphered data.";
   private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
   private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
@@ -1157,10 +1159,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           SAM_COMMAND_ERROR + "generating the encrypted key: " + e.getCommand().getName(), e);
     } catch (ReaderBrokenCommunicationException e) {
       throw new SamIOException(
-          SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+          SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_KEY_CIPHERED_DATA_ERROR, e);
     } catch (CardBrokenCommunicationException e) {
       throw new SamIOException(
-          SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+          SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_KEY_CIPHERED_DATA_ERROR, e);
     }
 
     // transmit and receive data with the card
@@ -1173,6 +1175,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
+   * (private)<br>
    * Transmits a card request, processes and converts any exceptions.
    *
    * @param cardRequest The card request to transmit.
