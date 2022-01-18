@@ -61,8 +61,12 @@ public class CardTransactionManagerAdapterTest {
   private static final String ATR1 = "3B3F9600805A0080C120000012345678829000";
 
   private static final String PIN_OK = "1234";
-  private static final String CIPHER_PIN_OK = "1122334455667788";
+  private static final String NEW_PIN = "4567";
+  private static final String CIPHER_PIN_VERIFICATION_OK = "1122334455667788";
+  private static final String CIPHER_PIN_UPDATE_OK = "88776655443322111122334455667788";
   private static final String PIN_5_DIGITS = "12345";
+  private static byte PIN_CIPHERING_KEY_KIF = 0x11;
+  private static byte PIN_CIPHERING_KEY_KVC = 0x22;
 
   private static final byte FILE7 = (byte) 0x07;
   private static final byte FILE8 = (byte) 0x08;
@@ -126,6 +130,9 @@ public class CardTransactionManagerAdapterTest {
   private static final String KEY_INDEXES_0002 = "01010101";
   private static final String ACCESS_CONDITIONS_0003 = "01100000";
   private static final String KEY_INDEXES_0003 = "01020101";
+
+  private static final String CIPHERED_KEY =
+      "000102030405060708090A0B0C0D0E0FF0E0D0C0B0A090807060504030201000";
 
   private static final String SW1SW2_OK_RSP = SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
@@ -234,10 +241,16 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String CARD_VERIFY_PIN_PLAIN_OK_CMD =
       "0020000004" + ByteArrayUtil.toHex(PIN_OK.getBytes());
-  private static final String CARD_VERIFY_PIN_ENCRYPTED_OK_CMD = "0020000008" + CIPHER_PIN_OK;
+  private static final String CARD_VERIFY_PIN_ENCRYPTED_OK_CMD =
+      "0020000008" + CIPHER_PIN_VERIFICATION_OK;
   private static final String CARD_CHECK_PIN_CMD = "0020000000";
-  private static final String CARD_VERIFY_PIN_OK_RSP = "9000";
+  private static final String CARD_CHANGE_PIN_CMD = "00D8000410" + CIPHER_PIN_UPDATE_OK;
+  private static final String CARD_CHANGE_PIN_PLAIN_CMD =
+      "00D8000404" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
+  private static final String CARD_VERIFY_PIN_OK_RSP = SW1SW2_OK;
   private static final String CARD_VERIFY_PIN_KO_RSP = "63C2";
+  private static final String CARD_CHANGE_PIN_RSP = SW1SW2_OK;
+  private static final String CARD_CHANGE_PIN_PLAIN_RSP = SW1SW2_OK;
 
   private static final int SV_BALANCE = 0x123456;
   private static final String SV_BALANCE_STR = "123456";
@@ -275,6 +288,8 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String CARD_GET_CHALLENGE_CMD = "0084000008";
   private static final String CARD_GET_CHALLENGE_RSP = CARD_CHALLENGE + SW1SW2_OK;
+
+  private static final String CARD_CHANGE_KEY_CMD = "00D8000120" + CIPHERED_KEY;
 
   private static final String SAM_SELECT_DIVERSIFIER_CMD = "8014000008" + CARD_DIVERSIFIER;
   private static final String SAM_GET_CHALLENGE_CMD = "8084000004";
@@ -320,9 +335,13 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_DIGEST_AUTHENTICATE_CMD = "8082000004" + CARD_SIGNATURE;
   private static final String SAM_DIGEST_AUTHENTICATE_FAILED = "6988";
 
-  private static final String SAM_CARD_CIPHER_PIN_CMD =
+  private static final String SAM_CARD_CIPHER_PIN_VERIFICATION_CMD =
       "801280FF060000" + ByteArrayUtil.toHex(PIN_OK.getBytes());
-  private static final String SAM_CARD_CIPHER_PIN_RSP = CIPHER_PIN_OK + SW1SW2_OK;
+  private static final String SAM_CARD_CIPHER_PIN_VERIFICATION_RSP =
+      CIPHER_PIN_VERIFICATION_OK + SW1SW2_OK;
+  private static final String SAM_CARD_CIPHER_PIN_UPDATE_CMD =
+      "801240FF0A112200000000" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
+  private static final String SAM_CARD_CIPHER_PIN_UPDATE_RSP = CIPHER_PIN_UPDATE_OK + SW1SW2_OK;
   private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + CARD_CHALLENGE;
   private static final String SAM_GIVE_RANDOM_RSP = SW1SW2_OK;
   private static final String SAM_PREPARE_LOAD_CMD =
@@ -341,6 +360,9 @@ public class CardTransactionManagerAdapterTest {
           + "FFFE0000000079123456780000DD00001600729000BC0000140000020000000079";
   private static final String SAM_PREPARE_UNDEBIT_RSP = "CD00340000DF0C9437AABB" + SW1SW2_OK;
   private static final String SAM_SV_CHECK_CMD = "8058000003A54BC9";
+
+  private static final String SAM_CARD_GENERATE_KEY_CMD = "8012FFFF050405020390";
+  private static final String SAM_CARD_GENERATE_KEY_RSP = CIPHERED_KEY + SW1SW2_OK;
 
   private CardTransactionManager cardTransactionManager;
   private CalypsoCardAdapter calypsoCard;
@@ -794,6 +816,163 @@ public class CardTransactionManagerAdapterTest {
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void processChangePin_whenTransmissionIsPlain_shouldSendApdusToTheCardAndTheSAM()
+      throws Exception {
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .enablePinPlainTransmission()
+            .setSamResource(samReader, calypsoSam);
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+
+    calypsoCard.setPinAttemptRemaining(3);
+
+    CardRequestSpi cardChangePinCardRequest = createCardRequest(CARD_CHANGE_PIN_PLAIN_CMD);
+    CardResponseApi cardChangePinCardResponse = createCardResponse(CARD_CHANGE_PIN_PLAIN_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardChangePinCardResponse);
+
+    cardTransactionManager.processChangePin(NEW_PIN.getBytes());
+
+    InOrder inOrder = inOrder(cardReader);
+
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class));
+
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void processChangePin_whenTransmissionIsEncrypted_shouldSendApdusToTheCardAndTheSAM()
+      throws Exception {
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setPinModificationCipheringKey(PIN_CIPHERING_KEY_KIF, PIN_CIPHERING_KEY_KVC)
+            .setSamResource(samReader, calypsoSam);
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+
+    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
+    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD, SAM_CARD_CIPHER_PIN_UPDATE_CMD);
+    CardResponseApi samCardResponse =
+        createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_CIPHER_PIN_UPDATE_RSP);
+
+    CardRequestSpi cardChangePinCardRequest = createCardRequest(CARD_CHANGE_PIN_CMD);
+    CardResponseApi cardChangePinCardResponse = createCardResponse(CARD_CHANGE_PIN_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class)))
+        .thenReturn(cardGetChallengeCardResponse);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardChangePinCardResponse);
+
+    cardTransactionManager.processChangePin(NEW_PIN.getBytes());
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class));
+
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void processChangeKey_shouldSendApdusToTheCardAndTheSAM() throws Exception {
+    cardSecuritySetting =
+        CalypsoExtensionService.getInstance()
+            .createCardSecuritySetting()
+            .setSamResource(samReader, calypsoSam)
+            .enablePinPlainTransmission();
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+
+    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
+    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD, SAM_CARD_GENERATE_KEY_CMD);
+    CardResponseApi samCardResponse =
+        createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_GENERATE_KEY_RSP);
+
+    CardRequestSpi cardChangeKeyCardRequest = createCardRequest(CARD_CHANGE_KEY_CMD);
+    CardResponseApi cardChangeKeyCardResponse = createCardResponse(SW1SW2_OK);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class)))
+        .thenReturn(cardGetChallengeCardResponse);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardChangeKeyCardResponse);
+
+    cardTransactionManager.processChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
+
     verifyNoMoreInteractions(samReader, cardReader);
   }
 
