@@ -592,12 +592,26 @@ class SamCommandProcessor {
       // no current work key is available (outside secure session)
       if (newPin == null) {
         // PIN verification
+        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif()
+                == null
+            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc()
+                == null) {
+          throw new IllegalStateException(
+              "No KIF or KVC defined for the PIN verification ciphering key");
+        }
         pinCipheringKif =
             ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif();
         pinCipheringKvc =
             ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc();
       } else {
         // PIN modification
+        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif()
+                == null
+            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc()
+                == null) {
+          throw new IllegalStateException(
+              "No KIF or KVC defined for the PIN modification ciphering key");
+        }
         pinCipheringKif =
             ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif();
         pinCipheringKvc =
