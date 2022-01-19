@@ -14,30 +14,34 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the "Read Record Multiple" APDU command.
+ * Builds the "Search Record Multiple" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardReadRecordMultiple extends AbstractCardCommand {
+final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardReadRecordMultiple.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardSearchRecordMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
         new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
     m.put(
+        0x6400,
+        new StatusProperties(
+            "Data Out overflow (outgoing data would be too long).",
+            CardSessionBufferOverflowException.class));
+    m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported (<4).", CardIllegalParameterException.class));
     m.put(
         0x6981,
         new StatusProperties("Incorrect EF type: Binary EF.", CardDataAccessException.class));
@@ -59,7 +63,7 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect command data (incorrect Tag, incorrect Length, R. Length > RecSize, R. Offset + R. Length > RecSize, R. Length = 0).",
+            "Incorrect command data (S. Length incompatible with Lc, S. Length > RecSize, S. Offset + S. Length > RecSize, S. Mask bigger than S. Data).",
             CardIllegalParameterException.class));
     m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(
@@ -70,49 +74,64 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
-    m.put(
-        0x6200,
-        new StatusProperties(
-            "Successful execution, partial read only: issue another Read Record Multiple from record (P1 + (Size of returned data) / (R. Length)) to continue reading."));
     STATUS_TABLE = m;
   }
 
-  private final byte sfi;
-  private final byte recordNumber;
-  private final byte offset;
-  private final byte length;
-  private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
+  private final SearchCommandDataAdapter data;
+  private byte[] firstMatchingRecordContent;
 
   /**
    * (package-private)<br>
    * Constructor.
    *
    * @param calypsoCardClass The CLA field value.
-   * @param sfi The SFI.
-   * @param recordNumber The number of the first record to read.
-   * @param offset The offset from which to read in each record.
-   * @param length The number of bytes to read in each record.
+   * @param data The search command input/output data.
    * @since 2.1.0
    */
-  CmdCardReadRecordMultiple(
-      CalypsoCardClass calypsoCardClass, byte sfi, byte recordNumber, byte offset, byte length) {
+  CmdCardSearchRecordMultiple(CalypsoCardClass calypsoCardClass, SearchCommandDataAdapter data) {
 
-    super(CalypsoCardCommand.READ_RECORD_MULTIPLE);
+    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE);
 
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-    this.offset = offset;
-    this.length = length;
+    this.data = data;
 
-    byte p2 = (byte) (sfi * 8 + 5);
-    byte[] dataIn = new byte[] {0x54, 0x02, offset, length};
+    final int searchDataLength = data.getSearchData().length;
+
+    byte p2 = (byte) (data.getSfi() * 8 + 7);
+
+    byte[] dataIn = new byte[3 + (2 * searchDataLength)];
+    if (data.isEnableRepeatedOffset()) {
+      dataIn[0] = (byte) 0x80;
+    }
+    if (data.isFetchFirstMatchingResult()) {
+      dataIn[0] |= 1;
+    }
+    dataIn[1] = (byte) data.getOffset();
+    dataIn[2] = (byte) searchDataLength;
+
+    System.arraycopy(data.getSearchData(), 0, dataIn, 3, searchDataLength);
+
+    if (data.getMask() == null) {
+      // CL-CMD-SEARCH.1
+      Arrays.fill(dataIn, dataIn.length - searchDataLength, dataIn.length, (byte) 0xFF);
+    } else {
+      System.arraycopy(
+          data.getMask(), 0, dataIn, dataIn.length - searchDataLength, data.getMask().length);
+      if (data.getMask().length != searchDataLength) {
+        // CL-CMD-SEARCH.1
+        Arrays.fill(
+            dataIn,
+            dataIn.length - searchDataLength + data.getMask().length,
+            dataIn.length,
+            (byte) 0xFF);
+      }
+    }
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
                 getCommandRef().getInstructionByte(),
-                recordNumber,
+                (byte) data.getRecordNumber(),
                 p2,
                 dataIn,
                 (byte) 0)));
@@ -120,8 +139,14 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
     if (logger.isDebugEnabled()) {
       String extraInfo =
           String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, LENGTH:%d",
-              sfi, recordNumber, offset, length);
+              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh, MASK:%sh",
+              data.getSfi(),
+              data.getRecordNumber(),
+              data.getOffset(),
+              data.isEnableRepeatedOffset(),
+              data.isFetchFirstMatchingResult(),
+              ByteArrayUtil.toHex(data.getSearchData()),
+              ByteArrayUtil.toHex(data.getMask()));
       addSubName(extraInfo);
     }
   }
@@ -153,13 +178,16 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardReadRecordMultiple setApduResponse(ApduResponseApi apduResponse) {
+  CmdCardSearchRecordMultiple setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
-      int nbRecords = dataOut.length / length;
-      for (int i = 0; i < nbRecords; i++) {
-        results.put(recordNumber + i, Arrays.copyOfRange(dataOut, i * length, (i + 1) * length));
+      int nbRecords = dataOut[0];
+      for (int i = 1; i <= nbRecords; i++) {
+        data.getMatchingRecordNumbers().add((int) dataOut[i]);
+      }
+      if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
+        firstMatchingRecordContent = Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length);
       }
     }
     return this;
@@ -168,31 +196,21 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return The SFI.
+   * @return The search command input/output data.
    * @since 2.1.0
    */
-  int getSfi() {
-    return sfi;
+  SearchCommandDataAdapter getSearchCommandData() {
+    return data;
   }
 
   /**
    * (package-private)<br>
    *
-   * @return The offset.
+   * @return An empty array if fetching of first matching record is not requested or if no record
+   *     has matched.
    * @since 2.1.0
    */
-  public byte getOffset() {
-    return offset;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty sorted map of read bytes by record number, or an empty map if no data is
-   *     available.
-   * @since 2.1.0
-   */
-  SortedMap<Integer, byte[]> getResults() {
-    return results;
+  byte[] getFirstMatchingRecordContent() {
+    return firstMatchingRecordContent != null ? firstMatchingRecordContent : new byte[0];
   }
 }

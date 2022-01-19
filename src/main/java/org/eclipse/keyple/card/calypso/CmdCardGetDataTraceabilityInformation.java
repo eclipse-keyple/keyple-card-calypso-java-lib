@@ -22,7 +22,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
  * 6Cxx status and thus make calculation of the digest impossible.
  *
- * @since 2.0.4
+ * @since 2.1.0
  */
 final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
 
@@ -48,7 +48,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    * Instantiates a new CmdCardGetDataTrace.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
 
@@ -69,7 +69,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    * {@inheritDoc}
    *
    * @return False
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -79,7 +79,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.*;
 import org.calypsonet.terminal.calypso.GetDataTag;
+import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
@@ -188,6 +189,27 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
   private static final String CARD_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
   private static final String CARD_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD =
+          "00A2010F070000021234FFFF00";
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_RSP = "020406" + SW1SW2_OK;
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_CMD =
+          "00A2010F07000002123456FF00";
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_RSP = "020406" + SW1SW2_OK;
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_CMD =
+          "00A2010F070000021234567700";
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_RSP = "020406" + SW1SW2_OK;
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_CMD =
+          "00A20227078103021234FFFF00";
+  private static final String
+      CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_RSP =
+          "020406112233123456" + SW1SW2_OK;
   private static final String CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD =
       "00B3010D045402030100";
   private static final String CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP =
@@ -1366,6 +1388,324 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = IllegalArgumentException.class)
   public void prepareWriteRecord_whenRecordNumberIsHigherThan255_shouldThrowIAE() {
     cardTransactionManager.prepareWriteRecord(FILE7, 256, new byte[1]);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareSearchRecordMultiple_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
+    calypsoCard.initializeWithFci(
+        new ApduResponseAdapter(
+            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    cardTransactionManager.prepareSearchRecordMultiple(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenDataIsNull_shouldThrowIAE() {
+    cardTransactionManager.prepareSearchRecordMultiple(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenDataIsNotInstanceOfInternalAdapter_shouldThrowIAE() {
+    cardTransactionManager.prepareSearchRecordMultiple(
+        new SearchCommandData() {
+          @Override
+          public SearchCommandData setSfi(byte sfi) {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData startAtRecord(int recordNumber) {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData setOffset(int offset) {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData enableRepeatedOffset() {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData setSearchData(byte[] data) {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData setMask(byte[] mask) {
+            return null;
+          }
+
+          @Override
+          public SearchCommandData fetchFirstMatchingResult() {
+            return null;
+          }
+
+          @Override
+          public List<Integer> getMatchingRecordNumbers() {
+            return null;
+          }
+        });
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenSfiIsNegative_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSfi((byte) -1)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenSfiGreaterThan31_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSfi((byte) 32)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenRecordNumberIs0_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .startAtRecord(0)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenRecordNumberIsGreaterThan255_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .startAtRecord(256)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenOffsetIsNegative_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setOffset(-1)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenOffsetIsGreaterThan255_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setOffset(256)
+            .setSearchData(new byte[1]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenSearchDataIsNotSet_shouldThrowIAE() {
+    SearchCommandData data = CalypsoExtensionService.getInstance().createSearchCommandData();
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenSearchDataIsNull_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance().createSearchCommandData().setSearchData(null);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareSearchRecordMultiple_whenSearchDataIsEmpty_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance().createSearchCommandData().setSearchData(new byte[0]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareSearchRecordMultiple_whenSearchDataLengthIsGreaterThan255MinusOffset0_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[256]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareSearchRecordMultiple_whenSearchDataLengthIsGreaterThan254MinusOffset1_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setOffset(1)
+            .setSearchData(new byte[255]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareSearchRecordMultiple_whenMaskLengthIsGreaterThanSearchDataLength_shouldThrowIAE() {
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[1])
+            .setMask(new byte[2]);
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+  }
+
+  @Test
+  public void prepareSearchRecordMultiple_whenUsingDefaultParameters_shouldPrepareDefaultCommand()
+      throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[] {0x12, 0x34});
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
+  }
+
+  @Test
+  public void prepareSearchRecordMultiple_whenSetAllParameters_shouldPrepareCustomCommand()
+      throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSfi((byte) 4)
+            .startAtRecord(2)
+            .setOffset(3)
+            .enableRepeatedOffset()
+            .setSearchData(new byte[] {0x12, 0x34})
+            .fetchFirstMatchingResult();
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
+    assertThat(calypsoCard.getFileBySfi((byte) 4).getData().getContent(4))
+        .isEqualTo(ByteArrayUtil.fromHex("112233123456"));
+  }
+
+  @Test
+  public void prepareSearchRecordMultiple_whenNoMask_shouldFillMaskWithFFh() throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[] {0x12, 0x34});
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
+  }
+
+  @Test
+  public void prepareSearchRecordMultiple_whenPartialMask_shouldRightPadMaskWithFFh()
+      throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[] {0x12, 0x34})
+            .setMask(new byte[] {0x56});
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
+  }
+
+  @Test
+  public void prepareSearchRecordMultiple_whenFullMask_shouldUseCompleteMask() throws Exception {
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    SearchCommandData data =
+        CalypsoExtensionService.getInstance()
+            .createSearchCommandData()
+            .setSearchData(new byte[] {0x12, 0x34})
+            .setMask(new byte[] {0x56, 0x77});
+    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
   }
 
   @Test(expected = UnsupportedOperationException.class)

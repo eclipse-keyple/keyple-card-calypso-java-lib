@@ -502,7 +502,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   public byte[] getTraceabilityInformation() {
@@ -864,7 +864,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param sfi the SFI.
    * @param numRecord the record number (should be {@code >=} 1).
    * @param content the content (should be not empty).
-   * @since 2.0.4
+   * @since 2.1.0
    */
   void fillContent(byte sfi, int numRecord, byte[] content, int offset) {
     ElementaryFile ef = getOrCreateFile(sfi);
@@ -979,7 +979,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
    *
    * @param traceabilityInformation The traceability information.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   void setTraceabilityInformation(byte[] traceabilityInformation) {
     this.traceabilityInformation = traceabilityInformation;

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * (package-private)<br>
  * Builds the "Update/Write Binary" APDU command.
  *
- * @since 2.0.4
+ * @since 2.1.0
  */
 final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
 
@@ -82,7 +82,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    * @param sfi the sfi to select.
    * @param offset the offset.
    * @param data the data to write.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   CmdCardUpdateOrWriteBinary(
       boolean isUpdateCommand,
@@ -126,7 +126,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -137,7 +137,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The SFI.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   byte getSfi() {
     return sfi;
@@ -147,7 +147,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The offset.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   int getOffset() {
     return offset;
@@ -157,7 +157,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    * (package-private)<br>
    *
    * @return The data.
-   * @since 2.0.4
+   * @since 2.1.0
    */
   byte[] getData() {
     return data;
@@ -166,7 +166,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.4
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

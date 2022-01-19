@@ -133,6 +133,37 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * (private)<br>
+   * Updates the {@link SearchCommandDataAdapter} and the {@link CalypsoCardAdapter} objects with
+   * the response to a "Search Record Multiple" command received from the card.<br>
+   * The first matching record content is added to the {@link CalypsoCardAdapter} file structure if
+   * requested.
+   *
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardSearchRecordMultiple The command.
+   * @param apduResponse The response received.
+   * @param isSessionOpen True when a secure session is open.
+   * @throws CardCommandException If a response from the card was unexpected.
+   */
+  private static void updateCalypsoCardSearchRecordMultiple(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardSearchRecordMultiple cmdCardSearchRecordMultiple,
+      ApduResponseApi apduResponse,
+      boolean isSessionOpen)
+      throws CardCommandException {
+
+    cmdCardSearchRecordMultiple.setApduResponse(apduResponse);
+    checkResponseStatusForStrictAndBestEffortMode(cmdCardSearchRecordMultiple, isSessionOpen);
+
+    if (cmdCardSearchRecordMultiple.getFirstMatchingRecordContent().length > 0) {
+      calypsoCard.setContent(
+          cmdCardSearchRecordMultiple.getSearchCommandData().getSfi(),
+          cmdCardSearchRecordMultiple.getSearchCommandData().getMatchingRecordNumbers().get(0),
+          cmdCardSearchRecordMultiple.getFirstMatchingRecordContent());
+    }
+  }
+
+  /**
+   * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a 'Read Record Multiple'
    * command received from the card.<br>
    * The records read are added to the {@link CalypsoCardAdapter} file structure.
@@ -752,6 +783,10 @@ final class CalypsoCardUtilAdapter {
         } else {
           throw new IllegalStateException("Unknown GET DATA command reference.");
         }
+        break;
+      case SEARCH_RECORD_MULTIPLE:
+        updateCalypsoCardSearchRecordMultiple(
+            calypsoCard, (CmdCardSearchRecordMultiple) command, apduResponse, isSessionOpen);
         break;
       case READ_RECORD_MULTIPLE:
         updateCalypsoCardReadRecordMultiple(
