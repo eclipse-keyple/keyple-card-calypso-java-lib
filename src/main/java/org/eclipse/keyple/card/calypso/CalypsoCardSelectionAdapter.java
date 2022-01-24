@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
-import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
@@ -233,71 +232,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.1.0
-   */
-  @Override
-  public CalypsoCardSelection prepareReadRecordMultiple(
-      byte sfi, int fromRecordNumber, int toRecordNumber, int offset, int nbBytesToRead) {
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            fromRecordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "fromRecordNumber")
-        .isInRange(
-            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
-        .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, "offset")
-        .isInRange(
-            nbBytesToRead,
-            CalypsoCardConstant.DATA_LENGTH_MIN,
-            CalypsoCardConstant.DATA_LENGTH_MAX - offset,
-            "nbBytesToRead");
-
-    final int nbRecordsPerApdu = CalypsoCardConstant.PAYLOAD_CAPACITY_PRIME_REV3 / nbBytesToRead;
-
-    int currentRecordNumber = fromRecordNumber;
-
-    while (currentRecordNumber <= toRecordNumber) {
-      commands.add(
-          new CmdCardReadRecordMultiple(
-              CalypsoCardClass.ISO,
-              sfi,
-              (byte) currentRecordNumber,
-              (byte) offset,
-              (byte) nbBytesToRead));
-      currentRecordNumber += nbRecordsPerApdu;
-    }
-
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  public CalypsoCardSelection prepareSearchRecordMultiple(SearchCommandData data) {
-
-    if (!(data instanceof SearchCommandDataAdapter)) {
-      throw new IllegalArgumentException(
-          "The provided data must be an instance of 'SearchCommandDataAdapter' class.");
-    }
-
-    Assert.getInstance().notNull(data, "data");
-    ((SearchCommandDataAdapter) data).checkInputData();
-
-    commands.add(
-        new CmdCardSearchRecordMultiple(CalypsoCardClass.ISO, (SearchCommandDataAdapter) data));
-
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.0.0
    */
   @Override
@@ -329,12 +263,22 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
+  @Deprecated
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
-
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
+    return prepareSelectFile((short) ByteArrayUtil.twoBytesToInt(lid, 0));
+  }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  public CalypsoCardSelection prepareSelectFile(short lid) {
     commands.add(
         new CmdCardSelectFile(CalypsoCardClass.ISO, CalypsoCard.ProductType.PRIME_REVISION_3, lid));
     return this;
@@ -346,27 +290,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0.0
    */
   @Override
-  public CalypsoCardSelection prepareSelectFile(short lid) {
-    byte[] bLid =
-        new byte[] {
-          (byte) ((lid >> 8) & 0xff), (byte) (lid & 0xff),
-        };
-    prepareSelectFile(bLid);
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
   public CalypsoCardSelection prepareSelectFile(SelectFileControl selectControl) {
-
     Assert.getInstance().notNull(selectControl, "selectControl");
-
     commands.add(new CmdCardSelectFile(CalypsoCardClass.ISO, selectControl));
-
     return this;
   }
 

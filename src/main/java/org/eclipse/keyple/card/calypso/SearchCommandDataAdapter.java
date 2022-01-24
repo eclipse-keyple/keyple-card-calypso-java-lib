@@ -13,8 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.calypsonet.terminal.calypso.SearchCommandData;
-import org.eclipse.keyple.core.util.Assert;
+import org.calypsonet.terminal.calypso.transaction.SearchCommandData;
 
 /**
  * (package-private)<br>
@@ -197,33 +196,5 @@ final class SearchCommandDataAdapter implements SearchCommandData {
    */
   boolean isFetchFirstMatchingResult() {
     return fetchFirstMatchingResult;
-  }
-
-  /**
-   * (package-private)<br>
-   * Checks the validity of the form's input data.
-   *
-   * @throws IllegalArgumentException If one of the provided argument is out of range.
-   * @since 2.1.0
-   */
-  void checkInputData() {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "startAtRecord")
-        .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, "offset")
-        .notNull(searchData, "searchData")
-        .isInRange(
-            searchData.length,
-            CalypsoCardConstant.DATA_LENGTH_MIN,
-            CalypsoCardConstant.DATA_LENGTH_MAX - offset,
-            "searchData");
-    if (mask != null) {
-      Assert.getInstance()
-          .isInRange(mask.length, CalypsoCardConstant.DATA_LENGTH_MIN, searchData.length, "mask");
-    }
   }
 }
