@@ -106,13 +106,12 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    *
    * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param productType The target product type.
-   * @param selectionPath The file identifier path.
+   * @param lid The LID.
    * @since 2.0.1
    */
   CmdCardSelectFile(
-      CalypsoCardClass calypsoCardClass,
-      CalypsoCard.ProductType productType,
-      byte[] selectionPath) {
+      CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
+
     super(command);
 
     // handle the REV1 case
@@ -128,6 +127,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
       p1 = (byte) 0x09;
     }
 
+    byte[] dataIn =
+        new byte[] {
+          (byte) ((lid >> 8) & 0xFF), (byte) (lid & 0xFF),
+        };
+
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -135,11 +139,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
                 command.getInstructionByte(),
                 p1,
                 (byte) 0x00,
-                selectionPath,
+                dataIn,
                 (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("SELECTIONPATH=" + ByteArrayUtil.toHex(selectionPath));
+      addSubName("LID=" + ByteArrayUtil.toHex(dataIn));
     }
   }
 

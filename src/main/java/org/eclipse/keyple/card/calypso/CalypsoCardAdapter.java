@@ -730,10 +730,23 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
+  @Deprecated
   public Map<Byte, ElementaryFile> getAllFiles() {
     return efBySfi;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.0
+   */
+  @Override
+  public Set<ElementaryFile> getFiles() {
+    // TODO
+    return null;
   }
 
   /**

@@ -17,7 +17,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.*;
 import org.calypsonet.terminal.calypso.GetDataTag;
-import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
@@ -1237,8 +1236,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_whenRecordNumberIsMoreThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 256);
+  public void prepareReadRecord_whenRecordNumberIsMoreThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecord(FILE7, 251);
   }
 
   @Test
@@ -1268,8 +1267,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecords_whenFromRecordNumberIsGreaterThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecords(FILE7, 256, 256, 1);
+  public void prepareReadRecords_whenFromRecordNumberIsGreaterThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 251, 251, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1278,8 +1277,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecords_whenToRecordNumberIsGreaterThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 256, 1);
+  public void prepareReadRecords_whenToRecordNumberIsGreaterThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 251, 1);
   }
 
   @Test
@@ -1371,8 +1370,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateRecord_whenRecordNumberIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateRecord(FILE7, 256, new byte[1]);
+  public void prepareUpdateRecord_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareUpdateRecord(FILE7, 251, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1386,26 +1385,26 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteRecord_whenRecordNumberIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteRecord(FILE7, 256, new byte[1]);
+  public void prepareWriteRecord_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareWriteRecord(FILE7, 251, new byte[1]);
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareSearchRecordMultiple_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
+  public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
-    cardTransactionManager.prepareSearchRecordMultiple(null);
+    cardTransactionManager.prepareSearchRecords(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenDataIsNull_shouldThrowIAE() {
-    cardTransactionManager.prepareSearchRecordMultiple(null);
+  public void prepareSearchRecords_whenDataIsNull_shouldThrowIAE() {
+    cardTransactionManager.prepareSearchRecords(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenDataIsNotInstanceOfInternalAdapter_shouldThrowIAE() {
-    cardTransactionManager.prepareSearchRecordMultiple(
+  public void prepareSearchRecords_whenDataIsNotInstanceOfInternalAdapter_shouldThrowIAE() {
+    cardTransactionManager.prepareSearchRecords(
         new SearchCommandData() {
           @Override
           public SearchCommandData setSfi(byte sfi) {
@@ -1450,119 +1449,118 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenSfiIsNegative_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSfiIsNegative_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setSfi((byte) -1)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenSfiGreaterThan31_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSfiGreaterThan31_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setSfi((byte) 32)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenRecordNumberIs0_shouldThrowIAE() {
+  public void prepareSearchRecords_whenRecordNumberIs0_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .startAtRecord(0)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenRecordNumberIsGreaterThan255_shouldThrowIAE() {
+  public void prepareSearchRecords_whenRecordNumberIsGreaterThan250_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
-            .startAtRecord(256)
+            .startAtRecord(251)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenOffsetIsNegative_shouldThrowIAE() {
+  public void prepareSearchRecords_whenOffsetIsNegative_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setOffset(-1)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenOffsetIsGreaterThan255_shouldThrowIAE() {
+  public void prepareSearchRecords_whenOffsetIsGreaterThan249_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
-            .setOffset(256)
+            .setOffset(250)
             .setSearchData(new byte[1]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenSearchDataIsNotSet_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSearchDataIsNotSet_shouldThrowIAE() {
     SearchCommandData data = CalypsoExtensionService.getInstance().createSearchCommandData();
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenSearchDataIsNull_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSearchDataIsNull_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance().createSearchCommandData().setSearchData(null);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecordMultiple_whenSearchDataIsEmpty_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSearchDataIsEmpty_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance().createSearchCommandData().setSearchData(new byte[0]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void
-      prepareSearchRecordMultiple_whenSearchDataLengthIsGreaterThan255MinusOffset0_shouldThrowIAE() {
+      prepareSearchRecords_whenSearchDataLengthIsGreaterThan250MinusOffset0_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
-            .setSearchData(new byte[256]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+            .setSearchData(new byte[251]);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void
-      prepareSearchRecordMultiple_whenSearchDataLengthIsGreaterThan254MinusOffset1_shouldThrowIAE() {
+      prepareSearchRecords_whenSearchDataLengthIsGreaterThan249MinusOffset1_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setOffset(1)
-            .setSearchData(new byte[255]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+            .setSearchData(new byte[250]);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void
-      prepareSearchRecordMultiple_whenMaskLengthIsGreaterThanSearchDataLength_shouldThrowIAE() {
+  public void prepareSearchRecords_whenMaskLengthIsGreaterThanSearchDataLength_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setSearchData(new byte[1])
             .setMask(new byte[2]);
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
   }
 
   @Test
-  public void prepareSearchRecordMultiple_whenUsingDefaultParameters_shouldPrepareDefaultCommand()
+  public void prepareSearchRecords_whenUsingDefaultParameters_shouldPrepareDefaultCommand()
       throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -1578,7 +1576,7 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setSearchData(new byte[] {0x12, 0x34});
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1590,7 +1588,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSearchRecordMultiple_whenSetAllParameters_shouldPrepareCustomCommand()
+  public void prepareSearchRecords_whenSetAllParameters_shouldPrepareCustomCommand()
       throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -1611,7 +1609,7 @@ public class CardTransactionManagerAdapterTest {
             .enableRepeatedOffset()
             .setSearchData(new byte[] {0x12, 0x34})
             .fetchFirstMatchingResult();
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1625,7 +1623,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSearchRecordMultiple_whenNoMask_shouldFillMaskWithFFh() throws Exception {
+  public void prepareSearchRecords_whenNoMask_shouldFillMaskWithFFh() throws Exception {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD);
@@ -1640,7 +1638,7 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
             .setSearchData(new byte[] {0x12, 0x34});
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1652,8 +1650,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSearchRecordMultiple_whenPartialMask_shouldRightPadMaskWithFFh()
-      throws Exception {
+  public void prepareSearchRecords_whenPartialMask_shouldRightPadMaskWithFFh() throws Exception {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_CMD);
@@ -1669,7 +1666,7 @@ public class CardTransactionManagerAdapterTest {
             .createSearchCommandData()
             .setSearchData(new byte[] {0x12, 0x34})
             .setMask(new byte[] {0x56});
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1681,7 +1678,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
-  public void prepareSearchRecordMultiple_whenFullMask_shouldUseCompleteMask() throws Exception {
+  public void prepareSearchRecords_whenFullMask_shouldUseCompleteMask() throws Exception {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_CMD);
@@ -1697,7 +1694,7 @@ public class CardTransactionManagerAdapterTest {
             .createSearchCommandData()
             .setSearchData(new byte[] {0x12, 0x34})
             .setMask(new byte[] {0x56, 0x77});
-    cardTransactionManager.prepareSearchRecordMultiple(data);
+    cardTransactionManager.prepareSearchRecords(data);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1709,69 +1706,69 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareReadRecordMultiple_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE() {
+  public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 1, 1);
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenSfiIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 0, 1, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenSfiIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 0, 1, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 32, 1, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenSfiIsHigherThan31_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 32, 1, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenFromRecordNumberIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 0, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenFromRecordNumberIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 0, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenFromRecordNumberGreaterThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 256, 256, 1, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void
-      prepareReadRecordMultiple_whenToRecordNumberLessThanFromRecordNumber_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 2, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenFromRecordNumberGreaterThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 251, 251, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void
-      prepareReadRecordMultiple_whenToRecordNumberGreaterThan255MinusFromRecordNumber_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 256, 1, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenOffsetIsNegative_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, -1, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenOffsetGreaterThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 256, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordMultiple_whenNbBytesToReadIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 1, 0);
+      prepareReadRecordsPartially_whenToRecordNumberLessThanFromRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 2, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void
-      prepareReadRecordMultiple_whenNbBytesToReadIsGreaterThan255MinusOffset_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 1, 3, 253);
+      prepareReadRecordsPartially_whenToRecordNumberGreaterThan250MinusFromRecordNumber_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 251, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordsPartially_whenOffsetIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, -1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordsPartially_whenOffsetGreaterThan249_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 250, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecordsPartially_whenNbBytesToReadIsZero_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      prepareReadRecordsPartially_whenNbBytesToReadIsGreaterThan250MinusOffset_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 3, 248);
   }
 
   @Test
   public void
-      prepareReadRecordMultiple_whenNbRecordsToReadMultipliedByNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
+      prepareReadRecordsPartially_whenNbRecordsToReadMultipliedByNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -1784,7 +1781,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(3);
 
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 2, 3, 1);
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 2, 3, 1);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -1800,7 +1797,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareReadRecordMultiple_whenNbRecordsToReadMultipliedByNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+      prepareReadRecordsPartially_whenNbRecordsToReadMultipliedByNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -1819,7 +1816,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareReadRecordMultiple((byte) 1, 1, 5, 3, 1);
+    cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 5, 3, 1);
     cardTransactionManager.processCardCommands();
 
     verify(cardReader)
@@ -2189,8 +2186,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareIncreaseCounter_whenRecordNumberIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareIncreaseCounter(FILE7, 256, 1);
+  public void prepareIncreaseCounter_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareIncreaseCounter(FILE7, 251, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2209,8 +2206,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareDecreaseCounter_whenRecordNumberIsHigherThan255_shouldThrowIAE() {
-    cardTransactionManager.prepareDecreaseCounter(FILE7, 256, 1);
+  public void prepareDecreaseCounter_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+    cardTransactionManager.prepareDecreaseCounter(FILE7, 251, 1);
   }
 
   @Test(expected = IllegalStateException.class)

@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.calypsonet.terminal.calypso.GetDataTag;
-import org.calypsonet.terminal.calypso.SearchCommandData;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
@@ -1446,16 +1445,24 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated
    */
   @Override
+  @Deprecated
   public final CardTransactionManager prepareSelectFile(byte[] lid) {
-
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
+    return prepareSelectFile((short) ByteArrayUtil.twoBytesToInt(lid, 0));
+  }
 
-    // create the command and add it to the list of commands
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.0
+   */
+  @Override
+  public CardTransactionManager prepareSelectFile(short lid) {
     cardCommandManager.addRegularCommand(
         new CmdCardSelectFile(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid));
-
     return this;
   }
 
@@ -1659,7 +1666,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.1.0
    */
   @Override
-  public CardTransactionManager prepareReadRecordMultiple(
+  public CardTransactionManager prepareReadRecordsPartially(
       byte sfi, int fromRecordNumber, int toRecordNumber, int offset, int nbBytesToRead) {
 
     if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
@@ -1718,7 +1725,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
         .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
 
-    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
+    if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
       cardCommandManager.addRegularCommand(
           new CmdCardReadBinary(calypsoCard.getCardClass(), sfi, 0, (byte) 1));
@@ -1759,7 +1766,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.1.0
    */
   @Override
-  public CardTransactionManager prepareSearchRecordMultiple(SearchCommandData data) {
+  public CardTransactionManager prepareSearchRecords(SearchCommandData data) {
 
     if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
       throw new UnsupportedOperationException(
@@ -1771,12 +1778,42 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           "The provided data must be an instance of 'SearchCommandDataAdapter' class.");
     }
 
-    Assert.getInstance().notNull(data, "data");
-    ((SearchCommandDataAdapter) data).checkInputData();
+    SearchCommandDataAdapter dataAdapter = (SearchCommandDataAdapter) data;
+
+    Assert.getInstance()
+        .notNull(data, "data")
+        .isInRange(
+            (int) dataAdapter.getSfi(),
+            CalypsoCardConstant.SFI_MIN,
+            CalypsoCardConstant.SFI_MAX,
+            "sfi")
+        .isInRange(
+            dataAdapter.getRecordNumber(),
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX,
+            "startAtRecord")
+        .isInRange(
+            dataAdapter.getOffset(),
+            CalypsoCardConstant.OFFSET_MIN,
+            CalypsoCardConstant.OFFSET_MAX,
+            OFFSET)
+        .notNull(dataAdapter.getSearchData(), "searchData")
+        .isInRange(
+            dataAdapter.getSearchData().length,
+            CalypsoCardConstant.DATA_LENGTH_MIN,
+            CalypsoCardConstant.DATA_LENGTH_MAX - dataAdapter.getOffset(),
+            "searchData");
+    if (dataAdapter.getMask() != null) {
+      Assert.getInstance()
+          .isInRange(
+              dataAdapter.getMask().length,
+              CalypsoCardConstant.DATA_LENGTH_MIN,
+              dataAdapter.getSearchData().length,
+              "mask");
+    }
 
     cardCommandManager.addRegularCommand(
-        new CmdCardSearchRecordMultiple(
-            calypsoCard.getCardClass(), (SearchCommandDataAdapter) data));
+        new CmdCardSearchRecordMultiple(calypsoCard.getCardClass(), dataAdapter));
 
     return this;
   }
@@ -1807,8 +1844,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareUpdateRecord(
       byte sfi, int recordNumber, byte[] recordData) {
-    Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi") //
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
@@ -1831,8 +1868,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareWriteRecord(
       byte sfi, int recordNumber, byte[] recordData) {
-    Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi") //
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
@@ -1891,7 +1928,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
         .notEmpty(data, "data");
 
-    if (sfi > 0 && offset > CalypsoCardConstant.OFFSET_MAX) {
+    if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
       cardCommandManager.addRegularCommand(
           new CmdCardReadBinary(calypsoCard.getCardClass(), sfi, 0, (byte) 1));
@@ -1930,13 +1967,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareIncreaseCounter(
       byte sfi, int counterNumber, int incValue) {
-    Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi") //
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
             counterNumber,
             CalypsoCardConstant.NB_CNT_MIN,
             CalypsoCardConstant.NB_CNT_MAX,
-            "counterNumber") //
+            "counterNumber")
         .isInRange(
             incValue,
             CalypsoCardConstant.CNT_VALUE_MIN,
@@ -1958,13 +1995,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareDecreaseCounter(
       byte sfi, int counterNumber, int decValue) {
-    Assert.getInstance() //
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi") //
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
             counterNumber,
             CalypsoCardConstant.NB_CNT_MIN,
             CalypsoCardConstant.NB_CNT_MAX,
-            "counterNumber") //
+            "counterNumber")
         .isInRange(
             decValue,
             CalypsoCardConstant.CNT_VALUE_MIN,

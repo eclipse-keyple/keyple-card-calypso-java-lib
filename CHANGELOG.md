@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of `EF_LIST` and `TRACEABILITY_INFORMATION` tags to `prepareGetData` methods (issue [#33]).
 - Implementation of `prepareUpdateBinary` and `prepareWriteBinary` methods (issue [#34]).
 - Implementation of `prepareReadBinary` method (issue [#35]).
-- Implementation of `prepareReadRecordMultiple` methods (issue [#36]).
-- Implementation of `prepareSearchRecordMultiple` methods (issue [#37]).
+- Implementation of `prepareReadRecordsPartially` methods (issue [#36]).
+- Implementation of `prepareSearchRecords` methods (issue [#37]).
 - Implementation of `processChangeKey` methods (issue [#39]).
 ### Fixed
 - Revision 2 case for `prepareSelectFile` method (issue [#32]).
 ### Upgraded
-- "Calypsonet Terminal Calypso API" to version `1.1.0`.
+- "Calypsonet Terminal Calypso API" to version `1.1.0` (issue [#53]).
 
 ## [2.0.3] - 2021-12-17
 ### Fixed
@@ -38,8 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.0.2`
 - "Keyple Service Resource Library" to version `2.0.1`
-### Deprecated
-- `addSuccessfulStatusWord` method (issue [calypsonet/calypsonet-terminal-calypso-java-api#11]).
 
 ## [2.0.0] - 2021-10-06
 This is the initial release.
@@ -52,6 +50,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#53]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/53
 [#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
 [#37]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/37
 [#36]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/36
@@ -66,5 +65,3 @@ It also brings many major API changes.
 [#20]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/20
 
 [eclipse/keyple#6]: https://github.com/eclipse/keyple/issues/6
-
-[calypsonet/calypsonet-terminal-calypso-java-api#11]: https://github.com/calypsonet/calypsonet-terminal-calypso-java-api/issues/11
