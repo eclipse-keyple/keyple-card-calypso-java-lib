@@ -235,11 +235,11 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 </td>
 </tr>
 <tr id="i6" class="altColor">
-<td class="colFirst"><code>org.calypsonet.terminal.calypso.SearchCommandData</code></td>
+<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SearchCommandData</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSearchCommandData()">createSearchCommandData</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Creates an instance of <code>SearchCommandData</code> to be used to define the parameters of the
- "Search Record Multiple" card command.</div>
+ <code>CardTransactionManager.prepareSearchRecords(SearchCommandData)</code> method.</div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
@@ -375,16 +375,9 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>createSearchCommandData</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.SearchCommandData&nbsp;createSearchCommandData()</pre>
+<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SearchCommandData&nbsp;createSearchCommandData()</pre>
 <div class="block">Creates an instance of <code>SearchCommandData</code> to be used to define the parameters of the
- "Search Record Multiple" card command.
-
- <p>See methods:
-
- <ul>
-   <li><code>CalypsoCardSelection.prepareSearchRecordMultiple(SearchCommandData)</code>
-   <li><code>CardTransactionManager.prepareSearchRecordMultiple(SearchCommandData)</code>
- </ul></div>
+ <code>CardTransactionManager.prepareSearchRecords(SearchCommandData)</code> method.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A not null reference.</dd>
