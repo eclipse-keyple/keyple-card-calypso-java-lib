@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of `prepareReadRecordsPartially` methods (issue [#36]).
 - Implementation of `prepareSearchRecords` methods (issue [#37]).
 - Implementation of `processChangeKey` methods (issue [#39]).
+- Management of EFs with SFI equal to 0 (issue [#55]).
 ### Fixed
 - Revision 2 case for `prepareSelectFile` method (issue [#32]).
 ### Upgraded
@@ -50,6 +51,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#55]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/55
 [#53]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/53
 [#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
 [#37]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/37

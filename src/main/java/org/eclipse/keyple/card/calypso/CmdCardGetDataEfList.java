@@ -94,22 +94,17 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Gets a reference to a map of all Elementary File headers by their associated SFI.
+   * Gets a reference to a map of all Elementary File headers and their associated SFI.
    *
    * @return A not empty map.
    * @since 2.1.0
    */
-  Map<Byte, FileHeader> getEfHeaders() {
+  Map<FileHeaderAdapter, Byte> getEfHeaders() {
     byte[] rawList = getApduResponse().getDataOut();
-    Map<Byte, FileHeader> efToFileHeaderMap = new HashMap<Byte, FileHeader>();
+    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = new HashMap<FileHeaderAdapter, Byte>();
     int nbFiles = rawList[1] / DESCRIPTOR_TAG_LENGTH;
     for (int i = 0; i < nbFiles; i++) {
-      efToFileHeaderMap.put(
-          rawList[
-              DESCRIPTORS_OFFSET
-                  + (i * DESCRIPTOR_TAG_LENGTH)
-                  + DESCRIPTOR_DATA_OFFSET
-                  + DESCRIPTOR_DATA_SFI_OFFSET],
+      fileHeaderToSfiMap.put(
           createFileHeader(
               Arrays.copyOfRange(
                   rawList,
@@ -117,9 +112,14 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
                   DESCRIPTORS_OFFSET
                       + (i * DESCRIPTOR_TAG_LENGTH)
                       + DESCRIPTOR_DATA_OFFSET
-                      + DESCRIPTOR_DATA_LENGTH)));
+                      + DESCRIPTOR_DATA_LENGTH)),
+          rawList[
+              DESCRIPTORS_OFFSET
+                  + (i * DESCRIPTOR_TAG_LENGTH)
+                  + DESCRIPTOR_DATA_OFFSET
+                  + DESCRIPTOR_DATA_SFI_OFFSET]);
     }
-    return efToFileHeaderMap;
+    return fileHeaderToSfiMap;
   }
 
   /**
@@ -129,7 +129,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * @param efDescriptorByteArray A 6-byte array.
    * @return A not null {@link FileHeader}.
    */
-  private FileHeader createFileHeader(byte[] efDescriptorByteArray) {
+  private FileHeaderAdapter createFileHeader(byte[] efDescriptorByteArray) {
     ElementaryFile.Type efType;
     switch (efDescriptorByteArray[3]) {
       case CalypsoCardConstant.EF_TYPE_LINEAR:

@@ -28,10 +28,10 @@ class FileHeaderAdapter implements FileHeader {
   private final int recordsNumber;
   private final int recordSize;
   private final ElementaryFile.Type type;
-  private final byte[] accessConditions;
-  private final byte[] keyIndexes;
-  private final Byte dfStatus;
-  private final Short sharedReference;
+  private byte[] accessConditions;
+  private byte[] keyIndexes;
+  private Byte dfStatus;
+  private Short sharedReference;
 
   /** Private constructor */
   private FileHeaderAdapter(FileHeaderBuilder builder) {
@@ -171,12 +171,12 @@ class FileHeaderAdapter implements FileHeader {
 
     /**
      * (package-private)<br>
-     * Build a new {@code FileHeader}.
+     * Build a new instance.
      *
      * @return A new instance
      * @since 2.0.0
      */
-    FileHeader build() {
+    FileHeaderAdapter build() {
       return new FileHeaderAdapter(this);
     }
   }
@@ -280,15 +280,38 @@ class FileHeaderAdapter implements FileHeader {
    * @since 2.0.0
    */
   FileHeaderAdapter(FileHeader source) {
-    this.lid = source.getLid();
-    this.recordsNumber = source.getRecordsNumber();
-    this.recordSize = source.getRecordSize();
-    this.type = source.getEfType();
-    this.accessConditions =
+    lid = source.getLid();
+    recordsNumber = source.getRecordsNumber();
+    recordSize = source.getRecordSize();
+    type = source.getEfType();
+    accessConditions =
         Arrays.copyOf(source.getAccessConditions(), source.getAccessConditions().length);
-    this.keyIndexes = Arrays.copyOf(source.getKeyIndexes(), source.getKeyIndexes().length);
-    this.dfStatus = source.getDfStatus();
-    this.sharedReference = source.getSharedReference();
+    keyIndexes = Arrays.copyOf(source.getKeyIndexes(), source.getKeyIndexes().length);
+    dfStatus = source.getDfStatus();
+    sharedReference = source.getSharedReference();
+  }
+
+  /**
+   * (package-private)<br>
+   * Updates the missing information using the provided source.
+   *
+   * @param source The header to use.
+   * @since 2.1.0
+   */
+  void updateMissingInfoFrom(FileHeader source) {
+    if (accessConditions == null) {
+      accessConditions =
+          Arrays.copyOf(source.getAccessConditions(), source.getAccessConditions().length);
+    }
+    if (keyIndexes == null) {
+      keyIndexes = Arrays.copyOf(source.getKeyIndexes(), source.getKeyIndexes().length);
+    }
+    if (dfStatus == null) {
+      dfStatus = source.getDfStatus();
+    }
+    if (sharedReference == null) {
+      sharedReference = source.getSharedReference();
+    }
   }
 
   /**

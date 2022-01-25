@@ -1139,7 +1139,7 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
 
-    assertThat(calypsoCard.getAllFiles()).isEmpty();
+    assertThat(calypsoCard.getFiles()).isEmpty();
 
     cardTransactionManager.prepareGetData(GetDataTag.EF_LIST);
     cardTransactionManager.processCardCommands();
@@ -1149,7 +1149,7 @@ public class CardTransactionManagerAdapterTest {
 
     verifyNoMoreInteractions(samReader, cardReader);
 
-    assertThat(calypsoCard.getAllFiles()).hasSize(5);
+    assertThat(calypsoCard.getFiles()).hasSize(5);
 
     FileHeader fileHeader07 = calypsoCard.getFileBySfi((byte) 0x07).getHeader();
     assertThat(fileHeader07.getLid()).isEqualTo((short) 0x2001);
@@ -1714,8 +1714,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordsPartially_whenSfiIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordsPartially((byte) 0, 1, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenSfiIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) -1, 1, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1845,8 +1845,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadBinary_whenSfiIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareReadBinary((byte) 0, 1, 1);
+  public void prepareReadBinary_whenSfiIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) -1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1949,8 +1949,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateBinary_whenSfiIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateBinary((byte) 0, 1, new byte[1]);
+  public void prepareUpdateBinary_whenSfiIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareUpdateBinary((byte) -1, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2064,8 +2064,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteBinary_whenSfiIsZero_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteBinary((byte) 0, 1, new byte[1]);
+  public void prepareWriteBinary_whenSfiIsNegative_shouldThrowIAE() {
+    cardTransactionManager.prepareWriteBinary((byte) -1, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
