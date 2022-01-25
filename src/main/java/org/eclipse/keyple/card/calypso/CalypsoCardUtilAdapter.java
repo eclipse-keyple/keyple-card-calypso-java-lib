@@ -20,7 +20,6 @@ import java.util.Map;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
@@ -223,8 +222,8 @@ final class CalypsoCardUtilAdapter {
    * (private)<br>
    * Updates the {@link CalypsoCardAdapter} object with the response to a Select File command
    * received from the card.<br>
-   * Depending on the content of the response, either a {@link FileHeader} is added or the {@link
-   * DirectoryHeader} is updated
+   * Depending on the content of the response, either a {@link FileHeaderAdapter} is added or the
+   * {@link DirectoryHeaderAdapter} is updated
    *
    * @param calypsoCard The {@link CalypsoCardAdapter} object to update.
    * @param command The command.
@@ -252,7 +251,7 @@ final class CalypsoCardUtilAdapter {
         calypsoCard.setDirectoryHeader(directoryHeader);
         break;
       case FILE_TYPE_EF:
-        FileHeader fileHeader = createFileHeader(proprietaryInformation);
+        FileHeaderAdapter fileHeader = createFileHeader(proprietaryInformation);
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
       default:
@@ -279,13 +278,10 @@ final class CalypsoCardUtilAdapter {
 
     command.setApduResponse(apduResponse).checkStatus();
 
-    Map<Byte, FileHeader> sfiToFileHeaderMap = command.getEfHeaders();
+    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = command.getEfHeaders();
 
-    for (Map.Entry<Byte, FileHeader> entry : sfiToFileHeaderMap.entrySet()) {
-      if (calypsoCard.getFileBySfi(entry.getKey()) == null
-          || calypsoCard.getFileBySfi(entry.getKey()).getHeader() == null) {
-        calypsoCard.setFileHeader(entry.getKey(), entry.getValue());
-      }
+    for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
+      calypsoCard.setFileHeader(entry.getValue(), entry.getKey());
     }
   }
 
@@ -450,11 +446,10 @@ final class CalypsoCardUtilAdapter {
 
     cmdCardDecrease.setApduResponse(apduResponse).checkStatus();
 
-    calypsoCard.setContent(
+    calypsoCard.setCounter(
         (byte) cmdCardDecrease.getSfi(),
-        1,
-        apduResponse.getDataOut(),
-        3 * (cmdCardDecrease.getCounterNumber() - 1));
+        cmdCardDecrease.getCounterNumber(),
+        apduResponse.getDataOut());
   }
 
   /**
@@ -474,11 +469,10 @@ final class CalypsoCardUtilAdapter {
 
     cmdCardIncrease.setApduResponse(apduResponse).checkStatus();
 
-    calypsoCard.setContent(
+    calypsoCard.setCounter(
         (byte) cmdCardIncrease.getSfi(),
-        1,
-        apduResponse.getDataOut(),
-        3 * (cmdCardIncrease.getCounterNumber() - 1));
+        cmdCardIncrease.getCounterNumber(),
+        apduResponse.getDataOut());
   }
 
   /**
@@ -694,12 +688,12 @@ final class CalypsoCardUtilAdapter {
   /**
    * (private)<br>
    * Parses the proprietaryInformation field of a file identified as an EF and create a {@link
-   * FileHeader}
+   * FileHeaderAdapter}
    *
    * @param proprietaryInformation from the response to a Select File command.
-   * @return A {@link FileHeader} object
+   * @return A {@link FileHeaderAdapter} object
    */
-  private static FileHeader createFileHeader(byte[] proprietaryInformation) {
+  private static FileHeaderAdapter createFileHeader(byte[] proprietaryInformation) {
 
     ElementaryFile.Type fileType =
         getEfTypeFromCardValue(proprietaryInformation[SEL_EF_TYPE_OFFSET]);

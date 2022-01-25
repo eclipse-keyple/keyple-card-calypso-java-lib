@@ -12,8 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.card.FileData;
-import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
@@ -25,7 +23,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 class ElementaryFileAdapter implements ElementaryFile {
 
   private final byte sfi;
-  private FileHeader header;
+  private FileHeaderAdapter header;
   private final FileDataAdapter data;
 
   /**
@@ -63,7 +61,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * @return the current instance.
    * @since 2.0.0
    */
-  ElementaryFile setHeader(FileHeader header) {
+  ElementaryFile setHeader(FileHeaderAdapter header) {
     this.header = header;
     return this;
   }
@@ -84,7 +82,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * @since 2.0.0
    */
   @Override
-  public FileHeader getHeader() {
+  public FileHeaderAdapter getHeader() {
     return header;
   }
 
@@ -94,7 +92,7 @@ class ElementaryFileAdapter implements ElementaryFile {
    * @since 2.0.0
    */
   @Override
-  public FileData getData() {
+  public FileDataAdapter getData() {
     return data;
   }
 
