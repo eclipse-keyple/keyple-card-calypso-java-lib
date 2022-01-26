@@ -117,6 +117,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
 
     this.calypsoCard = calypsoCard;
 
+    // CL-CSS-ABORTCMD.1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

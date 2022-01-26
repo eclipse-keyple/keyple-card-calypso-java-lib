@@ -219,7 +219,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       WriteAccessLevel writeAccessLevel, List<AbstractCardCommand> cardCommands) {
 
     // This method should be invoked only if no session was previously open
-    checkSessionIsNotOpen();
+    checkSessionNotOpen();
 
     if (cardSecuritySettings == null) {
       throw new IllegalStateException("No security settings are available.");
@@ -380,8 +380,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * </ul>
    *
    * @param cardCommands the card commands inside session.
-   * @param channelControl indicated if the card channel of the card reader must be closed after
-   *     the. last command
+   * @param channelControl indicated if the card channel of the card reader must be closed after the
+   *     last command.
    * @throws CardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
@@ -469,8 +469,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *     commands.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
    *     ratification command must be sent.
-   * @param channelControl indicates if the card channel of the card reader must be closed after
-   *     the. last command
+   * @param channelControl indicates if the card channel of the card reader must be closed after the
+   *     last command.
    * @throws CardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
@@ -480,7 +480,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
 
-    checkSessionIsOpen();
+    checkSessionOpen();
 
     // Get the card ApduRequestAdapter List - for the first card exchange
     List<ApduRequestSpi> apduRequests = getApduRequests(cardModificationCommands);
@@ -598,8 +598,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param cardCommands a list of commands that can modify the card memory content.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
    *     ratification command must be sent.
-   * @param channelControl indicates if the card channel of the card reader must be closed after
-   *     the. last command
+   * @param channelControl indicates if the card channel of the card reader must be closed after the
+   *     last command.
    * @throws CardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
@@ -753,8 +753,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * <p>Note: commands prepared prior to the invocation of this method shall not require the use of
    * a SAM.
    *
-   * @param channelControl indicates if the card channel of the card reader must be closed after
-   *     the. last command
+   * @param channelControl indicates if the card channel of the card reader must be closed after the
+   *     last command.
    * @throws CardTransactionException if a functional error occurs (including card and SAM IO
    *     errors)
    */
@@ -865,7 +865,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager processClosing() {
 
-    checkSessionIsOpen();
+    checkSessionOpen();
 
     boolean atLeastOneReadCommand = false;
     boolean sessionPreviouslyClosed = false;
@@ -952,7 +952,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager processCancel() {
 
-    checkSessionIsOpen();
+    checkSessionOpen();
 
     // card ApduRequestAdapter List to hold Close Secure Session command
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
@@ -1180,9 +1180,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param cardRequest The card request to transmit.
    * @param channelControl The channel control.
    * @return The card response.
-   * @throws ReaderBrokenCommunicationException If the communication with the card or the card
-   *     reader failed.
-   * @throws UnexpectedStatusWordException If the card returned an unexpected response.
+   * @throws CardIOException If the communication with the card or the card reader failed.
+   * @throws IllegalStateException If the card returned an unexpected response.
    */
   private CardResponseApi safeTransmit(CardRequestSpi cardRequest, ChannelControl channelControl) {
     try {
@@ -1297,7 +1296,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * @throws IllegalStateException if no session is open
    */
-  private void checkSessionIsOpen() {
+  private void checkSessionOpen() {
     if (sessionState != SessionState.SESSION_OPEN) {
       throw new IllegalStateException(
           "Bad session state. Current: "
@@ -1312,7 +1311,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * @throws IllegalStateException if a session is open
    */
-  private void checkSessionIsNotOpen() {
+  private void checkSessionNotOpen() {
     if (sessionState == SessionState.SESSION_OPEN) {
       throw new IllegalStateException(
           "Bad session state. Current: " + sessionState + ", expected: not open");
@@ -1990,6 +1989,18 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * {@inheritDoc}
    *
+   * @since 2.1.0
+   */
+  @Override
+  public CardTransactionManager prepareIncreaseCounters(
+      byte sfi, Map<Integer, Integer> counterNumberToIncValueMap) {
+    // TODO implementation
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    */
   @Override
@@ -2021,19 +2032,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @since 2.1.0
    */
   @Override
-  public CardTransactionManager prepareIncreaseMultipleCounters(
-      byte sfi, Map<Integer, Integer> counterNumberToIncValueMap) {
-    // TODO implementation
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  public CardTransactionManager prepareDecreaseMultipleCounters(
+  public CardTransactionManager prepareDecreaseCounters(
       byte sfi, Map<Integer, Integer> counterNumberToDecValueMap) {
     // TODO implementation
     return null;
@@ -2194,7 +2193,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param date 2-byte free value.
    * @param time 2-byte free value.
    */
-  private void prepareSvDebitPriv(int amount, byte[] date, byte[] time)
+  private void prepareInternalSvDebit(int amount, byte[] date, byte[] time)
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
           CalypsoSamCommandException {
 
@@ -2230,7 +2229,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param date 2-byte free value.
    * @param time 2-byte free value.
    */
-  private void prepareSvUndebitPriv(int amount, byte[] date, byte[] time)
+  private void prepareInternalSvUndebit(int amount, byte[] date, byte[] time)
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
           CalypsoSamCommandException {
 
@@ -2260,9 +2259,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   public final CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
     try {
       if (SvAction.DO.equals(svAction)) {
-        prepareSvDebitPriv(amount, date, time);
+        prepareInternalSvDebit(amount, date, time);
       } else {
-        prepareSvUndebitPriv(amount, date, time);
+        prepareInternalSvUndebit(amount, date, time);
       }
     } catch (CalypsoSamCommandException e) {
       throw new SamAnomalyException(
