@@ -88,16 +88,15 @@ class CardCommandManager {
       case SV_RELOAD:
       case SV_DEBIT:
       case SV_UNDEBIT:
+        // CL-SV-GETDEBIT.1
+        // CL-SV-GETRLOAD.1
         if (!cardCommands.isEmpty()) {
           throw new IllegalStateException(
               "This SV command can only be placed in the first position in the list of prepared commands");
         }
-
         if (svLastCommand != CalypsoCardCommand.SV_GET) {
-          // @see Calypso Layer ID 8.07/8.08 (200108)
           throw new IllegalStateException("This SV command must follow an SV Get command");
         }
-
         // here, we expect the command and the SV operation to be consistent
         if (svOperation != this.svOperation) {
           logger.error("Sv operation = {}, current command = {}", this.svOperation, svOperation);

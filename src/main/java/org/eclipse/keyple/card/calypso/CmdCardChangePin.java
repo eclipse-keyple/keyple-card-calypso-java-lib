@@ -77,7 +77,7 @@ final class CmdCardChangePin extends AbstractCardCommand {
 
     byte cla = calypsoCardClass.getValue();
     byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x04;
+    byte p2 = (byte) 0xFF; // CL-PIN-MP1P2.1
 
     setApduRequest(
         new ApduRequestAdapter(

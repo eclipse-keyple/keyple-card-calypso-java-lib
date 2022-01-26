@@ -265,9 +265,9 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_VERIFY_PIN_ENCRYPTED_OK_CMD =
       "0020000008" + CIPHER_PIN_VERIFICATION_OK;
   private static final String CARD_CHECK_PIN_CMD = "0020000000";
-  private static final String CARD_CHANGE_PIN_CMD = "00D8000410" + CIPHER_PIN_UPDATE_OK;
+  private static final String CARD_CHANGE_PIN_CMD = "00D800FF10" + CIPHER_PIN_UPDATE_OK;
   private static final String CARD_CHANGE_PIN_PLAIN_CMD =
-      "00D8000404" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
+      "00D800FF04" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
   private static final String CARD_VERIFY_PIN_OK_RSP = SW1SW2_OK;
   private static final String CARD_VERIFY_PIN_KO_RSP = "63C2";
   private static final String CARD_CHANGE_PIN_RSP = SW1SW2_OK;

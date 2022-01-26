@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of `prepareSearchRecords` methods (issue [#37]).
 - Implementation of `processChangeKey` methods (issue [#39]).
 - Management of EFs with SFI equal to 0 (issue [#55]).
+### Changed
+- Internal parameter P2 to FFh for the "Change PIN" card APDU command.
 ### Fixed
 - Revision 2 case for `prepareSelectFile` method (issue [#32]).
 ### Upgraded
