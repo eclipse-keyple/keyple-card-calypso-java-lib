@@ -14,22 +14,21 @@ package org.eclipse.keyple.card.calypso;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the Decrease APDU command.
+ * Builds the "Decrease/Increase" APDU command.
  *
- * @since 2.0.1
+ * @since 2.1.0
  */
-final class CmdCardDecrease extends AbstractCardCommand {
+final class CmdCardDecreaseOrIncrease extends AbstractCardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardDecrease.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardDecreaseOrIncrease.class);
 
   /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.DECREASE;
+  private static final CalypsoCardCommand command = CalypsoCardCommand.INCREASE;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -75,37 +74,43 @@ final class CmdCardDecrease extends AbstractCardCommand {
   /* Construction arguments */
   private final int sfi;
   private final int counterNumber;
-  private final int decValue;
+  private final int value;
 
   /**
    * (package-private)<br>
-   * Instantiates a new decrease cmd build from command parameters.
+   * Constructor.
    *
+   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
+   *     command.
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param sfi SFI of the file to select or 00h for current EF.
    * @param counterNumber &gt;= 01h: Counters file, number of the counter. 00h: Simulated Counter.
    *     file.
-   * @param decValue Value to subtract to the counter (defined as a positive int &lt;= 16777215
+   * @param value Value to substract or add to the counter (defined as a positive int &lt;= 16777215
    *     [FFFFFFh])
    * @throws IllegalArgumentException If the decrement value is out of range
    * @throws IllegalArgumentException If the command is inconsistent
-   * @since 2.0.1
    */
-  CmdCardDecrease(CalypsoCardClass calypsoCardClass, byte sfi, int counterNumber, int decValue) {
+  CmdCardDecreaseOrIncrease(
+      boolean isDecreaseCommand,
+      CalypsoCardClass calypsoCardClass,
+      byte sfi,
+      int counterNumber,
+      int value) {
 
-    super(command);
+    super(isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE);
 
     byte cla = calypsoCardClass.getValue();
     this.sfi = sfi;
     this.counterNumber = counterNumber;
-    this.decValue = decValue;
+    this.value = value;
 
     // convert the integer value into a 3-byte buffer
     // CL-COUN-DATAIN.1
-    byte[] decValueBuffer = new byte[3];
-    decValueBuffer[0] = (byte) ((decValue >> 16) & 0xFF);
-    decValueBuffer[1] = (byte) ((decValue >> 8) & 0xFF);
-    decValueBuffer[2] = (byte) (decValue & 0xFF);
+    byte[] valueBuffer = new byte[3];
+    valueBuffer[0] = (byte) ((value >> 16) & 0xFF);
+    valueBuffer[1] = (byte) ((value >> 8) & 0xFF);
+    valueBuffer[2] = (byte) (value & 0xFF);
 
     byte p2 = (byte) (sfi * 8);
 
@@ -117,12 +122,14 @@ final class CmdCardDecrease extends AbstractCardCommand {
                 command.getInstructionByte(),
                 (byte) counterNumber,
                 p2,
-                decValueBuffer,
-                (byte) 0)));
+                valueBuffer,
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format("SFI:%02Xh, COUNTER:%d, DECREMENT:%d", sfi, counterNumber, decValue);
+          String.format(
+              "SFI:%02Xh, COUNTER:%d, %s:%d",
+              sfi, counterNumber, isDecreaseCommand ? "DECREMENT" : "INCREMENT", value);
       addSubName(extraInfo);
     }
   }
@@ -141,7 +148,7 @@ final class CmdCardDecrease extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the SFI of the accessed file
+   * @return The SFI of the accessed file
    * @since 2.0.1
    */
   int getSfi() {
@@ -151,7 +158,7 @@ final class CmdCardDecrease extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the counter number
+   * @return The counter number
    * @since 2.0.1
    */
   int getCounterNumber() {
@@ -161,28 +168,11 @@ final class CmdCardDecrease extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return the decrement value
+   * @return The decrement/increment value
    * @since 2.0.1
    */
-  int getDecValue() {
-    return decValue;
-  }
-
-  /**
-   * (package-private)<br>
-   * Returns the new counter value as an int between 0
-   *
-   * @return The new value
-   * @since 2.0.1
-   */
-  int getNewValue() {
-    byte[] newValueBuffer = getApduResponse().getDataOut();
-    if (newValueBuffer.length == 3) {
-      return ByteArrayUtil.threeBytesToInt(newValueBuffer, 0);
-    } else {
-      throw new IllegalStateException(
-          "No counter value available in response to the Decrease command.");
-    }
+  int getOperationValue() {
+    return value;
   }
 
   /**

@@ -431,47 +431,26 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * (private)<br>
-   * Updates the {@link CalypsoCardAdapter} object with the response to a Decrease command received
-   * from the card <br>
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Decrease/Increase command
+   * received from the card <br>
    * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cmdCardDecrease the command.
+   * @param cmdCardDecreaseOrIncrease the command.
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */
-  private static void updateCalypsoCardDecrease(
-      CalypsoCardAdapter calypsoCard, CmdCardDecrease cmdCardDecrease, ApduResponseApi apduResponse)
+  private static void updateCalypsoCardIncreaseOrDecrease(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardDecreaseOrIncrease cmdCardDecreaseOrIncrease,
+      ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardDecrease.setApduResponse(apduResponse).checkStatus();
+    cmdCardDecreaseOrIncrease.setApduResponse(apduResponse).checkStatus();
 
     calypsoCard.setCounter(
-        (byte) cmdCardDecrease.getSfi(),
-        cmdCardDecrease.getCounterNumber(),
-        apduResponse.getDataOut());
-  }
-
-  /**
-   * (private)<br>
-   * Updates the {@link CalypsoCardAdapter} object with the response to an Increase command received
-   * from the card <br>
-   * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
-   *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cmdCardIncrease the command.
-   * @param apduResponse the response received.
-   * @throws CardCommandException if a response from the card was unexpected
-   */
-  private static void updateCalypsoCardIncrease(
-      CalypsoCardAdapter calypsoCard, CmdCardIncrease cmdCardIncrease, ApduResponseApi apduResponse)
-      throws CardCommandException {
-
-    cmdCardIncrease.setApduResponse(apduResponse).checkStatus();
-
-    calypsoCard.setCounter(
-        (byte) cmdCardIncrease.getSfi(),
-        cmdCardIncrease.getCounterNumber(),
+        (byte) cmdCardDecreaseOrIncrease.getSfi(),
+        cmdCardDecreaseOrIncrease.getCounterNumber(),
         apduResponse.getDataOut());
   }
 
@@ -799,10 +778,9 @@ final class CalypsoCardUtilAdapter {
         updateCalypsoCardAppendRecord(calypsoCard, (CmdCardAppendRecord) command, apduResponse);
         break;
       case DECREASE:
-        updateCalypsoCardDecrease(calypsoCard, (CmdCardDecrease) command, apduResponse);
-        break;
       case INCREASE:
-        updateCalypsoCardIncrease(calypsoCard, (CmdCardIncrease) command, apduResponse);
+        updateCalypsoCardIncreaseOrDecrease(
+            calypsoCard, (CmdCardDecreaseOrIncrease) command, apduResponse);
         break;
       case OPEN_SESSION:
         updateCalypsoCardOpenSession(calypsoCard, (CmdCardOpenSession) command, apduResponse);
