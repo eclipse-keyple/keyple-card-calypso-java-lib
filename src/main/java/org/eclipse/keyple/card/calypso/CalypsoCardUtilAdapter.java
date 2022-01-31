@@ -13,10 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.*;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
@@ -456,6 +453,34 @@ final class CalypsoCardUtilAdapter {
 
   /**
    * (private)<br>
+   * Updates the {@link CalypsoCardAdapter} object with the response to an Decrease/Increase
+   * Multiple command received from the card <br>
+   * The counter value is updated in the {@link CalypsoCardAdapter} file structure.
+   *
+   * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
+   * @param cmdCardDecreaseOrIncreaseMultiple the command.
+   * @param apduResponse the response received.
+   * @throws CardCommandException if a response from the card was unexpected
+   */
+  private static void updateCalypsoCardIncreaseOrDecreaseMultiple(
+      CalypsoCardAdapter calypsoCard,
+      CmdCardDecreaseOrIncreaseMultiple cmdCardDecreaseOrIncreaseMultiple,
+      ApduResponseApi apduResponse)
+      throws CardCommandException {
+
+    cmdCardDecreaseOrIncreaseMultiple.setApduResponse(apduResponse).checkStatus();
+
+    SortedMap<Integer, byte[]> countersValues =
+        cmdCardDecreaseOrIncreaseMultiple.getNewCountersValues();
+
+    for (Map.Entry<Integer, byte[]> entry : countersValues.entrySet()) {
+      calypsoCard.setCounter(
+          (byte) cmdCardDecreaseOrIncreaseMultiple.getSfi(), entry.getKey(), entry.getValue());
+    }
+  }
+
+  /**
+   * (private)<br>
    * Parses the response to a Get Challenge command received from the card.<br>
    * The card challenge value is stored in {@link CalypsoCardAdapter}.
    *
@@ -781,6 +806,11 @@ final class CalypsoCardUtilAdapter {
       case INCREASE:
         updateCalypsoCardIncreaseOrDecrease(
             calypsoCard, (CmdCardDecreaseOrIncrease) command, apduResponse);
+        break;
+      case DECREASE_MULTIPLE:
+      case INCREASE_MULTIPLE:
+        updateCalypsoCardIncreaseOrDecreaseMultiple(
+            calypsoCard, (CmdCardDecreaseOrIncreaseMultiple) command, apduResponse);
         break;
       case OPEN_SESSION:
         updateCalypsoCardOpenSession(calypsoCard, (CmdCardOpenSession) command, apduResponse);

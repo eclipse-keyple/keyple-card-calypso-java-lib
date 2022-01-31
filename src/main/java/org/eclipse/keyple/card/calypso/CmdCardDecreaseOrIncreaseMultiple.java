@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +76,7 @@ final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
 
   private final byte sfi;
   private final Map<Integer, Integer> counterNumberToIncValueMap;
-  private final SortedMap<Integer, Integer> results = new TreeMap<Integer, Integer>();
+  private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -173,9 +172,7 @@ final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
       byte[] dataOut = apduResponse.getDataOut();
       int nbCounters = dataOut.length / 4;
       for (int i = 0; i < nbCounters; i++) {
-        results.put(
-            dataOut[nbCounters] & 0xFF,
-            ByteArrayUtil.threeBytesToInt(dataOut, (nbCounters * 4) + 1));
+        results.put(dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
       }
     }
     return this;
@@ -204,11 +201,11 @@ final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return A not empty sorted map of counter values by counter number, or an empty map if no data
-   *     is available.
+   * @return A not empty sorted map of counter values as 3-byte array by counter number, or an empty
+   *     map if no data is available.
    * @since 2.1.0
    */
-  SortedMap<Integer, Integer> getResults() {
+  SortedMap<Integer, byte[]> getNewCountersValues() {
     return results;
   }
 }

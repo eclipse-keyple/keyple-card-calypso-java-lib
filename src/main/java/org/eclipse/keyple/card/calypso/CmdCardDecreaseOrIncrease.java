@@ -27,9 +27,6 @@ final class CmdCardDecreaseOrIncrease extends AbstractCardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardDecreaseOrIncrease.class);
 
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.INCREASE;
-
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
@@ -119,7 +116,7 @@ final class CmdCardDecreaseOrIncrease extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 cla,
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 (byte) counterNumber,
                 p2,
                 valueBuffer,
