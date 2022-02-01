@@ -193,6 +193,11 @@ public class CardTransactionManagerAdapterTest {
       "003A00080C01000001020000020300000300";
   private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP =
       "0100001102000022030000339000";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD =
+      "003A000808010000010200000200";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP = "01000011020000229000";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD = "003A0008040300000300";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP = "030000339000";
   private static final String CARD_DECREASE_MULTIPLE_SFI1_C1_11_C2_22_C8_88_CMD =
       "003800080C01000011020000220800008800";
   private static final String CARD_DECREASE_MULTIPLE_SFI1_C1_111_C2_222_C8_888_RSP =
@@ -2320,12 +2325,47 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(3, 3);
     counterNumberToIncValueMap.put(1, 1);
     counterNumberToIncValueMap.put(2, 2);
+    cardTransactionManager.prepareIncreaseCounters((byte) 1, counterNumberToIncValueMap);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(0x11);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(2))
+        .isEqualTo(0x22);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(3))
+        .isEqualTo(0x33);
+  }
+
+  @Test
+  public void
+      prepareIncreaseCounters_whenDataLengthIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+          throws Exception {
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD, CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP, CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(9);
+
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
+    counterNumberToIncValueMap.put(1, 1);
+    counterNumberToIncValueMap.put(2, 2);
+    counterNumberToIncValueMap.put(3, 3);
     cardTransactionManager.prepareIncreaseCounters((byte) 1, counterNumberToIncValueMap);
     cardTransactionManager.processCardCommands();
 
@@ -2391,7 +2431,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(2, 0x22);

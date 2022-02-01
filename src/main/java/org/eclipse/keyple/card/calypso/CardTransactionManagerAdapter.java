@@ -2066,7 +2066,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   public CardTransactionManager prepareDecreaseOrIncreaseCounters(
       boolean isDecreaseCommand, byte sfi, Map<Integer, Integer> counterNumberToIncValueMap) {
 
-    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+    if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+        && calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
       throw new UnsupportedOperationException(
           "The 'Increase Multiple' command is not available for this card.");
     }
@@ -2092,14 +2093,39 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
               CalypsoCardConstant.CNT_VALUE_MAX,
               "counterNumberToIncValueMapValue");
     }
-
-    // create the command and add it to the list of commands
-    cardCommandManager.addRegularCommand(
-        new CmdCardDecreaseOrIncreaseMultiple(
-            isDecreaseCommand,
-            calypsoCard.getCardClass(),
-            sfi,
-            new TreeMap<Integer, Integer>(counterNumberToIncValueMap)));
+    final int nbCountersPerApdu = calypsoCard.getPayloadCapacity() / 4;
+    if (counterNumberToIncValueMap.size() <= nbCountersPerApdu) {
+      // create the command and add it to the list of commands
+      cardCommandManager.addRegularCommand(
+          new CmdCardDecreaseOrIncreaseMultiple(
+              isDecreaseCommand,
+              calypsoCard.getCardClass(),
+              sfi,
+              new TreeMap<Integer, Integer>(counterNumberToIncValueMap)));
+    } else {
+      // the number of counters exceeds the payload capacity, let's split into several apdu commands
+      int i = 0;
+      TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
+      for (Map.Entry<Integer, Integer> entry : counterNumberToIncValueMap.entrySet()) {
+        i++;
+        map.put(entry.getKey(), entry.getValue());
+        if (i == nbCountersPerApdu) {
+          cardCommandManager.addRegularCommand(
+              new CmdCardDecreaseOrIncreaseMultiple(
+                  isDecreaseCommand,
+                  calypsoCard.getCardClass(),
+                  sfi,
+                  new TreeMap<Integer, Integer>(map)));
+          i = 0;
+          map.clear();
+        }
+      }
+      if (!map.isEmpty()) {
+        cardCommandManager.addRegularCommand(
+            new CmdCardDecreaseOrIncreaseMultiple(
+                isDecreaseCommand, calypsoCard.getCardClass(), sfi, map));
+      }
+    }
 
     return this;
   }
