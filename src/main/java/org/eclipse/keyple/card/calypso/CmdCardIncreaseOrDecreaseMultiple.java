@@ -76,7 +76,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
 
   private final byte sfi;
   private final Map<Integer, Integer> counterNumberToIncDecValueMap;
-  private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
+  private final SortedMap<Integer, byte[]> newCounterValues = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -109,10 +109,10 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
     int index = 0;
     for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
       dataIn[index] = entry.getKey().byteValue();
-      Integer incValue = entry.getValue();
-      dataIn[index + 1] = (byte) ((incValue >> 16) & 0xFF);
-      dataIn[index + 2] = (byte) ((incValue >> 8) & 0xFF);
-      dataIn[index + 3] = (byte) (incValue & 0xFF);
+      Integer incDecValue = entry.getValue();
+      dataIn[index + 1] = (byte) ((incDecValue >> 16) & 0xFF);
+      dataIn[index + 2] = (byte) ((incDecValue >> 8) & 0xFF);
+      dataIn[index + 3] = (byte) (incDecValue & 0xFF);
       index += 4;
     }
     setApduRequest(
@@ -172,7 +172,8 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
       byte[] dataOut = apduResponse.getDataOut();
       int nbCounters = dataOut.length / 4;
       for (int i = 0; i < nbCounters; i++) {
-        results.put(dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
+        newCounterValues.put(
+            dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
       }
     }
     return this;
@@ -205,7 +206,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    *     map if no data is available.
    * @since 2.1.0
    */
-  SortedMap<Integer, byte[]> getNewCountersValues() {
-    return results;
+  SortedMap<Integer, byte[]> getNewCounterValues() {
+    return newCounterValues;
   }
 }

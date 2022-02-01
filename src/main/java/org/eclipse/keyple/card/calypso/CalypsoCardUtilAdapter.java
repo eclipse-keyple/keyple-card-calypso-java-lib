@@ -471,7 +471,7 @@ final class CalypsoCardUtilAdapter {
     cmdCardIncreaseOrDecreaseMultiple.setApduResponse(apduResponse).checkStatus();
 
     for (Map.Entry<Integer, byte[]> entry :
-        cmdCardIncreaseOrDecreaseMultiple.getNewCountersValues().entrySet()) {
+        cmdCardIncreaseOrDecreaseMultiple.getNewCounterValues().entrySet()) {
       calypsoCard.setCounter(
           (byte) cmdCardIncreaseOrDecreaseMultiple.getSfi(), entry.getKey(), entry.getValue());
     }
