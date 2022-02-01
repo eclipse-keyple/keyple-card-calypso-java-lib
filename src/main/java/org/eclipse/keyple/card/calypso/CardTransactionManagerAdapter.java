@@ -639,15 +639,16 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * <p>Gets the value of the all counters of the designated file
    *
-   * @param sfi the SFI of the EF containing the counter.
-   * @return The value of the counter
-   * @throws IllegalStateException If no counter was found.
+   * @param sfi The SFI of the EF containing the counter.
+   * @param counters The list of expected counters.
+   * @return A map containing the counters.
+   * @throws IllegalStateException If one of the expected counter was found.
    */
-  private Map<Integer, Integer> getAllCountersValue(int sfi) {
+  private Map<Integer, Integer> getCounterValues(int sfi, Set<Integer> counters) {
     ElementaryFile ef = calypsoCard.getFileBySfi((byte) sfi);
     if (ef != null) {
       Map<Integer, Integer> allCountersValue = ef.getData().getAllCountersValue();
-      if (!allCountersValue.isEmpty()) {
+      if (allCountersValue.keySet().containsAll(counters)) {
         return allCountersValue;
       }
     }
@@ -742,12 +743,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         } else if (command.getCommandRef() == CalypsoCardCommand.INCREASE_MULTIPLE
             || command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE) {
           int sfi = ((CmdCardIncreaseOrDecreaseMultiple) command).getSfi();
+          Map<Integer, Integer> counterNumberToIncDecValueMap =
+              ((CmdCardIncreaseOrDecreaseMultiple) command).getCounterNumberToIncDecValueMap();
           apduResponses.add(
               createIncreaseDecreaseMultipleResponse(
                   command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE,
-                  getAllCountersValue(sfi),
-                  ((CmdCardIncreaseOrDecreaseMultiple) command)
-                      .getCounterNumberToIncDecValueMap()));
+                  getCounterValues(sfi, counterNumberToIncDecValueMap.keySet()),
+                  counterNumberToIncDecValueMap));
         } else if (command.getCommandRef() == CalypsoCardCommand.SV_RELOAD
             || command.getCommandRef() == CalypsoCardCommand.SV_DEBIT
             || command.getCommandRef() == CalypsoCardCommand.SV_UNDEBIT) {
@@ -2086,7 +2088,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
         && calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
       throw new UnsupportedOperationException(
-          "The 'Increase/Decrease Multiple' commands is not available for this card.");
+          "The 'Increase/Decrease Multiple' commands are not available for this card.");
     }
 
     Assert.getInstance()
