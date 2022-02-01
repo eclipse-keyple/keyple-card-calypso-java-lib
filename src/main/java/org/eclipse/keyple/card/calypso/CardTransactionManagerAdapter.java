@@ -150,15 +150,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   public CardTransactionManagerAdapter(CardReader cardReader, CalypsoCard calypsoCard) {
     this.cardReader = (ProxyReaderApi) cardReader;
-
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
-
     modificationsCounter = this.calypsoCard.getModificationsCounter();
-
     sessionState = SessionState.SESSION_UNINITIALIZED;
-
     cardCommandManager = new CardCommandManager();
-
     channelControl = ChannelControl.KEEP_OPEN;
   }
 
