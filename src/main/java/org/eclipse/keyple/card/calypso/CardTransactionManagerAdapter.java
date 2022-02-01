@@ -653,13 +653,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
    *     "Increase Multiple" command.
-   * @param currentCounterNumberToValueMap The values of the counters currently known in the file.
+   * @param counterNumberToCurrentValueMap The values of the counters currently known in the file.
    * @param counterNumberToIncDecValueMap The values to be decremented/incremented.
    * @return An {@link ApduResponseApi} containing the expected bytes.
    */
   private ApduResponseApi createIncreaseDecreaseMultipleResponse(
       boolean isDecreaseCommand,
-      Map<Integer, Integer> currentCounterNumberToValueMap,
+      Map<Integer, Integer> counterNumberToCurrentValueMap,
       Map<Integer, Integer> counterNumberToIncDecValueMap) {
     // response = CCVVVVVV..CCVVVVVV9000
     byte[] response = new byte[2 + (counterNumberToIncDecValueMap.size() * 4)];
@@ -668,9 +668,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       response[index] = entry.getKey().byteValue();
       int newCounterValue;
       if (isDecreaseCommand) {
-        newCounterValue = currentCounterNumberToValueMap.get(entry.getKey()) - entry.getValue();
+        newCounterValue = counterNumberToCurrentValueMap.get(entry.getKey()) - entry.getValue();
       } else {
-        newCounterValue = currentCounterNumberToValueMap.get(entry.getKey()) + entry.getValue();
+        newCounterValue = counterNumberToCurrentValueMap.get(entry.getKey()) + entry.getValue();
       }
       response[index + 1] = (byte) ((newCounterValue & 0x00FF0000) >> 16);
       response[index + 2] = (byte) ((newCounterValue & 0x0000FF00) >> 8);
