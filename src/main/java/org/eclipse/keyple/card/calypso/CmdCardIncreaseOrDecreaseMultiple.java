@@ -19,14 +19,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the "Decrease/Increase Multiple" APDU command.
+ * Builds the "Increase/Decrease Multiple" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
+final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(CmdCardDecreaseOrIncreaseMultiple.class);
+      LoggerFactory.getLogger(CmdCardIncreaseOrDecreaseMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
@@ -90,7 +90,7 @@ final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
    *     their associated increment values.
    * @since 2.1.0
    */
-  CmdCardDecreaseOrIncreaseMultiple(
+  CmdCardIncreaseOrDecreaseMultiple(
       boolean isDecreaseCommand,
       CalypsoCardClass calypsoCardClass,
       byte sfi,
@@ -166,7 +166,7 @@ final class CmdCardDecreaseOrIncreaseMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardDecreaseOrIncreaseMultiple setApduResponse(ApduResponseApi apduResponse) {
+  CmdCardIncreaseOrDecreaseMultiple setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();

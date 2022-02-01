@@ -19,13 +19,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
- * Builds the "Decrease/Increase" APDU command.
+ * Builds the "Increase/Decrease" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardDecreaseOrIncrease extends AbstractCardCommand {
+final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardDecreaseOrIncrease.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardIncreaseOrDecrease.class);
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -88,7 +88,7 @@ final class CmdCardDecreaseOrIncrease extends AbstractCardCommand {
    * @throws IllegalArgumentException If the decrement value is out of range
    * @throws IllegalArgumentException If the command is inconsistent
    */
-  CmdCardDecreaseOrIncrease(
+  CmdCardIncreaseOrDecrease(
       boolean isDecreaseCommand,
       CalypsoCardClass calypsoCardClass,
       byte sfi,

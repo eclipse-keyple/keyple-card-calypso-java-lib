@@ -657,7 +657,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param counterNumberToValueMap The values to be decremented/incremented.
    * @return An {@link ApduResponseApi} containing the expected bytes.
    */
-  private ApduResponseApi createIncreaseDecreaseOrMultipleResponse(
+  private ApduResponseApi createIncreaseDecreaseMultipleResponse(
       boolean isDecreaseCommand,
       Map<Integer, Integer> currentCountersValues,
       Map<Integer, Integer> counterNumberToValueMap) {
@@ -700,34 +700,30 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
     if (cardCommands != null) {
       for (AbstractCardCommand command : cardCommands) {
-        if (command.getCommandRef() == CalypsoCardCommand.DECREASE
-            || command.getCommandRef() == CalypsoCardCommand.INCREASE) {
-          int sfi = ((CmdCardDecreaseOrIncrease) command).getSfi();
-          int counter = ((CmdCardDecreaseOrIncrease) command).getCounterNumber();
+        if (command.getCommandRef() == CalypsoCardCommand.INCREASE
+            || command.getCommandRef() == CalypsoCardCommand.DECREASE) {
+          int sfi = ((CmdCardIncreaseOrDecrease) command).getSfi();
+          int counter = ((CmdCardIncreaseOrDecrease) command).getCounterNumber();
           int newCounterValue;
           if (command.getCommandRef() == CalypsoCardCommand.DECREASE) {
             newCounterValue =
                 getCounterValue(sfi, counter)
-                    - ((CmdCardDecreaseOrIncrease) command).getOperationValue();
+                    - ((CmdCardIncreaseOrDecrease) command).getOperationValue();
           } else {
             newCounterValue =
                 getCounterValue(sfi, counter)
-                    + ((CmdCardDecreaseOrIncrease) command).getOperationValue();
+                    + ((CmdCardIncreaseOrDecrease) command).getOperationValue();
           }
           apduResponses.add(createIncreaseDecreaseResponse(newCounterValue));
-        } else if (command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE
-            || command.getCommandRef() == CalypsoCardCommand.INCREASE_MULTIPLE) {
-          int sfi = ((CmdCardDecreaseOrIncreaseMultiple) command).getSfi();
+        } else if (command.getCommandRef() == CalypsoCardCommand.INCREASE_MULTIPLE
+            || command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE) {
+          int sfi = ((CmdCardIncreaseOrDecreaseMultiple) command).getSfi();
           Map<Integer, Integer> counterNumberToValueMap =
-              ((CmdCardDecreaseOrIncreaseMultiple) command).getCounterNumberToIncValueMap();
-          for (Map.Entry<Integer, Integer> entry : counterNumberToValueMap.entrySet()) {
-            counterNumberToValueMap.put(
-                entry.getKey(), getCounterValue(sfi, entry.getKey()) + entry.getValue());
-          }
+              ((CmdCardIncreaseOrDecreaseMultiple) command).getCounterNumberToIncValueMap();
           SortedMap<Integer, Integer> currentCountersValues =
               calypsoCard.getFileBySfi((byte) sfi).getData().getAllCountersValue();
           apduResponses.add(
-              createIncreaseDecreaseOrMultipleResponse(
+              createIncreaseDecreaseMultipleResponse(
                   command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE,
                   currentCountersValues,
                   counterNumberToValueMap));
@@ -2013,7 +2009,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * <p>Factorisation of prepareDecreaseCounter and prepareIncreaseCounter.
    */
-  private CardTransactionManager prepareDecreaseOrIncreaseCounter(
+  private CardTransactionManager prepareIncreaseOrDecreaseCounter(
       boolean isDecreaseCommand, byte sfi, int counterNumber, int operationValue) {
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
@@ -2030,7 +2026,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // create the command and add it to the list of commands
     cardCommandManager.addRegularCommand(
-        new CmdCardDecreaseOrIncrease(
+        new CmdCardIncreaseOrDecrease(
             isDecreaseCommand, calypsoCard.getCardClass(), sfi, counterNumber, operationValue));
 
     return this;
@@ -2044,7 +2040,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareIncreaseCounter(
       byte sfi, int counterNumber, int incValue) {
-    return prepareDecreaseOrIncreaseCounter(false, sfi, counterNumber, incValue);
+    return prepareIncreaseOrDecreaseCounter(false, sfi, counterNumber, incValue);
   }
 
   /**
@@ -2055,7 +2051,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareDecreaseCounter(
       byte sfi, int counterNumber, int decValue) {
-    return prepareDecreaseOrIncreaseCounter(true, sfi, counterNumber, decValue);
+    return prepareIncreaseOrDecreaseCounter(true, sfi, counterNumber, decValue);
   }
 
   /**
@@ -2063,7 +2059,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *
    * <p>Factorisation of prepareDecreaseMultipleCounters and prepareIncreaseMultipleCounters.
    */
-  public CardTransactionManager prepareDecreaseOrIncreaseCounters(
+  public CardTransactionManager prepareIncreaseOrDecreaseCounters(
       boolean isDecreaseCommand, byte sfi, Map<Integer, Integer> counterNumberToIncValueMap) {
 
     if (calypsoCard.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
@@ -2097,7 +2093,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (counterNumberToIncValueMap.size() <= nbCountersPerApdu) {
       // create the command and add it to the list of commands
       cardCommandManager.addRegularCommand(
-          new CmdCardDecreaseOrIncreaseMultiple(
+          new CmdCardIncreaseOrDecreaseMultiple(
               isDecreaseCommand,
               calypsoCard.getCardClass(),
               sfi,
@@ -2111,7 +2107,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
         map.put(entry.getKey(), entry.getValue());
         if (i == nbCountersPerApdu) {
           cardCommandManager.addRegularCommand(
-              new CmdCardDecreaseOrIncreaseMultiple(
+              new CmdCardIncreaseOrDecreaseMultiple(
                   isDecreaseCommand,
                   calypsoCard.getCardClass(),
                   sfi,
@@ -2122,7 +2118,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       }
       if (!map.isEmpty()) {
         cardCommandManager.addRegularCommand(
-            new CmdCardDecreaseOrIncreaseMultiple(
+            new CmdCardIncreaseOrDecreaseMultiple(
                 isDecreaseCommand, calypsoCard.getCardClass(), sfi, map));
       }
     }
@@ -2138,7 +2134,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public CardTransactionManager prepareIncreaseCounters(
       byte sfi, Map<Integer, Integer> counterNumberToDecValueMap) {
-    return prepareDecreaseOrIncreaseCounters(false, sfi, counterNumberToDecValueMap);
+    return prepareIncreaseOrDecreaseCounters(false, sfi, counterNumberToDecValueMap);
   }
 
   /**
@@ -2149,7 +2145,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public CardTransactionManager prepareDecreaseCounters(
       byte sfi, Map<Integer, Integer> counterNumberToDecValueMap) {
-    return prepareDecreaseOrIncreaseCounters(true, sfi, counterNumberToDecValueMap);
+    return prepareIncreaseOrDecreaseCounters(true, sfi, counterNumberToDecValueMap);
   }
 
   /**
