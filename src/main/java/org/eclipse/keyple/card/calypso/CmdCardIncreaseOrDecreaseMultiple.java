@@ -67,10 +67,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
-    m.put(
-        0x6200,
-        new StatusProperties(
-            "Successful execution, partial read only: issue another Read Record Multiple from record (P1 + (Size of returned data) / (R. Length)) to continue reading."));
     STATUS_TABLE = m;
   }
 

@@ -282,10 +282,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // The updateCalypsoCard method fills the CalypsoCard object with the command data.
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard,
-          cmdCardOpenSession,
-          cardApduResponses.get(0),
-          sessionState == SessionState.SESSION_OPEN);
+          calypsoCard, cmdCardOpenSession, cardApduResponses.get(0), true);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
@@ -337,8 +334,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // update CalypsoCard with the received data
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cardCommands, cardApduResponses, sessionState == SessionState.SESSION_OPEN);
+      CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, cardApduResponses, true);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
@@ -548,10 +544,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // commands will be taken into account)
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard,
-          cardModificationCommands,
-          apduResponses,
-          sessionState == SessionState.SESSION_OPEN);
+          calypsoCard, cardModificationCommands, apduResponses, true);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR
@@ -563,10 +556,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Check the card's response to Close Secure Session
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard,
-          cmdCardCloseSession,
-          apduResponses.get(closeCommandIndex),
-          sessionState == SessionState.SESSION_OPEN);
+          calypsoCard, cmdCardCloseSession, apduResponses.get(closeCommandIndex), true);
     } catch (CardSecurityDataException e) {
       throw new CardCloseSecureSessionException("Invalid card session", e);
     } catch (CardCommandException e) {
