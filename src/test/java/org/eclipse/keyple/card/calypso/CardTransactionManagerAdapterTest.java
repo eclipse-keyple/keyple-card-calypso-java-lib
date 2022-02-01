@@ -19,6 +19,7 @@ import java.util.*;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.calypso.transaction.*;
@@ -184,10 +185,23 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_UPDATE_REC_SFI8_REC1_29B_2_4_CMD = "94DC01441D" + FILE8_REC1_29B;
   private static final String CARD_WRITE_REC_SFI8_REC1_4B_CMD = "00D2014404" + FILE8_REC1_4B;
   private static final String CARD_APPEND_REC_SFI9_REC1_4B_CMD = "00E2004804" + FILE9_REC1_4B;
-  private static final String CARD_DECREASE_SFI10_REC1_100U_CMD = "003001800300006400";
-  private static final String CARD_DECREASE_SFI10_REC1_100U_RSP = "0010BE9000";
-  private static final String CARD_INCREASE_SFI11_REC1_100U_CMD = "003201880300006400";
-  private static final String CARD_INCREASE_SFI11_REC1_100U_RSP = "0022759000";
+  private static final String CARD_DECREASE_SFI10_CNT1_100U_CMD = "003001080300006400";
+  private static final String CARD_DECREASE_SFI10_CNT1_4286U_RSP = "0010BE9000";
+  private static final String CARD_INCREASE_SFI11_CNT1_100U_CMD = "003201080300006400";
+  private static final String CARD_INCREASE_SFI11_CNT1_8821U_RSP = "0022759000";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_C3_3_CMD =
+      "003A00080C01000001020000020300000300";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP =
+      "0100001102000022030000339000";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD =
+      "003A000808010000010200000200";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP = "01000011020000229000";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD = "003A0008040300000300";
+  private static final String CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP = "030000339000";
+  private static final String CARD_DECREASE_MULTIPLE_SFI1_C1_11_C2_22_C8_88_CMD =
+      "003800080C01000011020000220800008800";
+  private static final String CARD_DECREASE_MULTIPLE_SFI1_C1_111_C2_222_C8_888_RSP =
+      "0100011102000222080008889000";
   private static final String
       CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD =
           "00A2010F070000021234FFFF00";
@@ -1226,8 +1240,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecord_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecord((byte) 32, 1);
+  public void prepareReadRecord_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecord((byte) 31, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1257,8 +1271,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecords_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecords((byte) 32, 1, 1, 1);
+  public void prepareReadRecords_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecords((byte) 31, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1350,13 +1364,13 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadCounter_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadCounter((byte) 32, 1);
+  public void prepareReadCounter_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareReadCounter((byte) 31, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareAppendRecord_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareAppendRecord((byte) 32, new byte[3]);
+  public void prepareAppendRecord_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareAppendRecord((byte) 31, new byte[3]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1365,12 +1379,12 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateRecord_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateRecord((byte) 32, 1, new byte[1]);
+  public void prepareUpdateRecord_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareUpdateRecord((byte) 31, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateRecord_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+  public void prepareUpdateRecord_whenRecordNumberIsGreaterThan250_shouldThrowIAE() {
     cardTransactionManager.prepareUpdateRecord(FILE7, 251, new byte[1]);
   }
 
@@ -1380,12 +1394,12 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteRecord_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteRecord((byte) 32, 1, new byte[1]);
+  public void prepareWriteRecord_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareWriteRecord((byte) 31, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteRecord_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
+  public void prepareWriteRecord_whenRecordNumberIsGreaterThan250_shouldThrowIAE() {
     cardTransactionManager.prepareWriteRecord(FILE7, 251, new byte[1]);
   }
 
@@ -1459,11 +1473,11 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareSearchRecords_whenSfiGreaterThan31_shouldThrowIAE() {
+  public void prepareSearchRecords_whenSfiGreaterThanSfiMax_shouldThrowIAE() {
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
             .createSearchCommandData()
-            .setSfi((byte) 32)
+            .setSfi((byte) 31)
             .setSearchData(new byte[1]);
     cardTransactionManager.prepareSearchRecords(data);
   }
@@ -1719,8 +1733,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadRecordsPartially_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadRecordsPartially((byte) 32, 1, 1, 1, 1);
+  public void prepareReadRecordsPartially_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareReadRecordsPartially((byte) 31, 1, 1, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1850,8 +1864,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadBinary_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareReadBinary((byte) 32, 1, 1);
+  public void prepareReadBinary_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareReadBinary((byte) 31, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1860,7 +1874,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareReadBinary_whenOffsetIsHigherThan32767_shouldThrowIAE() {
+  public void prepareReadBinary_whenOffsetIsGreaterThan32767_shouldThrowIAE() {
     cardTransactionManager.prepareReadBinary((byte) 1, 32768, 1);
   }
 
@@ -1871,7 +1885,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareReadBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
+      prepareReadBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -1954,8 +1968,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateBinary_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareUpdateBinary((byte) 32, 1, new byte[1]);
+  public void prepareUpdateBinary_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareUpdateBinary((byte) 31, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1964,7 +1978,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareUpdateBinary_whenOffsetIsHigherThan32767_shouldThrowIAE() {
+  public void prepareUpdateBinary_whenOffsetIsGreaterThan32767_shouldThrowIAE() {
     cardTransactionManager.prepareUpdateBinary((byte) 1, 32768, new byte[1]);
   }
 
@@ -1980,7 +1994,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareUpdateBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
+      prepareUpdateBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -2069,8 +2083,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteBinary_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareWriteBinary((byte) 32, 1, new byte[1]);
+  public void prepareWriteBinary_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareWriteBinary((byte) 31, 1, new byte[1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2079,7 +2093,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareWriteBinary_whenOffsetIsHigherThan32767_shouldThrowIAE() {
+  public void prepareWriteBinary_whenOffsetIsGreaterThan32767_shouldThrowIAE() {
     cardTransactionManager.prepareWriteBinary((byte) 1, 32768, new byte[1]);
   }
 
@@ -2095,7 +2109,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareWriteBinary_whenSfiIsNot0AndOffsetIsHigherThan255_shouldAddFirstAReadBinaryCommand()
+      prepareWriteBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
     CardRequestSpi cardCardRequest =
@@ -2171,8 +2185,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareIncreaseCounter_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareIncreaseCounter((byte) 32, 1, 1);
+  public void prepareIncreaseCounter_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareIncreaseCounter((byte) 31, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2181,18 +2195,41 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareIncreaseCounter_whenValueIsHigherThan16777215_shouldThrowIAE() {
+  public void prepareIncreaseCounter_whenValueIsGreaterThan16777215_shouldThrowIAE() {
     cardTransactionManager.prepareIncreaseCounter(FILE7, 1, 16777216);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareIncreaseCounter_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
-    cardTransactionManager.prepareIncreaseCounter(FILE7, 251, 1);
+  public void prepareIncreaseCounter_whenCounterNumberIsGreaterThan83_shouldThrowIAE() {
+    cardTransactionManager.prepareIncreaseCounter(FILE7, 84, 1);
+  }
+
+  @Test
+  public void prepareIncreaseCounter_whenParametersAreCorrect_shouldAddDecreaseCommand()
+      throws Exception {
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_INCREASE_SFI11_CNT1_100U_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_INCREASE_SFI11_CNT1_8821U_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(8821);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareDecreaseCounter_whenSfiIsHigherThan31_shouldThrowIAE() {
-    cardTransactionManager.prepareDecreaseCounter((byte) 32, 1, 1);
+  public void prepareDecreaseCounter_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardTransactionManager.prepareDecreaseCounter((byte) 31, 1, 1);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2201,13 +2238,208 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareDecreaseCounter_whenValueIsHigherThan16777215_shouldThrowIAE() {
+  public void prepareDecreaseCounter_whenValueIsGreaterThan16777215_shouldThrowIAE() {
     cardTransactionManager.prepareDecreaseCounter(FILE7, 1, 16777216);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void prepareDecreaseCounter_whenRecordNumberIsHigherThan250_shouldThrowIAE() {
-    cardTransactionManager.prepareDecreaseCounter(FILE7, 251, 1);
+  public void prepareDecreaseCounter_whenCounterNumberIsGreaterThan83_shouldThrowIAE() {
+    cardTransactionManager.prepareDecreaseCounter(FILE7, 84, 1);
+  }
+
+  @Test
+  public void prepareDecreaseCounter_whenParametersAreCorrect_shouldAddDecreaseMultipleCommand()
+      throws Exception {
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_DECREASE_SFI10_CNT1_100U_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_DECREASE_SFI10_CNT1_4286U_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager.prepareDecreaseCounter((byte) 1, 1, 100);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(4286);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareIncreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() {
+    when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 1);
+    cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareIncreaseCounters_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 1);
+    cardTransactionManager.prepareIncreaseCounters((byte) 31, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareIncreaseCounters_whenValueIsLessThan0_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, -1);
+    cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareIncreaseCounters_whenValueIsGreaterThan16777215_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(84, 1);
+    cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareIncreaseCounters_whenCounterNumberIsGreaterThan83_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 16777216);
+    cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test
+  public void prepareIncreaseCounters_whenParametersAreCorrect_shouldAddIncreaseMultipleCommand()
+      throws Exception {
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_C3_3_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
+    counterNumberToIncValueMap.put(3, 3);
+    counterNumberToIncValueMap.put(1, 1);
+    counterNumberToIncValueMap.put(2, 2);
+    cardTransactionManager.prepareIncreaseCounters((byte) 1, counterNumberToIncValueMap);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(0x11);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(2))
+        .isEqualTo(0x22);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(3))
+        .isEqualTo(0x33);
+  }
+
+  @Test
+  public void
+      prepareIncreaseCounters_whenDataLengthIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
+          throws Exception {
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD, CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP, CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(9);
+
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
+    counterNumberToIncValueMap.put(1, 1);
+    counterNumberToIncValueMap.put(2, 2);
+    counterNumberToIncValueMap.put(3, 3);
+    cardTransactionManager.prepareIncreaseCounters((byte) 1, counterNumberToIncValueMap);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(0x11);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(2))
+        .isEqualTo(0x22);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(3))
+        .isEqualTo(0x33);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareDecreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() {
+    when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 1);
+    cardTransactionManager.prepareDecreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareDecreaseCounters_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 1);
+    cardTransactionManager.prepareDecreaseCounters((byte) 31, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareDecreaseCounters_whenValueIsLessThan0_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, -1);
+    cardTransactionManager.prepareDecreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareDecreaseCounters_whenValueIsGreaterThan16777215_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(84, 1);
+    cardTransactionManager.prepareDecreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareDecreaseCounters_whenCounterNumberIsGreaterThan83_shouldThrowIAE() {
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToIncValueMap.put(1, 16777216);
+    cardTransactionManager.prepareDecreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test
+  public void prepareDecreaseCounters_whenParametersAreCorrect_shouldAddDecreaseMultipleCommand()
+      throws Exception {
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_DECREASE_MULTIPLE_SFI1_C1_11_C2_22_C8_88_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_DECREASE_MULTIPLE_SFI1_C1_111_C2_222_C8_888_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
+    counterNumberToIncValueMap.put(2, 0x22);
+    counterNumberToIncValueMap.put(8, 0x88);
+    counterNumberToIncValueMap.put(1, 0x11);
+    cardTransactionManager.prepareDecreaseCounters((byte) 1, counterNumberToIncValueMap);
+    cardTransactionManager.processCardCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(0x111);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(2))
+        .isEqualTo(0x222);
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(8))
+        .isEqualTo(0x888);
   }
 
   @Test(expected = IllegalStateException.class)

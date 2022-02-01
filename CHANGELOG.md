@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of `EF_LIST` and `TRACEABILITY_INFORMATION` tags to `prepareGetData` methods (issue [#33]).
 - Implementation of `prepareUpdateBinary` and `prepareWriteBinary` methods (issue [#34]).
 - Implementation of `prepareReadBinary` method (issue [#35]).
-- Implementation of `prepareReadRecordsPartially` methods (issue [#36]).
-- Implementation of `prepareSearchRecords` methods (issue [#37]).
-- Implementation of `processChangeKey` methods (issue [#39]).
+- Implementation of `prepareReadRecordsPartially` method (issue [#36]).
+- Implementation of `prepareSearchRecords` method (issue [#37]).
+- Implementation of `prepareIncreaseCounters` and `prepareDecreaseCounters` methods (issue [#38]).
+- Implementation of `processChangeKey` method (issue [#39]).
 - Management of EFs with SFI equal to 0 (issue [#55]).
 ### Changed
 - Internal parameter P2 to FFh for the "Change PIN" card APDU command.
@@ -56,6 +57,7 @@ It also brings many major API changes.
 [#55]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/55
 [#53]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/53
 [#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
+[#38]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/38
 [#37]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/37
 [#36]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/36
 [#35]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/35

@@ -64,6 +64,12 @@ enum CalypsoCardCommand implements CardCommand {
   /** decrease counter. */
   DECREASE("Decrease", (byte) 0x30),
 
+  /** increase multiple counters. */
+  INCREASE_MULTIPLE("Increase Multiple", (byte) 0x3A),
+
+  /** decrease multiple counters. */
+  DECREASE_MULTIPLE("Decrease Multiple", (byte) 0x38),
+
   /** decrease counter. */
   SELECT_FILE("Select File", (byte) 0xA4),
 
