@@ -634,15 +634,21 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /**
    * Create an anticipated response to an Increase/Decrease command
    *
-   * @param newCounterValue the anticipated counter value.
+   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
+   *     command.
+   * @param currentCounterValue The current counter value.
+   * @param incDecValue The increment/decrement value.
    * @return An {@link ApduResponseApi} containing the expected bytes
    */
-  private ApduResponseApi createIncreaseDecreaseResponse(int newCounterValue) {
+  private ApduResponseApi createIncreaseDecreaseResponse(
+      boolean isDecreaseCommand, int currentCounterValue, int incDecValue) {
+    int newValue =
+        isDecreaseCommand ? currentCounterValue - incDecValue : currentCounterValue + incDecValue;
     // response = NNNNNN9000
     byte[] response = new byte[5];
-    response[0] = (byte) ((newCounterValue & 0x00FF0000) >> 16);
-    response[1] = (byte) ((newCounterValue & 0x0000FF00) >> 8);
-    response[2] = (byte) (newCounterValue & 0x000000FF);
+    response[0] = (byte) ((newValue & 0x00FF0000) >> 16);
+    response[1] = (byte) ((newValue & 0x0000FF00) >> 8);
+    response[2] = (byte) (newValue & 0x000000FF);
     response[3] = (byte) 0x90;
     response[4] = (byte) 0x00;
     return new ApduResponseAdapter(response);
@@ -704,28 +710,22 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             || command.getCommandRef() == CalypsoCardCommand.DECREASE) {
           int sfi = ((CmdCardIncreaseOrDecrease) command).getSfi();
           int counter = ((CmdCardIncreaseOrDecrease) command).getCounterNumber();
-          int newCounterValue;
-          if (command.getCommandRef() == CalypsoCardCommand.DECREASE) {
-            newCounterValue =
-                getCounterValue(sfi, counter)
-                    - ((CmdCardIncreaseOrDecrease) command).getOperationValue();
-          } else {
-            newCounterValue =
-                getCounterValue(sfi, counter)
-                    + ((CmdCardIncreaseOrDecrease) command).getOperationValue();
-          }
-          apduResponses.add(createIncreaseDecreaseResponse(newCounterValue));
+          apduResponses.add(
+              createIncreaseDecreaseResponse(
+                  command.getCommandRef() == CalypsoCardCommand.DECREASE,
+                  getCounterValue(sfi, counter),
+                  ((CmdCardIncreaseOrDecrease) command).getIncDecValue()));
         } else if (command.getCommandRef() == CalypsoCardCommand.INCREASE_MULTIPLE
             || command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE) {
           int sfi = ((CmdCardIncreaseOrDecreaseMultiple) command).getSfi();
           Map<Integer, Integer> counterNumberToValueMap =
-              ((CmdCardIncreaseOrDecreaseMultiple) command).getCounterNumberToIncValueMap();
-          SortedMap<Integer, Integer> currentCounterValues =
+              ((CmdCardIncreaseOrDecreaseMultiple) command).getCounterNumberToIncDecValueMap();
+          SortedMap<Integer, Integer> counterNumberToCurrentValueMap =
               calypsoCard.getFileBySfi((byte) sfi).getData().getAllCountersValue();
           apduResponses.add(
               createIncreaseDecreaseMultipleResponse(
                   command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE,
-                  currentCounterValues,
+                  counterNumberToCurrentValueMap,
                   counterNumberToValueMap));
         } else if (command.getCommandRef() == CalypsoCardCommand.SV_RELOAD
             || command.getCommandRef() == CalypsoCardCommand.SV_DEBIT

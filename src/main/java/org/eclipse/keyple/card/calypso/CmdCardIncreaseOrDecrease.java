@@ -71,7 +71,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   /* Construction arguments */
   private final int sfi;
   private final int counterNumber;
-  private final int value;
+  private final int incDecValue;
 
   /**
    * (package-private)<br>
@@ -83,8 +83,8 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
    * @param sfi SFI of the file to select or 00h for current EF.
    * @param counterNumber &gt;= 01h: Counters file, number of the counter. 00h: Simulated Counter.
    *     file.
-   * @param value Value to substract or add to the counter (defined as a positive int &lt;= 16777215
-   *     [FFFFFFh])
+   * @param incDecValue Value to subtract or add to the counter (defined as a positive int &lt;=
+   *     16777215 [FFFFFFh])
    * @throws IllegalArgumentException If the decrement value is out of range
    * @throws IllegalArgumentException If the command is inconsistent
    */
@@ -93,21 +93,21 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
       CalypsoCardClass calypsoCardClass,
       byte sfi,
       int counterNumber,
-      int value) {
+      int incDecValue) {
 
     super(isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE);
 
     byte cla = calypsoCardClass.getValue();
     this.sfi = sfi;
     this.counterNumber = counterNumber;
-    this.value = value;
+    this.incDecValue = incDecValue;
 
     // convert the integer value into a 3-byte buffer
     // CL-COUN-DATAIN.1
     byte[] valueBuffer = new byte[3];
-    valueBuffer[0] = (byte) ((value >> 16) & 0xFF);
-    valueBuffer[1] = (byte) ((value >> 8) & 0xFF);
-    valueBuffer[2] = (byte) (value & 0xFF);
+    valueBuffer[0] = (byte) ((incDecValue >> 16) & 0xFF);
+    valueBuffer[1] = (byte) ((incDecValue >> 8) & 0xFF);
+    valueBuffer[2] = (byte) (incDecValue & 0xFF);
 
     byte p2 = (byte) (sfi * 8);
 
@@ -126,7 +126,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
       String extraInfo =
           String.format(
               "SFI:%02Xh, COUNTER:%d, %s:%d",
-              sfi, counterNumber, isDecreaseCommand ? "DECREMENT" : "INCREMENT", value);
+              sfi, counterNumber, isDecreaseCommand ? "DECREMENT" : "INCREMENT", incDecValue);
       addSubName(extraInfo);
     }
   }
@@ -168,8 +168,8 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
    * @return The decrement/increment value
    * @since 2.0.1
    */
-  int getOperationValue() {
-    return value;
+  int getIncDecValue() {
+    return incDecValue;
   }
 
   /**

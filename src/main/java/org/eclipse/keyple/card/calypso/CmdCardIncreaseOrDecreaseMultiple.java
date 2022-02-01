@@ -75,7 +75,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
   }
 
   private final byte sfi;
-  private final Map<Integer, Integer> counterNumberToIncValueMap;
+  private final Map<Integer, Integer> counterNumberToIncDecValueMap;
   private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
 
   /**
@@ -86,15 +86,15 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    *     "Increase Multiple" command.
    * @param calypsoCardClass The CLA field value.
    * @param sfi The SFI.
-   * @param counterNumberToIncValueMap The map containing the counter numbers to be incremented and
-   *     their associated increment values.
+   * @param counterNumberToIncDecValueMap The map containing the counter numbers to be incremented
+   *     and their associated increment values.
    * @since 2.1.0
    */
   CmdCardIncreaseOrDecreaseMultiple(
       boolean isDecreaseCommand,
       CalypsoCardClass calypsoCardClass,
       byte sfi,
-      SortedMap<Integer, Integer> counterNumberToIncValueMap) {
+      SortedMap<Integer, Integer> counterNumberToIncDecValueMap) {
 
     super(
         isDecreaseCommand
@@ -102,12 +102,12 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
             : CalypsoCardCommand.INCREASE_MULTIPLE);
 
     this.sfi = sfi;
-    this.counterNumberToIncValueMap = counterNumberToIncValueMap;
+    this.counterNumberToIncDecValueMap = counterNumberToIncDecValueMap;
     byte p1 = 0;
     byte p2 = (byte) (sfi * 8);
-    byte[] dataIn = new byte[4 * counterNumberToIncValueMap.size()];
+    byte[] dataIn = new byte[4 * counterNumberToIncDecValueMap.size()];
     int index = 0;
-    for (Map.Entry<Integer, Integer> entry : counterNumberToIncValueMap.entrySet()) {
+    for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
       dataIn[index] = entry.getKey().byteValue();
       Integer incValue = entry.getValue();
       dataIn[index + 1] = (byte) ((incValue >> 16) & 0xFF);
@@ -127,7 +127,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
 
     if (logger.isDebugEnabled()) {
       StringBuilder extraInfo = new StringBuilder(String.format("SFI:%02Xh", sfi));
-      for (Map.Entry<Integer, Integer> entry : counterNumberToIncValueMap.entrySet()) {
+      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
         extraInfo.append(", ");
         extraInfo.append(entry.getKey());
         extraInfo.append(":");
@@ -194,8 +194,8 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    * @return The counters/values map.
    * @since 2.1.0
    */
-  public Map<Integer, Integer> getCounterNumberToIncValueMap() {
-    return counterNumberToIncValueMap;
+  public Map<Integer, Integer> getCounterNumberToIncDecValueMap() {
+    return counterNumberToIncDecValueMap;
   }
 
   /**
