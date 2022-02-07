@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Additional testing in "SV prepare" methods to satisfy the requirements CL-SV-1PCSS.1 and CL-SV-1PCSS.1 of the Calypso layer (issue [#59]).
+- Additional testing in "SV prepare" methods to satisfy the requirements `CL-SV-1PCSS.1` and `CL-SV-1PCSS.1` of the Calypso layer (issue [#59]).
 
 ## [2.1.0] - 2022-02-01
 ### Added
