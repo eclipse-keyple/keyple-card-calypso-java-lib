@@ -18,13 +18,11 @@ import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
- * Builds the SV Prepare Debit APDU command.
+ * Builds the SV Prepare Debit or Undebit APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamSvPrepareDebit extends AbstractSamCommand {
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_PREPARE_DEBIT;
+final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -52,20 +50,24 @@ final class CmdSamSvPrepareDebit extends AbstractSamCommand {
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdSamSvPrepareDebit to prepare a debit transaction.
+   * Instantiates a new CmdSamSvPrepareDebit to prepare a debit or cancel transaction.
    *
+   * @param isDebitCommand True if the current card command is an "SV Debit" command, false if it is
+   *     a "SV Undebit" command.
    * @param productType the SAM product type.
    * @param svGetHeader the SV Get command header.
    * @param svGetData a byte array containing the data from the SV get command and response.
-   * @param svDebitCmdBuildData the SV debit command data.
+   * @param svDebitOrUndebitCmdBuildData the SV debit/undebit command data.
    * @since 2.0.1
    */
-  CmdSamSvPrepareDebit(
+  CmdSamSvPrepareDebitOrUndebit(
+      boolean isDebitCommand,
       CalypsoSam.ProductType productType,
       byte[] svGetHeader,
       byte[] svGetData,
-      byte[] svDebitCmdBuildData) {
-    super(command);
+      byte[] svDebitOrUndebitCmdBuildData) {
+    super(
+        isDebitCommand ? CalypsoSamCommand.SV_PREPARE_DEBIT : CalypsoSamCommand.SV_PREPARE_UNDEBIT);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x01;
@@ -75,11 +77,15 @@ final class CmdSamSvPrepareDebit extends AbstractSamCommand {
     System.arraycopy(svGetHeader, 0, data, 0, 4);
     System.arraycopy(svGetData, 0, data, 4, svGetData.length);
     System.arraycopy(
-        svDebitCmdBuildData, 0, data, 4 + svGetData.length, svDebitCmdBuildData.length);
+        svDebitOrUndebitCmdBuildData,
+        0,
+        data,
+        4 + svGetData.length,
+        svDebitOrUndebitCmdBuildData.length);
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, data, null)));
   }
 
   /**

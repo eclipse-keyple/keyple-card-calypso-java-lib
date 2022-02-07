@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
@@ -82,7 +81,8 @@ final class CmdCardSvReload extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCard calypsoCard;
+  private final CalypsoCardClass calypsoCardClass;
+  private final boolean useExtendedMode;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -93,17 +93,24 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * <p>The process is carried out in two steps: first to check and store the card and application
    * data, then to create the final APDU with the data from the SAM (see finalizeCommand).
    *
-   * @param calypsoCard the Calypso card.
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param amount amount to debit (signed integer from -8388608 to 8388607).
    * @param kvc debit key KVC (not checked by the card).
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @param free 2 free bytes stored in the log but not processed by the card.
+   * @param useExtendedMode True if the extended mode is to be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
   CmdCardSvReload(
-      CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time, byte[] free) {
+      CalypsoCardClass calypsoCardClass,
+      int amount,
+      byte kvc,
+      byte[] date,
+      byte[] time,
+      byte[] free,
+      boolean useExtendedMode) {
 
     super(command);
 
@@ -119,11 +126,12 @@ final class CmdCardSvReload extends AbstractCardCommand {
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.calypsoCard = calypsoCard;
+    this.calypsoCardClass = calypsoCardClass;
+    this.useExtendedMode = useExtendedMode;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[18 + (calypsoCard.isExtendedModeSupported() ? 10 : 5)];
+    dataIn = new byte[18 + (useExtendedMode ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     dataIn[1] = date[0];
@@ -157,8 +165,8 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @since 2.0.1
    */
   void finalizeCommand(byte[] reloadComplementaryData) {
-    if ((calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 20)
-        || (!calypsoCard.isExtendedModeSupported() && reloadComplementaryData.length != 15)) {
+    if ((useExtendedMode && reloadComplementaryData.length != 20)
+        || (!useExtendedMode && reloadComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -173,7 +181,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                ((CalypsoCardAdapter) calypsoCard).getCardClass() == CalypsoCardClass.LEGACY
+                calypsoCardClass == CalypsoCardClass.LEGACY
                     ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                     : CalypsoCardClass.ISO.getValue(),
                 command.getInstructionByte(),
@@ -195,7 +203,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     svReloadData[0] = command.getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svReloadData[3] = calypsoCard.isExtendedModeSupported() ? (byte) 0x1C : (byte) 0x17;
+    svReloadData[3] = useExtendedMode ? (byte) 0x1C : (byte) 0x17;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svReloadData, 4, 11);
     return svReloadData;

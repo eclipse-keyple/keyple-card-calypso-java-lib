@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
 import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.calypsonet.terminal.calypso.transaction.SvOperation;
@@ -75,14 +74,14 @@ final class CmdCardSvGet extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardSvGet.
    *
-   * @param calypsoCardClass the card class.
-   * @param calypsoCard the Calypso card.
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param svOperation the desired SV operation.
+   * @param useExtendedMode True if the extended mode is to be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
   CmdCardSvGet(
-      CalypsoCardClass calypsoCardClass, CalypsoCard calypsoCard, SvOperation svOperation) {
+      CalypsoCardClass calypsoCardClass, SvOperation svOperation, boolean useExtendedMode) {
 
     super(command);
 
@@ -91,7 +90,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
             ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
             : CalypsoCardClass.ISO.getValue();
     // CL-SV-CMDMODE.1 Requirement fullfilled only for SAM C1.
-    byte p1 = calypsoCard.isExtendedModeSupported() ? (byte) 0x01 : (byte) 0x00;
+    byte p1 = useExtendedMode ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
     setApduRequest(

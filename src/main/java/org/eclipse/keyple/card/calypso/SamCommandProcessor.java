@@ -771,61 +771,40 @@ class SamCommandProcessor {
   }
 
   /**
-   * Computes the cryptographic data required for the SvDebit command.
+   * Computes the cryptographic data required for the SvDebit or SvUndebit command.
    *
    * <p>Use the data from the SvGet command and the partial data from the SvDebit command for this
    * purpose.
    *
    * <p>The returned data will be used to finalize the card SvDebit command.
    *
+   * @param isDebitCommand
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
-   * @return the complementary security data to finalize the SvDebit card command (sam ID + SV
-   *     prepare load output)
+   * @return the complementary security data to finalize the SvDebit/SvUndebit card command (sam ID
+   *     + SV prepare debit/debit output)
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0.0
    */
-  byte[] getSvDebitComplementaryData(
-      CmdCardSvDebit cmdCardSvDebit, byte[] svGetHeader, byte[] svGetData)
+  byte[] getSvDebitOrUndebitComplementaryData(
+      boolean isDebitCommand,
+      CmdCardSvDebitOrUndebit cmdCardSvDebitOrUndebit,
+      byte[] svGetHeader,
+      byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
     // get the complementary data from the SAM
-    CmdSamSvPrepareDebit cmdSamSvPrepareDebit =
-        new CmdSamSvPrepareDebit(
-            samProductType, svGetHeader, svGetData, cmdCardSvDebit.getSvDebitData());
+    CmdSamSvPrepareDebitOrUndebit cmdSamSvPrepareDebitOrUndebit =
+        new CmdSamSvPrepareDebitOrUndebit(
+            isDebitCommand,
+            samProductType,
+            svGetHeader,
+            svGetData,
+            cmdCardSvDebitOrUndebit.getSvDebitOrUndebitData());
 
-    return getSvComplementaryData(cmdSamSvPrepareDebit);
-  }
-
-  /**
-   * Computes the cryptographic data required for the SvUndebit command.
-   *
-   * <p>Use the data from the SvGet command and the partial data from the SvUndebit command for this
-   * purpose.
-   *
-   * <p>The returned data will be used to finalize the card SvUndebit command.
-   *
-   * @param svGetHeader the SV Get command header.
-   * @param svGetData the SV Get command response data.
-   * @return the complementary security data to finalize the SvUndebit card command (sam ID + SV
-   *     prepare load output)
-   * @throws CalypsoSamCommandException if the SAM has responded with an error status
-   * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
-   * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @since 2.0.0
-   */
-  public byte[] getSvUndebitComplementaryData(
-      CmdCardSvUndebit cmdCardSvUndebit, byte[] svGetHeader, byte[] svGetData)
-      throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
-          CardBrokenCommunicationException {
-    // get the complementary data from the SAM
-    CmdSamSvPrepareUndebit cmdSamSvPrepareUndebit =
-        new CmdSamSvPrepareUndebit(
-            samProductType, svGetHeader, svGetData, cmdCardSvUndebit.getSvUndebitData());
-
-    return getSvComplementaryData(cmdSamSvPrepareUndebit);
+    return getSvComplementaryData(cmdSamSvPrepareDebitOrUndebit);
   }
 
   /**

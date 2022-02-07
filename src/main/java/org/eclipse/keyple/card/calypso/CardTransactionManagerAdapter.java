@@ -19,6 +19,7 @@ import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.*;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -108,6 +109,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   private final CardCommandManager cardCommandManager;
   /** The current Store Value action */
   private SvAction svAction;
+  /** Flag indicating if an SV operation has been performed during the current secure session. */
+  private boolean secureSessionHasSvOperation;
   /** The {@link ChannelControl} action */
   private ChannelControl channelControl;
 
@@ -757,6 +760,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // CL-KEY-INDEXPO.1
     currentWriteAccessLevel = writeAccessLevel;
+
+    // CL-SV-1PCSS.1
+    secureSessionHasSvOperation = false;
 
     // create a sublist of AbstractCardCommand to be sent atomically
     List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
@@ -2233,18 +2239,26 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (!calypsoCard.isSvFeatureAvailable()) {
       throw new UnsupportedOperationException("Stored Value is not available for this card.");
     }
+
+    // CL-SV-CMDMODE.1
+    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    boolean useExtendedMode =
+        calypsoCard.isExtendedModeSupported()
+            && (calypsoSam == null
+                || calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1));
+
     if (((CardSecuritySettingAdapter) cardSecuritySettings).isSvLoadAndDebitLogEnabled()
-        && (!calypsoCard.isExtendedModeSupported())) {
+        && (!useExtendedMode)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
       // CL-SV-GETNUMBER.1
       SvOperation operation1 =
           SvOperation.RELOAD.equals(svOperation) ? SvOperation.DEBIT : SvOperation.RELOAD;
       cardCommandManager.addStoredValueCommand(
-          new CmdCardSvGet(calypsoCard.getCardClass(), calypsoCard, operation1), operation1);
+          new CmdCardSvGet(calypsoCard.getCardClass(), operation1, false), operation1);
     }
     cardCommandManager.addStoredValueCommand(
-        new CmdCardSvGet(calypsoCard.getCardClass(), calypsoCard, svOperation), svOperation);
+        new CmdCardSvGet(calypsoCard.getCardClass(), svOperation, useExtendedMode), svOperation);
     this.svAction = svAction;
 
     return this;
@@ -2258,9 +2272,32 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareSvReload(
       int amount, byte[] date, byte[] time, byte[] free) {
+
+    // CL-SV-1PCSS.1
+    if (SessionState.SESSION_OPEN.equals(sessionState)) {
+      if (!secureSessionHasSvOperation) {
+        secureSessionHasSvOperation = true;
+      } else {
+        throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
+      }
+    }
+
+    // CL-SV-CMDMODE.1
+    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    boolean useExtendedMode =
+        calypsoCard.isExtendedModeSupported()
+            && calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1);
+
     // create the initial command with the application data
     CmdCardSvReload svReloadCmdBuild =
-        new CmdCardSvReload(calypsoCard, amount, calypsoCard.getSvKvc(), date, time, free);
+        new CmdCardSvReload(
+            calypsoCard.getCardClass(),
+            amount,
+            calypsoCard.getSvKvc(),
+            date,
+            time,
+            free,
+            useExtendedMode);
 
     // get the security data from the SAM
     byte[] svReloadComplementaryData;
@@ -2301,6 +2338,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
+   * (private)<br>
    * Schedules the execution of a <b>SV Debit</b> command to decrease the current SV balance.
    *
    * <p>It consists in decreasing the current balance of the SV by a certain amount.
@@ -2310,8 +2348,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param amount the amount to be subtracted, positive integer in the range 0..32767
    * @param date 2-byte free value.
    * @param time 2-byte free value.
+   * @param useExtendedMode True if the extended mode is to be used.
    */
-  private void prepareInternalSvDebit(int amount, byte[] date, byte[] time)
+  private void prepareInternalSvDebit(int amount, byte[] date, byte[] time, boolean useExtendedMode)
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
           CalypsoSamCommandException {
 
@@ -2321,14 +2360,21 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
 
     // create the initial command with the application data
-    CmdCardSvDebit svDebitCmdBuild =
-        new CmdCardSvDebit(calypsoCard, amount, calypsoCard.getSvKvc(), date, time);
+    CmdCardSvDebitOrUndebit svDebitCmdBuild =
+        new CmdCardSvDebitOrUndebit(
+            true,
+            calypsoCard.getCardClass(),
+            amount,
+            calypsoCard.getSvKvc(),
+            date,
+            time,
+            useExtendedMode);
 
     // get the security data from the SAM
     byte[] svDebitComplementaryData;
     svDebitComplementaryData =
-        samCommandProcessor.getSvDebitComplementaryData(
-            svDebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
+        samCommandProcessor.getSvDebitOrUndebitComplementaryData(
+            true, svDebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
 
     // finalize the SvDebit command with the data provided by the SAM
     svDebitCmdBuild.finalizeCommand(svDebitComplementaryData);
@@ -2346,23 +2392,32 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param amount the amount to be subtracted, positive integer in the range 0..32767
    * @param date 2-byte free value.
    * @param time 2-byte free value.
+   * @param useExtendedMode True if the extended mode is to be used.
    */
-  private void prepareInternalSvUndebit(int amount, byte[] date, byte[] time)
+  private void prepareInternalSvUndebit(
+      int amount, byte[] date, byte[] time, boolean useExtendedMode)
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
           CalypsoSamCommandException {
 
     // create the initial command with the application data
-    CmdCardSvUndebit svUndebitCmdBuild =
-        new CmdCardSvUndebit(calypsoCard, amount, calypsoCard.getSvKvc(), date, time);
+    CmdCardSvDebitOrUndebit svUndebitCmdBuild =
+        new CmdCardSvDebitOrUndebit(
+            false,
+            calypsoCard.getCardClass(),
+            amount,
+            calypsoCard.getSvKvc(),
+            date,
+            time,
+            useExtendedMode);
 
     // get the security data from the SAM
-    byte[] svDebitComplementaryData;
-    svDebitComplementaryData =
-        samCommandProcessor.getSvUndebitComplementaryData(
-            svUndebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
+    byte[] svUndebitComplementaryData;
+    svUndebitComplementaryData =
+        samCommandProcessor.getSvDebitOrUndebitComplementaryData(
+            false, svUndebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
 
     // finalize the SvUndebit command with the data provided by the SAM
-    svUndebitCmdBuild.finalizeCommand(svDebitComplementaryData);
+    svUndebitCmdBuild.finalizeCommand(svUndebitComplementaryData);
 
     // create and keep the CalypsoCardCommand
     cardCommandManager.addStoredValueCommand(svUndebitCmdBuild, SvOperation.DEBIT);
@@ -2375,11 +2430,27 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
+
+    // CL-SV-1PCSS.1
+    if (SessionState.SESSION_OPEN.equals(sessionState)) {
+      if (!secureSessionHasSvOperation) {
+        secureSessionHasSvOperation = true;
+      } else {
+        throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
+      }
+    }
+
+    // CL-SV-CMDMODE.1
+    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    boolean useExtendedMode =
+        calypsoCard.isExtendedModeSupported()
+            && calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1);
+
     try {
       if (SvAction.DO.equals(svAction)) {
-        prepareInternalSvDebit(amount, date, time);
+        prepareInternalSvDebit(amount, date, time, useExtendedMode);
       } else {
-        prepareInternalSvUndebit(amount, date, time);
+        prepareInternalSvUndebit(amount, date, time, useExtendedMode);
       }
     } catch (CalypsoSamCommandException e) {
       throw new SamAnomalyException(
