@@ -2439,7 +2439,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       }
     }
 
-    // c
+    // CL-SV-CMDMODE.1
     CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     boolean useExtendedMode =
         calypsoCard.isExtendedModeSupported()
