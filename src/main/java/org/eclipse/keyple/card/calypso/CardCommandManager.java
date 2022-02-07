@@ -40,7 +40,8 @@ class CardCommandManager {
   /** The list to contain the prepared commands */
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
 
-  private CalypsoCardCommand svLastCommand;
+  private CalypsoCardCommand svLastCommandRef;
+  private AbstractCardCommand svLastModifyingCommand;
   private SvOperation svOperation;
   private boolean svOperationComplete = false;
 
@@ -94,7 +95,7 @@ class CardCommandManager {
           throw new IllegalStateException(
               "This SV command can only be placed in the first position in the list of prepared commands");
         }
-        if (svLastCommand != CalypsoCardCommand.SV_GET) {
+        if (svLastCommandRef != CalypsoCardCommand.SV_GET) {
           throw new IllegalStateException("This SV command must follow an SV Get command");
         }
         // here, we expect the command and the SV operation to be consistent
@@ -103,12 +104,12 @@ class CardCommandManager {
           throw new IllegalStateException("Inconsistent SV operation.");
         }
         svOperationComplete = true;
+        svLastModifyingCommand = command;
         break;
       default:
         throw new IllegalStateException("An SV command is expected.");
     }
-    svLastCommand = command.getCommandRef();
-
+    svLastCommandRef = command.getCommandRef();
     cardCommands.add(command);
   }
 
@@ -123,6 +124,7 @@ class CardCommandManager {
    */
   void notifyCommandsProcessed() {
     cardCommands.clear();
+    svLastModifyingCommand = null;
   }
 
   /**
@@ -159,5 +161,15 @@ class CardCommandManager {
     boolean flag = svOperationComplete;
     svOperationComplete = false;
     return flag;
+  }
+
+  /**
+   * (package-private)<br>
+   *
+   * @return The last SV modifying command or null.
+   * @since 2.1.1
+   */
+  AbstractCardCommand getSvLastModifyingCommand() {
+    return svLastModifyingCommand;
   }
 }

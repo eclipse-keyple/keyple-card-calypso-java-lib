@@ -17,6 +17,7 @@ import java.util.*;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
@@ -860,12 +861,13 @@ final class CalypsoCardUtilAdapter {
    * (package-private)<br>
    * Fills the CalypsoCard with the card's responses to a list of commands
    *
-   * @param calypsoCard the {@link CalypsoCardAdapter} object to fill with the provided response
-   *     from the card
-   * @param commands the list of commands that get the responses.
-   * @param apduResponses the APDU responses returned by the card to all commands.
-   * @param isSessionOpen true when a secure session is open.
-   * @throws CardCommandException if a response from the card was unexpected
+   * @param calypsoCard The {@link CalypsoCardAdapter} object to fill with the provided response
+   *     from the card.
+   * @param commands The list of commands that get the responses.
+   * @param apduResponses The APDU responses returned by the card to all commands.
+   * @param isSessionOpen True when a secure session is open.
+   * @throws CardCommandException If a response from the card was unexpected.
+   * @throws DesynchronizedExchangesException If the number of commands/responses does not match.
    * @since 2.0.0
    */
   static void updateCalypsoCard(
@@ -875,13 +877,34 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    Iterator<ApduResponseApi> responseIterator = apduResponses.iterator();
+    // If there are more responses than requests, then we are unable to fill the card image. In this
+    // case we stop processing immediately because it may be a case of fraud, and we throw a
+    // desynchronized exception.
+    if (apduResponses.size() > commands.size()) {
+      throw new DesynchronizedExchangesException(
+          "The number of commands/responses does not match: commands="
+              + commands.size()
+              + ", responses="
+              + apduResponses.size());
+    }
 
-    if (commands != null && !commands.isEmpty()) {
-      for (AbstractCardCommand command : commands) {
-        ApduResponseApi apduResponse = responseIterator.next();
-        updateCalypsoCard(calypsoCard, command, apduResponse, isSessionOpen);
-      }
+    // We go through all the responses (and not the requests) because there may be fewer in the case
+    // of an error that occurred in strict mode. In this case the last response will raise an
+    // exception.
+    Iterator<AbstractCardCommand> commandIterator = commands.iterator();
+    for (ApduResponseApi apduResponse : apduResponses) {
+      AbstractCardCommand command = commandIterator.next();
+      updateCalypsoCard(calypsoCard, command, apduResponse, isSessionOpen);
+    }
+
+    // Finally, if no error has occurred and there are fewer responses than requests, then we
+    // throw a desynchronized exception.
+    if (apduResponses.size() < commands.size()) {
+      throw new DesynchronizedExchangesException(
+          "The number of commands/responses does not match: commands="
+              + commands.size()
+              + ", responses="
+              + apduResponses.size());
     }
   }
 }
