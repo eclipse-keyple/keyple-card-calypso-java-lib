@@ -139,7 +139,7 @@ public class CalypsoCardSelectionAdapterTest {
   @Test
   public void prepareReadRecordFile_whenSfiIs07_shouldProduceReadRecordsApduWithSfi07() {
     cardSelection.filterByDfName("1122334455");
-    cardSelection.prepareReadRecordFile((byte) 0x07, 1);
+    cardSelection.prepareReadRecord((byte) 0x07, 1);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
     assertThat(commandApdu.getApdu()).isEqualTo(ByteArrayUtil.fromHex("00B2013C00"));

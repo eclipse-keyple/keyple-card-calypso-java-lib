@@ -591,8 +591,7 @@ final class CalypsoCardUtilAdapter {
    * CalypsoCardAdapter}.
    *
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
-   * @param cmdCardSvOperation the SV Operation command (CmdCardSvReload, CmdCardSvDebit or
-   *     CmdCardSvUndebit)
+   * @param cmdCardSvOperation the SV Operation command (CmdCardSvReload or CmdCardSvDebitOrUndebit)
    * @param apduResponse the response received.
    * @throws CardCommandException if a response from the card was unexpected
    */

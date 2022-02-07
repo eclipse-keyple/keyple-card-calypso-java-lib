@@ -13,13 +13,12 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
  * (package-private)<br>
- * Builds the SV Debit command.
+ * Builds the SV Debit or SV Undebit command.
  *
  * <p>See specs: Calypso Stored Value balance (signed binaries' coding based on the two's complement
  * method)
@@ -61,10 +60,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  *
  * @since 2.0.1
  */
-final class CmdCardSvDebit extends AbstractCardCommand {
-
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.SV_DEBIT;
+final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -95,25 +91,36 @@ final class CmdCardSvDebit extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCard calypsoCard;
+  private final CalypsoCardClass calypsoCardClass;
+  private final boolean useExtendedMode;
   /** apdu data array */
   private final byte[] dataIn;
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdCardSvDebit.
+   * Instantiates a new CmdCardSvDebitOrUndebit.
    *
-   * @param calypsoCard the Calypso card.
-   * @param amount amount to debit (positive integer from 0 to 32767).
+   * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
+   *     command.
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param amount amount to debit or undebit (positive integer from 0 to 32767).
    * @param kvc the KVC.
-   * @param date debit date (not checked by the card).
-   * @param time debit time (not checked by the card).
+   * @param date operation date (not checked by the card).
+   * @param time operation time (not checked by the card).
+   * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
-  CmdCardSvDebit(CalypsoCard calypsoCard, int amount, byte kvc, byte[] date, byte[] time) {
+  CmdCardSvDebitOrUndebit(
+      boolean isDebitCommand,
+      CalypsoCardClass calypsoCardClass,
+      int amount,
+      byte kvc,
+      byte[] date,
+      byte[] time,
+      boolean useExtendedMode) {
 
-    super(command);
+    super(isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -129,14 +136,15 @@ final class CmdCardSvDebit extends AbstractCardCommand {
     }
 
     // keeps a copy of these fields until the command is finalized
-    this.calypsoCard = calypsoCard;
+    this.calypsoCardClass = calypsoCardClass;
+    this.useExtendedMode = useExtendedMode;
 
     // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[15 + (calypsoCard.isExtendedModeSupported() ? 10 : 5)];
+    dataIn = new byte[15 + (useExtendedMode ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
-    short amountShort = (short) -amount;
+    short amountShort = isDebitCommand ? (short) -amount : (short) amount;
     dataIn[1] = (byte) ((amountShort >> 8) & 0xFF);
     dataIn[2] = (byte) (amountShort & 0xFF);
     dataIn[3] = date[0];
@@ -160,30 +168,35 @@ final class CmdCardSvDebit extends AbstractCardCommand {
    *
    * <p>5 or 10 byte signature (hi part)
    *
-   * @param debitComplementaryData the data out from the SvPrepareDebit SAM command.
+   * @param debitOrUndebitComplementaryData the data out from the SvPrepareDebit SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(byte[] debitComplementaryData) {
-    if ((calypsoCard.isExtendedModeSupported() && debitComplementaryData.length != 20)
-        || (!calypsoCard.isExtendedModeSupported() && debitComplementaryData.length != 15)) {
+  void finalizeCommand(byte[] debitOrUndebitComplementaryData) {
+    if ((useExtendedMode && debitOrUndebitComplementaryData.length != 20)
+        || (!useExtendedMode && debitOrUndebitComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
-    byte p1 = debitComplementaryData[4];
-    byte p2 = debitComplementaryData[5];
+    byte p1 = debitOrUndebitComplementaryData[4];
+    byte p2 = debitOrUndebitComplementaryData[5];
 
-    dataIn[0] = debitComplementaryData[6];
-    System.arraycopy(debitComplementaryData, 0, dataIn, 8, 4);
-    System.arraycopy(debitComplementaryData, 7, dataIn, 12, 3);
-    System.arraycopy(debitComplementaryData, 10, dataIn, 15, debitComplementaryData.length - 10);
+    dataIn[0] = debitOrUndebitComplementaryData[6];
+    System.arraycopy(debitOrUndebitComplementaryData, 0, dataIn, 8, 4);
+    System.arraycopy(debitOrUndebitComplementaryData, 7, dataIn, 12, 3);
+    System.arraycopy(
+        debitOrUndebitComplementaryData,
+        10,
+        dataIn,
+        15,
+        debitOrUndebitComplementaryData.length - 10);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                ((CalypsoCardAdapter) calypsoCard).getCardClass() == CalypsoCardClass.LEGACY
+                calypsoCardClass == CalypsoCardClass.LEGACY
                     ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                     : CalypsoCardClass.ISO.getValue(),
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 p1,
                 p2,
                 dataIn,
@@ -192,20 +205,20 @@ final class CmdCardSvDebit extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Gets the SV Debit part of the data to include in the SAM SV Prepare Debit command
+   * Gets the SV Debit/Undebit part of the data to include in the SAM SV Prepare Debit command
    *
-   * @return a byte array containing the SV debit data
+   * @return A byte array containing the SV debit/undebit data
    * @since 2.0.1
    */
-  byte[] getSvDebitData() {
-    byte[] svDebitData = new byte[12];
-    svDebitData[0] = command.getInstructionByte();
-    // svDebitData[1,2] / P1P2 not set because ignored
+  byte[] getSvDebitOrUndebitData() {
+    byte[] svDebitOrUndebitData = new byte[12];
+    svDebitOrUndebitData[0] = getCommandRef().getInstructionByte();
+    // svDebitOrUndebitData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in product type 3.2
-    svDebitData[3] = calypsoCard.isExtendedModeSupported() ? (byte) 0x19 : (byte) 0x14;
+    svDebitOrUndebitData[3] = useExtendedMode ? (byte) 0x19 : (byte) 0x14;
     // appends the fixed part of dataIn
-    System.arraycopy(dataIn, 0, svDebitData, 4, 8);
-    return svDebitData;
+    System.arraycopy(dataIn, 0, svDebitOrUndebitData, 4, 8);
+    return svDebitOrUndebitData;
   }
 
   /**
@@ -228,12 +241,12 @@ final class CmdCardSvDebit extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardSvDebit setApduResponse(ApduResponseApi apduResponse) {
+  CmdCardSvDebitOrUndebit setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {
-      throw new IllegalStateException("Bad length in response to SV Debit command.");
+      throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
     }
     return this;
   }
@@ -244,7 +257,7 @@ final class CmdCardSvDebit extends AbstractCardCommand {
    * The signature can be empty here in the case of a secure session where the transmission of the
    * signature is postponed until the end of the session.
    *
-   * @return a byte array containing the signature
+   * @return A byte array containing the SV signature
    * @since 2.0.1
    */
   byte[] getSignatureLo() {
