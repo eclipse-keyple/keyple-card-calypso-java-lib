@@ -99,7 +99,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @param free 2 free bytes stored in the log but not processed by the card.
-   * @param useExtendedMode True if the extended mode is to be used.
+   * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */

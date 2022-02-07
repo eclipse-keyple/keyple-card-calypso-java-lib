@@ -110,7 +110,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   /** The current Store Value action */
   private SvAction svAction;
   /** Flag indicating if an SV operation has been performed during the current secure session. */
-  private boolean secureSessionHasSvOperation;
+  private boolean isSvOperationInsideSession;
   /** The {@link ChannelControl} action */
   private ChannelControl channelControl;
 
@@ -761,9 +761,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // CL-KEY-INDEXPO.1
     currentWriteAccessLevel = writeAccessLevel;
 
-    // CL-SV-1PCSS.1
-    secureSessionHasSvOperation = false;
-
     // create a sublist of AbstractCardCommand to be sent atomically
     List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
 
@@ -803,6 +800,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
     // sets the flag indicating that the commands have been executed
     cardCommandManager.notifyCommandsProcessed();
+
+    // CL-SV-1PCSS.1
+    isSvOperationInsideSession = false;
 
     return this;
   }
@@ -2244,8 +2244,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     boolean useExtendedMode =
         calypsoCard.isExtendedModeSupported()
-            && (calypsoSam == null
-                || calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1));
+            && (calypsoSam == null || calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1);
 
     if (((CardSecuritySettingAdapter) cardSecuritySettings).isSvLoadAndDebitLogEnabled()
         && (!useExtendedMode)) {
@@ -2274,9 +2273,9 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       int amount, byte[] date, byte[] time, byte[] free) {
 
     // CL-SV-1PCSS.1
-    if (SessionState.SESSION_OPEN.equals(sessionState)) {
-      if (!secureSessionHasSvOperation) {
-        secureSessionHasSvOperation = true;
+    if (sessionState == SessionState.SESSION_OPEN) {
+      if (!isSvOperationInsideSession) {
+        isSvOperationInsideSession = true;
       } else {
         throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
       }
@@ -2286,7 +2285,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     boolean useExtendedMode =
         calypsoCard.isExtendedModeSupported()
-            && calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1);
+            && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
 
     // create the initial command with the application data
     CmdCardSvReload svReloadCmdBuild =
@@ -2348,7 +2347,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param amount the amount to be subtracted, positive integer in the range 0..32767
    * @param date 2-byte free value.
    * @param time 2-byte free value.
-   * @param useExtendedMode True if the extended mode is to be used.
+   * @param useExtendedMode True if the extended mode must be used.
    */
   private void prepareInternalSvDebit(int amount, byte[] date, byte[] time, boolean useExtendedMode)
       throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
@@ -2392,7 +2391,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param amount the amount to be subtracted, positive integer in the range 0..32767
    * @param date 2-byte free value.
    * @param time 2-byte free value.
-   * @param useExtendedMode True if the extended mode is to be used.
+   * @param useExtendedMode True if the extended mode must be used.
    */
   private void prepareInternalSvUndebit(
       int amount, byte[] date, byte[] time, boolean useExtendedMode)
@@ -2432,19 +2431,19 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   public final CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
 
     // CL-SV-1PCSS.1
-    if (SessionState.SESSION_OPEN.equals(sessionState)) {
-      if (!secureSessionHasSvOperation) {
-        secureSessionHasSvOperation = true;
+    if (sessionState == SessionState.SESSION_OPEN) {
+      if (!isSvOperationInsideSession) {
+        isSvOperationInsideSession = true;
       } else {
         throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
       }
     }
 
-    // CL-SV-CMDMODE.1
+    // c
     CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
     boolean useExtendedMode =
         calypsoCard.isExtendedModeSupported()
-            && calypsoSam.getProductType().equals(CalypsoSam.ProductType.SAM_C1);
+            && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
 
     try {
       if (SvAction.DO.equals(svAction)) {

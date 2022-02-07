@@ -107,7 +107,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    * @param kvc the KVC.
    * @param date operation date (not checked by the card).
    * @param time operation time (not checked by the card).
-   * @param useExtendedMode True if the extended mode is to be used.
+   * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
