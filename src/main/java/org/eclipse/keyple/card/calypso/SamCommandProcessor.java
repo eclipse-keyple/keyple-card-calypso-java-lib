@@ -17,7 +17,6 @@ import java.util.List;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -51,7 +50,7 @@ class SamCommandProcessor {
   private static final byte SIGNATURE_LENGTH_REV32 = (byte) 0x08;
 
   private final ProxyReaderApi samReader;
-  private final CardSecuritySetting cardSecuritySettings;
+  private final CardSecuritySettingAdapter cardSecuritySetting;
   private static final List<byte[]> cardDigestDataCache = new ArrayList<byte[]>();
   private final CalypsoCardAdapter calypsoCard;
   private final byte[] samSerialNumber;
@@ -65,24 +64,25 @@ class SamCommandProcessor {
   private boolean isDigesterInitialized;
 
   /**
+   * (package-private)<br>
    * Constructor
    *
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting the security settings from the application layer.
    * @since 2.0.0
    */
-  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySettingAdapter cardSecuritySetting) {
 
     Assert.getInstance()
-        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader(), "samReader")
-        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam(), "calypsoSam");
+        .notNull(cardSecuritySetting.getSamReader(), "samReader")
+        .notNull(cardSecuritySetting.getCalypsoSam(), "calypsoSam");
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
-    this.cardSecuritySettings = cardSecuritySetting;
-    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    this.cardSecuritySetting = cardSecuritySetting;
+    CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
     samProductType = calypsoSam.getProductType();
     samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReaderApi) ((CardSecuritySettingAdapter) cardSecuritySettings).getSamReader();
+    samReader = (ProxyReaderApi) cardSecuritySetting.getSamReader();
   }
 
   /**
@@ -152,7 +152,7 @@ class SamCommandProcessor {
     if (kvc != null) {
       return kvc;
     }
-    return ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKvc(writeAccessLevel);
+    return cardSecuritySetting.getDefaultKvc(writeAccessLevel);
   }
 
   /**
@@ -171,9 +171,9 @@ class SamCommandProcessor {
       return kif;
     }
     // CL-KEY-KIFUNK.1
-    Byte result = ((CardSecuritySettingAdapter) cardSecuritySettings).getKif(writeAccessLevel, kvc);
+    Byte result = cardSecuritySetting.getKif(writeAccessLevel, kvc);
     if (result == null) {
-      result = ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKif(writeAccessLevel);
+      result = cardSecuritySetting.getDefaultKif(writeAccessLevel);
     }
     return result;
   }
@@ -414,7 +414,9 @@ class SamCommandProcessor {
     try {
       cardResponse = samReader.transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
     } catch (UnexpectedStatusWordException e) {
-      logger.error("A SAM card command has failed: {}", e.getMessage());
+      if (logger.isDebugEnabled()) {
+        logger.debug("A SAM card command has failed: {}", e.getMessage());
+      }
       cardResponse = e.getCardResponse();
     }
     List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
@@ -557,30 +559,22 @@ class SamCommandProcessor {
       // no current work key is available (outside secure session)
       if (newPin == null) {
         // PIN verification
-        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif()
-                == null
-            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc()
-                == null) {
+        if (cardSecuritySetting.getPinVerificationCipheringKif() == null
+            || cardSecuritySetting.getPinVerificationCipheringKvc() == null) {
           throw new IllegalStateException(
               "No KIF or KVC defined for the PIN verification ciphering key");
         }
-        pinCipheringKif =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif();
-        pinCipheringKvc =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc();
+        pinCipheringKif = cardSecuritySetting.getPinVerificationCipheringKif();
+        pinCipheringKvc = cardSecuritySetting.getPinVerificationCipheringKvc();
       } else {
         // PIN modification
-        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif()
-                == null
-            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc()
-                == null) {
+        if (cardSecuritySetting.getPinModificationCipheringKif() == null
+            || cardSecuritySetting.getPinModificationCipheringKvc() == null) {
           throw new IllegalStateException(
               "No KIF or KVC defined for the PIN modification ciphering key");
         }
-        pinCipheringKif =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif();
-        pinCipheringKvc =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc();
+        pinCipheringKif = cardSecuritySetting.getPinModificationCipheringKif();
+        pinCipheringKvc = cardSecuritySetting.getPinModificationCipheringKvc();
       }
     }
 
@@ -701,6 +695,7 @@ class SamCommandProcessor {
   }
 
   /**
+   * (package-private)<br>
    * Computes the cryptographic data required for the SvDebit or SvUndebit command.
    *
    * <p>Use the data from the SvGet command and the partial data from the SvDebit command for this
@@ -708,7 +703,7 @@ class SamCommandProcessor {
    *
    * <p>The returned data will be used to finalize the card SvDebit command.
    *
-   * @param isDebitCommand
+   * @param isDebitCommand True if the command is a DEBIT, false for UNDEBIT.
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvDebit/SvUndebit card command (sam ID
