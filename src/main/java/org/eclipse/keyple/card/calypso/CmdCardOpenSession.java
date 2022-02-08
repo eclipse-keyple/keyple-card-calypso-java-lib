@@ -87,34 +87,33 @@ final class CmdCardOpenSession extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdCardOpenSession.
+   * Constructor.
    *
-   * @param calypsoCard the {@link CalypsoCard}.
+   * @param calypsoCard The card image.
+   * @param keyIndex The key index.
+   * @param samChallenge The SAM challenge.
+   * @param sfi The optional SFI of the file to read.
+   * @param recordNumber The optional record number to read.
    * @throws IllegalArgumentException If the key index is 0 and rev is 2.4
-   * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0.1
    */
   CmdCardOpenSession(
-      CalypsoCard calypsoCard,
-      byte debitKeyIndex,
-      byte[] sessionTerminalChallenge,
-      int sfi,
-      int recordNumber) {
+      CalypsoCard calypsoCard, byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
 
     super(CalypsoCardCommand.OPEN_SESSION);
 
     this.calypsoCard = calypsoCard;
     switch (calypsoCard.getProductType()) {
       case PRIME_REVISION_1:
-        createRev10(debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
+        createRev10(keyIndex, samChallenge, sfi, recordNumber);
         break;
       case PRIME_REVISION_2:
-        createRev24(debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber);
+        createRev24(keyIndex, samChallenge, sfi, recordNumber);
         break;
       case PRIME_REVISION_3:
       case LIGHT:
       case BASIC:
-        createRev3(debitKeyIndex, sessionTerminalChallenge, sfi, recordNumber, calypsoCard);
+        createRev3(keyIndex, samChallenge, sfi, recordNumber, calypsoCard);
         break;
       default:
         throw new IllegalArgumentException(
@@ -143,7 +142,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     byte p2;
     byte[] dataIn;
 
-    // CL-CSS-OSSMODE.1 fullfilled only for SAM C1
+    // CL-CSS-OSSMODE.1 fulfilled only for SAM C1
     if (!calypsoCard.isExtendedModeSupported()) {
       p2 = (byte) ((sfi * 8) + 1);
       dataIn = samChallenge;

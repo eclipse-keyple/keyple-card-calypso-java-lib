@@ -17,7 +17,6 @@ import java.util.List;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -41,18 +40,17 @@ import org.slf4j.LoggerFactory;
  * @since 2.0.0
  */
 class SamCommandProcessor {
+
   private static final Logger logger = LoggerFactory.getLogger(SamCommandProcessor.class);
 
   private static final byte KIF_UNDEFINED = (byte) 0xFF;
-
   private static final byte CHALLENGE_LENGTH_REV_INF_32 = (byte) 0x04;
   private static final byte CHALLENGE_LENGTH_REV32 = (byte) 0x08;
   private static final byte SIGNATURE_LENGTH_REV_INF_32 = (byte) 0x04;
   private static final byte SIGNATURE_LENGTH_REV32 = (byte) 0x08;
-  private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
 
   private final ProxyReaderApi samReader;
-  private final CardSecuritySetting cardSecuritySettings;
+  private final CardSecuritySettingAdapter cardSecuritySetting;
   private static final List<byte[]> cardDigestDataCache = new ArrayList<byte[]>();
   private final CalypsoCardAdapter calypsoCard;
   private final byte[] samSerialNumber;
@@ -66,28 +64,29 @@ class SamCommandProcessor {
   private boolean isDigesterInitialized;
 
   /**
+   * (package-private)<br>
    * Constructor
    *
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting the security settings from the application layer.
    * @since 2.0.0
    */
-  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySettingAdapter cardSecuritySetting) {
 
     Assert.getInstance()
-        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader(), "samReader")
-        .notNull(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam(), "calypsoSam");
+        .notNull(cardSecuritySetting.getSamReader(), "samReader")
+        .notNull(cardSecuritySetting.getCalypsoSam(), "calypsoSam");
 
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
-    this.cardSecuritySettings = cardSecuritySetting;
-    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    this.cardSecuritySetting = cardSecuritySetting;
+    CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
     samProductType = calypsoSam.getProductType();
     samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReaderApi) ((CardSecuritySettingAdapter) cardSecuritySettings).getSamReader();
+    samReader = (ProxyReaderApi) cardSecuritySetting.getSamReader();
   }
 
   /**
-   * Gets the terminal challenge
+   * Gets the SAM challenge
    *
    * <p>Performs key diversification if necessary by sending the SAM Select Diversifier command
    * prior to the Get Challenge command. The diversification flag is set to avoid further
@@ -105,64 +104,39 @@ class SamCommandProcessor {
    * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync
    * @since 2.0.0
    */
-  byte[] getSessionTerminalChallenge()
+  byte[] getChallenge()
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+
+    List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
 
     // diversify only if this has not already been done.
     if (!isDiversificationDone) {
-      // build the SAM Select Diversifier command to provide the SAM with the card S/N
+      // build the "Select Diversifier" SAM command to provide the SAM with the card S/N
       // CL-SAM-CSN.1
-      CmdSamSelectDiversifier selectDiversifierCmd =
-          new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull());
-
-      apduRequests.add(selectDiversifierCmd.getApduRequest());
-
+      samCommands.add(
+          new CmdSamSelectDiversifier(samProductType, calypsoCard.getCalypsoSerialNumberFull()));
       // note that the diversification has been made
       isDiversificationDone = true;
     }
 
-    // build the SAM Get Challenge command
+    // build the "Get Challenge" SAM command
     byte challengeLength =
         calypsoCard.isExtendedModeSupported()
             ? CHALLENGE_LENGTH_REV32
             : CHALLENGE_LENGTH_REV_INF_32;
+    CmdSamGetChallenge cmdSamGetChallenge = new CmdSamGetChallenge(samProductType, challengeLength);
+    samCommands.add(cmdSamGetChallenge);
 
-    CmdSamGetChallenge samGetChallengeCmd = new CmdSamGetChallenge(samProductType, challengeLength);
+    // Transmit the commands to the SAM
+    transmitCommands(samCommands);
 
-    apduRequests.add(samGetChallengeCmd.getApduRequest());
-
-    // Transmit the CardRequest to the SAM and get back the CardResponse (list of ApduResponseApi)
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse =
-          samReader.transmitCardRequest(
-              new CardRequestAdapter(apduRequests, false), ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+    // Retrieve the SAM challenge
+    byte[] samChallenge = cmdSamGetChallenge.getChallenge();
+    if (logger.isDebugEnabled()) {
+      logger.debug("identification: TERMINALCHALLENGE={}", ByteArrayUtil.toHex(samChallenge));
     }
-
-    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
-    byte[] sessionTerminalChallenge;
-
-    int numberOfSamCmd = apduRequests.size();
-    if (samApduResponses.size() == numberOfSamCmd) {
-      samGetChallengeCmd.setApduResponse(samApduResponses.get(numberOfSamCmd - 1)).checkStatus();
-      sessionTerminalChallenge = samGetChallengeCmd.getChallenge();
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "identification: TERMINALCHALLENGE = {}",
-            ByteArrayUtil.toHex(sessionTerminalChallenge));
-      }
-    } else {
-      throw new DesynchronizedExchangesException(
-          "The number of commands/responses does not match: cmd="
-              + numberOfSamCmd
-              + ", resp="
-              + samApduResponses.size());
-    }
-    return sessionTerminalChallenge;
+    return samChallenge;
   }
 
   /**
@@ -178,7 +152,7 @@ class SamCommandProcessor {
     if (kvc != null) {
       return kvc;
     }
-    return ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKvc(writeAccessLevel);
+    return cardSecuritySetting.getDefaultKvc(writeAccessLevel);
   }
 
   /**
@@ -197,9 +171,9 @@ class SamCommandProcessor {
       return kif;
     }
     // CL-KEY-KIFUNK.1
-    Byte result = ((CardSecuritySettingAdapter) cardSecuritySettings).getKif(writeAccessLevel, kvc);
+    Byte result = cardSecuritySetting.getKif(writeAccessLevel, kvc);
     if (result == null) {
-      result = ((CardSecuritySettingAdapter) cardSecuritySettings).getDefaultKif(writeAccessLevel);
+      result = cardSecuritySetting.getDefaultKif(writeAccessLevel);
     }
     return result;
   }
@@ -231,17 +205,17 @@ class SamCommandProcessor {
 
     if (logger.isDebugEnabled()) {
       logger.debug(
-          "initialize: POREVISION = {}, SAMREVISION = {}, SESSIONENCRYPTION = {}, VERIFICATIONMODE = {}",
+          "initialize: CARDREVISION={}, SAMREVISION={}, SESSIONENCRYPTION={}, VERIFICATIONMODE={}",
           calypsoCard.getProductType(),
           samProductType,
           sessionEncryption,
           verificationMode);
       logger.debug(
-          "initialize: VERIFICATIONMODE = {}, REV32MODE = {}",
+          "initialize: VERIFICATIONMODE={}, REV32MODE={}",
           verificationMode,
           calypsoCard.isExtendedModeSupported());
       logger.debug(
-          "initialize: KIF = {}, KVC {}, DIGESTDATA = {}",
+          "initialize: KIF={}, KVC={}, DIGESTDATA={}",
           String.format("%02Xh", kif),
           String.format("%02Xh", kvc),
           ByteArrayUtil.toHex(digestData));
@@ -385,16 +359,17 @@ class SamCommandProcessor {
   }
 
   /**
-   * Gets the terminal signature from the SAM
+   * (package-private)<br>
+   * Gets the terminal signature's high part from the SAM
    *
    * <p>All remaining data in the digest cache is sent to the SAM and the Digest Close command is
    * executed.
    *
-   * @return the terminal signature
+   * @return The terminal signature's high part.
    * @throws CalypsoSamCommandException if the SAM has responded with an error status
    * @throws ReaderBrokenCommunicationException if the communication with the SAM reader has failed.
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
-   * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync
+   * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync.
    * @since 2.0.0
    */
   byte[] getTerminalSignature()
@@ -405,46 +380,74 @@ class SamCommandProcessor {
     // Get the SAM Digest request including Digest Close from the cache manager
     List<AbstractSamCommand> samCommands = getPendingSamCommands(true);
 
-    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
-
-    // Transmit CardRequest and get CardResponse
-    CardResponseApi samCardResponse;
-
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
-
-    if (samApduResponses.size() != samCommands.size()) {
-      throw new DesynchronizedExchangesException(
-          "The number of commands/responses does not match: cmd="
-              + samCommands.size()
-              + ", resp="
-              + samApduResponses.size());
-    }
-
-    // check all responses status
-    for (int i = 0; i < samApduResponses.size(); i++) {
-      samCommands.get(i).setApduResponse(samApduResponses.get(i)).checkStatus();
-    }
+    // Transmit the commands to the SAM
+    transmitCommands(samCommands);
 
     // Get Terminal Signature from the latest response
-    CmdSamDigestClose cmdSamDigestClose =
-        (CmdSamDigestClose)
-            samCommands
-                .get(samCommands.size() - 1)
-                .setApduResponse(samApduResponses.get(samCommands.size() - 1));
-
-    byte[] sessionTerminalSignature = cmdSamDigestClose.getSignature();
+    byte[] terminalSignature =
+        ((CmdSamDigestClose) samCommands.get(samCommands.size() - 1)).getSignature();
 
     if (logger.isDebugEnabled()) {
-      logger.debug("SIGNATURE = {}", ByteArrayUtil.toHex(sessionTerminalSignature));
+      logger.debug("SIGNATURE={}", ByteArrayUtil.toHex(terminalSignature));
     }
 
-    return sessionTerminalSignature;
+    return terminalSignature;
+  }
+
+  /**
+   * (private)<br>
+   * Transmits the provided commands to the SAM, then attach responses and check status words.
+   *
+   * @param samCommands The SAM commands.
+   * @throws ReaderBrokenCommunicationException If the communication with the SAM reader has failed.
+   * @throws CardBrokenCommunicationException If the communication with the SAM has failed.
+   * @throws CalypsoSamCommandException If the SAM has responded with an error status.
+   * @throws DesynchronizedExchangesException If the APDU SAM exchanges are out of sync.
+   */
+  private void transmitCommands(List<AbstractSamCommand> samCommands)
+      throws ReaderBrokenCommunicationException, CardBrokenCommunicationException,
+          CalypsoSamCommandException {
+
+    List<ApduRequestSpi> apduRequests = getApduRequests(samCommands);
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
+    CardResponseApi cardResponse;
+    try {
+      cardResponse = samReader.transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
+    } catch (UnexpectedStatusWordException e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("A SAM card command has failed: {}", e.getMessage());
+      }
+      cardResponse = e.getCardResponse();
+    }
+    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
+
+    // If there are more responses than requests, then we are unable to fill the card image. In this
+    // case we stop processing immediately because it may be a case of fraud, and we throw a
+    // desynchronized exception.
+    if (apduResponses.size() > apduRequests.size()) {
+      throw new DesynchronizedExchangesException(
+          "The number of SAM commands/responses does not match: commands="
+              + apduRequests.size()
+              + ", responses="
+              + apduResponses.size());
+    }
+
+    // We go through all the responses (and not the requests) because there may be fewer in the case
+    // of an error that occurred in strict mode. In this case the last response will raise an
+    // exception.
+    for (int i = 0; i < apduResponses.size(); i++) {
+      samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
+    }
+
+    // Finally, if no error has occurred and there are fewer responses than requests, then we
+    // throw a desynchronized exception.
+    if (apduResponses.size() < apduRequests.size()) {
+      throw new DesynchronizedExchangesException(
+          "The number of SAM commands/responses does not match: commands="
+              + apduRequests.size()
+              + ", responses="
+              + apduResponses.size());
+    }
   }
 
   /**
@@ -462,31 +465,10 @@ class SamCommandProcessor {
   void authenticateCardSignature(byte[] cardSignatureLo)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
-    // Check the card signature part with the SAM
-    // Build and send SAM Digest Authenticate command
-    CmdSamDigestAuthenticate cmdSamDigestAuthenticate =
-        new CmdSamDigestAuthenticate(samProductType, cardSignatureLo);
 
-    List<ApduRequestSpi> samApduRequests = new ArrayList<ApduRequestSpi>();
-    samApduRequests.add(cmdSamDigestAuthenticate.getApduRequest());
-
-    CardRequestSpi samCardRequest = new CardRequestAdapter(samApduRequests, false);
-
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    // Get transaction result parsing the response
-    List<ApduResponseApi> samApduResponses = samCardResponse.getApduResponses();
-
-    if (samApduResponses == null || samApduResponses.isEmpty()) {
-      throw new DesynchronizedExchangesException("No response to Digest Authenticate command.");
-    }
-
-    cmdSamDigestAuthenticate.setApduResponse(samApduResponses.get(0)).checkStatus();
+    List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>(1);
+    samCommands.add(new CmdSamDigestAuthenticate(samProductType, cardSignatureLo));
+    transmitCommands(samCommands);
   }
 
   /**
@@ -510,7 +492,7 @@ class SamCommandProcessor {
    * (package-private)<br>
    * Compute the encrypted key data for the "Change Key" command.
    *
-   * @param poChallenge The challenge from the card.
+   * @param cardChallenge The challenge from the card.
    * @param cipheringKif The KIF of the key used for encryption.
    * @param cipheringKvc The KVC of the key used for encryption.
    * @param sourceKif The KIF of the key to encrypt.
@@ -522,9 +504,10 @@ class SamCommandProcessor {
    * @since 2.1.0
    */
   byte[] getEncryptedKey(
-      byte[] poChallenge, byte cipheringKif, byte cipheringKvc, byte sourceKif, byte sourceKvc)
+      byte[] cardChallenge, byte cipheringKif, byte cipheringKvc, byte sourceKif, byte sourceKvc)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
+
     List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
 
     if (!isDiversificationDone) {
@@ -535,31 +518,14 @@ class SamCommandProcessor {
       isDiversificationDone = true;
     }
 
-    samCommands.add(new CmdSamGiveRandom(samProductType, poChallenge));
-
-    int cardGenerateKeyCmdIndex = samCommands.size();
+    samCommands.add(new CmdSamGiveRandom(samProductType, cardChallenge));
 
     CmdSamCardGenerateKey cmdSamCardGenerateKey =
         new CmdSamCardGenerateKey(samProductType, cipheringKif, cipheringKvc, sourceKif, sourceKvc);
-
     samCommands.add(cmdSamCardGenerateKey);
 
-    // build a SAM CardRequest
-    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
-
-    // execute the command
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    ApduResponseApi cmdSamCardGenerateKeyResponse =
-        samCardResponse.getApduResponses().get(cardGenerateKeyCmdIndex);
-
-    // check execution status
-    cmdSamCardGenerateKey.setApduResponse(cmdSamCardGenerateKeyResponse).checkStatus();
+    // Transmit the commands to the SAM
+    transmitCommands(samCommands);
 
     return cmdSamCardGenerateKey.getCipheredData();
   }
@@ -568,7 +534,7 @@ class SamCommandProcessor {
    * (package-private)<br>
    * Compute the PIN ciphered data for the encrypted PIN verification or PIN update commands
    *
-   * @param poChallenge the challenge from the card.
+   * @param cardChallenge the challenge from the card.
    * @param currentPin the current PIN value.
    * @param newPin the new PIN value (set to null if the operation is a PIN presentation).
    * @return the PIN ciphered data
@@ -577,9 +543,10 @@ class SamCommandProcessor {
    * @throws CardBrokenCommunicationException if the communication with the SAM has failed.
    * @since 2.0.0
    */
-  byte[] getCipheredPinData(byte[] poChallenge, byte[] currentPin, byte[] newPin)
+  byte[] getCipheredPinData(byte[] cardChallenge, byte[] currentPin, byte[] newPin)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
+
     List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
     byte pinCipheringKif;
     byte pinCipheringKvc;
@@ -592,30 +559,22 @@ class SamCommandProcessor {
       // no current work key is available (outside secure session)
       if (newPin == null) {
         // PIN verification
-        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif()
-                == null
-            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc()
-                == null) {
+        if (cardSecuritySetting.getPinVerificationCipheringKif() == null
+            || cardSecuritySetting.getPinVerificationCipheringKvc() == null) {
           throw new IllegalStateException(
               "No KIF or KVC defined for the PIN verification ciphering key");
         }
-        pinCipheringKif =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKif();
-        pinCipheringKvc =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinVerificationCipheringKvc();
+        pinCipheringKif = cardSecuritySetting.getPinVerificationCipheringKif();
+        pinCipheringKvc = cardSecuritySetting.getPinVerificationCipheringKvc();
       } else {
         // PIN modification
-        if (((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif()
-                == null
-            || ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc()
-                == null) {
+        if (cardSecuritySetting.getPinModificationCipheringKif() == null
+            || cardSecuritySetting.getPinModificationCipheringKvc() == null) {
           throw new IllegalStateException(
               "No KIF or KVC defined for the PIN modification ciphering key");
         }
-        pinCipheringKif =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKif();
-        pinCipheringKvc =
-            ((CardSecuritySettingAdapter) cardSecuritySettings).getPinModificationCipheringKvc();
+        pinCipheringKif = cardSecuritySetting.getPinModificationCipheringKif();
+        pinCipheringKvc = cardSecuritySetting.getPinModificationCipheringKvc();
       }
     }
 
@@ -632,32 +591,14 @@ class SamCommandProcessor {
       samCommands.addAll(getPendingSamCommands(false));
     }
 
-    samCommands.add(new CmdSamGiveRandom(samProductType, poChallenge));
-
-    int cardCipherPinCmdIndex = samCommands.size();
+    samCommands.add(new CmdSamGiveRandom(samProductType, cardChallenge));
 
     CmdSamCardCipherPin cmdSamCardCipherPin =
         new CmdSamCardCipherPin(
             samProductType, pinCipheringKif, pinCipheringKvc, currentPin, newPin);
-
     samCommands.add(cmdSamCardCipherPin);
 
-    // build a SAM CardRequest
-    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
-
-    // execute the command
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    ApduResponseApi cardCipherPinResponse =
-        samCardResponse.getApduResponses().get(cardCipherPinCmdIndex);
-
-    // check execution status
-    cmdSamCardCipherPin.setApduResponse(cardCipherPinResponse).checkStatus();
+    transmitCommands(samCommands);
 
     return cmdSamCardCipherPin.getCipheredData();
   }
@@ -703,26 +644,9 @@ class SamCommandProcessor {
       samCommands.addAll(getPendingSamCommands(false));
     }
 
-    int svPrepareOperationCmdIndex = samCommands.size();
-
     samCommands.add(cmdSamSvPrepare);
 
-    // build a SAM CardRequest
-    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
-
-    // execute the command
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    ApduResponseApi svPrepareResponse =
-        samCardResponse.getApduResponses().get(svPrepareOperationCmdIndex);
-
-    // check execution status
-    cmdSamSvPrepare.setApduResponse(svPrepareResponse).checkStatus();
+    transmitCommands(samCommands);
 
     byte[] prepareOperationData = cmdSamSvPrepare.getApduResponse().getDataOut();
 
@@ -762,7 +686,7 @@ class SamCommandProcessor {
       CmdCardSvReload cmdCardSvReload, byte[] svGetHeader, byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
-    // get the complementary data from the SAM
+
     CmdSamSvPrepareLoad cmdSamSvPrepareLoad =
         new CmdSamSvPrepareLoad(
             samProductType, svGetHeader, svGetData, cmdCardSvReload.getSvReloadData());
@@ -771,6 +695,7 @@ class SamCommandProcessor {
   }
 
   /**
+   * (package-private)<br>
    * Computes the cryptographic data required for the SvDebit or SvUndebit command.
    *
    * <p>Use the data from the SvGet command and the partial data from the SvDebit command for this
@@ -778,7 +703,7 @@ class SamCommandProcessor {
    *
    * <p>The returned data will be used to finalize the card SvDebit command.
    *
-   * @param isDebitCommand
+   * @param isDebitCommand True if the command is a DEBIT, false for UNDEBIT.
    * @param svGetHeader the SV Get command header.
    * @param svGetData the SV Get command response data.
    * @return the complementary security data to finalize the SvDebit/SvUndebit card command (sam ID
@@ -795,7 +720,7 @@ class SamCommandProcessor {
       byte[] svGetData)
       throws CalypsoSamCommandException, ReaderBrokenCommunicationException,
           CardBrokenCommunicationException {
-    // get the complementary data from the SAM
+
     CmdSamSvPrepareDebitOrUndebit cmdSamSvPrepareDebitOrUndebit =
         new CmdSamSvPrepareDebitOrUndebit(
             isDebitCommand,
@@ -821,25 +746,9 @@ class SamCommandProcessor {
   void checkSvStatus(byte[] svOperationResponseData)
       throws CalypsoSamCommandException, CardBrokenCommunicationException,
           ReaderBrokenCommunicationException {
+
     List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
-
-    CmdSamSvCheck cmdSamSvCheck = new CmdSamSvCheck(samProductType, svOperationResponseData);
-    samCommands.add(cmdSamSvCheck);
-
-    // build a SAM CardRequest
-    CardRequestSpi samCardRequest = new CardRequestAdapter(getApduRequests(samCommands), false);
-
-    // execute the command
-    CardResponseApi samCardResponse;
-    try {
-      samCardResponse = samReader.transmitCardRequest(samCardRequest, ChannelControl.KEEP_OPEN);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
-    }
-
-    ApduResponseApi svCheckResponse = samCardResponse.getApduResponses().get(0);
-
-    // check execution status
-    cmdSamSvCheck.setApduResponse(svCheckResponse).checkStatus();
+    samCommands.add(new CmdSamSvCheck(samProductType, svOperationResponseData));
+    transmitCommands(samCommands);
   }
 }

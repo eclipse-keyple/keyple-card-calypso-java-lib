@@ -12,8 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
@@ -54,6 +52,11 @@ import org.slf4j.LoggerFactory;
  *   <li>CL-SF-SFI.1
  *   <li>CL-PERF-HFLOW.1
  *   <li>CL-CSS-INFOEND.1
+ *   <li>CL-SW-CHECK.1
+ *   <li>CL-CSS-SMEXCEED.1
+ *   <li>CL-CSS-6D006E00.1
+ *   <li>CL-CSS-UNEXPERR.1
+ *   <li>CL-CSS-INFOCSS.1
  * </ul>
  *
  * @since 2.0.0
@@ -61,6 +64,7 @@ import org.slf4j.LoggerFactory;
 class CardTransactionManagerAdapter implements CardTransactionManager {
 
   private static final Logger logger = LoggerFactory.getLogger(CardTransactionManagerAdapter.class);
+  private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   // prefix/suffix used to compose exception messages
   private static final String CARD_READER_COMMUNICATION_ERROR =
@@ -80,7 +84,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       "generating of the key ciphered data.";
   private static final String TRANSMITTING_COMMANDS = "transmitting commands.";
   private static final String CHECKING_THE_SV_OPERATION = "checking the SV operation.";
-  private static final String UNEXPECTED_EXCEPTION = "An unexpected exception was raised.";
   private static final String RECORD_NUMBER = "recordNumber";
 
   // commands that modify the content of the card in session have a cost on the session buffer equal
@@ -91,10 +94,16 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
   private static final String OFFSET = "offset";
 
+  private static final ApduResponseApi RESPONSE_OK =
+      new ApduResponseAdapter(new byte[] {(byte) 0x90, (byte) 0x00});
+
+  private static final ApduResponseApi RESPONSE_OK_POSTPONED =
+      new ApduResponseAdapter(new byte[] {(byte) 0x62, (byte) 0x00});
+
   /** The reader for the card. */
   private final ProxyReaderApi cardReader;
   /** The card security settings used to manage the secure session */
-  private CardSecuritySetting cardSecuritySettings;
+  private CardSecuritySettingAdapter cardSecuritySetting;
   /** The SAM commands processor */
   private SamCommandProcessor samCommandProcessor;
   /** The current CalypsoCard */
@@ -124,6 +133,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
+   * (package-private)<br>
    * Creates an instance of {@link CardTransactionManager} for secure operations.
    *
    * <p>Secure operations are enabled by the presence of {@link CardSecuritySetting}.
@@ -133,31 +143,30 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param cardSecuritySetting The security settings.
    * @since 2.0.0
    */
-  public CardTransactionManagerAdapter(
-      CardReader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
-
+  CardTransactionManagerAdapter(
+      CardReader cardReader,
+      CalypsoCard calypsoCard,
+      CardSecuritySettingAdapter cardSecuritySetting) {
     this(cardReader, calypsoCard);
-
-    this.cardSecuritySettings = cardSecuritySetting;
-
-    samCommandProcessor = new SamCommandProcessor(calypsoCard, cardSecuritySetting);
+    this.cardSecuritySetting = cardSecuritySetting;
+    this.samCommandProcessor = new SamCommandProcessor(calypsoCard, cardSecuritySetting);
   }
 
   /**
-   * Creates an instance of {@link
-   * org.calypsonet.terminal.calypso.transaction.CardTransactionManager} for non-secure operations.
+   * (package-private)<br>
+   * Creates an instance of {@link CardTransactionManager} for non-secure operations.
    *
    * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @since 2.0.0
    */
-  public CardTransactionManagerAdapter(CardReader cardReader, CalypsoCard calypsoCard) {
+  CardTransactionManagerAdapter(CardReader cardReader, CalypsoCard calypsoCard) {
     this.cardReader = (ProxyReaderApi) cardReader;
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
-    modificationsCounter = this.calypsoCard.getModificationsCounter();
-    sessionState = SessionState.SESSION_UNINITIALIZED;
-    cardCommandManager = new CardCommandManager();
-    channelControl = ChannelControl.KEEP_OPEN;
+    this.modificationsCounter = this.calypsoCard.getModificationsCounter();
+    this.sessionState = SessionState.SESSION_UNINITIALIZED;
+    this.cardCommandManager = new CardCommandManager();
+    this.channelControl = ChannelControl.KEEP_OPEN;
   }
 
   /**
@@ -187,7 +196,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardSecuritySetting getCardSecuritySetting() {
-    return cardSecuritySettings;
+    return cardSecuritySetting;
   }
 
   /**
@@ -201,41 +210,37 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
+   * (private)<br>
    * Open a single Secure Session.
    *
    * @param writeAccessLevel access level of the session (personalization, load or debit).
    * @param cardCommands the card commands inside session.
-   * @throws IllegalStateException if no {@link
-   *     org.calypsonet.terminal.calypso.transaction.CardTransactionManager} is available
+   * @throws IllegalStateException if no {@link CardSecuritySetting} is available.
    * @throws CardTransactionException if a functional error occurs (including card and SAM IO
-   *     errors)
+   *     errors).
    */
   private void processAtomicOpening(
       WriteAccessLevel writeAccessLevel, List<AbstractCardCommand> cardCommands) {
 
-    // This method should be invoked only if no session was previously open
-    checkSessionNotOpen();
-
-    if (cardSecuritySettings == null) {
+    if (cardSecuritySetting == null) {
       throw new IllegalStateException("No security settings are available.");
     }
 
-    byte[] sessionTerminalChallenge = getSessionTerminalChallenge();
+    calypsoCard.backupFiles();
 
-    // card ApduRequestAdapter List to hold Open Secure Session and other optional commands
-    List<ApduRequestSpi> cardApduRequests = new ArrayList<ApduRequestSpi>();
+    if (cardCommands == null) {
+      cardCommands = new ArrayList<AbstractCardCommand>();
+    }
 
+    // Let's check if we have a read record command at the top of the command list.
+    // If so, then the command is withdrawn in favour of its equivalent executed at the same
+    // time as the open secure session command.
     // The sfi and record number to be read when the open secure session command is executed.
     // The default value is 0 (no record to read) but we will optimize the exchanges if a read
     // record command has been prepared.
     int sfi = 0;
     int recordNumber = 0;
-
-    // Let's check if we have a read record command at the top of the command list.
-    //
-    // If so, then the command is withdrawn in favour of its equivalent executed at the same
-    // time as the open secure session command.
-    if (cardCommands != null && !cardCommands.isEmpty()) {
+    if (!cardCommands.isEmpty()) {
       AbstractCardCommand cardCommand = cardCommands.get(0);
       if (cardCommand.getCommandRef() == CalypsoCardCommand.READ_RECORDS
           && ((CmdCardReadRecords) cardCommand).getReadMode()
@@ -246,106 +251,98 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       }
     }
 
-    // Build the card Open Secure Session command
+    // Compute the SAM challenge
+    byte[] samChallenge = getSamChallenge();
+
+    // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
         new CmdCardOpenSession(
-            calypsoCard,
-            (byte) (writeAccessLevel.ordinal() + 1),
-            sessionTerminalChallenge,
-            sfi,
-            recordNumber);
+            calypsoCard, (byte) (writeAccessLevel.ordinal() + 1), samChallenge, sfi, recordNumber);
 
-    // Add the resulting ApduRequestAdapter to the card ApduRequestAdapter list
-    cardApduRequests.add(cmdCardOpenSession.getApduRequest());
+    // Add the "Open Secure Session" card command in first position.
+    cardCommands.add(0, cmdCardOpenSession);
 
-    // Add all optional commands to the card ApduRequestAdapter list
-    if (cardCommands != null) {
-      cardApduRequests.addAll(getApduRequests(cardCommands));
-    }
+    // List of APDU requests to hold Open Secure Session and other optional commands
+    List<ApduRequestSpi> apduRequests =
+        new ArrayList<ApduRequestSpi>(getApduRequests(cardCommands));
 
-    // Create a CardRequest from the ApduRequestAdapter list, card AID as Selector, keep channel
-    // open
-    CardRequestSpi cardRequest = new CardRequestAdapter(cardApduRequests, false);
+    // Wrap the list of C-APDUs into a card request
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
 
-    // Transmit the commands to the card
-    CardResponseApi cardResponse = safeTransmit(cardRequest, ChannelControl.KEEP_OPEN);
+    sessionState = SessionState.SESSION_OPEN;
 
-    // Retrieve and check the ApduResponses
-    List<ApduResponseApi> cardApduResponses = cardResponse.getApduResponses();
+    // Open a secure session, transmit the commands to the card and keep channel open
+    CardResponseApi cardResponse = transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
 
-    // Do some basic checks
-    checkCommandsResponsesSynchronization(cardApduRequests.size(), cardApduResponses.size());
+    // Retrieve the list of R-APDUs
+    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
 
-    // Parse the response to Open Secure Session (the first item of cardApduResponses)
-    // The updateCalypsoCard method fills the CalypsoCard object with the command data.
+    // Parse all the responses and fills the CalypsoCard object with the command data.
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cmdCardOpenSession, cardApduResponses.get(0), true);
+      CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, apduResponses, true);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
     }
-    // Build the Digest Init command from card Open Session
-    // the session challenge is needed for the SAM digest computation
-    byte[] sessionCardChallenge = cmdCardOpenSession.getCardChallenge();
 
-    // The card KIF
+    // Build the "Digest Init" SAM command from card Open Session:
+
+    // The card KIF/KVC (KVC may be null for card Rev 1.0)
     Byte cardKif = cmdCardOpenSession.getSelectedKif();
-
-    // The card KVC, may be null for card Rev 1.0
     Byte cardKvc = cmdCardOpenSession.getSelectedKvc();
 
     if (logger.isDebugEnabled()) {
       logger.debug(
-          "processAtomicOpening => opening: CARDCHALLENGE = {}, CARDKIF = {}, CARDKVC = {}",
-          ByteArrayUtil.toHex(sessionCardChallenge),
-          cardKif != null ? String.format("%02Xh", cardKif) : null,
-          cardKvc != null ? String.format("%02Xh", cardKvc) : null);
+          "processAtomicOpening => opening: CARDCHALLENGE={}, CARDKIF={}, CARDKVC={}",
+          ByteArrayUtil.toHex(cmdCardOpenSession.getCardChallenge()),
+          cardKif != null ? String.format(PATTERN_1_BYTE_HEX, cardKif) : null,
+          cardKvc != null ? String.format(PATTERN_1_BYTE_HEX, cardKvc) : null);
     }
 
     Byte kvc = samCommandProcessor.computeKvc(writeAccessLevel, cardKvc);
     Byte kif = samCommandProcessor.computeKif(writeAccessLevel, cardKif, kvc);
 
-    if (!((CardSecuritySettingAdapter) cardSecuritySettings).isSessionKeyAuthorized(kif, kvc)) {
-      String logKif = kif != null ? Integer.toHexString(kif).toUpperCase() : "null";
-      String logKvc = kvc != null ? Integer.toHexString(kvc).toUpperCase() : "null";
+    if (!cardSecuritySetting.isSessionKeyAuthorized(kif, kvc)) {
       throw new UnauthorizedKeyException(
-          String.format("Unauthorized key error: KIF = %s KVC = %s", logKif, logKvc));
+          String.format(
+              "Unauthorized key error: KIF=%s, KVC=%s",
+              kif != null ? String.format(PATTERN_1_BYTE_HEX, kif) : null,
+              kvc != null ? String.format(PATTERN_1_BYTE_HEX, kvc) : null));
     }
 
     // Initialize the digest processor. It will store all digest operations (Digest Init, Digest
     // Update) until the session closing. At this moment, all SAM Apdu will be processed at
     // once.
     samCommandProcessor.initializeDigester(
-        false, false, kif, kvc, cardApduResponses.get(0).getDataOut());
+        false, false, kif, kvc, apduResponses.get(0).getDataOut());
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
     // we skip it and start the loop at index 1.
-    if ((cardCommands != null) && !cardCommands.isEmpty()) {
-      // Add requests and responses to the digest processor
-      samCommandProcessor.pushCardExchangedData(cardApduRequests, cardApduResponses, 1);
+    // Add requests and responses to the digest processor
+    samCommandProcessor.pushCardExchangedData(apduRequests, apduResponses, 1);
+  }
+
+  /**
+   * (private)<br>
+   * Aborts the secure session without raising any exception.
+   */
+  private void abortSecureSessionSilently() {
+    if (sessionState == SessionState.SESSION_OPEN) {
+      try {
+        processCancel();
+      } catch (RuntimeException e) {
+        logger.error("An error occurred while aborting the current secure session.", e);
+      }
+      sessionState = SessionState.SESSION_CLOSED;
     }
-
-    // Remove Open Secure Session response and create a new CardResponse
-    cardApduResponses.remove(0);
-
-    // update CalypsoCard with the received data
-    try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, cardApduResponses, true);
-    } catch (CardCommandException e) {
-      throw new CardAnomalyException(
-          CARD_COMMAND_ERROR + "processing the response to open session: " + e.getCommand(), e);
-    }
-
-    sessionState = SessionState.SESSION_OPEN;
   }
 
   /**
    * Create an ApduRequestAdapter List from a AbstractCardCommand List.
    *
    * @param cardCommands a list of card commands.
-   * @return The ApduRequestAdapter list
+   * @return An empty list if there is no command.
    */
   private List<ApduRequestSpi> getApduRequests(List<AbstractCardCommand> cardCommands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
@@ -358,6 +355,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
+   * (private)<br>
    * Process card commands in a Secure Session.
    *
    * <ul>
@@ -379,35 +377,27 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   private void processAtomicCardCommands(
       List<AbstractCardCommand> cardCommands, ChannelControl channelControl) {
 
-    // Get the card ApduRequestAdapter List
+    // Get the list of C-APDU to transmit
     List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
 
-    // Create a CardRequest from the ApduRequestAdapter list, card AID as Selector, manage the
-    // logical
-    // channel according to the channelControl
-    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
+    // Wrap the list of C-APDUs into a card request
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
 
     // Transmit the commands to the card
-    CardResponseApi cardResponse = safeTransmit(cardRequest, channelControl);
+    CardResponseApi cardResponse = transmitCardRequest(cardRequest, channelControl);
 
-    // Retrieve and check the ApduResponses
-    List<ApduResponseApi> cardApduResponses = cardResponse.getApduResponses();
+    // Retrieve the list of R-APDUs
+    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
 
-    // Do some basic checks
-    checkCommandsResponsesSynchronization(apduRequests.size(), cardApduResponses.size());
-
-    // Add all commands data to the digest computation if this method is invoked within a Secure
-    // Session.
+    // If this method is invoked within a secure session, then add all commands data to the digest
+    // computation.
     if (sessionState == SessionState.SESSION_OPEN) {
-      samCommandProcessor.pushCardExchangedData(apduRequests, cardApduResponses, 0);
+      samCommandProcessor.pushCardExchangedData(apduRequests, apduResponses, 0);
     }
 
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard,
-          cardCommands,
-          cardResponse.getApduResponses(),
-          sessionState == SessionState.SESSION_OPEN);
+          calypsoCard, cardCommands, apduResponses, sessionState == SessionState.SESSION_OPEN);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR + "processing responses to card commands: " + e.getCommand(), e);
@@ -455,9 +445,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * The method is marked as deprecated because the advanced variant defined below must be used at
    * the application level.
    *
-   * @param cardModificationCommands a list of commands that can modify the card memory content.
-   * @param cardAnticipatedResponses a list of anticipated card responses to the modification
-   *     commands.
+   * @param cardCommands The list of last card commands to transmit inside the secure session.
    * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
    *     ratification command must be sent.
    * @param channelControl indicates if the card channel of the card reader must be closed after the
@@ -466,83 +454,86 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *     errors)
    */
   private void processAtomicClosing(
-      List<AbstractCardCommand> cardModificationCommands,
-      List<ApduResponseApi> cardAnticipatedResponses,
+      List<AbstractCardCommand> cardCommands,
       boolean isRatificationMechanismEnabled,
       ChannelControl channelControl) {
 
-    checkSessionOpen();
-
-    // Get the card ApduRequestAdapter List - for the first card exchange
-    List<ApduRequestSpi> apduRequests = getApduRequests(cardModificationCommands);
-
-    // Compute "anticipated" Digest Update (for optional cardModificationCommands)
-    if ((cardModificationCommands != null) && !apduRequests.isEmpty()) {
-      checkCommandsResponsesSynchronization(apduRequests.size(), cardAnticipatedResponses.size());
-      // Add all commands data to the digest computation: commands and anticipated
-      // responses.
-      samCommandProcessor.pushCardExchangedData(apduRequests, cardAnticipatedResponses, 0);
+    if (cardCommands == null) {
+      cardCommands = new ArrayList<AbstractCardCommand>(0);
     }
 
+    // Get the list of C-APDU to transmit
+    List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
+
+    // Build the expected APDU responses of the card commands
+    List<ApduResponseApi> expectedApduResponses = buildAnticipatedResponses(cardCommands);
+
+    // Add all commands data to the digest computation: commands and expected responses.
+    samCommandProcessor.pushCardExchangedData(apduRequests, expectedApduResponses, 0);
+
     // All SAM digest operations will now run at once.
-    // Get Terminal Signature from the latest response
+    // Get Terminal Signature from the latest response.
     byte[] sessionTerminalSignature = getSessionTerminalSignature();
 
-    // Build the card Close Session command. The last one for this session
+    // Build the last "Close Secure Session" card command.
     CmdCardCloseSession cmdCardCloseSession =
         new CmdCardCloseSession(
             calypsoCard, !isRatificationMechanismEnabled, sessionTerminalSignature);
 
     apduRequests.add(cmdCardCloseSession.getApduRequest());
 
-    // Keep the cardsition of the Close Session command in request list
-    int closeCommandIndex = apduRequests.size() - 1;
-
     // Add the card Ratification command if any
-    boolean ratificationCommandAdded;
+    boolean isRatificationCommandAdded;
     if (isRatificationMechanismEnabled && ((CardReader) cardReader).isContactless()) {
       // CL-RAT-CMD.1
       // CL-RAT-DELAY.1
       // CL-RAT-NXTCLOSE.1
       apduRequests.add(CmdCardRatificationBuilder.getApduRequest(calypsoCard.getCardClass()));
-      ratificationCommandAdded = true;
+      isRatificationCommandAdded = true;
     } else {
-      ratificationCommandAdded = false;
+      isRatificationCommandAdded = false;
     }
 
     // Transfer card commands
-    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
 
+    // Transmit the commands to the card
     CardResponseApi cardResponse;
     try {
-      cardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
-    } catch (CardBrokenCommunicationException e) {
-      cardResponse = e.getCardResponse();
+      cardResponse = transmitCardRequest(cardRequest, channelControl);
+    } catch (CardIOException e) {
+      AbstractApduException cause = (AbstractApduException) e.getCause();
+      cardResponse = cause.getCardResponse();
       // The current exception may have been caused by a communication issue with the card
       // during the ratification command.
-      //
       // In this case, we do not stop the process and consider the Secure Session close. We'll
       // check the signature.
-      //
       // We should have one response less than requests.
-      if (!ratificationCommandAdded
+      if (!isRatificationCommandAdded
           || cardResponse == null
           || cardResponse.getApduResponses().size() != apduRequests.size() - 1) {
-        throw new CardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
+        throw e;
       }
-    } catch (ReaderBrokenCommunicationException e) {
-      throw new CardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
-    } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
     }
 
+    // Retrieve the list of R-APDUs
     List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
+
+    // Remove response of ratification command if present.
+    if (isRatificationCommandAdded && apduResponses.size() == cardCommands.size() + 2) {
+      apduResponses.remove(apduResponses.size() - 1);
+    }
+
+    // Retrieve response of "Close Secure Session" command if present.
+    ApduResponseApi closeSecureSessionApduResponse = null;
+    if (apduResponses.size() == cardCommands.size() + 1) {
+      closeSecureSessionApduResponse = apduResponses.remove(apduResponses.size() - 1);
+    }
 
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cardModificationCommands, apduResponses, true);
+      CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, cardCommands, apduResponses, true);
     } catch (CardCommandException e) {
       throw new CardAnomalyException(
           CARD_COMMAND_ERROR
@@ -551,10 +542,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
           e);
     }
 
+    sessionState = SessionState.SESSION_CLOSED;
+
     // Check the card's response to Close Secure Session
     try {
       CalypsoCardUtilAdapter.updateCalypsoCard(
-          calypsoCard, cmdCardCloseSession, apduResponses.get(closeCommandIndex), true);
+          calypsoCard, cmdCardCloseSession, closeSecureSessionApduResponse, false);
     } catch (CardSecurityDataException e) {
       throw new CardCloseSecureSessionException("Invalid card session", e);
     } catch (CardCommandException e) {
@@ -572,29 +565,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     if (cardCommandManager.isSvOperationCompleteOneTime()) {
       checkSvOperationStatus(cmdCardCloseSession.getPostponedData());
     }
-
-    sessionState = SessionState.SESSION_CLOSED;
-  }
-
-  /**
-   * Advanced variant of processAtomicClosing in which the list of expected responses is determined
-   * from previous reading operations.
-   *
-   * @param cardCommands a list of commands that can modify the card memory content.
-   * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
-   *     ratification command must be sent.
-   * @param channelControl indicates if the card channel of the card reader must be closed after the
-   *     last command.
-   * @throws CardTransactionException if a functional error occurs (including card and SAM IO
-   *     errors)
-   */
-  private void processAtomicClosing(
-      List<AbstractCardCommand> cardCommands,
-      boolean isRatificationMechanismEnabled,
-      ChannelControl channelControl) {
-    List<ApduResponseApi> cardAnticipatedResponses = getAnticipatedResponses(cardCommands);
-    processAtomicClosing(
-        cardCommands, cardAnticipatedResponses, isRatificationMechanismEnabled, channelControl);
   }
 
   /**
@@ -645,7 +615,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
-   * Create an anticipated response to an Increase/Decrease command
+   * Builds an anticipated response to an Increase/Decrease command
    *
    * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
    *     command.
@@ -653,7 +623,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param incDecValue The increment/decrement value.
    * @return An {@link ApduResponseApi} containing the expected bytes
    */
-  private ApduResponseApi createIncreaseDecreaseResponse(
+  private ApduResponseApi buildAnticipatedIncreaseDecreaseResponse(
       boolean isDecreaseCommand, int currentCounterValue, int incDecValue) {
     int newValue =
         isDecreaseCommand ? currentCounterValue - incDecValue : currentCounterValue + incDecValue;
@@ -668,7 +638,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
-   * Create an anticipated response to an Increase/Decrease Multiple command
+   * Builds an anticipated response to an Increase/Decrease Multiple command
    *
    * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
    *     "Increase Multiple" command.
@@ -676,7 +646,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param counterNumberToIncDecValueMap The values to be decremented/incremented.
    * @return An {@link ApduResponseApi} containing the expected bytes.
    */
-  private ApduResponseApi createIncreaseDecreaseMultipleResponse(
+  private ApduResponseApi buildAnticipatedIncreaseDecreaseMultipleResponse(
       boolean isDecreaseCommand,
       Map<Integer, Integer> counterNumberToCurrentValueMap,
       Map<Integer, Integer> counterNumberToIncDecValueMap) {
@@ -701,49 +671,47 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     return new ApduResponseAdapter(response);
   }
 
-  static final ApduResponseApi RESPONSE_OK =
-      new ApduResponseAdapter(new byte[] {(byte) 0x90, (byte) 0x00});
-  static final ApduResponseApi RESPONSE_OK_POSTPONED =
-      new ApduResponseAdapter(new byte[] {(byte) 0x62, (byte) 0x00});
-
   /**
-   * Get the anticipated response to the command sent in processClosing.<br>
-   * These commands are supposed to be "modifying commands" i.e.
-   * Increase/Decrease/UpdateRecord/WriteRecord ou AppendRecord.
+   * (private)<br>
+   * Builds the anticipated expected responses to the commands sent in processClosing.<br>
+   * These commands are supposed to be "modifying commands" only.
    *
    * @param cardCommands the list of card commands sent.
-   * @return The list of the anticipated responses.
+   * @return An empty list if there is no command.
    * @throws IllegalStateException if the anticipation process failed
    */
-  private List<ApduResponseApi> getAnticipatedResponses(List<AbstractCardCommand> cardCommands) {
+  private List<ApduResponseApi> buildAnticipatedResponses(List<AbstractCardCommand> cardCommands) {
     List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
     if (cardCommands != null) {
       for (AbstractCardCommand command : cardCommands) {
-        if (command.getCommandRef() == CalypsoCardCommand.INCREASE
-            || command.getCommandRef() == CalypsoCardCommand.DECREASE) {
-          int sfi = ((CmdCardIncreaseOrDecrease) command).getSfi();
-          int counter = ((CmdCardIncreaseOrDecrease) command).getCounterNumber();
-          apduResponses.add(
-              createIncreaseDecreaseResponse(
-                  command.getCommandRef() == CalypsoCardCommand.DECREASE,
-                  getCounterValue(sfi, counter),
-                  ((CmdCardIncreaseOrDecrease) command).getIncDecValue()));
-        } else if (command.getCommandRef() == CalypsoCardCommand.INCREASE_MULTIPLE
-            || command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE) {
-          int sfi = ((CmdCardIncreaseOrDecreaseMultiple) command).getSfi();
-          Map<Integer, Integer> counterNumberToIncDecValueMap =
-              ((CmdCardIncreaseOrDecreaseMultiple) command).getCounterNumberToIncDecValueMap();
-          apduResponses.add(
-              createIncreaseDecreaseMultipleResponse(
-                  command.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE,
-                  getCounterValues(sfi, counterNumberToIncDecValueMap.keySet()),
-                  counterNumberToIncDecValueMap));
-        } else if (command.getCommandRef() == CalypsoCardCommand.SV_RELOAD
-            || command.getCommandRef() == CalypsoCardCommand.SV_DEBIT
-            || command.getCommandRef() == CalypsoCardCommand.SV_UNDEBIT) {
-          apduResponses.add(RESPONSE_OK_POSTPONED);
-        } else { // Append/Update/Write Record: response = 9000
-          apduResponses.add(RESPONSE_OK);
+        switch (command.getCommandRef()) {
+          case INCREASE:
+          case DECREASE:
+            CmdCardIncreaseOrDecrease cmdA = (CmdCardIncreaseOrDecrease) command;
+            apduResponses.add(
+                buildAnticipatedIncreaseDecreaseResponse(
+                    cmdA.getCommandRef() == CalypsoCardCommand.DECREASE,
+                    getCounterValue(cmdA.getSfi(), cmdA.getCounterNumber()),
+                    cmdA.getIncDecValue()));
+            break;
+          case INCREASE_MULTIPLE:
+          case DECREASE_MULTIPLE:
+            CmdCardIncreaseOrDecreaseMultiple cmdB = (CmdCardIncreaseOrDecreaseMultiple) command;
+            Map<Integer, Integer> counterNumberToIncDecValueMap =
+                cmdB.getCounterNumberToIncDecValueMap();
+            apduResponses.add(
+                buildAnticipatedIncreaseDecreaseMultipleResponse(
+                    cmdB.getCommandRef() == CalypsoCardCommand.DECREASE_MULTIPLE,
+                    getCounterValues(cmdB.getSfi(), counterNumberToIncDecValueMap.keySet()),
+                    counterNumberToIncDecValueMap));
+            break;
+          case SV_RELOAD:
+          case SV_DEBIT:
+          case SV_UNDEBIT:
+            apduResponses.add(RESPONSE_OK_POSTPONED);
+            break;
+          default: // Append/Update/Write Record: response = 9000
+            apduResponses.add(RESPONSE_OK);
         }
       }
     }
@@ -757,54 +725,66 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager processOpening(WriteAccessLevel writeAccessLevel) {
+    try {
+      checkSessionNotOpen();
 
-    // CL-KEY-INDEXPO.1
-    currentWriteAccessLevel = writeAccessLevel;
+      // CL-KEY-INDEXPO.1
+      currentWriteAccessLevel = writeAccessLevel;
 
-    // create a sublist of AbstractCardCommand to be sent atomically
-    List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
+      // Create a sublist of AbstractCardCommand to be sent atomically
+      List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
 
-    AtomicInteger neededSessionBufferSpace = new AtomicInteger();
-    AtomicBoolean overflow = new AtomicBoolean();
-
-    for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
-      // check if the command is a modifying one and get it status (overflow yes/no,
-      // neededSessionBufferSpace)
-      // if the command overflows the session buffer in atomic modification mode, an exception
-      // is raised.
-      if (checkModifyingCommand(command, overflow, neededSessionBufferSpace)) {
-        if (overflow.get()) {
-          // Open the session with the current commands
-          processAtomicOpening(currentWriteAccessLevel, cardAtomicCommands);
-          // Closes the session, resets the modifications buffer counters for the next
-          // round.
-          processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
-          resetModificationsBufferCounter();
-          // Clear the list and add the command that did not fit in the card modifications
-          // buffer. We also update the usage counter without checking the result.
-          cardAtomicCommands.clear();
-          cardAtomicCommands.add(command);
-          // just update modifications buffer usage counter, ignore result (always false)
-          isSessionBufferOverflowed(neededSessionBufferSpace.get());
-        } else {
-          // The command fits in the card modifications buffer, just add it to the list
-          cardAtomicCommands.add(command);
+      for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
+        // Check if the command is a modifying command.
+        if (command.isSessionBufferUsed()) {
+          modificationsCounter -= computeCommandSessionBufferSize(command);
+          if (modificationsCounter < 0) {
+            checkMultipleSessionEnabled(command);
+            // Process an intermediate secure session with the current commands.
+            processAtomicOpening(currentWriteAccessLevel, cardAtomicCommands);
+            processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
+            // Reset and update the buffer counter.
+            modificationsCounter = calypsoCard.getModificationsCounter();
+            modificationsCounter -= computeCommandSessionBufferSize(command);
+            // Clear the list.
+            cardAtomicCommands.clear();
+          }
         }
-      } else {
-        // This command does not affect the card modifications buffer
         cardAtomicCommands.add(command);
       }
+
+      processAtomicOpening(currentWriteAccessLevel, cardAtomicCommands);
+
+      // sets the flag indicating that the commands have been executed
+      cardCommandManager.notifyCommandsProcessed();
+
+      // CL-SV-1PCSS.1
+      isSvOperationInsideSession = false;
+
+      return this;
+
+    } catch (RuntimeException e) {
+      abortSecureSessionSilently();
+      throw e;
     }
+  }
 
-    processAtomicOpening(currentWriteAccessLevel, cardAtomicCommands);
-
-    // sets the flag indicating that the commands have been executed
-    cardCommandManager.notifyCommandsProcessed();
-
-    // CL-SV-1PCSS.1
-    isSvOperationInsideSession = false;
-
-    return this;
+  /**
+   * (private)<br>
+   * Throws an exception if the multiple session is not enabled.
+   *
+   * @param command The command.
+   * @throws AtomicTransactionException If the multiple session is not allowed.
+   */
+  private void checkMultipleSessionEnabled(AbstractCardCommand command) {
+    // CL-CSS-REQUEST.1
+    // CL-CSS-SMEXCEED.1
+    // CL-CSS-INFOCSS.1
+    if (!cardSecuritySetting.isMultipleSessionEnabled()) {
+      throw new AtomicTransactionException(
+          "ATOMIC mode error! This command would overflow the card modifications buffer: "
+              + command.getName());
+    }
   }
 
   /**
@@ -854,52 +834,46 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    *     errors)
    */
   private void processCardCommandsInSession() {
+    try {
+      // A session is open, we have to care about the card modifications buffer
+      List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
+      boolean isAtLeastOneReadCommand = false;
 
-    // A session is open, we have to care about the card modifications buffer
-    List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
-
-    AtomicInteger neededSessionBufferSpace = new AtomicInteger();
-    AtomicBoolean overflow = new AtomicBoolean();
-
-    for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
-      // check if the command is a modifying one and get it status (overflow yes/no,
-      // neededSessionBufferSpace)
-      // if the command overflows the session buffer in atomic modification mode, an exception
-      // is raised.
-      if (checkModifyingCommand(command, overflow, neededSessionBufferSpace)) {
-        if (overflow.get()) {
-          // The current command would overflow the modifications buffer in the card. We
-          // send the current commands and update the command list. The command Iterator is
-          // kept all along the process.
-          processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-          // Close the session and reset the modifications buffer counters for the next
-          // round
-          processAtomicClosing(null, false, ChannelControl.KEEP_OPEN);
-          resetModificationsBufferCounter();
-          // We reopen a new session for the remaining commands to be sent
-          processAtomicOpening(currentWriteAccessLevel, null);
-          // Clear the list and add the command that did not fit in the card modifications
-          // buffer. We also update the usage counter without checking the result.
-          cardAtomicCommands.clear();
-          cardAtomicCommands.add(command);
-          // just update modifications buffer usage counter, ignore result (always false)
-          isSessionBufferOverflowed(neededSessionBufferSpace.get());
+      for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
+        // Check if the command is a modifying command.
+        if (command.isSessionBufferUsed()) {
+          modificationsCounter -= computeCommandSessionBufferSize(command);
+          if (modificationsCounter < 0) {
+            checkMultipleSessionEnabled(command);
+            // Close the current secure session with the current commands and open a new one.
+            if (isAtLeastOneReadCommand) {
+              processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
+              cardAtomicCommands.clear();
+            }
+            processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
+            processAtomicOpening(currentWriteAccessLevel, null);
+            // Reset and update the buffer counter.
+            modificationsCounter = calypsoCard.getModificationsCounter();
+            modificationsCounter -= computeCommandSessionBufferSize(command);
+            isAtLeastOneReadCommand = false;
+            // Clear the list.
+            cardAtomicCommands.clear();
+          }
         } else {
-          // The command fits in the card modifications buffer, just add it to the list
-          cardAtomicCommands.add(command);
+          isAtLeastOneReadCommand = true;
         }
-      } else {
-        // This command does not affect the card modifications buffer
         cardAtomicCommands.add(command);
       }
-    }
 
-    if (!cardAtomicCommands.isEmpty()) {
       processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-    }
 
-    // sets the flag indicating that the commands have been executed
-    cardCommandManager.notifyCommandsProcessed();
+      // sets the flag indicating that the commands have been executed
+      cardCommandManager.notifyCommandsProcessed();
+
+    } catch (RuntimeException e) {
+      abortSecureSessionSilently();
+      throw e;
+    }
   }
 
   /**
@@ -924,84 +898,55 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager processClosing() {
+    try {
+      checkSessionOpen();
 
-    checkSessionOpen();
+      List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
+      boolean isAtLeastOneReadCommand = false;
 
-    boolean atLeastOneReadCommand = false;
-    boolean sessionPreviouslyClosed = false;
-
-    AtomicInteger neededSessionBufferSpace = new AtomicInteger();
-    AtomicBoolean overflow = new AtomicBoolean();
-
-    List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
-    for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
-      // check if the command is a modifying one and get it status (overflow yes/no,
-      // neededSessionBufferSpace)
-      // if the command overflows the session buffer in atomic modification mode, an exception
-      // is raised.
-      if (checkModifyingCommand(command, overflow, neededSessionBufferSpace)) {
-        if (overflow.get()) {
-          // Reopen a session with the same access level if it was previously closed in
-          // this current processClosing
-          if (sessionPreviouslyClosed) {
+      for (AbstractCardCommand command : cardCommandManager.getCardCommands()) {
+        // Check if the command is a modifying command.
+        if (command.isSessionBufferUsed()) {
+          modificationsCounter -= computeCommandSessionBufferSize(command);
+          if (modificationsCounter < 0) {
+            checkMultipleSessionEnabled(command);
+            // Close the current secure session with the current commands and open a new one.
+            if (isAtLeastOneReadCommand) {
+              processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
+              cardAtomicCommands.clear();
+            }
+            processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
             processAtomicOpening(currentWriteAccessLevel, null);
-          }
-
-          // If at least one non-modifying was prepared, we use processAtomicCardCommands
-          // instead of processAtomicClosing to send the list
-          if (atLeastOneReadCommand) {
-            processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-            // Clear the list of commands sent
+            // Reset and update the buffer counter.
+            modificationsCounter = calypsoCard.getModificationsCounter();
+            modificationsCounter -= computeCommandSessionBufferSize(command);
+            isAtLeastOneReadCommand = false;
+            // Clear the list.
             cardAtomicCommands.clear();
-            processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
-            resetModificationsBufferCounter();
-            sessionPreviouslyClosed = true;
-            atLeastOneReadCommand = false;
-          } else {
-            // All commands in the list are 'modifying the card'
-            processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
-            // Clear the list of commands sent
-            cardAtomicCommands.clear();
-            resetModificationsBufferCounter();
-            sessionPreviouslyClosed = true;
           }
-
-          // Add the command that did not fit in the card modifications
-          // buffer. We also update the usage counter without checking the result.
-          cardAtomicCommands.add(command);
-          // just update modifications buffer usage counter, ignore result (always false)
-          isSessionBufferOverflowed(neededSessionBufferSpace.get());
         } else {
-          // The command fits in the card modifications buffer, just add it to the list
-          cardAtomicCommands.add(command);
+          isAtLeastOneReadCommand = true;
         }
-      } else {
-        // This command does not affect the card modifications buffer
         cardAtomicCommands.add(command);
-        atLeastOneReadCommand = true;
       }
+
+      if (isAtLeastOneReadCommand) {
+        processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
+        cardAtomicCommands.clear();
+      }
+
+      processAtomicClosing(
+          cardAtomicCommands, cardSecuritySetting.isRatificationMechanismEnabled(), channelControl);
+
+      // sets the flag indicating that the commands have been executed
+      cardCommandManager.notifyCommandsProcessed();
+
+      return this;
+
+    } catch (RuntimeException e) {
+      abortSecureSessionSilently();
+      throw e;
     }
-    if (sessionPreviouslyClosed) {
-      // Reopen a session if necessary
-      processAtomicOpening(currentWriteAccessLevel, null);
-    }
-
-    if (atLeastOneReadCommand) {
-      // execute the command
-      processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-      cardAtomicCommands.clear();
-    }
-
-    // Finally, close the session as requested
-    processAtomicClosing(
-        cardAtomicCommands,
-        ((CardSecuritySettingAdapter) cardSecuritySettings).isRatificationMechanismEnabled(),
-        channelControl);
-
-    // sets the flag indicating that the commands have been executed
-    cardCommandManager.notifyCommandsProcessed();
-
-    return this;
   }
 
   /**
@@ -1013,20 +958,18 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   public final CardTransactionManager processCancel() {
 
     checkSessionOpen();
-
-    // card ApduRequestAdapter List to hold Close Secure Session command
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+    calypsoCard.restoreFiles();
 
     // Build the card Close Session command (in "abort" mode since no signature is provided).
     CmdCardCloseSession cmdCardCloseSession = new CmdCardCloseSession(calypsoCard);
 
+    // card ApduRequestAdapter List to hold Close Secure Session command
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     apduRequests.add(cmdCardCloseSession.getApduRequest());
 
     // Transfer card commands
     CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, false);
-
-    CardResponseApi cardResponse = safeTransmit(cardRequest, channelControl);
-
+    CardResponseApi cardResponse = transmitCardRequest(cardRequest, channelControl);
     try {
       cmdCardCloseSession.setApduResponse(cardResponse.getApduResponses().get(0)).checkStatus();
     } catch (CardCommandException e) {
@@ -1051,62 +994,82 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public final CardTransactionManager processVerifyPin(byte[] pin) {
-    Assert.getInstance()
-        .notNull(pin, "pin")
-        .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+    try {
+      Assert.getInstance()
+          .notNull(pin, "pin")
+          .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
 
-    if (!calypsoCard.isPinFeatureAvailable()) {
-      throw new UnsupportedOperationException(PIN_NOT_AVAILABLE_ERROR);
-    }
+      if (!calypsoCard.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(PIN_NOT_AVAILABLE_ERROR);
+      }
 
-    if (cardCommandManager.hasCommands()) {
-      throw new IllegalStateException(
-          "No commands should have been prepared prior to a PIN submission.");
-    }
+      if (cardCommandManager.hasCommands()) {
+        throw new IllegalStateException(
+            "No commands should have been prepared prior to a PIN submission.");
+      }
 
-    // CL-PIN-PENCRYPT.1
-    if (cardSecuritySettings != null
-        && !((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
+      // CL-PIN-PENCRYPT.1
+      if (cardSecuritySetting != null && !cardSecuritySetting.isPinPlainTransmissionEnabled()) {
 
-      // CL-PIN-GETCHAL.1
-      cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
+        // CL-PIN-GETCHAL.1
+        cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
+
+        // transmit and receive data with the card
+        processAtomicCardCommands(cardCommandManager.getCardCommands(), ChannelControl.KEEP_OPEN);
+
+        // sets the flag indicating that the commands have been executed
+        cardCommandManager.notifyCommandsProcessed();
+
+        // Get the encrypted PIN with the help of the SAM
+        byte[] cipheredPin = getSamCipherPinData(pin, null);
+
+        cardCommandManager.addRegularCommand(
+            new CmdCardVerifyPin(calypsoCard.getCardClass(), true, cipheredPin));
+      } else {
+        cardCommandManager.addRegularCommand(
+            new CmdCardVerifyPin(calypsoCard.getCardClass(), false, pin));
+      }
 
       // transmit and receive data with the card
-      processAtomicCardCommands(cardCommandManager.getCardCommands(), ChannelControl.KEEP_OPEN);
+      processAtomicCardCommands(cardCommandManager.getCardCommands(), channelControl);
 
       // sets the flag indicating that the commands have been executed
       cardCommandManager.notifyCommandsProcessed();
 
-      // Get the encrypted PIN with the help of the SAM
-      byte[] cipheredPin;
-      try {
-        cipheredPin =
-            samCommandProcessor.getCipheredPinData(calypsoCard.getCardChallenge(), pin, null);
-      } catch (CalypsoSamCommandException e) {
-        throw new SamAnomalyException(
-            SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
-            e);
-      } catch (ReaderBrokenCommunicationException e) {
-        throw new SamIOException(
-            SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
-      } catch (CardBrokenCommunicationException e) {
-        throw new SamIOException(
-            SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
-      }
-      cardCommandManager.addRegularCommand(
-          new CmdCardVerifyPin(calypsoCard.getCardClass(), true, cipheredPin));
-    } else {
-      cardCommandManager.addRegularCommand(
-          new CmdCardVerifyPin(calypsoCard.getCardClass(), false, pin));
+      return this;
+
+    } catch (RuntimeException e) {
+      abortSecureSessionSilently();
+      throw e;
     }
+  }
 
-    // transmit and receive data with the card
-    processAtomicCardCommands(cardCommandManager.getCardCommands(), channelControl);
-
-    // sets the flag indicating that the commands have been executed
-    cardCommandManager.notifyCommandsProcessed();
-
-    return this;
+  /**
+   * (private)<br>
+   * Returns the cipher PIN data from the SAM (ciphered PIN transmission or PIN change).
+   *
+   * @param currentPin The current PIN.
+   * @param newPin The new PIN, or null in case of a PIN presentation.
+   * @return A not null array.
+   * @throws SamIOException If the communication with the SAM or the SAM reader failed (only for SV
+   *     operations).
+   * @throws SamAnomalyException If a SAM error occurs (only for SV operations).
+   */
+  private byte[] getSamCipherPinData(byte[] currentPin, byte[] newPin) {
+    try {
+      return samCommandProcessor.getCipheredPinData(
+          calypsoCard.getCardChallenge(), currentPin, newPin);
+    } catch (CalypsoSamCommandException e) {
+      throw new SamAnomalyException(
+          SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
+          e);
+    } catch (ReaderBrokenCommunicationException e) {
+      throw new SamIOException(
+          SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+    } catch (CardBrokenCommunicationException e) {
+      throw new SamIOException(
+          SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
+    }
   }
 
   /**
@@ -1116,65 +1079,56 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   @Override
   public CardTransactionManager processChangePin(byte[] newPin) {
+    try {
+      Assert.getInstance()
+          .notNull(newPin, "newPin")
+          .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
 
-    Assert.getInstance()
-        .notNull(newPin, "newPin")
-        .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
-
-    if (!calypsoCard.isPinFeatureAvailable()) {
-      throw new UnsupportedOperationException(PIN_NOT_AVAILABLE_ERROR);
-    }
-
-    if (sessionState == SessionState.SESSION_OPEN) {
-      throw new IllegalStateException("'Change PIN' not allowed when a secure session is open.");
-    }
-
-    // CL-PIN-MENCRYPT.1
-    if (((CardSecuritySettingAdapter) cardSecuritySettings).isPinPlainTransmissionEnabled()) {
-      // transmission in plain mode
-      if (calypsoCard.getPinAttemptRemaining() >= 0) {
-        cardCommandManager.addRegularCommand(
-            new CmdCardChangePin(calypsoCard.getCardClass(), newPin));
+      if (!calypsoCard.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(PIN_NOT_AVAILABLE_ERROR);
       }
-    } else {
-      // CL-PIN-GETCHAL.1
-      cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
+
+      if (sessionState == SessionState.SESSION_OPEN) {
+        throw new IllegalStateException("'Change PIN' not allowed when a secure session is open.");
+      }
+
+      // CL-PIN-MENCRYPT.1
+      if (cardSecuritySetting.isPinPlainTransmissionEnabled()) {
+        // transmission in plain mode
+        if (calypsoCard.getPinAttemptRemaining() >= 0) {
+          cardCommandManager.addRegularCommand(
+              new CmdCardChangePin(calypsoCard.getCardClass(), newPin));
+        }
+      } else {
+        // CL-PIN-GETCHAL.1
+        cardCommandManager.addRegularCommand(new CmdCardGetChallenge(calypsoCard.getCardClass()));
+
+        // transmit and receive data with the card
+        processAtomicCardCommands(cardCommandManager.getCardCommands(), ChannelControl.KEEP_OPEN);
+
+        // sets the flag indicating that the commands have been executed
+        cardCommandManager.notifyCommandsProcessed();
+
+        // Get the encrypted PIN with the help of the SAM
+        byte[] currentPin = new byte[4]; // all zeros as required
+        byte[] newPinData = getSamCipherPinData(currentPin, newPin);
+
+        cardCommandManager.addRegularCommand(
+            new CmdCardChangePin(calypsoCard.getCardClass(), newPinData));
+      }
 
       // transmit and receive data with the card
-      processAtomicCardCommands(cardCommandManager.getCardCommands(), ChannelControl.KEEP_OPEN);
+      processAtomicCardCommands(cardCommandManager.getCardCommands(), channelControl);
 
       // sets the flag indicating that the commands have been executed
       cardCommandManager.notifyCommandsProcessed();
 
-      // Get the encrypted PIN with the help of the SAM
-      byte[] newPinData;
-      byte[] currentPin = new byte[4]; // all zeros as required
-      try {
-        newPinData =
-            samCommandProcessor.getCipheredPinData(
-                calypsoCard.getCardChallenge(), currentPin, newPin);
-      } catch (CalypsoSamCommandException e) {
-        throw new SamAnomalyException(
-            SAM_COMMAND_ERROR + "generating of the PIN ciphered data: " + e.getCommand().getName(),
-            e);
-      } catch (ReaderBrokenCommunicationException e) {
-        throw new SamIOException(
-            SAM_READER_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
-      } catch (CardBrokenCommunicationException e) {
-        throw new SamIOException(
-            SAM_COMMUNICATION_ERROR + GENERATING_OF_THE_PIN_CIPHERED_DATA_ERROR, e);
-      }
-      cardCommandManager.addRegularCommand(
-          new CmdCardChangePin(calypsoCard.getCardClass(), newPinData));
+      return this;
+
+    } catch (RuntimeException e) {
+      abortSecureSessionSilently();
+      throw e;
     }
-
-    // transmit and receive data with the card
-    processAtomicCardCommands(cardCommandManager.getCardCommands(), channelControl);
-
-    // sets the flag indicating that the commands have been executed
-    cardCommandManager.notifyCommandsProcessed();
-
-    return this;
   }
 
   /**
@@ -1241,41 +1195,104 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @param channelControl The channel control.
    * @return The card response.
    * @throws CardIOException If the communication with the card or the card reader failed.
-   * @throws IllegalStateException If the card returned an unexpected response.
+   * @throws SamIOException If the communication with the SAM or the SAM reader failed (only for SV
+   *     operations).
+   * @throws SamAnomalyException If a SAM error occurs (only for SV operations).
    */
-  private CardResponseApi safeTransmit(CardRequestSpi cardRequest, ChannelControl channelControl) {
+  private CardResponseApi transmitCardRequest(
+      CardRequestSpi cardRequest, ChannelControl channelControl) {
+
+    // Process SAM operations first for SV if needed.
+    if (cardCommandManager.getSvLastModifyingCommand() != null) {
+      finalizeSvCommand();
+    }
+
+    // Process card request.
+    CardResponseApi cardResponse;
     try {
-      return cardReader.transmitCardRequest(cardRequest, channelControl);
+      cardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
     } catch (ReaderBrokenCommunicationException e) {
       throw new CardIOException(CARD_READER_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (CardBrokenCommunicationException e) {
       throw new CardIOException(CARD_COMMUNICATION_ERROR + TRANSMITTING_COMMANDS, e);
     } catch (UnexpectedStatusWordException e) {
-      throw new IllegalStateException(UNEXPECTED_EXCEPTION, e);
+      if (logger.isDebugEnabled()) {
+        logger.debug("A card command has failed: {}", e.getMessage());
+      }
+      cardResponse = e.getCardResponse();
+    }
+    return cardResponse;
+  }
+
+  /**
+   * (private)<br>
+   * Finalizes the last SV modifying command.
+   *
+   * @throws SamIOException If the communication with the SAM or the SAM reader failed.
+   * @throws SamAnomalyException If a SAM error occurs.
+   */
+  private void finalizeSvCommand() {
+    try {
+      byte[] svComplementaryData;
+
+      if (cardCommandManager.getSvLastModifyingCommand().getCommandRef()
+          == CalypsoCardCommand.SV_RELOAD) {
+
+        // SV RELOAD: get the security data from the SAM
+        CmdCardSvReload svCommand =
+            (CmdCardSvReload) cardCommandManager.getSvLastModifyingCommand();
+
+        svComplementaryData =
+            samCommandProcessor.getSvReloadComplementaryData(
+                svCommand, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
+
+        // finalize the SV command with the data provided by the SAM
+        svCommand.finalizeCommand(svComplementaryData);
+
+      } else {
+
+        // SV DEBIT/UNDEBIT: get the security data from the SAM
+        CmdCardSvDebitOrUndebit svCommand =
+            (CmdCardSvDebitOrUndebit) cardCommandManager.getSvLastModifyingCommand();
+
+        svComplementaryData =
+            samCommandProcessor.getSvDebitOrUndebitComplementaryData(
+                svCommand.getCommandRef() == CalypsoCardCommand.SV_DEBIT,
+                svCommand,
+                calypsoCard.getSvGetHeader(),
+                calypsoCard.getSvGetData());
+
+        // finalize the SV command with the data provided by the SAM
+        svCommand.finalizeCommand(svComplementaryData);
+      }
+    } catch (CalypsoSamCommandException e) {
+      throw new SamAnomalyException(
+          SAM_COMMAND_ERROR + "preparing the SV command: " + e.getCommand().getName(), e);
+    } catch (ReaderBrokenCommunicationException e) {
+      throw new SamIOException(SAM_READER_COMMUNICATION_ERROR + "preparing the SV command.", e);
+    } catch (CardBrokenCommunicationException e) {
+      throw new SamIOException(SAM_COMMUNICATION_ERROR + "preparing the SV command.", e);
     }
   }
 
   /**
-   * Gets the terminal challenge from the SAM, and raises exceptions if necessary.
+   * Gets the SAM challenge, and raises exceptions if necessary.
    *
    * @return A not null reference.
    * @throws SamAnomalyException If SAM returned an unexpected response.
    * @throws SamIOException If the communication with the SAM or the SAM reader failed.
    */
-  private byte[] getSessionTerminalChallenge() {
-    byte[] sessionTerminalChallenge;
+  private byte[] getSamChallenge() {
     try {
-      sessionTerminalChallenge = samCommandProcessor.getSessionTerminalChallenge();
+      return samCommandProcessor.getChallenge();
     } catch (CalypsoSamCommandException e) {
       throw new SamAnomalyException(
-          SAM_COMMAND_ERROR + "getting the terminal challenge: " + e.getCommand().getName(), e);
+          SAM_COMMAND_ERROR + "getting the SAM challenge: " + e.getCommand().getName(), e);
     } catch (ReaderBrokenCommunicationException e) {
-      throw new SamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "getting the terminal challenge.", e);
+      throw new SamIOException(SAM_READER_COMMUNICATION_ERROR + "getting the SAM challenge.", e);
     } catch (CardBrokenCommunicationException e) {
-      throw new SamIOException(SAM_COMMUNICATION_ERROR + "getting terminal challenge.", e);
+      throw new SamIOException(SAM_COMMUNICATION_ERROR + "getting SAM challenge.", e);
     }
-    return sessionTerminalChallenge;
   }
 
   /**
@@ -1284,11 +1301,11 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    * @return A not null reference.
    * @throws SamAnomalyException If SAM returned an unexpected response.
    * @throws SamIOException If the communication with the SAM or the SAM reader failed.
+   * @throws DesynchronizedExchangesException if the APDU SAM exchanges are out of sync.
    */
   private byte[] getSessionTerminalSignature() {
-    byte[] sessionTerminalSignature;
     try {
-      sessionTerminalSignature = samCommandProcessor.getTerminalSignature();
+      return samCommandProcessor.getTerminalSignature();
     } catch (CalypsoSamCommandException e) {
       throw new SamAnomalyException(
           SAM_COMMAND_ERROR + "getting the terminal signature: " + e.getCommand().getName(), e);
@@ -1298,10 +1315,10 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       throw new SamIOException(
           SAM_READER_COMMUNICATION_ERROR + "getting the terminal signature.", e);
     }
-    return sessionTerminalSignature;
   }
 
   /**
+   * (private)<br>
    * Ask the SAM to verify the signature of the card, and raises exceptions if necessary.
    *
    * @param cardSignature The card signature.
@@ -1379,113 +1396,19 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
-   * Checks if the number of responses matches the number of commands.<br>
-   * Throw a {@link DesynchronizedExchangesException} if not.
+   * (private)<br>
+   * Computes the session buffer size of the provided command.<br>
+   * The size may be a number of bytes or 1 depending on the card specificities.
    *
-   * @param commandsNumber the number of commands.
-   * @param responsesNumber the number of responses.
-   * @throws DesynchronizedExchangesException if the test failed
+   * @param command The command.
+   * @return A positive value.
    */
-  private void checkCommandsResponsesSynchronization(int commandsNumber, int responsesNumber) {
-    if (commandsNumber != responsesNumber) {
-      throw new DesynchronizedExchangesException(
-          "The number of commands/responses does not match: cmd="
-              + commandsNumber
-              + ", resp="
-              + responsesNumber);
-    }
-  }
-
-  /**
-   * Checks the provided command from the session buffer overflow management perspective<br>
-   * A exception is raised if the session buffer is overflowed in ATOMIC modification mode.<br>
-   * Returns false if the command does not affect the session buffer.<br>
-   * Sets the overflow flag and the neededSessionBufferSpace value according to the characteristics
-   * of the command in other cases.
-   *
-   * @param command the command.
-   * @param overflow flag set to true if the command overflowed the buffer.
-   * @param neededSessionBufferSpace updated with the size of the buffer consumed by the command.
-   * @return True if the command modifies the content of the card, false if not
-   * @throws AtomicTransactionException if the command overflows the buffer in ATOMIC modification
-   *     mode
-   */
-  private boolean checkModifyingCommand(
-      AbstractCardCommand command, AtomicBoolean overflow, AtomicInteger neededSessionBufferSpace) {
-    if (command.isSessionBufferUsed()) {
-      // This command affects the card modifications buffer
-      neededSessionBufferSpace.set(
-          command.getApduRequest().getApdu().length
-              + SESSION_BUFFER_CMD_ADDITIONAL_COST
-              - APDU_HEADER_LENGTH);
-      if (isSessionBufferOverflowed(neededSessionBufferSpace.get())) {
-        // raise an exception if in atomic mode
-        // CL-CSS-REQUEST.1
-        // CL-CSS-SMEXCEED.1
-        // CL-CSS-INFOCSS.1
-        if (!((CardSecuritySettingAdapter) cardSecuritySettings).isMultipleSessionEnabled()) {
-          throw new AtomicTransactionException(
-              "ATOMIC mode error! This command would overflow the card modifications buffer: "
-                  + command.getName());
-        }
-        overflow.set(true);
-      } else {
-        overflow.set(false);
-      }
-      return true;
-    } else return false;
-  }
-
-  /**
-   * Checks whether the requirement for the modifications buffer of the command provided in argument
-   * is compatible with the current usage level of the buffer.
-   *
-   * <p>If it is compatible, the requirement is subtracted from the current level and the method
-   * returns false. If this is not the case, the method returns true and the current level is left
-   * unchanged.
-   *
-   * @param sessionBufferSizeConsumed session buffer requirement.
-   * @return True or false
-   */
-  private boolean isSessionBufferOverflowed(int sessionBufferSizeConsumed) {
-    boolean isSessionBufferFull = false;
-    if (calypsoCard.isModificationsCounterInBytes()) {
-      if (modificationsCounter - sessionBufferSizeConsumed >= 0) {
-        modificationsCounter = modificationsCounter - sessionBufferSizeConsumed;
-      } else {
-        if (logger.isDebugEnabled()) {
-          logger.debug(
-              "Modifications buffer overflow! BYTESMODE, CURRENTCOUNTER = {}, REQUIREMENT = {}",
-              modificationsCounter,
-              sessionBufferSizeConsumed);
-        }
-        isSessionBufferFull = true;
-      }
-    } else {
-      if (modificationsCounter > 0) {
-        modificationsCounter--;
-      } else {
-        if (logger.isDebugEnabled()) {
-          logger.debug(
-              "Modifications buffer overflow! COMMANDSMODE, CURRENTCOUNTER = {}, REQUIREMENT = {}",
-              modificationsCounter,
-              1);
-        }
-        isSessionBufferFull = true;
-      }
-    }
-    return isSessionBufferFull;
-  }
-
-  /** Initialized the modifications buffer counter to its maximum value for the current card */
-  private void resetModificationsBufferCounter() {
-    if (logger.isTraceEnabled()) {
-      logger.trace(
-          "Modifications buffer counter reset: PREVIOUSVALUE = {}, NEWVALUE = {}",
-          modificationsCounter,
-          calypsoCard.getModificationsCounter());
-    }
-    modificationsCounter = calypsoCard.getModificationsCounter();
+  private int computeCommandSessionBufferSize(AbstractCardCommand command) {
+    return calypsoCard.isModificationsCounterInBytes()
+        ? command.getApduRequest().getApdu().length
+            + SESSION_BUFFER_CMD_ADDITIONAL_COST
+            - APDU_HEADER_LENGTH
+        : 1;
   }
 
   /**
@@ -2241,13 +2164,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     }
 
     // CL-SV-CMDMODE.1
-    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
+    CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
     boolean useExtendedMode =
         calypsoCard.isExtendedModeSupported()
             && (calypsoSam == null || calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1);
 
-    if (((CardSecuritySettingAdapter) cardSecuritySettings).isSvLoadAndDebitLogEnabled()
-        && (!useExtendedMode)) {
+    if (cardSecuritySetting.isSvLoadAndDebitLogEnabled() && (!useExtendedMode)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
       // CL-SV-GETNUMBER.1
@@ -2272,20 +2194,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   public final CardTransactionManager prepareSvReload(
       int amount, byte[] date, byte[] time, byte[] free) {
 
-    // CL-SV-1PCSS.1
-    if (sessionState == SessionState.SESSION_OPEN) {
-      if (!isSvOperationInsideSession) {
-        isSvOperationInsideSession = true;
-      } else {
-        throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
-      }
-    }
-
-    // CL-SV-CMDMODE.1
-    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
-    boolean useExtendedMode =
-        calypsoCard.isExtendedModeSupported()
-            && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
+    checkSvInsideSession();
 
     // create the initial command with the application data
     CmdCardSvReload svReloadCmdBuild =
@@ -2296,31 +2205,41 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             date,
             time,
             free,
-            useExtendedMode);
-
-    // get the security data from the SAM
-    byte[] svReloadComplementaryData;
-    try {
-      svReloadComplementaryData =
-          samCommandProcessor.getSvReloadComplementaryData(
-              svReloadCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
-    } catch (CalypsoSamCommandException e) {
-      throw new SamAnomalyException(
-          SAM_COMMAND_ERROR + "preparing the SV reload command: " + e.getCommand().getName(), e);
-    } catch (ReaderBrokenCommunicationException e) {
-      throw new SamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
-    } catch (CardBrokenCommunicationException e) {
-      throw new SamIOException(SAM_COMMUNICATION_ERROR + "preparing the SV reload command.", e);
-    }
-
-    // finalize the SvReload command with the data provided by the SAM
-    svReloadCmdBuild.finalizeCommand(svReloadComplementaryData);
+            isSvExtendedModeAllowed());
 
     // create and keep the CalypsoCardCommand
     cardCommandManager.addStoredValueCommand(svReloadCmdBuild, SvOperation.RELOAD);
 
     return this;
+  }
+
+  /**
+   * (private)<br>
+   * Checks if only one modifying SV command is prepared inside the current secure session.
+   *
+   * @throws IllegalStateException If more than SV command is prepared.
+   */
+  private void checkSvInsideSession() {
+    // CL-SV-1PCSS.1
+    if (sessionState == SessionState.SESSION_OPEN) {
+      if (!isSvOperationInsideSession) {
+        isSvOperationInsideSession = true;
+      } else {
+        throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
+      }
+    }
+  }
+
+  /**
+   * (private)<br>
+   *
+   * @return True if the extended mode of the SV command is allowed.
+   */
+  private boolean isSvExtendedModeAllowed() {
+    // CL-SV-CMDMODE.1
+    CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
+    return calypsoCard.isExtendedModeSupported()
+        && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
   }
 
   /**
@@ -2337,92 +2256,6 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   }
 
   /**
-   * (private)<br>
-   * Schedules the execution of a <b>SV Debit</b> command to decrease the current SV balance.
-   *
-   * <p>It consists in decreasing the current balance of the SV by a certain amount.
-   *
-   * <p>Note: the key used is the debit key
-   *
-   * @param amount the amount to be subtracted, positive integer in the range 0..32767
-   * @param date 2-byte free value.
-   * @param time 2-byte free value.
-   * @param useExtendedMode True if the extended mode must be used.
-   */
-  private void prepareInternalSvDebit(int amount, byte[] date, byte[] time, boolean useExtendedMode)
-      throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
-          CalypsoSamCommandException {
-
-    if (!((CardSecuritySettingAdapter) cardSecuritySettings).isSvNegativeBalanceAuthorized()
-        && (calypsoCard.getSvBalance() - amount) < 0) {
-      throw new IllegalStateException("Negative balances not allowed.");
-    }
-
-    // create the initial command with the application data
-    CmdCardSvDebitOrUndebit svDebitCmdBuild =
-        new CmdCardSvDebitOrUndebit(
-            true,
-            calypsoCard.getCardClass(),
-            amount,
-            calypsoCard.getSvKvc(),
-            date,
-            time,
-            useExtendedMode);
-
-    // get the security data from the SAM
-    byte[] svDebitComplementaryData;
-    svDebitComplementaryData =
-        samCommandProcessor.getSvDebitOrUndebitComplementaryData(
-            true, svDebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
-
-    // finalize the SvDebit command with the data provided by the SAM
-    svDebitCmdBuild.finalizeCommand(svDebitComplementaryData);
-
-    // create and keep the CalypsoCardCommand
-    cardCommandManager.addStoredValueCommand(svDebitCmdBuild, SvOperation.DEBIT);
-  }
-
-  /**
-   * Prepares an SV Undebit (partially or totally cancels the last SV debit command).
-   *
-   * <p>It consists in canceling a previous debit. <br>
-   * Note: the key used is the debit key
-   *
-   * @param amount the amount to be subtracted, positive integer in the range 0..32767
-   * @param date 2-byte free value.
-   * @param time 2-byte free value.
-   * @param useExtendedMode True if the extended mode must be used.
-   */
-  private void prepareInternalSvUndebit(
-      int amount, byte[] date, byte[] time, boolean useExtendedMode)
-      throws CardBrokenCommunicationException, ReaderBrokenCommunicationException,
-          CalypsoSamCommandException {
-
-    // create the initial command with the application data
-    CmdCardSvDebitOrUndebit svUndebitCmdBuild =
-        new CmdCardSvDebitOrUndebit(
-            false,
-            calypsoCard.getCardClass(),
-            amount,
-            calypsoCard.getSvKvc(),
-            date,
-            time,
-            useExtendedMode);
-
-    // get the security data from the SAM
-    byte[] svUndebitComplementaryData;
-    svUndebitComplementaryData =
-        samCommandProcessor.getSvDebitOrUndebitComplementaryData(
-            false, svUndebitCmdBuild, calypsoCard.getSvGetHeader(), calypsoCard.getSvGetData());
-
-    // finalize the SvUndebit command with the data provided by the SAM
-    svUndebitCmdBuild.finalizeCommand(svUndebitComplementaryData);
-
-    // create and keep the CalypsoCardCommand
-    cardCommandManager.addStoredValueCommand(svUndebitCmdBuild, SvOperation.DEBIT);
-  }
-
-  /**
    * {@inheritDoc}
    *
    * @since 2.0.0
@@ -2430,38 +2263,27 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
   @Override
   public final CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
 
-    // CL-SV-1PCSS.1
-    if (sessionState == SessionState.SESSION_OPEN) {
-      if (!isSvOperationInsideSession) {
-        isSvOperationInsideSession = true;
-      } else {
-        throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
-      }
+    checkSvInsideSession();
+
+    if (svAction == SvAction.DO
+        && !cardSecuritySetting.isSvNegativeBalanceAuthorized()
+        && (calypsoCard.getSvBalance() - amount) < 0) {
+      throw new IllegalStateException("Negative balances not allowed.");
     }
 
-    // CL-SV-CMDMODE.1
-    CalypsoSam calypsoSam = ((CardSecuritySettingAdapter) cardSecuritySettings).getCalypsoSam();
-    boolean useExtendedMode =
-        calypsoCard.isExtendedModeSupported()
-            && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
+    // create the initial command with the application data
+    CmdCardSvDebitOrUndebit command =
+        new CmdCardSvDebitOrUndebit(
+            svAction == SvAction.DO,
+            calypsoCard.getCardClass(),
+            amount,
+            calypsoCard.getSvKvc(),
+            date,
+            time,
+            isSvExtendedModeAllowed());
 
-    try {
-      if (SvAction.DO.equals(svAction)) {
-        prepareInternalSvDebit(amount, date, time, useExtendedMode);
-      } else {
-        prepareInternalSvUndebit(amount, date, time, useExtendedMode);
-      }
-    } catch (CalypsoSamCommandException e) {
-      throw new SamAnomalyException(
-          SAM_COMMAND_ERROR + "preparing the SV debit/undebit command: " + e.getCommand().getName(),
-          e);
-    } catch (ReaderBrokenCommunicationException e) {
-      throw new SamIOException(
-          SAM_READER_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
-    } catch (CardBrokenCommunicationException e) {
-      throw new SamIOException(
-          SAM_COMMUNICATION_ERROR + "preparing the SV debit/undebit command.", e);
-    }
+    // create and keep the CalypsoCardCommand
+    cardCommandManager.addStoredValueCommand(command, SvOperation.DEBIT);
 
     return this;
   }

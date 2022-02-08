@@ -186,7 +186,13 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
         .isTrue(calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN, PRODUCT_TYPE)
         .notNull(cardSecuritySetting, "cardSecuritySetting");
 
-    return new CardTransactionManagerAdapter(reader, calypsoCard, cardSecuritySetting);
+    if (!(cardSecuritySetting instanceof CardSecuritySettingAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided 'cardSecuritySetting' must be an instance of 'CardSecuritySettingAdapter' class.");
+    }
+
+    return new CardTransactionManagerAdapter(
+        reader, calypsoCard, (CardSecuritySettingAdapter) cardSecuritySetting);
   }
 
   /**
