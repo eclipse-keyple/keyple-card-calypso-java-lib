@@ -150,7 +150,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     if (isExtendedModeAllowed) {
       p2 = (byte) ((sfi * 8) + 2);
       dataIn = new byte[samChallenge.length + 1];
-      dataIn[0] = (byte) 0x00;
       System.arraycopy(samChallenge, 0, dataIn, 1, samChallenge.length);
     } else {
       p2 = (byte) ((sfi * 8) + 1);
