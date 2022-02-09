@@ -92,7 +92,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
   }
 
   private final CalypsoCardClass calypsoCardClass;
-  private final boolean useExtendedMode;
+  private final boolean isExtendedModeAllowed;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -107,7 +107,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    * @param kvc the KVC.
    * @param date operation date (not checked by the card).
    * @param time operation time (not checked by the card).
-   * @param useExtendedMode True if the extended mode must be used.
+   * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
@@ -118,7 +118,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
       byte kvc,
       byte[] date,
       byte[] time,
-      boolean useExtendedMode) {
+      boolean isExtendedModeAllowed) {
 
     super(isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT, 0);
 
@@ -137,11 +137,11 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
     // keeps a copy of these fields until the command is finalized
     this.calypsoCardClass = calypsoCardClass;
-    this.useExtendedMode = useExtendedMode;
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
 
     // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[15 + (useExtendedMode ? 10 : 5)];
+    dataIn = new byte[15 + (isExtendedModeAllowed ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     short amountShort = isDebitCommand ? (short) -amount : (short) amount;
@@ -172,8 +172,8 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    * @since 2.0.1
    */
   void finalizeCommand(byte[] debitOrUndebitComplementaryData) {
-    if ((useExtendedMode && debitOrUndebitComplementaryData.length != 20)
-        || (!useExtendedMode && debitOrUndebitComplementaryData.length != 15)) {
+    if ((isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 20)
+        || (!isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -215,7 +215,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     svDebitOrUndebitData[0] = getCommandRef().getInstructionByte();
     // svDebitOrUndebitData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in product type 3.2
-    svDebitOrUndebitData[3] = useExtendedMode ? (byte) 0x19 : (byte) 0x14;
+    svDebitOrUndebitData[3] = isExtendedModeAllowed ? (byte) 0x19 : (byte) 0x14;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svDebitOrUndebitData, 4, 8);
     return svDebitOrUndebitData;

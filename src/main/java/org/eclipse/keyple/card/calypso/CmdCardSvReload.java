@@ -82,7 +82,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
   }
 
   private final CalypsoCardClass calypsoCardClass;
-  private final boolean useExtendedMode;
+  private final boolean isExtendedModeAllowed;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -99,7 +99,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @param free 2 free bytes stored in the log but not processed by the card.
-   * @param useExtendedMode True if the extended mode must be used.
+   * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
@@ -110,7 +110,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
       byte[] date,
       byte[] time,
       byte[] free,
-      boolean useExtendedMode) {
+      boolean isExtendedModeAllowed) {
 
     super(command, 0);
 
@@ -127,11 +127,11 @@ final class CmdCardSvReload extends AbstractCardCommand {
 
     // keeps a copy of these fields until the builder is finalized
     this.calypsoCardClass = calypsoCardClass;
-    this.useExtendedMode = useExtendedMode;
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
-    dataIn = new byte[18 + (useExtendedMode ? 10 : 5)];
+    dataIn = new byte[18 + (isExtendedModeAllowed ? 10 : 5)];
 
     // dataIn[0] will be filled in at the finalization phase.
     dataIn[1] = date[0];
@@ -165,8 +165,8 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @since 2.0.1
    */
   void finalizeCommand(byte[] reloadComplementaryData) {
-    if ((useExtendedMode && reloadComplementaryData.length != 20)
-        || (!useExtendedMode && reloadComplementaryData.length != 15)) {
+    if ((isExtendedModeAllowed && reloadComplementaryData.length != 20)
+        || (!isExtendedModeAllowed && reloadComplementaryData.length != 15)) {
       throw new IllegalArgumentException("Bad SV prepare load data length.");
     }
 
@@ -203,7 +203,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     svReloadData[0] = command.getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
-    svReloadData[3] = useExtendedMode ? (byte) 0x1C : (byte) 0x17;
+    svReloadData[3] = isExtendedModeAllowed ? (byte) 0x1C : (byte) 0x17;
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svReloadData, 4, 11);
     return svReloadData;
