@@ -52,7 +52,7 @@ final class CmdSamUnlock extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamUnlock(CalypsoSam.ProductType productType, byte[] unlockData) {
-    super(command);
+    super(command, 0);
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;

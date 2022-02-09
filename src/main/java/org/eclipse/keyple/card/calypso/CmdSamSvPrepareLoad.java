@@ -68,7 +68,7 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
       byte[] svGetHeader,
       byte[] svGetData,
       byte[] svReloadCmdBuildData) {
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x01;

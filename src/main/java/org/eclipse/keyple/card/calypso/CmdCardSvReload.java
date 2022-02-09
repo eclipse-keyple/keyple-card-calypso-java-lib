@@ -112,7 +112,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
       byte[] free,
       boolean useExtendedMode) {
 
-    super(command);
+    super(command, 0);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -12,22 +12,25 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * This exception indicates that the status word is not referenced.
+ * (package-private)<br>
+ * This exception indicates that the length of the response is not equal to the value of the LE
+ * field in the request.
  *
- * @since 2.0.0
+ * @since 2.1.1
  */
-class CardCommandUnknownStatusException extends CalypsoApduCommandException {
+class CalypsoSamUnexpectedResponseLengthException extends CalypsoSamCommandException {
 
   /**
+   * (package-private)<br>
    * Constructor allowing to set a message, the command and the status word.
    *
-   * @param message the message to identify the exception context (Should not be null).
-   * @param command the card command (Should not be null).
-   * @param statusWord the status word (Should not be null).
-   * @since 2.0.0
+   * @param message the message to identify the exception context.
+   * @param command the card command.
+   * @param statusWord the status word.
+   * @since 2.1.1
    */
-  public CardCommandUnknownStatusException(
-      String message, CardCommand command, Integer statusWord) {
+  CalypsoSamUnexpectedResponseLengthException(
+      String message, CalypsoSamCommand command, Integer statusWord) {
     super(message, command, statusWord);
   }
 }

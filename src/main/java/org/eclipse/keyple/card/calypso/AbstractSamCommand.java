@@ -58,10 +58,11 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
+   * @param le The value of the LE field.
    * @since 2.0.1
    */
-  AbstractSamCommand(CalypsoSamCommand commandRef) {
-    super(commandRef);
+  AbstractSamCommand(CalypsoSamCommand commandRef, int le) {
+    super(commandRef, le);
   }
 
   /**
@@ -81,13 +82,11 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    */
   @Override
   final CalypsoApduCommandException buildCommandException(
-      Class<? extends CalypsoApduCommandException> exceptionClass,
-      String message,
-      CardCommand commandRef,
-      Integer statusWord) {
+      Class<? extends CalypsoApduCommandException> exceptionClass, String message) {
 
     CalypsoApduCommandException e;
-    CalypsoSamCommand command = (CalypsoSamCommand) commandRef;
+    CalypsoSamCommand command = getCommandRef();
+    Integer statusWord = getApduResponse().getStatusWord();
     if (exceptionClass == CalypsoSamAccessForbiddenException.class) {
       e = new CalypsoSamAccessForbiddenException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamCounterOverflowException.class) {
@@ -106,6 +105,17 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
       e = new CalypsoSamUnknownStatusException(message, command, statusWord);
     }
     return e;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.1
+   */
+  @Override
+  final CalypsoApduCommandException buildUnexpectedResponseLengthException(String message) {
+    return new CalypsoSamUnexpectedResponseLengthException(
+        message, getCommandRef(), getApduResponse().getStatusWord());
   }
 
   /**

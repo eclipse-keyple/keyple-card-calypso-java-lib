@@ -26,10 +26,11 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
+   * @param le The value of the LE field.
    * @since 2.0.1
    */
-  AbstractCardCommand(CalypsoCardCommand commandRef) {
-    super(commandRef);
+  AbstractCardCommand(CalypsoCardCommand commandRef, int le) {
+    super(commandRef, le);
   }
 
   /**
@@ -60,13 +61,11 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
    */
   @Override
   final CalypsoApduCommandException buildCommandException(
-      Class<? extends CalypsoApduCommandException> exceptionClass,
-      String message,
-      CardCommand commandRef,
-      Integer statusWord) {
+      Class<? extends CalypsoApduCommandException> exceptionClass, String message) {
 
     CalypsoApduCommandException e;
-    CalypsoCardCommand command = (CalypsoCardCommand) commandRef;
+    CalypsoCardCommand command = getCommandRef();
+    Integer statusWord = getApduResponse().getStatusWord();
     if (exceptionClass == CardAccessForbiddenException.class) {
       e = new CardAccessForbiddenException(message, command, statusWord);
     } else if (exceptionClass == CardDataAccessException.class) {
@@ -91,6 +90,17 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
       e = new CardUnknownStatusException(message, command, statusWord);
     }
     return e;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.1
+   */
+  @Override
+  final CalypsoApduCommandException buildUnexpectedResponseLengthException(String message) {
+    return new CardUnexpectedResponseLengthException(
+        message, getCommandRef(), getApduResponse().getStatusWord());
   }
 
   /**

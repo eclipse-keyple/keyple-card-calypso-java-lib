@@ -52,7 +52,7 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0);
 
     setApduRequest(
         new ApduRequestAdapter(

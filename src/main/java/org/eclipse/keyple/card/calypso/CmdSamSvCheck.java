@@ -52,7 +52,7 @@ final class CmdSamSvCheck extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamSvCheck(CalypsoSam.ProductType productType, byte[] svCardSignature) {
-    super(command);
+    super(command, 0);
     if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svCardSignature.");
     }

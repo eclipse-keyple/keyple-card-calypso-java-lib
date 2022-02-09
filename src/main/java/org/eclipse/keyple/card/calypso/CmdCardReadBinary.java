@@ -74,7 +74,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    */
   CmdCardReadBinary(CalypsoCardClass calypsoCardClass, byte sfi, int offset, byte length) {
 
-    super(CalypsoCardCommand.READ_BINARY);
+    super(CalypsoCardCommand.READ_BINARY, length);
 
     this.sfi = sfi;
     this.offset = offset;

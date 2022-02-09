@@ -32,7 +32,7 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
    */
   CmdCardGetChallenge(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0x08);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;

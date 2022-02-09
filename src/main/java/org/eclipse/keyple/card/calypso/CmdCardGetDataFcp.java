@@ -62,7 +62,7 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0);
 
     setApduRequest(
         new ApduRequestAdapter(

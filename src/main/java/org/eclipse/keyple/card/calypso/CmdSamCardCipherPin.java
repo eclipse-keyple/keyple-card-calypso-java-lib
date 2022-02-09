@@ -74,7 +74,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
       byte cipheringKvc,
       byte[] currentPin,
       byte[] newPin) {
-    super(command);
+    super(command, 0);
 
     if (currentPin == null || currentPin.length != 4) {
       throw new IllegalArgumentException("Bad current PIN value.");

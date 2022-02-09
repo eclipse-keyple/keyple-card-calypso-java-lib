@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
+ * (package-private)<br>
  * This exception is the parent abstract class of all card APDU commands exceptions.
  *
  * @since 2.0.0
@@ -23,6 +24,7 @@ abstract class CalypsoApduCommandException extends Exception {
   private final Integer statusWord;
 
   /**
+   * (package-private)<br>
    * Constructor allowing to set the error message and the reference to the command
    *
    * @param message the message to identify the exception context (Should not be null).
@@ -30,29 +32,31 @@ abstract class CalypsoApduCommandException extends Exception {
    * @param statusWord the status word.
    * @since 2.0.0
    */
-  protected CalypsoApduCommandException(String message, CardCommand command, Integer statusWord) {
+  CalypsoApduCommandException(String message, CardCommand command, Integer statusWord) {
     super(message);
     this.command = command;
     this.statusWord = statusWord;
   }
 
   /**
+   * (package-private)<br>
    * Gets the command
    *
    * @return A not null reference.
    * @since 2.0.0
    */
-  public CardCommand getCommand() {
+  CardCommand getCommand() {
     return command;
   }
 
   /**
+   * (package-private)<br>
    * Gets the status word
    *
    * @return A nullable reference
    * @since 2.0.0
    */
-  public Integer getStatusWord() {
+  Integer getStatusWord() {
     return statusWord;
   }
 }

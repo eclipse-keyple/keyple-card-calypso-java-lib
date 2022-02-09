@@ -90,7 +90,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   CmdCardWriteRecord(
       CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = calypsoCardClass.getValue();
     this.sfi = sfi;

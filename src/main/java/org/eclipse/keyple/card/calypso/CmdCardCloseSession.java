@@ -72,7 +72,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
   CmdCardCloseSession(
       CalypsoCard calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
 
-    super(command);
+    super(command, 0);
 
     this.calypsoCard = calypsoCard;
 
@@ -90,8 +90,6 @@ final class CmdCardCloseSession extends AbstractCardCommand {
      * case 4: this command contains incoming and outgoing data. We define le = 0, the actual
      * length will be processed by the lower layers.
      */
-    byte le = 0;
-
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -100,7 +98,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
                 p1,
                 (byte) 0x00,
                 terminalSessionSignature,
-                le)));
+                (byte) 0)));
   }
 
   /**
@@ -113,7 +111,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
    */
   CmdCardCloseSession(CalypsoCard calypsoCard) {
 
-    super(command);
+    super(command, 0);
 
     this.calypsoCard = calypsoCard;
 

@@ -63,7 +63,7 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
    */
   CmdSamDigestUpdate(
       CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;

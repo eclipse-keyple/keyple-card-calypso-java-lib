@@ -83,7 +83,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
   CmdCardSvGet(
       CalypsoCardClass calypsoCardClass, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(command);
+    super(command, 0);
 
     byte cla =
         calypsoCardClass == CalypsoCardClass.LEGACY

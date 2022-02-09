@@ -67,7 +67,8 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
       byte[] svGetData,
       byte[] svDebitOrUndebitCmdBuildData) {
     super(
-        isDebitCommand ? CalypsoSamCommand.SV_PREPARE_DEBIT : CalypsoSamCommand.SV_PREPARE_UNDEBIT);
+        isDebitCommand ? CalypsoSamCommand.SV_PREPARE_DEBIT : CalypsoSamCommand.SV_PREPARE_UNDEBIT,
+        0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x01;

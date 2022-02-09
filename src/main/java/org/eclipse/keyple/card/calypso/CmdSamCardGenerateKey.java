@@ -73,7 +73,7 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
       byte cipheringKvc,
       byte sourceKif,
       byte sourceKvc) {
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 
