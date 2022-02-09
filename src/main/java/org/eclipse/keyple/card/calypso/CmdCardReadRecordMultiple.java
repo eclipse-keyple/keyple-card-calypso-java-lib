@@ -97,7 +97,7 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   CmdCardReadRecordMultiple(
       CalypsoCardClass calypsoCardClass, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CalypsoCardCommand.READ_RECORD_MULTIPLE);
+    super(CalypsoCardCommand.READ_RECORD_MULTIPLE, 0);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;

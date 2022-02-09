@@ -56,7 +56,7 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
    */
   CmdCardRehabilitate(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;

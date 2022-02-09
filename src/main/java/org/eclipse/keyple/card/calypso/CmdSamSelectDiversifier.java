@@ -51,7 +51,7 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamSelectDiversifier(CalypsoSam.ProductType productType, byte[] diversifier) {
-    super(command);
+    super(command, 0);
 
     if (diversifier == null || (diversifier.length != 4 && diversifier.length != 8)) {
       throw new IllegalArgumentException("Bad diversifier value!");

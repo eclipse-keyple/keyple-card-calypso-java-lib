@@ -95,7 +95,8 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
     super(
         isDecreaseCommand
             ? CalypsoCardCommand.DECREASE_MULTIPLE
-            : CalypsoCardCommand.INCREASE_MULTIPLE);
+            : CalypsoCardCommand.INCREASE_MULTIPLE,
+        0);
 
     this.sfi = sfi;
     this.counterNumberToIncDecValueMap = counterNumberToIncDecValueMap;

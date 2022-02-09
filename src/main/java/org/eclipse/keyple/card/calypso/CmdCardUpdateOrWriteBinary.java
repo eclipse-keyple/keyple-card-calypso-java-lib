@@ -91,7 +91,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
       int offset,
       byte[] data) {
 
-    super(isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY);
+    super(isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY, 0);
 
     this.sfi = sfi;
     this.offset = offset;

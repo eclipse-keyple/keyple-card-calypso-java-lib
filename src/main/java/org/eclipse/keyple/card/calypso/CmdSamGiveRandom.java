@@ -47,7 +47,7 @@ final class CmdSamGiveRandom extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamGiveRandom(CalypsoSam.ProductType productType, byte[] random) {
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p1 = (byte) 0x00;

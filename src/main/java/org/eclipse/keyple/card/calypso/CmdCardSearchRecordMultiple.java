@@ -90,7 +90,7 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
    */
   CmdCardSearchRecordMultiple(CalypsoCardClass calypsoCardClass, SearchCommandDataAdapter data) {
 
-    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE);
+    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE, 0);
 
     this.data = data;
 

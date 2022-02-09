@@ -53,7 +53,7 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamDigestAuthenticate(CalypsoSam.ProductType productType, byte[] signature) {
-    super(command);
+    super(command, 0);
 
     if (signature == null) {
       throw new IllegalArgumentException("Signature can't be null");

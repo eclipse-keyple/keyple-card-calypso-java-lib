@@ -65,7 +65,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = calypsoCardClass.getValue();
     byte p1;
@@ -112,7 +112,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
 
-    super(command);
+    super(command, 0);
 
     // handle the REV1 case
     // CL-KEY-KIFSF.1

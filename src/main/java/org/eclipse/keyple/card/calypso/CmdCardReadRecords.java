@@ -105,7 +105,7 @@ final class CmdCardReadRecords extends AbstractCardCommand {
       ReadMode readMode,
       int expectedLength) {
 
-    super(command);
+    super(command, expectedLength);
 
     this.sfi = sfi;
     this.firstRecordNumber = firstRecordNumber;

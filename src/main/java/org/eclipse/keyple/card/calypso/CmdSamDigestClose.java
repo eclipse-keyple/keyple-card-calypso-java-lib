@@ -49,7 +49,7 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamDigestClose(CalypsoSam.ProductType productType, byte expectedResponseLength) {
-    super(command);
+    super(command, expectedResponseLength);
 
     if (expectedResponseLength != 0x04 && expectedResponseLength != 0x08) {
       throw new IllegalArgumentException(

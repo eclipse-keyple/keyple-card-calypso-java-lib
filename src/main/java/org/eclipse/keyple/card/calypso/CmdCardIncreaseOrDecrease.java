@@ -95,7 +95,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
       int counterNumber,
       int incDecValue) {
 
-    super(isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE);
+    super(isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE, 0);
 
     byte cla = calypsoCardClass.getValue();
     this.sfi = sfi;

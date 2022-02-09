@@ -69,7 +69,7 @@ final class CmdCardChangePin extends AbstractCardCommand {
    */
   CmdCardChangePin(CalypsoCardClass calypsoCardClass, byte[] newPinData) {
 
-    super(command);
+    super(command, 0);
 
     if (newPinData == null || (newPinData.length != 0x04 && newPinData.length != 0x10)) {
       throw new IllegalArgumentException("Bad PIN data length.");

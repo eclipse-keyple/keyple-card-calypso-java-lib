@@ -73,7 +73,7 @@ final class CmdSamWriteKey extends AbstractSamCommand {
    */
   CmdSamWriteKey(
       CalypsoSam.ProductType productType, byte writingMode, byte keyReference, byte[] keyData) {
-    super(command);
+    super(command, 0);
     byte cla = SamUtilAdapter.getClassByte(productType);
 
     if (keyData == null) {

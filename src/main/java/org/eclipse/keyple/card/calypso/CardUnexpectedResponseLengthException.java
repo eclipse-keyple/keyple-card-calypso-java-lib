@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,21 +13,24 @@ package org.eclipse.keyple.card.calypso;
 
 /**
  * (package-private)<br>
- * Parent abstract class of all Keyple SAM APDU commands exceptions.
+ * This exception indicates that the length of the response is not equal to the value of the LE
+ * field in the request.
  *
- * @since 2.0.0
+ * @since 2.1.1
  */
-abstract class CalypsoSamCommandException extends CalypsoApduCommandException {
+class CardUnexpectedResponseLengthException extends CardCommandException {
 
   /**
    * (package-private)<br>
+   * Constructor allowing to set a message, the command and the status word.
    *
    * @param message the message to identify the exception context.
-   * @param command the Calypso SAM command.
-   * @param statusWord the status word (optional).
-   * @since 2.0.0
+   * @param command the card command.
+   * @param statusWord the status word.
+   * @since 2.1.1
    */
-  CalypsoSamCommandException(String message, CalypsoSamCommand command, Integer statusWord) {
+  CardUnexpectedResponseLengthException(
+      String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);
   }
 }

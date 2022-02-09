@@ -72,7 +72,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 
@@ -95,7 +95,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 
@@ -121,7 +121,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, byte kvc) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 
@@ -149,7 +149,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
   CmdSamReadKeyParameters(
       CalypsoSam.ProductType productType, SourceRef sourceKeyRef, int recordNumber) {
 
-    super(command);
+    super(command, 0);
 
     if (recordNumber < 1 || recordNumber > MAX_WORK_KEY_REC_NUMB) {
       throw new IllegalArgumentException(
@@ -191,7 +191,7 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    */
   CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, NavControl navControl) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 

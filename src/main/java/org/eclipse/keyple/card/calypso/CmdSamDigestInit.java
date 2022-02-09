@@ -71,7 +71,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
       byte workKif,
       byte workKvc,
       byte[] digestData) {
-    super(command);
+    super(command, 0);
 
     if (workKif == 0x00 || workKvc == 0x00) {
       throw new IllegalArgumentException("Bad kif or kvc!");

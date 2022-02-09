@@ -80,7 +80,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    */
   CmdCardAppendRecord(CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = calypsoCardClass.getValue();
 

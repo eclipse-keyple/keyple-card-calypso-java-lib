@@ -58,7 +58,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0);
 
     setApduRequest(
         new ApduRequestAdapter(

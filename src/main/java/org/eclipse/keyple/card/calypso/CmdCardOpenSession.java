@@ -100,7 +100,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   CmdCardOpenSession(
       CalypsoCard calypsoCard, byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
 
-    super(CalypsoCardCommand.OPEN_SESSION);
+    super(CalypsoCardCommand.OPEN_SESSION, 0);
 
     this.calypsoCard = calypsoCard;
     switch (calypsoCard.getProductType()) {
@@ -157,8 +157,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
      * case 4: this command contains incoming and outgoing data. We define le = 0, the actual
      * length will be processed by the lower layers.
      */
-    byte le = 0;
-
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -167,7 +165,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
                 p1,
                 p2,
                 dataIn,
-                le)));
+                (byte) 0)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
@@ -244,8 +242,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
      * case 4: this command contains incoming and outgoing data. We define le = 0, the actual
      * length will be processed by the lower layers.
      */
-    byte le = 0;
-
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -254,7 +250,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
                 p1,
                 p2,
                 samChallenge,
-                le)));
+                (byte) 0)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);

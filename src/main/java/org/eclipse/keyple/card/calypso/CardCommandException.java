@@ -20,12 +20,14 @@ package org.eclipse.keyple.card.calypso;
 abstract class CardCommandException extends CalypsoApduCommandException {
 
   /**
+   * (package-private)<br>
+   *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @param statusWord the status word (optional).
    * @since 2.0.0
    */
-  protected CardCommandException(String message, CalypsoCardCommand command, Integer statusWord) {
+  CardCommandException(String message, CalypsoCardCommand command, Integer statusWord) {
     super(message, command, statusWord);
   }
 }

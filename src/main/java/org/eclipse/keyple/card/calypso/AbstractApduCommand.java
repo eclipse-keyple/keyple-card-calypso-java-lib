@@ -48,6 +48,7 @@ abstract class AbstractApduCommand {
   }
 
   private final CardCommand commandRef;
+  private final int le;
   private String name;
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
@@ -57,11 +58,13 @@ abstract class AbstractApduCommand {
    * Constructor
    *
    * @param commandRef The command reference.
+   * @param le The value of the LE field.
    * @since 2.0.1
    */
-  AbstractApduCommand(CardCommand commandRef) {
+  AbstractApduCommand(CardCommand commandRef, int le) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
+    this.le = le;
   }
 
   /**
@@ -162,24 +165,25 @@ abstract class AbstractApduCommand {
 
   /**
    * (package-private)<br>
-   * Builds a command exception.
-   *
-   * <p>This method should be override in subclasses in order to create specific exceptions.
+   * Builds a specific APDU command exception.
    *
    * @param exceptionClass the exception class.
-   * @param message the message.
-   * @param commandRef {@link CardCommand} the command reference.
-   * @param statusWord the status word.
-   * @return A not null value
+   * @param message The message.
+   * @return A not null reference.
    * @since 2.0.1
    */
-  CalypsoApduCommandException buildCommandException(
-      Class<? extends CalypsoApduCommandException> exceptionClass,
-      String message,
-      CardCommand commandRef,
-      Integer statusWord) {
-    return new CardCommandUnknownStatusException(message, commandRef, statusWord);
-  }
+  abstract CalypsoApduCommandException buildCommandException(
+      Class<? extends CalypsoApduCommandException> exceptionClass, String message);
+
+  /**
+   * (package-private)<br>
+   * Builds a specific APDU command exception for the case of an unexpected response length.
+   *
+   * @param message The message.
+   * @return A not null reference.
+   * @since 2.1.1
+   */
+  abstract CalypsoApduCommandException buildUnexpectedResponseLengthException(String message);
 
   /**
    * (private)<br>
@@ -193,29 +197,41 @@ abstract class AbstractApduCommand {
 
   /**
    * (package-private)<br>
-   * Gets true if the status is successful from the statusTable according to the current status
-   * code.
+   * Gets true if the status is successful from the statusTable according to the current status code
+   * and if the length of the response is equal to the LE field in the request.
    *
    * @return A value
    * @since 2.0.1
    */
   final boolean isSuccessful() {
     StatusProperties props = getStatusWordProperties();
-    return props != null && props.isSuccessful();
+    return props != null
+        && props.isSuccessful()
+        && (le == 0 || apduResponse.getDataOut().length == le); // CL-CSS-RESPLE.1
   }
 
   /**
    * (package-private)<br>
-   * This method check the status word.<br>
+   * This method check the status word and if the length of the response is equal to the LE field in
+   * the request.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
-   * @throws CalypsoApduCommandException if status is not successful.
+   * @throws CalypsoApduCommandException if status is not successful or if the length of the
+   *     response is not equal to the LE field in the request.
    * @since 2.0.1
    */
   void checkStatus() throws CalypsoApduCommandException {
 
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
+      // SW is successful, then check the response length (CL-CSS-RESPLE.1)
+      if (le != 0 && apduResponse.getDataOut().length != le) {
+        throw buildUnexpectedResponseLengthException(
+            String.format(
+                "Incorrect APDU response length (expected: %d, actual: %d)",
+                le, apduResponse.getDataOut().length));
+      }
+      // SW and response length are correct.
       return;
     }
     // status word is not referenced, or not successful.
@@ -227,11 +243,8 @@ abstract class AbstractApduCommand {
     // message
     String message = props != null ? props.getInformation() : "Unknown status";
 
-    // status word
-    Integer statusWord = apduResponse.getStatusWord();
-
     // Throw the exception
-    throw buildCommandException(exceptionClass, message, commandRef, statusWord);
+    throw buildCommandException(exceptionClass, message);
   }
 
   /**

@@ -66,7 +66,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   CmdSamReadCeilings(
       CalypsoSam.ProductType productType, CeilingsOperationType operationType, int index) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 

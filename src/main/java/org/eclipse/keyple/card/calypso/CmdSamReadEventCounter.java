@@ -64,7 +64,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   CmdSamReadEventCounter(
       CalypsoSam.ProductType productType, SamEventCounterOperationType operationType, int index) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p2;

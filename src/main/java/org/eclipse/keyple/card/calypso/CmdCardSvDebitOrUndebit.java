@@ -120,7 +120,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
       byte[] time,
       boolean useExtendedMode) {
 
-    super(isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT);
+    super(isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT, 0);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1

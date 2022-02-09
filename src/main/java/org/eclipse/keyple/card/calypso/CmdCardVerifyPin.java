@@ -80,7 +80,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    */
   CmdCardVerifyPin(CalypsoCardClass calypsoCardClass, boolean encryptPinTransmission, byte[] pin) {
 
-    super(command);
+    super(command, 0);
 
     if (pin == null
         || (!encryptPinTransmission && pin.length != 4)
@@ -114,7 +114,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    */
   CmdCardVerifyPin(CalypsoCardClass calypsoCardClass) {
 
-    super(command);
+    super(command, 0);
 
     cla = calypsoCardClass.getValue();
 

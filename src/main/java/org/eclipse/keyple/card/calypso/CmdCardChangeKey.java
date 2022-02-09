@@ -70,7 +70,7 @@ final class CmdCardChangeKey extends AbstractCardCommand {
    */
   CmdCardChangeKey(CalypsoCardClass calypsoCardClass, byte keyIndex, byte[] cryptogram) {
 
-    super(command);
+    super(command, 0);
 
     byte cla = calypsoCardClass.getValue();
     byte p1 = (byte) 0x00;
