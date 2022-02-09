@@ -77,7 +77,8 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCard calypsoCard;
+  private final CalypsoCard.ProductType productType;
+  private final boolean isExtendedModeAllowed;
 
   private int sfi;
   private int recordNumber;
@@ -89,21 +90,28 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * (package-private)<br>
    * Constructor.
    *
-   * @param calypsoCard The card image.
+   * @param productType The card product type.
    * @param keyIndex The key index.
    * @param samChallenge The SAM challenge.
    * @param sfi The optional SFI of the file to read.
    * @param recordNumber The optional record number to read.
+   * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @throws IllegalArgumentException If the key index is 0 and rev is 2.4
    * @since 2.0.1
    */
   CmdCardOpenSession(
-      CalypsoCard calypsoCard, byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
+      CalypsoCard.ProductType productType,
+      byte keyIndex,
+      byte[] samChallenge,
+      int sfi,
+      int recordNumber,
+      boolean isExtendedModeAllowed) {
 
     super(CalypsoCardCommand.OPEN_SESSION, 0);
 
-    this.calypsoCard = calypsoCard;
-    switch (calypsoCard.getProductType()) {
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.productType = productType;
+    switch (productType) {
       case PRIME_REVISION_1:
         createRev10(keyIndex, samChallenge, sfi, recordNumber);
         break;
@@ -113,11 +121,10 @@ final class CmdCardOpenSession extends AbstractCardCommand {
       case PRIME_REVISION_3:
       case LIGHT:
       case BASIC:
-        createRev3(keyIndex, samChallenge, sfi, recordNumber, calypsoCard);
+        createRev3(keyIndex, samChallenge, sfi, recordNumber);
         break;
       default:
-        throw new IllegalArgumentException(
-            "Product type " + calypsoCard.getProductType() + " isn't supported");
+        throw new IllegalArgumentException("Product type " + productType + " isn't supported");
     }
   }
 
@@ -129,11 +136,9 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * @param samChallenge the sam challenge returned by the SAM Get Challenge APDU command.
    * @param sfi the sfi to select.
    * @param recordNumber the record number to read.
-   * @param calypsoCard The {@link CalypsoCard}.
    * @throws IllegalArgumentException If the request is inconsistent
    */
-  private void createRev3(
-      byte keyIndex, byte[] samChallenge, int sfi, int recordNumber, CalypsoCard calypsoCard) {
+  private void createRev3(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -142,15 +147,13 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     byte p2;
     byte[] dataIn;
 
-    // CL-CSS-OSSMODE.1 fulfilled only for SAM C1
-    if (!calypsoCard.isExtendedModeSupported()) {
-      p2 = (byte) ((sfi * 8) + 1);
-      dataIn = samChallenge;
-    } else {
+    if (isExtendedModeAllowed) {
       p2 = (byte) ((sfi * 8) + 2);
       dataIn = new byte[samChallenge.length + 1];
-      dataIn[0] = (byte) 0x00;
       System.arraycopy(samChallenge, 0, dataIn, 1, samChallenge.length);
+    } else {
+      p2 = (byte) ((sfi * 8) + 1);
+      dataIn = samChallenge;
     }
 
     /*
@@ -299,7 +302,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     super.setApduResponse(apduResponse);
     byte[] dataOut = getApduResponse().getDataOut();
     if (dataOut.length > 0) {
-      switch (calypsoCard.getProductType()) {
+      switch (productType) {
         case PRIME_REVISION_1:
           parseRev10(dataOut);
           break;
@@ -326,14 +329,14 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     int offset;
 
     // CL-CSS-OSSRFU.1
-    if (!calypsoCard.isExtendedModeSupported()) {
-      offset = 0;
-      previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
-      manageSecureSessionAuthorized = false;
-    } else {
+    if (isExtendedModeAllowed) {
       offset = 4;
       previousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
       manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
+    } else {
+      offset = 0;
+      previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
+      manageSecureSessionAuthorized = false;
     }
 
     byte kif = apduResponseData[5 + offset];

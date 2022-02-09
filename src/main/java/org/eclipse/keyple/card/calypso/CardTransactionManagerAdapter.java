@@ -257,7 +257,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
         new CmdCardOpenSession(
-            calypsoCard, (byte) (writeAccessLevel.ordinal() + 1), samChallenge, sfi, recordNumber);
+            calypsoCard.getProductType(),
+            (byte) (writeAccessLevel.ordinal() + 1),
+            samChallenge,
+            sfi,
+            recordNumber,
+            isExtendedModeAllowed());
 
     // Add the "Open Secure Session" card command in first position.
     cardCommands.add(0, cmdCardOpenSession);
@@ -2205,7 +2210,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             date,
             time,
             free,
-            isSvExtendedModeAllowed());
+            isExtendedModeAllowed());
 
     // create and keep the CalypsoCardCommand
     cardCommandManager.addStoredValueCommand(svReloadCmdBuild, SvOperation.RELOAD);
@@ -2232,11 +2237,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
 
   /**
    * (private)<br>
+   * CL-CSS-OSSMODE.1<br>
+   * CL-SV-CMDMODE.1
    *
-   * @return True if the extended mode of the SV command is allowed.
+   * @return True if the card extended mode is allowed.
    */
-  private boolean isSvExtendedModeAllowed() {
-    // CL-SV-CMDMODE.1
+  private boolean isExtendedModeAllowed() {
     CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
     return calypsoCard.isExtendedModeSupported()
         && calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1;
@@ -2280,7 +2286,7 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
             calypsoCard.getSvKvc(),
             date,
             time,
-            isSvExtendedModeAllowed());
+            isExtendedModeAllowed());
 
     // create and keep the CalypsoCardCommand
     cardCommandManager.addStoredValueCommand(command, SvOperation.DEBIT);
