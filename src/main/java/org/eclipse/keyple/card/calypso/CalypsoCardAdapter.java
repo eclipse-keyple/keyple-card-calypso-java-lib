@@ -85,6 +85,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte currentSfi;
   private short currentLid;
   private Boolean isDfRatified;
+  private Integer transactionCounter;
   private Integer pinAttemptCounter;
   private Integer svBalance;
   private int svLastTNum;
@@ -133,7 +134,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     dfName = null;
     calypsoSerialNumber = new byte[8];
-    // old cards have their modification counter in number of commands
+    // old cards have their modification counter expressed in number of commands
     // the array is initialized with 0 (cf. default value for primitive types)
     System.arraycopy(atr, 12, calypsoSerialNumber, 4, 4);
     modificationsCounterMax = REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
@@ -202,7 +203,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     if (productType == ProductType.PRIME_REVISION_2) {
       calypsoCardClass = CalypsoCardClass.LEGACY;
-      // old cards have their modification counter in number of commands
+      // old cards have their modification counter expressed in number of commands
       isModificationCounterInBytes = false;
       modificationsCounterMax = REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION;
     } else if (productType == ProductType.BASIC) {
@@ -287,6 +288,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public boolean isHce() {
     return isHce;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
+  public boolean isDfInvalidated() {
+    return isDfInvalidated;
   }
 
   /**
@@ -513,22 +524,26 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public boolean isDfInvalidated() {
-    return isDfInvalidated;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
   public boolean isDfRatified() {
     if (isDfRatified != null) {
       return isDfRatified;
     }
     throw new IllegalStateException(
         "Unable to determine the ratification status. No session was opened.");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.1
+   */
+  @Override
+  public int getTransactionCounter() {
+    if (transactionCounter == null) {
+      throw new IllegalStateException(
+          "Unable to determine the transaction counter. No session was opened.");
+    }
+    return transactionCounter;
   }
 
   /**
@@ -540,8 +555,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param svGetData A not empty array.
    * @param svBalance the current SV balance.
    * @param svLastTNum the last SV transaction number.
-   * @param svLoadLogRecord the SV load log record (may be null if not available).
-   * @param svDebitLogRecord the SV debit log record (may be null if not available).
+   * @param svLoadLogRecord the SV load log record (it may be null if not available).
+   * @param svDebitLogRecord the SV debit log record (it may be null if not available).
    * @since 2.0.0
    */
   void setSvData(
@@ -655,6 +670,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void setDfRatified(boolean dfRatified) {
     isDfRatified = dfRatified;
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the transaction counter.
+   *
+   * @param transactionCounter The counter value.
+   * @since 2.1.1
+   */
+  void setTransactionCounter(int transactionCounter) {
+    this.transactionCounter = transactionCounter;
   }
 
   /**

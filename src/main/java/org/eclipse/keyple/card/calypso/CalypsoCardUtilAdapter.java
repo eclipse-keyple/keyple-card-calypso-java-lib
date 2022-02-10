@@ -51,6 +51,8 @@ final class CalypsoCardUtilAdapter {
     cmdCardOpenSession.setApduResponse(apduResponse);
     // CL-CSS-INFORAT.1
     calypsoCard.setDfRatified(cmdCardOpenSession.wasRatified());
+    // CL-CSS-INFOTCNT.1
+    calypsoCard.setTransactionCounter(cmdCardOpenSession.getTransactionCounterValue());
 
     byte[] recordDataRead = cmdCardOpenSession.getRecordDataRead();
 

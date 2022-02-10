@@ -472,6 +472,30 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test
+  public void processOpening_whenSuccessful_shouldUpdateTransactionCounterAndRatificationStatus()
+      throws Exception {
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
+
+    assertThat(calypsoCard.isDfRatified()).isTrue();
+    assertThat(calypsoCard.getTransactionCounter()).isEqualTo(0x030490);
+  }
+
+  @Test
   public void processOpening_whenOneReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
       throws Exception {
     CardRequestSpi samCardRequest =
