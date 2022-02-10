@@ -546,6 +546,16 @@ public class CalypsoCardAdapterTest {
     calypsoCardAdapter.getSvBalance();
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void isDfRatified_whenNoSessionWasOpened_shouldThrowISE() {
+    calypsoCardAdapter.isDfRatified();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void getTransactionCounter_whenNoSessionWasOpened_shouldThrowISE() {
+    calypsoCardAdapter.getTransactionCounter();
+  }
+
   /**
    * (private)<br>
    * Builds a simulated response to a Select Application command.
