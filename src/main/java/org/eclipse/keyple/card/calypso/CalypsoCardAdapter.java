@@ -296,6 +296,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
+  public boolean isDfInvalidated() {
+    return isDfInvalidated;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.0.0
+   */
+  @Override
   public byte[] getDfName() {
     return dfName;
   }
@@ -514,22 +524,26 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public boolean isDfInvalidated() {
-    return isDfInvalidated;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
   public boolean isDfRatified() {
     if (isDfRatified != null) {
       return isDfRatified;
     }
     throw new IllegalStateException(
         "Unable to determine the ratification status. No session was opened.");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.1.1
+   */
+  @Override
+  public int getTransactionCounter() {
+    if (transactionCounter == null) {
+      throw new IllegalStateException(
+          "Unable to determine the transaction counter. No session was opened.");
+    }
+    return transactionCounter;
   }
 
   /**
@@ -645,20 +659,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       svDebitLogRecords.add(new SvDebitLogRecordAdapter(entry.getValue(), 0));
     }
     return svDebitLogRecords;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.1
-   */
-  @Override
-  public int getTransactionCounter() {
-    if (transactionCounter == null) {
-      throw new IllegalStateException(
-          "Unable to determine the transaction counter. No session was opened.");
-    }
-    return transactionCounter;
   }
 
   /**
