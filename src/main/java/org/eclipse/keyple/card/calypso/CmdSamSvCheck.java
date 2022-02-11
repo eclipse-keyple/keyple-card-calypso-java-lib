@@ -71,7 +71,13 @@ final class CmdSamSvCheck extends AbstractSamCommand {
     } else {
       setApduRequest(
           new ApduRequestAdapter(
-              ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
+              ApduUtil.build(
+                  cla,
+                  command.getInstructionByte(),
+                  p1,
+                  p2,
+                  new byte[0],
+                  null))); // Case 3 without input data.
     }
   }
 
