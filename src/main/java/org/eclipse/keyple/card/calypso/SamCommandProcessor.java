@@ -62,16 +62,21 @@ class SamCommandProcessor {
   private boolean isDiversificationDone;
   private boolean isDigestInitDone;
   private boolean isDigesterInitialized;
+  private final List<byte[]> transactionAuditData;
 
   /**
    * (package-private)<br>
    * Constructor
    *
    * @param calypsoCard The initial card data provided by the selection process.
-   * @param cardSecuritySetting the security settings from the application layer.
+   * @param cardSecuritySetting The security settings from the application layer.
+   * @param transactionAuditData The transaction audit data list to fill.
    * @since 2.0.0
    */
-  SamCommandProcessor(CalypsoCard calypsoCard, CardSecuritySettingAdapter cardSecuritySetting) {
+  SamCommandProcessor(
+      CalypsoCard calypsoCard,
+      CardSecuritySettingAdapter cardSecuritySetting,
+      List<byte[]> transactionAuditData) {
 
     Assert.getInstance()
         .notNull(cardSecuritySetting.getSamReader(), "samReader")
@@ -80,9 +85,10 @@ class SamCommandProcessor {
     this.calypsoCard = (CalypsoCardAdapter) calypsoCard;
     this.cardSecuritySetting = cardSecuritySetting;
     CalypsoSam calypsoSam = cardSecuritySetting.getCalypsoSam();
-    samProductType = calypsoSam.getProductType();
-    samSerialNumber = calypsoSam.getSerialNumber();
-    samReader = (ProxyReaderApi) cardSecuritySetting.getSamReader();
+    this.samProductType = calypsoSam.getProductType();
+    this.samSerialNumber = calypsoSam.getSerialNumber();
+    this.samReader = (ProxyReaderApi) cardSecuritySetting.getSamReader();
+    this.transactionAuditData = transactionAuditData;
   }
 
   /**
@@ -410,14 +416,23 @@ class SamCommandProcessor {
 
     List<ApduRequestSpi> apduRequests = getApduRequests(samCommands);
     CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
-    CardResponseApi cardResponse;
+    CardResponseApi cardResponse = null;
     try {
       cardResponse = samReader.transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
+    } catch (ReaderBrokenCommunicationException e) {
+      cardResponse = e.getCardResponse();
+      throw e;
+    } catch (CardBrokenCommunicationException e) {
+      cardResponse = e.getCardResponse();
+      throw e;
     } catch (UnexpectedStatusWordException e) {
       if (logger.isDebugEnabled()) {
         logger.debug("A SAM card command has failed: {}", e.getMessage());
       }
       cardResponse = e.getCardResponse();
+    } finally {
+      CardTransactionManagerAdapter.storeTransactionAuditData(
+          cardRequest, cardResponse, transactionAuditData);
     }
     List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
 
@@ -426,9 +441,9 @@ class SamCommandProcessor {
     // desynchronized exception.
     if (apduResponses.size() > apduRequests.size()) {
       throw new DesynchronizedExchangesException(
-          "The number of SAM commands/responses does not match: commands="
+          "The number of SAM commands/responses does not match: nb commands = "
               + apduRequests.size()
-              + ", responses="
+              + ", nb responses = "
               + apduResponses.size());
     }
 
@@ -443,9 +458,9 @@ class SamCommandProcessor {
     // throw a desynchronized exception.
     if (apduResponses.size() < apduRequests.size()) {
       throw new DesynchronizedExchangesException(
-          "The number of SAM commands/responses does not match: commands="
+          "The number of SAM commands/responses does not match: nb commands = "
               + apduRequests.size()
-              + ", responses="
+              + ", nb responses = "
               + apduResponses.size());
     }
   }

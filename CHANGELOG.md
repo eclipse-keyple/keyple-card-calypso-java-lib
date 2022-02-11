@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional Calypso requirement related to the analysis of the APDU response length (issue [#62]).
 - Additional Calypso requirement related to the card extended mode command management (issue [#64]).
 - Additional Calypso requirement related to the card transaction counter (issue [#66]).
+- Additional Calypso requirement related to the transaction audit data (issue [#68]).
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.2.0` (issue [#66]).
 
@@ -65,6 +66,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#68]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/68
 [#66]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/66
 [#64]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/64
 [#62]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/62

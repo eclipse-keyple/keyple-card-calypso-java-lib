@@ -884,9 +884,9 @@ final class CalypsoCardUtilAdapter {
     // desynchronized exception.
     if (apduResponses.size() > commands.size()) {
       throw new DesynchronizedExchangesException(
-          "The number of commands/responses does not match: commands="
+          "The number of commands/responses does not match: nb commands = "
               + commands.size()
-              + ", responses="
+              + ", nb responses = "
               + apduResponses.size());
     }
 
@@ -903,9 +903,9 @@ final class CalypsoCardUtilAdapter {
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {
       throw new DesynchronizedExchangesException(
-          "The number of commands/responses does not match: commands="
+          "The number of commands/responses does not match: nb commands = "
               + commands.size()
-              + ", responses="
+              + ", nb responses = "
               + apduResponses.size());
     }
   }
