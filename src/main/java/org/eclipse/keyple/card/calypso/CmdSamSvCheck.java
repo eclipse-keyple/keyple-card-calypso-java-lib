@@ -76,8 +76,8 @@ final class CmdSamSvCheck extends AbstractSamCommand {
                   command.getInstructionByte(),
                   p1,
                   p2,
-                  null,
-                  (byte) 0x00))); // In this case LE field sets the LC command field to 00h.
+                  new byte[0],
+                  null))); // Case 3 without input data.
     }
   }
 
