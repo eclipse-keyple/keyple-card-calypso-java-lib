@@ -1342,7 +1342,12 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   private String getTransactionAuditDataAsString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("\nTransaction audit data:\n[\n");
+    sb.append("\nTransaction audit data:\n");
+    sb.append("CARD: ").append(calypsoCard.toString()).append("\n");
+    if (cardSecuritySetting != null && cardSecuritySetting.getCalypsoSam() != null) {
+      sb.append("SAM: ").append(cardSecuritySetting.getCalypsoSam().toString()).append("\n");
+    }
+    sb.append("APDUs:\n[\n");
     for (byte[] apdu : transactionAuditData) {
       sb.append(ByteArrayUtil.toHex(apdu)).append("\n");
     }

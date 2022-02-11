@@ -17,6 +17,7 @@ import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,5 +275,16 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   @Override
   public final byte getSoftwareRevision() {
     return softwareRevision;
+  }
+
+  /**
+   * Gets the object content as a Json string.
+   *
+   * @return A not empty string.
+   * @since 2.1.1
+   */
+  @Override
+  public String toString() {
+    return JsonUtil.toJson(this);
   }
 }

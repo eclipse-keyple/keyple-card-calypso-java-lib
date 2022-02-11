@@ -30,23 +30,10 @@ import org.slf4j.LoggerFactory;
 final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoCardAdapter.class);
+
   private static final String PATTERN_1_BYTE_HEX = "%02Xh";
   private static final String PATTERN_2_BYTES_HEX = "%04Xh";
 
-  private ApduResponseApi selectApplicationResponse;
-  private String powerOnData;
-
-  private boolean isExtendedModeSupported;
-  private boolean isRatificationOnDeselectSupported;
-  private boolean isSvFeatureAvailable;
-  private boolean isPinFeatureAvailable;
-  private boolean isPkiModeSupported;
-  private boolean isDfInvalidated;
-  private CalypsoCardClass calypsoCardClass;
-  private byte[] calypsoSerialNumber;
-  private byte[] startupInfo;
-  private ProductType productType = ProductType.UNKNOWN;
-  private byte[] dfName;
   private static final int CARD_REV1_ATR_LENGTH = 20;
   private static final int REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
   private static final int REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 6;
@@ -75,6 +62,19 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         220435, 262144, 311743, 370727, 440871, 524288, 623487, 741455, 881743, 1048576
       };
 
+  private ApduResponseApi selectApplicationResponse;
+  private String powerOnData;
+  private boolean isExtendedModeSupported;
+  private boolean isRatificationOnDeselectSupported;
+  private boolean isSvFeatureAvailable;
+  private boolean isPinFeatureAvailable;
+  private boolean isPkiModeSupported;
+  private boolean isDfInvalidated;
+  private CalypsoCardClass calypsoCardClass;
+  private byte[] calypsoSerialNumber;
+  private byte[] startupInfo;
+  private ProductType productType = ProductType.UNKNOWN;
+  private byte[] dfName;
   private int modificationsCounterMax;
   private boolean isModificationCounterInBytes = true;
   private DirectoryHeader directoryHeader;
