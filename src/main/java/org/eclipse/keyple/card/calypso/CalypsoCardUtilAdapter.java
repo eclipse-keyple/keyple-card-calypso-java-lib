@@ -42,13 +42,15 @@ final class CalypsoCardUtilAdapter {
    * @param calypsoCard the {@link CalypsoCardAdapter} object to update.
    * @param cmdCardOpenSession the command.
    * @param apduResponse the response received.
+   * @throws CardCommandException if a response from the card was unexpected
    */
   private static void updateCalypsoCardOpenSession(
       CalypsoCardAdapter calypsoCard,
       CmdCardOpenSession cmdCardOpenSession,
-      ApduResponseApi apduResponse) {
+      ApduResponseApi apduResponse)
+      throws CardCommandException {
 
-    cmdCardOpenSession.setApduResponse(apduResponse);
+    cmdCardOpenSession.setApduResponse(apduResponse).checkStatus();
     // CL-CSS-INFORAT.1
     calypsoCard.setDfRatified(cmdCardOpenSession.wasRatified());
     // CL-CSS-INFOTCNT.1
