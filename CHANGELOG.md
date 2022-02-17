@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional Calypso requirement related to the transaction audit data (issue [#68]).
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.2.0` (issue [#66]).
+- "Keyple Util Library" to version `2.1.0`.
 ### Fixed
 - Null Pointer Exception raised when the "open secure session" command returns an unexpected status word [#70]
+- JSON serialization for interfaces in objects trees (issue [#71]).
 
 ## [2.1.0] - 2022-02-01
 ### Added
@@ -68,6 +70,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#71]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/71
 [#70]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/70
 [#68]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/68
 [#66]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/66

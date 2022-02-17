@@ -348,7 +348,8 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
       try {
         processCancel();
       } catch (RuntimeException e) {
-        logger.error("An error occurred while aborting the current secure session.", e);
+        logger.warn(
+            "An error occurred while aborting the current secure session: {}", e.getMessage());
       }
       sessionState = SessionState.SESSION_CLOSED;
     }
@@ -1342,16 +1343,13 @@ class CardTransactionManagerAdapter implements CardTransactionManager {
    */
   private String getTransactionAuditDataAsString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("\nTransaction audit data:\n");
-    sb.append("CARD: ").append(calypsoCard.toString()).append("\n");
+    sb.append("\nTransaction audit JSON data: {");
+    sb.append("\"card\":").append(calypsoCard.toString());
     if (cardSecuritySetting != null && cardSecuritySetting.getCalypsoSam() != null) {
-      sb.append("SAM: ").append(cardSecuritySetting.getCalypsoSam().toString()).append("\n");
+      sb.append(",\"sam\":").append(cardSecuritySetting.getCalypsoSam().toString());
     }
-    sb.append("APDUs:\n[\n");
-    for (byte[] apdu : transactionAuditData) {
-      sb.append(ByteArrayUtil.toHex(apdu)).append("\n");
-    }
-    sb.append("]");
+    sb.append(",\"apdus\":").append(JsonUtil.toJson(transactionAuditData));
+    sb.append("}");
     return sb.toString();
   }
 
