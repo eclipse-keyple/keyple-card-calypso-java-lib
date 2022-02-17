@@ -150,12 +150,8 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   public CalypsoSamSelection setUnlockData(String unlockData) {
     Assert.getInstance()
         .notEmpty(unlockData, "unlockData")
-        .isTrue(unlockData.length() == 16 || unlockData.length() == 32, "length");
-
-    if (!ByteArrayUtil.isValidHexString(unlockData)) {
-      throw new IllegalArgumentException("Invalid hexadecimal string.");
-    }
-
+        .isTrue(unlockData.length() == 16 || unlockData.length() == 32, "unlockData")
+        .isHexString(unlockData, "unlockData");
     this.unlockData = unlockData;
     return this;
   }

@@ -114,9 +114,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection filterByDfName(String aid) {
-
-    Assert.getInstance().isTrue(ByteArrayUtil.isValidHexString(aid), "aid format");
-
+    Assert.getInstance().isHexString(aid, "aid format");
     this.filterByDfName(ByteArrayUtil.fromHex(aid));
     return this;
   }
