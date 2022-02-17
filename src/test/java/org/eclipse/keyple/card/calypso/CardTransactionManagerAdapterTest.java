@@ -66,8 +66,8 @@ public class CardTransactionManagerAdapterTest {
   private static final String CIPHER_PIN_VERIFICATION_OK = "1122334455667788";
   private static final String CIPHER_PIN_UPDATE_OK = "88776655443322111122334455667788";
   private static final String PIN_5_DIGITS = "12345";
-  private static byte PIN_CIPHERING_KEY_KIF = 0x11;
-  private static byte PIN_CIPHERING_KEY_KVC = 0x22;
+  private static final byte PIN_CIPHERING_KEY_KIF = 0x11;
+  private static final byte PIN_CIPHERING_KEY_KVC = 0x22;
 
   private static final byte FILE7 = (byte) 0x07;
   private static final byte FILE8 = (byte) 0x08;
@@ -1037,8 +1037,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void prepareSelectFile_whenLidIsNull_shouldThrowIAE() {
-    byte[] nullArray = null;
-    cardTransactionManager.prepareSelectFile(nullArray);
+    cardTransactionManager.prepareSelectFile((byte[]) null);
   }
 
   @Test(expected = IllegalArgumentException.class)
