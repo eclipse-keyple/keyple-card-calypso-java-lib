@@ -33,14 +33,6 @@ final class SearchCommandDataAdapter implements SearchCommandData {
   private final List<Integer> matchingRecordNumbers = new ArrayList<Integer>(1);
 
   /**
-   * (package-private)<br>
-   * Constructor.
-   *
-   * @since 2.1.0
-   */
-  SearchCommandDataAdapter() {}
-
-  /**
    * {@inheritDoc}
    *
    * @since 2.1.0
@@ -170,8 +162,7 @@ final class SearchCommandDataAdapter implements SearchCommandData {
   /**
    * (package-private)<br>
    *
-   * @return A not empty array of search data. It is required to check input data first using {@link
-   *     #checkInputData()} method.
+   * @return A not empty array of search data. It is required to check input data first.
    * @since 2.1.0
    */
   byte[] getSearchData() {

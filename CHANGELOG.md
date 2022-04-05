@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `CalypsoExtensionService.createSignatureComputationData` method.
+- `CalypsoExtensionService.createSignatureVerificationData` method.
+- `CalypsoExtensionService.createSamSecuritySetting` method.
+- `CalypsoExtensionService.createSamTransaction` method.
+- `CalypsoExtensionService.createSamTransactionWithoutSecurity` method.
 - Additional Calypso requirements related to Stored Value operations (issue [#59]).
 - Additional Calypso requirements related to abortion of a secure session (issue [#57]).
 - Additional Calypso requirement related to the analysis of the APDU response length (issue [#62]).

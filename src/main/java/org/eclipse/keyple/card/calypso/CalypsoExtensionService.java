@@ -18,11 +18,17 @@ import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
 import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
+import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.calypso.transaction.SearchCommandData;
+import org.calypsonet.terminal.calypso.transaction.SignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.SignatureVerificationData;
 import org.calypsonet.terminal.card.CardApiProperties;
+import org.calypsonet.terminal.card.ProxyReaderApi;
 import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.ReaderApiProperties;
 import org.eclipse.keyple.core.common.CommonApiProperties;
@@ -41,8 +47,6 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
-  public static final String PRODUCT_TYPE = "productType";
-
   static {
     // Register additional JSON adapters.
     JsonUtil.registerTypeAdapter(DirectoryHeader.class, new DirectoryHeaderJsonAdapter(), false);
@@ -56,9 +60,9 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   private CalypsoExtensionService() {}
 
   /**
-   * Gets the single instance of CalypsoExtensionService.
+   * Returns the service instance.
    *
-   * @return The instance of CalypsoExtensionService.
+   * @return A not null reference.
    * @since 2.0.0
    */
   public static CalypsoExtensionService getInstance() {
@@ -96,7 +100,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link SearchCommandData} to be used to define the parameters of the
+   * Returns a new instance of {@link SearchCommandData} to use to define the parameters of the
    * {@link CardTransactionManager#prepareSearchRecords(SearchCommandData)} method.
    *
    * @return A not null reference.
@@ -107,8 +111,31 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link CalypsoCardSelection} that can be supplemented later with
-   * specific commands.
+   * Returns a new instance of {@link SignatureComputationData} to use to define the parameters of
+   * the {@link CardTransactionManager#prepareComputeSignature(SignatureComputationData)} and {@link
+   * SamTransactionManager#prepareComputeSignature(SignatureComputationData)} methods.
+   *
+   * @return A not null reference.
+   * @since 2.2.0
+   */
+  public SignatureComputationData createSignatureComputationData() {
+    return new SignatureComputationDataAdapter();
+  }
+
+  /**
+   * Returns a new instance of {@link SignatureVerificationData} to use to define the parameters of
+   * the {@link CardTransactionManager#prepareVerifySignature(SignatureVerificationData)} and {@link
+   * SamTransactionManager#prepareVerifySignature(SignatureVerificationData)} methods.
+   *
+   * @return A not null reference.
+   * @since 2.2.0
+   */
+  public SignatureVerificationData createSignatureVerificationData() {
+    return new SignatureVerificationDataAdapter();
+  }
+
+  /**
+   * Returns a new instance of {@link CalypsoCardSelection} to use when selecting a card.
    *
    * @return A not null reference.
    * @since 2.0.0
@@ -118,7 +145,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link CalypsoCardSelection}.
+   * Returns a new instance of {@link CalypsoSamSelection} to use when selecting a SAM.
    *
    * @return A not null reference.
    * @since 2.0.0
@@ -128,8 +155,8 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link CardResourceProfileExtension} to be provided to the {@link
-   * org.eclipse.keyple.core.service.resource.CardResourceService}.
+   * Returns a new instance of {@link CardResourceProfileExtension} to provide to the {@link
+   * org.eclipse.keyple.core.service.resource.CardResourceService} service.
    *
    * <p>The provided argument defines the selection rules to be applied to the SAM when detected by
    * the card resource service.
@@ -137,7 +164,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @param calypsoSamSelection A not null {@link
    *     org.calypsonet.terminal.calypso.sam.CalypsoSamSelection}.
    * @return A not null reference.
-   * @throws IllegalArgumentException If calypsoSamSelection is null.
+   * @throws IllegalArgumentException If "calypsoSamSelection" is null.
    * @since 2.0.0
    */
   public CardResourceProfileExtension createSamResourceProfileExtension(
@@ -147,8 +174,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates an instance of {@link CalypsoCardSelection} that can be supplemented later with
-   * specific commands.
+   * Returns a new instance of {@link CardSecuritySetting} to use for secure card operations.
    *
    * @return A not null reference.
    * @since 2.0.0
@@ -158,58 +184,173 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Creates a card transaction manager to handle operations secured with a SAM.
+   * Return a new card transaction manager to handle operations secured with a control SAM.
    *
    * <p>The reader and the card's initial data are those from the selection.<br>
    * The provided {@link CardSecuritySetting} must match the specific needs of the card (SAM card
    * resource profile and other optional settings).
    *
-   * @param reader The reader through which the card communicates.
+   * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @param cardSecuritySetting The security settings.
    * @return A not null reference.
-   * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoCard"
    *     has a null or unknown product type.
    * @since 2.0.0
    */
   public CardTransactionManager createCardTransaction(
-      CardReader reader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
-
-    Assert.getInstance()
-        .notNull(reader, "reader")
-        .notNull(calypsoCard, "calypsoCard")
-        .notNull(calypsoCard.getProductType(), PRODUCT_TYPE)
-        .isTrue(calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN, PRODUCT_TYPE)
-        .notNull(cardSecuritySetting, "cardSecuritySetting");
-
-    if (!(cardSecuritySetting instanceof CardSecuritySettingAdapter)) {
-      throw new IllegalArgumentException(
-          "The provided 'cardSecuritySetting' must be an instance of 'CardSecuritySettingAdapter' class.");
-    }
-
-    return new CardTransactionManagerAdapter(
-        reader, calypsoCard, (CardSecuritySettingAdapter) cardSecuritySetting);
+      CardReader cardReader, CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting) {
+    return createCardTransactionManagerAdapter(cardReader, calypsoCard, cardSecuritySetting, true);
   }
 
   /**
-   * Creates a card transaction manager to handle non-secured operations.
+   * Returns a new card transaction manager to handle non-secured operations.
    *
-   * @param reader The reader through which the card communicates.
+   * @param cardReader The reader through which the card communicates.
    * @param calypsoCard The initial card data provided by the selection process.
    * @return A not null reference.
-   * @throws IllegalArgumentException If one of the provided argument is null or if the CalypsoCard
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoCard"
    *     has a null or unknown product type.
    * @since 2.0.0
    */
   public CardTransactionManager createCardTransactionWithoutSecurity(
-      CardReader reader, CalypsoCard calypsoCard) {
+      CardReader cardReader, CalypsoCard calypsoCard) {
+    return createCardTransactionManagerAdapter(cardReader, calypsoCard, null, false);
+  }
+
+  /**
+   * (private)<br>
+   * Returns a new card transaction manager adapter.
+   *
+   * @param cardReader The reader.
+   * @param calypsoCard The card.
+   * @param cardSecuritySetting The security settings.
+   * @param isSecureMode True if is secure mode requested.
+   * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoCard"
+   *     has a null or unknown product type.
+   */
+  private CardTransactionManagerAdapter createCardTransactionManagerAdapter(
+      CardReader cardReader,
+      CalypsoCard calypsoCard,
+      CardSecuritySetting cardSecuritySetting,
+      boolean isSecureMode) {
 
     Assert.getInstance()
-        .notNull(reader, "reader")
-        .notNull(calypsoCard, "calypsoCard")
-        .notNull(calypsoCard.getProductType(), PRODUCT_TYPE)
-        .isTrue(calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN, PRODUCT_TYPE);
+        .notNull(cardReader, "card reader")
+        .notNull(calypsoCard, "calypso card")
+        .notNull(calypsoCard.getProductType(), "product type")
+        .isTrue(
+            calypsoCard.getProductType() != CalypsoCard.ProductType.UNKNOWN,
+            "product type is known")
+        .isTrue(!isSecureMode || cardSecuritySetting != null, "security setting is not null");
 
-    return new CardTransactionManagerAdapter(reader, calypsoCard);
+    if (!(cardReader instanceof ProxyReaderApi)) {
+      throw new IllegalArgumentException(
+          "The provided 'cardReader' must implement 'ProxyReaderApi'");
+    }
+    if (!(calypsoCard instanceof CalypsoCardAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided 'calypsoCard' must be an instance of 'CalypsoCardAdapter'");
+    }
+    if (isSecureMode && !(cardSecuritySetting instanceof CardSecuritySettingAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided 'cardSecuritySetting' must be an instance of 'CardSecuritySettingAdapter'");
+    }
+
+    return new CardTransactionManagerAdapter(
+        (ProxyReaderApi) cardReader,
+        (CalypsoCardAdapter) calypsoCard,
+        (CardSecuritySettingAdapter) cardSecuritySetting);
+  }
+
+  /**
+   * Returns a new instance of {@link SamSecuritySetting} to use for secure SAM operations.
+   *
+   * @return A not null reference.
+   * @since 2.2.0
+   */
+  public SamSecuritySetting createSamSecuritySetting() {
+    return new SamSecuritySettingAdapter();
+  }
+
+  /**
+   * Returns a new SAM transaction manager to handle operations secured with a control SAM.
+   *
+   * <p>The reader and the SAM's initial data are those from the selection.<br>
+   * The provided {@link SamSecuritySetting} must match the specific needs of the SAM (SAM card
+   * resource profile and other optional settings).
+   *
+   * @param samReader The reader through which the SAM communicates.
+   * @param calypsoSam The initial SAM data provided by the selection process.
+   * @param samSecuritySetting The security settings.
+   * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
+   *     a null or unknown product type.
+   * @since 2.2.0
+   */
+  public SamTransactionManager createSamTransaction(
+      CardReader samReader, CalypsoSam calypsoSam, SamSecuritySetting samSecuritySetting) {
+    return createSamTransactionManagerAdapter(samReader, calypsoSam, samSecuritySetting, true);
+  }
+
+  /**
+   * Returns a new SAM transaction manager to handle non-secured operations.
+   *
+   * @param samReader The reader through which the SAM communicates.
+   * @param calypsoSam The initial SAM data provided by the selection process.
+   * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
+   *     a null or unknown product type.
+   * @since 2.2.0
+   */
+  public SamTransactionManager createSamTransactionWithoutSecurity(
+      CardReader samReader, CalypsoSam calypsoSam) {
+    return createSamTransactionManagerAdapter(samReader, calypsoSam, null, false);
+  }
+
+  /**
+   * (private)<br>
+   * Returns a new SAM transaction manager adapter.
+   *
+   * @param samReader The reader.
+   * @param calypsoSam The SAM.
+   * @param samSecuritySetting The security settings.
+   * @param isSecureMode True if is secure mode requested.
+   * @return A not null reference.
+   * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
+   *     a null or unknown product type.
+   */
+  private SamTransactionManagerAdapter createSamTransactionManagerAdapter(
+      CardReader samReader,
+      CalypsoSam calypsoSam,
+      SamSecuritySetting samSecuritySetting,
+      boolean isSecureMode) {
+
+    Assert.getInstance()
+        .notNull(samReader, "sam reader")
+        .notNull(calypsoSam, "calypso SAM")
+        .notNull(calypsoSam.getProductType(), "product type")
+        .isTrue(
+            calypsoSam.getProductType() != CalypsoSam.ProductType.UNKNOWN, "product type is known")
+        .isTrue(!isSecureMode || samSecuritySetting != null, "security setting is not null");
+
+    if (!(samReader instanceof ProxyReaderApi)) {
+      throw new IllegalArgumentException(
+          "The provided 'samReader' must implement 'ProxyReaderApi'");
+    }
+    if (!(calypsoSam instanceof CalypsoSamAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided 'calypsoSam' must be an instance of 'CalypsoSamAdapter'");
+    }
+    if (isSecureMode && !(samSecuritySetting instanceof SamSecuritySettingAdapter)) {
+      throw new IllegalArgumentException(
+          "The provided 'samSecuritySetting' must be an instance of 'SamSecuritySettingAdapter'");
+    }
+
+    return new SamTransactionManagerAdapter(
+        (ProxyReaderApi) samReader,
+        (CalypsoSamAdapter) calypsoSam,
+        (SamSecuritySettingAdapter) samSecuritySetting);
   }
 }

@@ -17,7 +17,7 @@ import java.util.*;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
+import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
@@ -871,7 +871,7 @@ final class CalypsoCardUtilAdapter {
    * @param apduResponses The APDU responses returned by the card to all commands.
    * @param isSessionOpen True when a secure session is open.
    * @throws CardCommandException If a response from the card was unexpected.
-   * @throws DesynchronizedExchangesException If the number of commands/responses does not match.
+   * @throws InconsistentDataException If the number of commands/responses does not match.
    * @since 2.0.0
    */
   static void updateCalypsoCard(
@@ -885,7 +885,7 @@ final class CalypsoCardUtilAdapter {
     // case we stop processing immediately because it may be a case of fraud, and we throw a
     // desynchronized exception.
     if (apduResponses.size() > commands.size()) {
-      throw new DesynchronizedExchangesException(
+      throw new InconsistentDataException(
           "The number of commands/responses does not match: nb commands = "
               + commands.size()
               + ", nb responses = "
@@ -904,7 +904,7 @@ final class CalypsoCardUtilAdapter {
     // Finally, if no error has occurred and there are fewer responses than requests, then we
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {
-      throw new DesynchronizedExchangesException(
+      throw new InconsistentDataException(
           "The number of commands/responses does not match: nb commands = "
               + commands.size()
               + ", nb responses = "

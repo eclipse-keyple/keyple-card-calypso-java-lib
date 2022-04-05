@@ -24,9 +24,6 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class CmdSamSelectDiversifier extends AbstractSamCommand {
 
-  /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.SELECT_DIVERSIFIER;
-
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
@@ -43,27 +40,33 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
 
   /**
    * (package-private)<br>
-   * Instantiates a new CmdSamSelectDiversifier.
+   * Creates a new instance.
    *
-   * @param productType the SAM product type.
-   * @param diversifier the application serial number.
-   * @throws IllegalArgumentException If the diversifier is null or has a wrong length
+   * @param productType The SAM product type.
+   * @param diversifier The key diversifier.
    * @since 2.0.1
    */
   CmdSamSelectDiversifier(CalypsoSam.ProductType productType, byte[] diversifier) {
-    super(command, 0);
 
-    if (diversifier == null || (diversifier.length != 4 && diversifier.length != 8)) {
-      throw new IllegalArgumentException("Bad diversifier value!");
+    super(CalypsoSamCommand.SELECT_DIVERSIFIER, 0);
+
+    // Format the diversifier on 4 or 8 bytes if needed.
+    if (diversifier.length != 4 && diversifier.length != 8) {
+      int newLength = diversifier.length < 4 ? 4 : 8;
+      byte[] tmp = new byte[newLength];
+      System.arraycopy(diversifier, 0, tmp, newLength - diversifier.length, diversifier.length);
+      diversifier = tmp;
     }
-
-    byte cla = SamUtilAdapter.getClassByte(productType);
-    byte p1 = 0x00;
-    byte p2 = 0x00;
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, diversifier, null)));
+            ApduUtil.build(
+                SamUtilAdapter.getClassByte(productType),
+                getCommandRef().getInstructionByte(),
+                (byte) 0,
+                (byte) 0,
+                diversifier,
+                null)));
   }
 
   /**

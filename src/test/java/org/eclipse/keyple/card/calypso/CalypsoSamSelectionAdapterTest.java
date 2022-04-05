@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
+import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -102,9 +102,8 @@ public class CalypsoSamSelectionAdapterTest {
         .isEqualTo(ByteArrayUtil.fromHex("802000001000112233445566778899AABBCCDDEEFF"));
   }
 
-  @Test(expected = DesynchronizedExchangesException.class)
-  public void parse_whenCommandsResponsesMismatch_shouldThrowDesynchronizedExchangesException()
-      throws Exception {
+  @Test(expected = InconsistentDataException.class)
+  public void parse_whenCommandsResponsesMismatch_shouldThrowIDE() throws Exception {
     CardSelectionResponseApi cardSelectionResponseApi = mock(CardSelectionResponseApi.class);
     when(cardSelectionResponseApi.getPowerOnData()).thenReturn(SAM_ATR);
     samSelection.setUnlockData("00112233445566778899AABBCCDDEEFF");

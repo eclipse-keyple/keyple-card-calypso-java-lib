@@ -44,9 +44,9 @@ final class CmdCardCloseSession extends AbstractCardCommand {
         0x6B00,
         new StatusProperties(
             "P1 or P2 signatureLo not supported.", CardIllegalParameterException.class));
-    m.put(0x6988, new StatusProperties("incorrect signatureLo.", CardSecurityDataException.class));
     m.put(
         0x6985, new StatusProperties("No session was opened.", CardAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("incorrect signatureLo.", CardSecurityDataException.class));
     STATUS_TABLE = m;
   }
 
