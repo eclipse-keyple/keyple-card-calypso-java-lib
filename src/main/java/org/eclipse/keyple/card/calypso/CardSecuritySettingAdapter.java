@@ -20,26 +20,32 @@ import org.eclipse.keyple.core.util.Assert;
 
 /**
  * (package-private)<br>
- * Implementation of {@link org.calypsonet.terminal.calypso.transaction.CardSecuritySetting}.
+ * Implementation of {@link CardSecuritySetting}.
  *
  * @since 2.0.0
  */
-final class CardSecuritySettingAdapter implements CardSecuritySetting {
+final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<CardSecuritySetting>
+    implements CardSecuritySetting {
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
-  private CardReader samReader;
-  private CalypsoSam calypsoSam;
+
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
-  private boolean isTransactionAuditEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
-  private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap;
-  private final Map<WriteAccessLevel, Byte> defaultKifMap;
-  private final Map<WriteAccessLevel, Byte> defaultKvcMap;
-  private final Set<Integer> authorizedSessionKeys;
-  private final Set<Integer> authorizedSvKeys;
+
+  private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
+      new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
+
+  private final Map<WriteAccessLevel, Byte> defaultKifMap =
+      new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+
+  private final Map<WriteAccessLevel, Byte> defaultKvcMap =
+      new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+
+  private final Set<Integer> authorizedSessionKeys = new HashSet<Integer>();
+  private final Set<Integer> authorizedSvKeys = new HashSet<Integer>();
 
   private Byte pinVerificationCipheringKif;
   private Byte pinVerificationCipheringKvc;
@@ -47,34 +53,15 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   private Byte pinModificationCipheringKvc;
 
   /**
-   * (package-private)<br>
-   * Constructor.
-   */
-  CardSecuritySettingAdapter() {
-    kifMap = new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
-    defaultKifMap = new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
-    defaultKvcMap = new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
-    authorizedSessionKeys = new HashSet<Integer>();
-    authorizedSvKeys = new HashSet<Integer>();
-  }
-
-  /**
    * {@inheritDoc}
    *
    * @since 2.0.0
+   * @deprecated Use {@link #setControlSamResource(CardReader, CalypsoSam)} instead.
    */
   @Override
+  @Deprecated
   public CardSecuritySetting setSamResource(CardReader samReader, CalypsoSam calypsoSam) {
-
-    Assert.getInstance()
-        .notNull(samReader, "samReader")
-        .notNull(calypsoSam, "calypsoSam")
-        .notNull(calypsoSam.getProductType(), "productType")
-        .isTrue(calypsoSam.getProductType() != CalypsoSam.ProductType.UNKNOWN, "productType");
-
-    this.samReader = samReader;
-    this.calypsoSam = calypsoSam;
-    return this;
+    return setControlSamResource(samReader, calypsoSam);
   }
 
   /**
@@ -116,17 +103,6 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0.0
    */
   @Override
-  public CardSecuritySettingAdapter enableTransactionAudit() {
-    isTransactionAuditEnabled = true;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
   public CardSecuritySettingAdapter enableSvLoadAndDebitLog() {
     isSvLoadAndDebitLogEnabled = true;
     return this;
@@ -151,9 +127,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
   @Override
   public CardSecuritySettingAdapter assignKif(
       WriteAccessLevel writeAccessLevel, byte kvc, byte kif) {
-
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
-
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
     if (map == null) {
       map = new HashMap<Byte, Byte>();
@@ -170,9 +144,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    */
   @Override
   public CardSecuritySettingAdapter assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif) {
-
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
-
     defaultKifMap.put(writeAccessLevel, kif);
     return this;
   }
@@ -184,9 +156,7 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    */
   @Override
   public CardSecuritySettingAdapter assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc) {
-
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
-
     defaultKvcMap.put(writeAccessLevel, kvc);
     return this;
   }
@@ -239,29 +209,6 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
 
   /**
    * (package-private)<br>
-   * Gets the associated SAM reader to use for secured operations.
-   *
-   * @return Null if no SAM reader is set.
-   * @since 2.0.0
-   */
-  CardReader getSamReader() {
-    return samReader;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the SAM used for secured operations.
-   *
-   * @return Null if no SAM is set or a {@link CalypsoSam} having a {@link CalypsoSam.ProductType}
-   *     different from {@link CalypsoSam.ProductType#UNKNOWN}.
-   * @since 2.0.0
-   */
-  CalypsoSam getCalypsoSam() {
-    return calypsoSam;
-  }
-
-  /**
-   * (package-private)<br>
    * Indicates if the multiple session mode is enabled.
    *
    * @return True if the multiple session mode is enabled.
@@ -291,17 +238,6 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    */
   boolean isPinPlainTransmissionEnabled() {
     return isPinPlainTransmissionEnabled;
-  }
-
-  /**
-   * (package-private)<br>
-   * Indicates if the transaction audit is enabled.
-   *
-   * @return True if the transaction audit is enabled.
-   * @since 2.0.0
-   */
-  boolean isTransactionAuditEnabled() {
-    return isTransactionAuditEnabled;
   }
 
   /**
@@ -337,7 +273,6 @@ final class CardSecuritySettingAdapter implements CardSecuritySetting {
    * @since 2.0.0
    */
   Byte getKif(WriteAccessLevel writeAccessLevel, byte kvc) {
-
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
     if (map != null) {

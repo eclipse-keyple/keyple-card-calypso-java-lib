@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
-import org.calypsonet.terminal.calypso.transaction.DesynchronizedExchangesException;
+import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
@@ -91,7 +91,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
       // an unlock command has been requested
       if (cardSelectionResponse.getCardResponse() == null
           || cardSelectionResponse.getCardResponse().getApduResponses().isEmpty()) {
-        throw new DesynchronizedExchangesException("Mismatch in the number of requests/responses");
+        throw new InconsistentDataException("Mismatch in the number of requests/responses");
       }
       ApduResponseApi apduResponse =
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);

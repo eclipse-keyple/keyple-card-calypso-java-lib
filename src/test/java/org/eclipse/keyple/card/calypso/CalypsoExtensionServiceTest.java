@@ -13,14 +13,17 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
+import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.card.CardApiProperties;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.ProxyReaderApi;
 import org.calypsonet.terminal.card.spi.CardSelectionSpi;
 import org.calypsonet.terminal.reader.CardReader;
@@ -34,12 +37,14 @@ import org.junit.Test;
 public class CalypsoExtensionServiceTest {
 
   public static final String POWER_ON_DATA = "3B8F8001805A0A010320031124B77FE7829000F7";
+  private static final String SAM_C1_POWER_ON_DATA = "3B3F9600805A4880C120501711223344829000";
   private static CalypsoExtensionService service;
   private CalypsoSamSelection calypsoSamSelection;
   private ReaderMock reader;
   private CalypsoCardAdapter calypsoCard;
-  private CalypsoSam calypsoSam;
   private CardSecuritySetting cardSecuritySetting;
+  private CalypsoSamAdapter calypsoSam;
+  private SamSecuritySetting samSecuritySetting;
 
   interface ReaderMock extends CardReader, ProxyReaderApi {}
 
@@ -51,10 +56,15 @@ public class CalypsoExtensionServiceTest {
   @Before
   public void setUp() {
     reader = mock(ReaderMock.class);
+
     calypsoCard = new CalypsoCardAdapter();
-    calypsoSam = mock(CalypsoSam.class);
-    calypsoSamSelection = mock(CalypsoSamSelection.class);
     cardSecuritySetting = mock(CardSecuritySettingAdapter.class);
+
+    calypsoSamSelection = mock(CalypsoSamSelection.class);
+    CardSelectionResponseApi samCardSelectionResponse = mock(CardSelectionResponseApi.class);
+    when(samCardSelectionResponse.getPowerOnData()).thenReturn(SAM_C1_POWER_ON_DATA);
+    calypsoSam = spy(new CalypsoSamAdapter(samCardSelectionResponse));
+    samSecuritySetting = mock(SamSecuritySettingAdapter.class);
   }
 
   @Test
@@ -78,10 +88,31 @@ public class CalypsoExtensionServiceTest {
   }
 
   @Test
+  public void createSearchCommandData_shouldReturnNewReference() {
+    assertThat(service.createSearchCommandData())
+        .isNotNull()
+        .isNotEqualTo(service.createSearchCommandData());
+  }
+
+  @Test
+  public void createSignatureComputationData_shouldReturnNewReference() {
+    assertThat(service.createSignatureComputationData())
+        .isNotNull()
+        .isNotEqualTo(service.createSignatureComputationData());
+  }
+
+  @Test
+  public void createSignatureVerificationData_shouldReturnNewReference() {
+    assertThat(service.createSignatureVerificationData())
+        .isNotNull()
+        .isNotEqualTo(service.createSignatureVerificationData());
+  }
+
+  @Test
   public void createCardSelection_shouldReturnNewReference() {
-    CalypsoCardSelection cardSelection = service.createCardSelection();
-    assertThat(cardSelection).isNotNull();
-    assertThat(service.createCardSelection()).isNotEqualTo(cardSelection);
+    assertThat(service.createCardSelection())
+        .isNotNull()
+        .isNotEqualTo(service.createCardSelection());
   }
 
   @Test
@@ -93,9 +124,7 @@ public class CalypsoExtensionServiceTest {
 
   @Test
   public void createSamSelection_shouldReturnNewReference() {
-    CalypsoSamSelection samSelection = service.createSamSelection();
-    assertThat(samSelection).isNotNull();
-    assertThat(service.createSamSelection()).isNotEqualTo(samSelection);
+    assertThat(service.createSamSelection()).isNotNull().isNotEqualTo(service.createSamSelection());
   }
 
   @Test
@@ -147,17 +176,6 @@ public class CalypsoExtensionServiceTest {
     service.createCardTransaction(reader, calypsoCard, cardSecuritySetting);
   }
 
-  @Test
-  public void createCardTransaction_shouldReturnANewReference() {
-    calypsoCard.initializeWithPowerOnData(POWER_ON_DATA);
-    when(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam()).thenReturn(calypsoSam);
-    when(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader()).thenReturn(reader);
-    CardTransactionManager cardTransaction =
-        service.createCardTransaction(reader, calypsoCard, cardSecuritySetting);
-    assertThat(service.createCardTransaction(reader, calypsoCard, cardSecuritySetting))
-        .isNotEqualTo(cardTransaction);
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void createCardTransactionWithoutSecurity_whenInvokedWithNullReader_shouldThrowIAE() {
     service.createCardTransactionWithoutSecurity(null, calypsoCard);
@@ -177,11 +195,67 @@ public class CalypsoExtensionServiceTest {
   @Test
   public void createCardTransactionWithoutSecurity_whenInvoked_shouldReturnANewReference() {
     calypsoCard.initializeWithPowerOnData(POWER_ON_DATA);
-    when(((CardSecuritySettingAdapter) cardSecuritySetting).getCalypsoSam()).thenReturn(calypsoSam);
-    when(((CardSecuritySettingAdapter) cardSecuritySetting).getSamReader()).thenReturn(reader);
     CardTransactionManager cardTransaction =
         service.createCardTransactionWithoutSecurity(reader, calypsoCard);
     assertThat(service.createCardTransactionWithoutSecurity(reader, calypsoCard))
         .isNotEqualTo(cardTransaction);
+  }
+
+  @Test
+  public void createSamSecuritySetting_shouldReturnANewReference() {
+    SamSecuritySetting samSecuritySetting = service.createSamSecuritySetting();
+    assertThat(samSecuritySetting).isNotNull();
+    assertThat(service.createSamSecuritySetting()).isNotEqualTo(samSecuritySetting);
+  }
+
+  @Test
+  public void createSamSecuritySetting_shouldReturnInstanceOfSamSecuritySettingAdapter() {
+    assertThat(service.createSamSecuritySetting()).isInstanceOf(SamSecuritySettingAdapter.class);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransaction_whenInvokedWithNullReader_shouldThrowIAE() {
+    service.createSamTransaction(null, calypsoSam, samSecuritySetting);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransaction_whenInvokedWithNullCalypsoCard_shouldThrowIAE() {
+    service.createSamTransaction(reader, null, samSecuritySetting);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransaction_whenInvokedWithNullSamSecuritySetting_shouldThrowIAE() {
+    service.createSamTransaction(reader, calypsoSam, null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransaction_whenInvokedWithUndefinedCalypsoSamProductType_shouldThrowIAE() {
+    when(calypsoSam.getProductType()).thenReturn(CalypsoSam.ProductType.UNKNOWN);
+    service.createSamTransaction(reader, calypsoSam, samSecuritySetting);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransactionWithoutSecurity_whenInvokedWithNullReader_shouldThrowIAE() {
+    service.createSamTransactionWithoutSecurity(null, calypsoSam);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createSamTransactionWithoutSecurity_whenInvokedWithNullCalypsoSam_shouldThrowIAE() {
+    service.createSamTransactionWithoutSecurity(reader, null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void
+      createSamTransactionWithoutSecurity_whenInvokedWithUndefinedCalypsoSamProductType_shouldThrowIAE() {
+    when(calypsoSam.getProductType()).thenReturn(CalypsoSam.ProductType.UNKNOWN);
+    service.createSamTransactionWithoutSecurity(reader, calypsoSam);
+  }
+
+  @Test
+  public void createSamTransactionWithoutSecurity_whenInvoked_shouldReturnANewReference() {
+    SamTransactionManager samTransaction =
+        service.createSamTransactionWithoutSecurity(reader, calypsoSam);
+    assertThat(service.createSamTransactionWithoutSecurity(reader, calypsoSam))
+        .isNotEqualTo(samTransaction);
   }
 }

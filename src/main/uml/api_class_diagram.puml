@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.1.+ (2022-02-01)
+    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-02-24)
 end title
 
 ' == THEME ==
@@ -60,16 +60,21 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         +{static} CalypsoExtensionService getInstance ()
 
         +<back:pink>SearchCommandData</back> createSearchCommandData ()
+        +<back:pink>SignatureComputationData</back> createSignatureComputationData ()
+        +<back:pink>SignatureVerificationData</back> createSignatureVerificationData ()
 
         +<back:pink>CalypsoCardSelection</back> createCardSelection ()
-
         +<back:pink>CalypsoSamSelection</back> createSamSelection ()
+        
         +<back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
 
         +<back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
         +<back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
-
         +<back:pink>CardTransactionManager</back> createCardTransactionWithoutSecurity (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard)
+
+        +<back:pink>SamSecuritySetting</back> createSamSecuritySetting ()
+        +<back:pink>SamTransactionManager</back> createSamTransaction (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam, <back:pink>SamSecuritySetting</back> samSecuritySetting)
+        +<back:pink>SamTransactionManager</back> createSamTransactionWithoutSecurity (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam)
 
         -- **KeypleCardExtension** --
         +String getCommonApiVersion ()
