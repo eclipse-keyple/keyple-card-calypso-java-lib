@@ -14,7 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.calypsonet.terminal.card.spi.CardSelectorSpi;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -105,7 +105,7 @@ final class CardSelectorAdapter implements CardSelectorSpi {
    * @since 2.0.0
    */
   public CardSelectorSpi filterByDfName(String aid) {
-    return filterByDfName(ByteArrayUtil.fromHex(aid));
+    return filterByDfName(HexUtil.toByteArray(aid));
   }
 
   /**

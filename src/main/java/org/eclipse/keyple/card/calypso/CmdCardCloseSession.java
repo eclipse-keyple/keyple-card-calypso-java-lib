@@ -17,7 +17,7 @@ import java.util.Map;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -82,7 +82,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
         && terminalSessionSignature.length != 4
         && terminalSessionSignature.length != 8) {
       throw new IllegalArgumentException(
-          "Invalid terminal sessionSignature: " + ByteArrayUtil.toHex(terminalSessionSignature));
+          "Invalid terminal sessionSignature: " + HexUtil.toHex(terminalSessionSignature));
     }
 
     byte p1 = ratificationAsked ? (byte) 0x80 : (byte) 0x00;

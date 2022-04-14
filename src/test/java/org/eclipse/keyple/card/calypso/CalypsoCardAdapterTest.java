@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,20 +77,20 @@ public class CalypsoCardAdapterTest {
     assertThat(calypsoCardAdapter.isDfInvalidated()).isFalse();
     assertThat(calypsoCardAdapter.isRatificationOnDeselectSupported()).isTrue();
     assertThat(calypsoCardAdapter.getApplicationSerialNumber())
-        .isEqualTo(ByteArrayUtil.fromHex(CALYPSO_SERIAL_NUMBER));
+        .isEqualTo(HexUtil.toByteArray(CALYPSO_SERIAL_NUMBER));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void initializeWithFci_whenBadFci_shouldThrowIAE() {
     ApduResponseApi selectApplicationResponse =
-        new ApduResponseAdapter(ByteArrayUtil.fromHex("1122339000"));
+        new ApduResponseAdapter(HexUtil.toByteArray("1122339000"));
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
   }
 
   @Test
   public void initializeWithFci_withEmptyFCI_shouldInitUnknownProductType() {
     ApduResponseApi selectApplicationResponse =
-        new ApduResponseAdapter(ByteArrayUtil.fromHex("9000"));
+        new ApduResponseAdapter(HexUtil.toByteArray("9000"));
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getProductType()).isEqualTo(CalypsoCard.ProductType.UNKNOWN);
   }
@@ -269,20 +269,20 @@ public class CalypsoCardAdapterTest {
             SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getStartupInfoRawData())
-        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE));
+        .isEqualTo(HexUtil.toByteArray(STARTUP_INFO_PRIME_REVISION_3_EXTRA_BYTE));
   }
 
   @Test
   public void initializeWithFci_whenTagsAreInADifferentOrder_shouldProvideSameResult() {
     ApduResponseApi selectApplicationResponse =
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_DIFFERENT_TAGS_ORDER));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_DIFFERENT_TAGS_ORDER));
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
-    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(ByteArrayUtil.fromHex(DF_NAME));
+    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(HexUtil.toByteArray(DF_NAME));
     assertThat(calypsoCardAdapter.getCalypsoSerialNumberFull())
-        .isEqualTo(ByteArrayUtil.fromHex(CALYPSO_SERIAL_NUMBER));
+        .isEqualTo(HexUtil.toByteArray(CALYPSO_SERIAL_NUMBER));
     assertThat(calypsoCardAdapter.getStartupInfoRawData())
-        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3));
+        .isEqualTo(HexUtil.toByteArray(STARTUP_INFO_PRIME_REVISION_3));
   }
 
   @Test
@@ -317,7 +317,7 @@ public class CalypsoCardAdapterTest {
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
-    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(ByteArrayUtil.fromHex(DF_NAME));
+    assertThat(calypsoCardAdapter.getDfName()).isEqualTo(HexUtil.toByteArray(DF_NAME));
   }
 
   @Test
@@ -327,7 +327,7 @@ public class CalypsoCardAdapterTest {
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getApplicationSerialNumber())
-        .isEqualTo(ByteArrayUtil.fromHex(CALYPSO_SERIAL_NUMBER));
+        .isEqualTo(HexUtil.toByteArray(CALYPSO_SERIAL_NUMBER));
   }
 
   @Test
@@ -337,7 +337,7 @@ public class CalypsoCardAdapterTest {
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
     assertThat(calypsoCardAdapter.getStartupInfoRawData())
-        .isEqualTo(ByteArrayUtil.fromHex(STARTUP_INFO_PRIME_REVISION_3));
+        .isEqualTo(HexUtil.toByteArray(STARTUP_INFO_PRIME_REVISION_3));
   }
 
   @Test
@@ -572,9 +572,9 @@ public class CalypsoCardAdapterTest {
       String startupInfoAsHexString,
       int statusWord) {
 
-    byte[] dfName = ByteArrayUtil.fromHex(dfNameAsHexString);
-    byte[] serialNumber = ByteArrayUtil.fromHex(serialNumberAsHexString);
-    byte[] startupInfo = ByteArrayUtil.fromHex(startupInfoAsHexString);
+    byte[] dfName = HexUtil.toByteArray(dfNameAsHexString);
+    byte[] serialNumber = HexUtil.toByteArray(serialNumberAsHexString);
+    byte[] startupInfo = HexUtil.toByteArray(startupInfoAsHexString);
     byte[] selAppResponse = new byte[23 + dfName.length + startupInfo.length];
 
     selAppResponse[0] = (byte) 0x6F;

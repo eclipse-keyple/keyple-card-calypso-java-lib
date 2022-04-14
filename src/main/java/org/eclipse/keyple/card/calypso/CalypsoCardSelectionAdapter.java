@@ -26,6 +26,7 @@ import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -115,7 +116,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection filterByDfName(String aid) {
     Assert.getInstance().isHexString(aid, "aid format");
-    this.filterByDfName(ByteArrayUtil.fromHex(aid));
+    this.filterByDfName(HexUtil.toByteArray(aid));
     return this;
   }
 
@@ -267,7 +268,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Deprecated
   public CalypsoCardSelection prepareSelectFile(byte[] lid) {
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
-    return prepareSelectFile((short) ByteArrayUtil.twoBytesToInt(lid, 0));
+    return prepareSelectFile((short) ByteArrayUtil.extractInt(lid, 0, 2, false));
   }
 
   /**

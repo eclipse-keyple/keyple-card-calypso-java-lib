@@ -511,7 +511,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * @since 2.0.1
    */
   int getTransactionCounterValue() {
-    return ByteArrayUtil.threeBytesToInt(secureSession.getChallengeTransactionCounter(), 0);
+    return ByteArrayUtil.extractInt(secureSession.getChallengeTransactionCounter(), 0, 3, false);
   }
 
   /**

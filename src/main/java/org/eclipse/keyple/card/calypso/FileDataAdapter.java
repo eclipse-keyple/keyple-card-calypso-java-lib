@@ -154,7 +154,7 @@ class FileDataAdapter implements FileData {
               + (rec1.length / 3)
               + ").");
     }
-    return ByteArrayUtil.threeBytesToInt(rec1, counterIndex);
+    return ByteArrayUtil.extractInt(rec1, counterIndex, 3, false);
   }
 
   /**
@@ -172,7 +172,7 @@ class FileDataAdapter implements FileData {
     }
     int length = rec1.length - (rec1.length % 3);
     for (int i = 0, c = 1; i < length; i += 3, c++) {
-      result.put(c, ByteArrayUtil.threeBytesToInt(rec1, i));
+      result.put(c, ByteArrayUtil.extractInt(rec1, i, 3, false));
     }
     return result;
   }

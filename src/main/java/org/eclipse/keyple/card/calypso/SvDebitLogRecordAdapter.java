@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -52,7 +53,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getAmount() {
-    return ByteArrayUtil.twoBytesSignedToInt(cardResponse, offset);
+    return ByteArrayUtil.extractInt(cardResponse, offset, 2, true);
   }
 
   /**
@@ -62,7 +63,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
    */
   @Override
   public int getBalance() {
-    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 14);
+    return ByteArrayUtil.extractInt(cardResponse, offset + 14, 3, true);
   }
 
   /**
@@ -122,7 +123,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
     final byte[] tnNum = new byte[2];
     tnNum[0] = cardResponse[offset + 17];
     tnNum[1] = cardResponse[offset + 18];
-    return ByteArrayUtil.twoBytesToInt(tnNum, 0);
+    return ByteArrayUtil.extractInt(tnNum, 0, 2, false);
   }
 
   /**
@@ -134,7 +135,7 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
   public int getSamTNum() {
     byte[] samTNum = new byte[3];
     System.arraycopy(cardResponse, offset + 11, samTNum, 0, 3);
-    return ByteArrayUtil.threeBytesToInt(samTNum, 0);
+    return ByteArrayUtil.extractInt(samTNum, 0, 3, false);
   }
 
   /**
@@ -150,13 +151,13 @@ class SvDebitLogRecordAdapter implements SvDebitLogRecord {
         + ", \"balance\":"
         + getBalance()
         + ", \"debitDate\":"
-        + ByteArrayUtil.toHex(getDebitDate())
+        + HexUtil.toHex(getDebitDate())
         + ", \"debitTime\":"
-        + ByteArrayUtil.toHex(getDebitDate())
+        + HexUtil.toHex(getDebitDate())
         + ", \"kvc\":"
         + getKvc()
         + ", \"samId\": \""
-        + ByteArrayUtil.toHex(getSamId())
+        + HexUtil.toHex(getSamId())
         + "\", \"svTransactionNumber\":"
         + getSvTNum()
         + ", \"svSamTransactionNumber\":"

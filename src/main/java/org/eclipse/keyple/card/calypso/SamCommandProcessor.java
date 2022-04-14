@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +137,7 @@ class SamCommandProcessor {
     // Retrieve the SAM challenge
     byte[] samChallenge = cmdSamGetChallenge.getChallenge();
     if (logger.isDebugEnabled()) {
-      logger.debug("identification: TERMINALCHALLENGE={}", ByteArrayUtil.toHex(samChallenge));
+      logger.debug("identification: TERMINALCHALLENGE={}", HexUtil.toHex(samChallenge));
     }
     return samChallenge;
   }
@@ -225,7 +225,7 @@ class SamCommandProcessor {
           "initialize: KIF={}, KVC={}, DIGESTDATA={}",
           String.format("%02Xh", kif),
           String.format("%02Xh", kvc),
-          ByteArrayUtil.toHex(digestData));
+          HexUtil.toHex(digestData));
     }
 
     // Clear data cache
@@ -394,7 +394,7 @@ class SamCommandProcessor {
         ((CmdSamDigestClose) samCommands.get(samCommands.size() - 1)).getSignature();
 
     if (logger.isDebugEnabled()) {
-      logger.debug("SIGNATURE={}", ByteArrayUtil.toHex(terminalSignature));
+      logger.debug("SIGNATURE={}", HexUtil.toHex(terminalSignature));
     }
 
     return terminalSignature;

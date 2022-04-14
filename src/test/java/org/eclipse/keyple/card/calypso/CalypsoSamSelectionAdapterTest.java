@@ -24,7 +24,7 @@ import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.CardSelectorSpi;
 import org.calypsonet.terminal.card.spi.ParseException;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -99,7 +99,7 @@ public class CalypsoSamSelectionAdapterTest {
     byte[] unlockDataApdu =
         samSelection.getCardSelectionRequest().getCardRequest().getApduRequests().get(0).getApdu();
     assertThat(unlockDataApdu)
-        .isEqualTo(ByteArrayUtil.fromHex("802000001000112233445566778899AABBCCDDEEFF"));
+        .isEqualTo(HexUtil.toByteArray("802000001000112233445566778899AABBCCDDEEFF"));
   }
 
   @Test(expected = InconsistentDataException.class)
@@ -119,7 +119,7 @@ public class CalypsoSamSelectionAdapterTest {
     List<ApduResponseApi> apduResponseApis = Arrays.asList(apduResponseApi);
     when(cardSelectionResponseApi.getPowerOnData()).thenReturn(SAM_ATR);
     ApduResponseApi unlockApduResponse = mock(ApduResponseApi.class);
-    when(unlockApduResponse.getApdu()).thenReturn(ByteArrayUtil.fromHex("6988"));
+    when(unlockApduResponse.getApdu()).thenReturn(HexUtil.toByteArray("6988"));
     when(unlockApduResponse.getStatusWord()).thenReturn(0x6988);
     when(cardSelectionResponseApi.getSelectApplicationResponse()).thenReturn(unlockApduResponse);
     when(cardSelectionResponseApi.getCardResponse()).thenReturn(cardResponseApi);
@@ -136,7 +136,7 @@ public class CalypsoSamSelectionAdapterTest {
     when(cardSelectionResponseApi.getPowerOnData()).thenReturn(SAM_ATR);
     ApduResponseApi unlockApduResponse = mock(ApduResponseApi.class);
     List<ApduResponseApi> apduResponseApis = Arrays.asList(unlockApduResponse);
-    when(unlockApduResponse.getApdu()).thenReturn(ByteArrayUtil.fromHex("9000"));
+    when(unlockApduResponse.getApdu()).thenReturn(HexUtil.toByteArray("9000"));
     when(unlockApduResponse.getStatusWord()).thenReturn(0x9000);
     when(cardSelectionResponseApi.getSelectApplicationResponse()).thenReturn(unlockApduResponse);
     when(cardSelectionResponseApi.getCardResponse()).thenReturn(cardResponseApi);
@@ -147,7 +147,7 @@ public class CalypsoSamSelectionAdapterTest {
     CalypsoSam calypsoSam = (CalypsoSam) samSelection.parse(cardSelectionResponseApi);
     assertThat(calypsoSam).isNotNull();
     assertThat(calypsoSam.getProductType()).isEqualTo(CalypsoSam.ProductType.SAM_C1);
-    assertThat(calypsoSam.getSerialNumber()).isEqualTo(ByteArrayUtil.fromHex("11223344"));
+    assertThat(calypsoSam.getSerialNumber()).isEqualTo(HexUtil.toByteArray("11223344"));
     assertThat(calypsoSam.getPlatform()).isEqualTo((byte) 0xAA);
     assertThat(calypsoSam.getApplicationType()).isEqualTo((byte) 0xBB);
     assertThat(calypsoSam.getApplicationSubType()).isEqualTo((byte) 0xC1);

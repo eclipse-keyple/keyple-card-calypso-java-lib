@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +66,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
     // to use
     Matcher matcher = pattern.matcher(powerOnData);
     if (matcher.find(0)) {
-      byte[] atrSubElements = ByteArrayUtil.fromHex(matcher.group(2));
+      byte[] atrSubElements = HexUtil.toByteArray(matcher.group(2));
       platform = atrSubElements[0];
       applicationType = atrSubElements[1];
       applicationSubType = atrSubElements[2];
@@ -105,7 +105,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
                 softwareIssuer,
                 softwareVersion,
                 softwareRevision));
-        logger.trace("SAM SERIALNUMBER = {}", ByteArrayUtil.toHex(serialNumber));
+        logger.trace("SAM SERIALNUMBER = {}", HexUtil.toHex(serialNumber));
       }
     } else {
       samProductType = ProductType.UNKNOWN;
@@ -204,7 +204,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    */
   @Override
   public String getProductInfo() {
-    return "Type: " + getProductType().name() + ", S/N: " + ByteArrayUtil.toHex(getSerialNumber());
+    return "Type: " + getProductType().name() + ", S/N: " + HexUtil.toHex(getSerialNumber());
   }
 
   /**

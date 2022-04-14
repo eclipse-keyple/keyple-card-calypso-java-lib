@@ -27,7 +27,7 @@ import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.calypsonet.terminal.reader.CardReader;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -111,13 +111,13 @@ public class CardTransactionManagerAdapterTest {
   private static final String REC_COUNTER_1000 = "0003E8";
   private static final String REC_COUNTER_2000 = "0007D0";
 
-  private static final byte[] FILE7_REC1_29B_BYTES = ByteArrayUtil.fromHex(FILE7_REC1_29B);
-  private static final byte[] FILE7_REC2_29B_BYTES = ByteArrayUtil.fromHex(FILE7_REC2_29B);
-  private static final byte[] FILE7_REC3_29B_BYTES = ByteArrayUtil.fromHex(FILE7_REC3_29B);
-  private static final byte[] FILE7_REC4_29B_BYTES = ByteArrayUtil.fromHex(FILE7_REC4_29B);
-  private static final byte[] FILE8_REC1_29B_BYTES = ByteArrayUtil.fromHex(FILE8_REC1_29B);
-  private static final byte[] FILE8_REC1_5B_BYTES = ByteArrayUtil.fromHex(FILE8_REC1_5B);
-  private static final byte[] FILE8_REC1_4B_BYTES = ByteArrayUtil.fromHex(FILE8_REC1_4B);
+  private static final byte[] FILE7_REC1_29B_BYTES = HexUtil.toByteArray(FILE7_REC1_29B);
+  private static final byte[] FILE7_REC2_29B_BYTES = HexUtil.toByteArray(FILE7_REC2_29B);
+  private static final byte[] FILE7_REC3_29B_BYTES = HexUtil.toByteArray(FILE7_REC3_29B);
+  private static final byte[] FILE7_REC4_29B_BYTES = HexUtil.toByteArray(FILE7_REC4_29B);
+  private static final byte[] FILE8_REC1_29B_BYTES = HexUtil.toByteArray(FILE8_REC1_29B);
+  private static final byte[] FILE8_REC1_5B_BYTES = HexUtil.toByteArray(FILE8_REC1_5B);
+  private static final byte[] FILE8_REC1_4B_BYTES = HexUtil.toByteArray(FILE8_REC1_4B);
 
   private static final short LID_3F00 = (short) 0x3F00;
   private static final short LID_0002 = (short) 0x0002;
@@ -275,13 +275,13 @@ public class CardTransactionManagerAdapterTest {
       "001122334455667788999000";
 
   private static final String CARD_VERIFY_PIN_PLAIN_OK_CMD =
-      "0020000004" + ByteArrayUtil.toHex(PIN_OK.getBytes());
+      "0020000004" + HexUtil.toHex(PIN_OK.getBytes());
   private static final String CARD_VERIFY_PIN_ENCRYPTED_OK_CMD =
       "0020000008" + CIPHER_PIN_VERIFICATION_OK;
   private static final String CARD_CHECK_PIN_CMD = "0020000000";
   private static final String CARD_CHANGE_PIN_CMD = "00D800FF10" + CIPHER_PIN_UPDATE_OK;
   private static final String CARD_CHANGE_PIN_PLAIN_CMD =
-      "00D800FF04" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
+      "00D800FF04" + HexUtil.toHex(NEW_PIN.getBytes());
   private static final String CARD_VERIFY_PIN_OK_RSP = SW1SW2_OK;
   private static final String CARD_VERIFY_PIN_KO_RSP = "63C2";
   private static final String CARD_CHANGE_PIN_RSP = SW1SW2_OK;
@@ -371,11 +371,11 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_DIGEST_AUTHENTICATE_FAILED = "6988";
 
   private static final String SAM_CARD_CIPHER_PIN_VERIFICATION_CMD =
-      "801280FF060000" + ByteArrayUtil.toHex(PIN_OK.getBytes());
+      "801280FF060000" + HexUtil.toHex(PIN_OK.getBytes());
   private static final String SAM_CARD_CIPHER_PIN_VERIFICATION_RSP =
       CIPHER_PIN_VERIFICATION_OK + SW1SW2_OK;
   private static final String SAM_CARD_CIPHER_PIN_UPDATE_CMD =
-      "801240FF0A112200000000" + ByteArrayUtil.toHex(NEW_PIN.getBytes());
+      "801240FF0A112200000000" + HexUtil.toHex(NEW_PIN.getBytes());
   private static final String SAM_CARD_CIPHER_PIN_UPDATE_RSP = CIPHER_PIN_UPDATE_OK + SW1SW2_OK;
   private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + CARD_CHALLENGE;
   private static final String SAM_GIVE_RANDOM_RSP = SW1SW2_OK;
@@ -413,8 +413,7 @@ public class CardTransactionManagerAdapterTest {
     cardReader = mock(ReaderMock.class);
     calypsoCard = spy(new CalypsoCardAdapter());
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3)));
     samReader = mock(ReaderMock.class);
     CardSelectionResponseApi samCardSelectionResponse = mock(CardSelectionResponseApi.class);
     when(samCardSelectionResponse.getPowerOnData()).thenReturn(SAM_C1_POWER_ON_DATA);
@@ -863,7 +862,7 @@ public class CardTransactionManagerAdapterTest {
   public void processVerifyPin_whenPINIsNotFirstCommand_shouldThrowISE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
     cardTransactionManager.prepareReadRecord(FILE7, 1);
     cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
   }
@@ -886,7 +885,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -914,7 +913,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
 
     calypsoCard.setPinAttemptRemaining(3);
 
@@ -950,7 +949,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
 
     CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
     CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
@@ -1010,7 +1009,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
 
     CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
     CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
@@ -1097,8 +1096,7 @@ public class CardTransactionManagerAdapterTest {
           throws Exception {
     short lid = 0x1234;
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD_PRIME_REV2);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP_PRIME_REV2);
     when(cardReader.transmitCardRequest(
@@ -1266,7 +1264,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getTraceabilityInformation())
-        .isEqualTo(ByteArrayUtil.fromHex("00112233445566778899"));
+        .isEqualTo(HexUtil.toByteArray("00112233445566778899"));
   }
 
   @Test
@@ -1363,9 +1361,9 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
-        .isEqualTo(ByteArrayUtil.fromHex("11"));
+        .isEqualTo(HexUtil.toByteArray("11"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
-        .isEqualTo(ByteArrayUtil.fromHex("22"));
+        .isEqualTo(HexUtil.toByteArray("22"));
   }
 
   @Test
@@ -1398,15 +1396,15 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
-        .isEqualTo(ByteArrayUtil.fromHex("11"));
+        .isEqualTo(HexUtil.toByteArray("11"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
-        .isEqualTo(ByteArrayUtil.fromHex("22"));
+        .isEqualTo(HexUtil.toByteArray("22"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(3))
-        .isEqualTo(ByteArrayUtil.fromHex("33"));
+        .isEqualTo(HexUtil.toByteArray("33"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(4))
-        .isEqualTo(ByteArrayUtil.fromHex("44"));
+        .isEqualTo(HexUtil.toByteArray("44"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(5))
-        .isEqualTo(ByteArrayUtil.fromHex("55"));
+        .isEqualTo(HexUtil.toByteArray("55"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1452,8 +1450,7 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = UnsupportedOperationException.class)
   public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareSearchRecords(null);
   }
 
@@ -1679,7 +1676,7 @@ public class CardTransactionManagerAdapterTest {
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
     assertThat(calypsoCard.getFileBySfi((byte) 4).getData().getContent(4))
-        .isEqualTo(ByteArrayUtil.fromHex("112233123456"));
+        .isEqualTo(HexUtil.toByteArray("112233123456"));
   }
 
   @Test
@@ -1768,8 +1765,7 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = UnsupportedOperationException.class)
   public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 1);
   }
 
@@ -1850,9 +1846,9 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
-        .isEqualTo(ByteArrayUtil.fromHex("00000011"));
+        .isEqualTo(HexUtil.toByteArray("00000011"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
-        .isEqualTo(ByteArrayUtil.fromHex("00000022"));
+        .isEqualTo(HexUtil.toByteArray("00000022"));
   }
 
   @Test
@@ -1885,22 +1881,21 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
-        .isEqualTo(ByteArrayUtil.fromHex("00000011"));
+        .isEqualTo(HexUtil.toByteArray("00000011"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(2))
-        .isEqualTo(ByteArrayUtil.fromHex("00000022"));
+        .isEqualTo(HexUtil.toByteArray("00000022"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(3))
-        .isEqualTo(ByteArrayUtil.fromHex("00000033"));
+        .isEqualTo(HexUtil.toByteArray("00000033"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(4))
-        .isEqualTo(ByteArrayUtil.fromHex("00000044"));
+        .isEqualTo(HexUtil.toByteArray("00000044"));
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(5))
-        .isEqualTo(ByteArrayUtil.fromHex("00000055"));
+        .isEqualTo(HexUtil.toByteArray("00000055"));
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -1954,8 +1949,8 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .startsWith(ByteArrayUtil.fromHex("1100"))
-        .endsWith(ByteArrayUtil.fromHex("0066"))
+        .startsWith(HexUtil.toByteArray("1100"))
+        .endsWith(HexUtil.toByteArray("0066"))
         .hasSize(257);
   }
 
@@ -1980,7 +1975,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("11"));
+        .isEqualTo(HexUtil.toByteArray("11"));
   }
 
   @Test
@@ -2005,7 +2000,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("11"));
+        .isEqualTo(HexUtil.toByteArray("11"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2053,7 +2048,7 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
 
-    cardTransactionManager.prepareUpdateBinary((byte) 1, 256, ByteArrayUtil.fromHex("66"));
+    cardTransactionManager.prepareUpdateBinary((byte) 1, 256, HexUtil.toByteArray("66"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2074,7 +2069,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareUpdateBinary((byte) 1, 4, ByteArrayUtil.fromHex("55"));
+    cardTransactionManager.prepareUpdateBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2083,7 +2078,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("0000000055"));
+        .isEqualTo(HexUtil.toByteArray("0000000055"));
   }
 
   @Test
@@ -2103,7 +2098,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareUpdateBinary((byte) 1, 0, ByteArrayUtil.fromHex("1122334455"));
+    cardTransactionManager.prepareUpdateBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2112,14 +2107,13 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("1122334455"));
+        .isEqualTo(HexUtil.toByteArray("1122334455"));
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareWriteBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
     calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -2168,7 +2162,7 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
 
-    cardTransactionManager.prepareWriteBinary((byte) 1, 256, ByteArrayUtil.fromHex("66"));
+    cardTransactionManager.prepareWriteBinary((byte) 1, 256, HexUtil.toByteArray("66"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2189,7 +2183,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareWriteBinary((byte) 1, 4, ByteArrayUtil.fromHex("55"));
+    cardTransactionManager.prepareWriteBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2198,7 +2192,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("0000000055"));
+        .isEqualTo(HexUtil.toByteArray("0000000055"));
   }
 
   @Test
@@ -2218,7 +2212,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
-    cardTransactionManager.prepareWriteBinary((byte) 1, 0, ByteArrayUtil.fromHex("1122334455"));
+    cardTransactionManager.prepareWriteBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2227,7 +2221,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(ByteArrayUtil.fromHex("1122334455"));
+        .isEqualTo(HexUtil.toByteArray("1122334455"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2503,7 +2497,7 @@ public class CardTransactionManagerAdapterTest {
       throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -2536,7 +2530,7 @@ public class CardTransactionManagerAdapterTest {
   public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_DEBIT_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_DEBIT_RSP);
     when(cardReader.transmitCardRequest(
@@ -2554,7 +2548,7 @@ public class CardTransactionManagerAdapterTest {
   public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
@@ -2573,7 +2567,7 @@ public class CardTransactionManagerAdapterTest {
       throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_PRIME_REV2_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
@@ -2616,7 +2610,7 @@ public class CardTransactionManagerAdapterTest {
   public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
     cardTransactionManager.prepareSvReadAllLogs();
   }
 
@@ -2624,7 +2618,7 @@ public class CardTransactionManagerAdapterTest {
   public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
     cardTransactionManager.prepareInvalidate();
   }
 
@@ -2652,7 +2646,7 @@ public class CardTransactionManagerAdapterTest {
   public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
-            ByteArrayUtil.fromHex(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
     CardRequestSpi cardCardRequest = createCardRequest(CARD_REHABILITATE_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -2669,7 +2663,7 @@ public class CardTransactionManagerAdapterTest {
   private CardRequestSpi createCardRequest(String... apduCommands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     for (String apduCommand : apduCommands) {
-      apduRequests.add(new ApduRequestAdapter(ByteArrayUtil.fromHex(apduCommand)));
+      apduRequests.add(new ApduRequestAdapter(HexUtil.toByteArray(apduCommand)));
     }
     return new CardRequestAdapter(apduRequests, false);
   }
@@ -2677,7 +2671,7 @@ public class CardTransactionManagerAdapterTest {
   private CardResponseApi createCardResponse(String... apduCommandResponses) {
     List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
     for (String apduResponse : apduCommandResponses) {
-      apduResponses.add(new ApduResponseAdapter(ByteArrayUtil.fromHex(apduResponse)));
+      apduResponses.add(new ApduResponseAdapter(HexUtil.toByteArray(apduResponse)));
     }
     return new CardResponseAdapter(apduResponses, true);
   }

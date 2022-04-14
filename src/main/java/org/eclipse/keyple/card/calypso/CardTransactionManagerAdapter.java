@@ -26,6 +26,7 @@ import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -306,7 +307,7 @@ final class CardTransactionManagerAdapter
     if (logger.isDebugEnabled()) {
       logger.debug(
           "processAtomicOpening => opening: CARDCHALLENGE={}, CARDKIF={}, CARDKVC={}",
-          ByteArrayUtil.toHex(cmdCardOpenSession.getCardChallenge()),
+          HexUtil.toHex(cmdCardOpenSession.getCardChallenge()),
           cardKif != null ? String.format(PATTERN_1_BYTE_HEX, cardKif) : null,
           cardKvc != null ? String.format(PATTERN_1_BYTE_HEX, cardKvc) : null);
     }
@@ -1585,7 +1586,7 @@ final class CardTransactionManagerAdapter
   @Deprecated
   public final CardTransactionManager prepareSelectFile(byte[] lid) {
     Assert.getInstance().notNull(lid, "lid").isEqual(lid.length, 2, "lid length");
-    return prepareSelectFile((short) ByteArrayUtil.twoBytesToInt(lid, 0));
+    return prepareSelectFile((short) ByteArrayUtil.extractInt(lid, 0, 2, false));
   }
 
   /**

@@ -134,11 +134,11 @@ final class CmdCardSvGet extends AbstractCardCommand {
         challengeOut = new byte[2];
         previousSignatureLo = new byte[3];
         currentKVC = cardResponse[0];
-        transactionNumber = ByteArrayUtil.twoBytesToInt(cardResponse, 1);
+        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 1, 2, false);
         System.arraycopy(cardResponse, 3, previousSignatureLo, 0, 3);
         challengeOut[0] = cardResponse[6];
         challengeOut[1] = cardResponse[7];
-        balance = ByteArrayUtil.threeBytesSignedToInt(cardResponse, 8);
+        balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
         if (cardResponse.length == 0x21) {
           /* Reload */
           loadLog = new SvLoadLogRecordAdapter(cardResponse, 11);
@@ -154,9 +154,9 @@ final class CmdCardSvGet extends AbstractCardCommand {
         previousSignatureLo = new byte[6];
         System.arraycopy(cardResponse, 0, challengeOut, 0, 8);
         currentKVC = cardResponse[8];
-        transactionNumber = ByteArrayUtil.twoBytesToInt(cardResponse, 9);
+        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
         System.arraycopy(cardResponse, 11, previousSignatureLo, 0, 6);
-        balance = ByteArrayUtil.threeBytesSignedToInt(cardResponse, 17);
+        balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
         loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
         debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);
         break;

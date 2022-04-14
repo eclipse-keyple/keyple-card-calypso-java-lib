@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
 import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -63,7 +63,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
 
     // prepare the UNLOCK command if unlock data has been defined
     if (unlockData != null) {
-      samCommands.add(new CmdSamUnlock(productType, ByteArrayUtil.fromHex(unlockData)));
+      samCommands.add(new CmdSamUnlock(productType, HexUtil.toByteArray(unlockData)));
       for (AbstractSamCommand samCommand : samCommands) {
         cardSelectionApduRequests.add(samCommand.getApduRequest());
       }

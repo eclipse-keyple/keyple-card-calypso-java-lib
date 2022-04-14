@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,10 +29,10 @@ public class SvDebitLogRecordTest {
   private static final String SAMID_STR = "AABBCCDD";
 
   private static final int AMOUNT = -2;
-  private static final byte[] DATE = ByteArrayUtil.fromHex(DATE_STR);
-  private static final byte[] TIME = ByteArrayUtil.fromHex(TIME_STR);
+  private static final byte[] DATE = HexUtil.toByteArray(DATE_STR);
+  private static final byte[] TIME = HexUtil.toByteArray(TIME_STR);
   private static final byte KVC = (byte) 0x90;
-  private static final byte[] SAMID = ByteArrayUtil.fromHex(SAMID_STR);
+  private static final byte[] SAMID = HexUtil.toByteArray(SAMID_STR);
   private static final int SAM_TNUM = 0x123456;
   private static final int BALANCE = 0x445566;
   private static final int SV_TNUM = 0x7890;
@@ -44,7 +44,7 @@ public class SvDebitLogRecordTest {
   @Before
   public void setUp() {
     byte[] svGetDebitData =
-        ByteArrayUtil.fromHex(
+        HexUtil.toByteArray(
             HEADER
                 + AMOUNT_STR
                 + DATE_STR

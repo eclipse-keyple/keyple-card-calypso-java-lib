@@ -22,7 +22,7 @@ import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.calypsonet.terminal.card.spi.CardSelectionRequestSpi;
 import org.calypsonet.terminal.card.spi.CardSelectorSpi;
 import org.calypsonet.terminal.card.spi.ParseException;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -123,7 +123,7 @@ public class CalypsoCardSelectionAdapterTest {
     cardSelection.prepareSelectFile((short) 0x1234);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(ByteArrayUtil.fromHex("00A4090002123400"));
+    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00A4090002123400"));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class CalypsoCardSelectionAdapterTest {
     cardSelection.prepareSelectFile(SelectFileControl.NEXT_EF);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(ByteArrayUtil.fromHex("00A4020202000000"));
+    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00A4020202000000"));
   }
 
   @Test
@@ -142,7 +142,7 @@ public class CalypsoCardSelectionAdapterTest {
     cardSelection.prepareReadRecord((byte) 0x07, 1);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(ByteArrayUtil.fromHex("00B2013C00"));
+    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00B2013C00"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -189,7 +189,7 @@ public class CalypsoCardSelectionAdapterTest {
     cardSelection.filterByDfName("6677889900");
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     CardSelectorSpi cardSelector = cardSelectionRequest.getCardSelector();
-    assertThat(cardSelector.getAid()).isEqualTo(ByteArrayUtil.fromHex("6677889900"));
+    assertThat(cardSelector.getAid()).isEqualTo(HexUtil.toByteArray("6677889900"));
   }
 
   @Test

@@ -16,7 +16,7 @@ import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.BerTlvUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +166,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
         return this;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("DF name = {}", ByteArrayUtil.toHex(dfName));
+        logger.debug("DF name = {}", HexUtil.toHex(dfName));
       }
 
       applicationSN = tags.get(TAG_APPLICATION_SERIAL_NUMBER);
@@ -181,7 +181,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
         return this;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("Application Serial Number = {}", ByteArrayUtil.toHex(applicationSN));
+        logger.debug("Application Serial Number = {}", HexUtil.toHex(applicationSN));
       }
 
       discretionaryData = tags.get(TAG_DISCRETIONARY_DATA);
@@ -194,7 +194,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
         return this;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("Discretionary Data = {}", ByteArrayUtil.toHex(discretionaryData));
+        logger.debug("Discretionary Data = {}", HexUtil.toHex(discretionaryData));
       }
 
       /* all 3 main fields were retrieved */

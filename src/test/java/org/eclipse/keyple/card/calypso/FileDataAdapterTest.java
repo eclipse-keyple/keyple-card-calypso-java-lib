@@ -15,17 +15,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import java.util.SortedMap;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 public class FileDataAdapterTest {
 
   private FileDataAdapter file;
-  private final byte[] data1 = ByteArrayUtil.fromHex("11");
-  private final byte[] data2 = ByteArrayUtil.fromHex("2222");
-  private final byte[] data3 = ByteArrayUtil.fromHex("333333");
-  private final byte[] data4 = ByteArrayUtil.fromHex("44444444");
+  private final byte[] data1 = HexUtil.toByteArray("11");
+  private final byte[] data2 = HexUtil.toByteArray("2222");
+  private final byte[] data3 = HexUtil.toByteArray("333333");
+  private final byte[] data4 = HexUtil.toByteArray("44444444");
 
   @Before
   public void setUp() {
@@ -122,7 +122,7 @@ public class FileDataAdapterTest {
   public void getContentP3_shouldReturnASubset() {
     file.setContent(2, data2);
     byte[] copy = file.getContent(2, 1, 1);
-    assertThat(copy).isEqualTo(ByteArrayUtil.fromHex("22"));
+    assertThat(copy).isEqualTo(HexUtil.toByteArray("22"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -207,7 +207,7 @@ public class FileDataAdapterTest {
     file.setContent(1, data4);
     file.setCounter(2, data3);
     byte[] val = file.getContent(1);
-    assertThat(val).isEqualTo(ByteArrayUtil.fromHex("444444333333"));
+    assertThat(val).isEqualTo(HexUtil.toByteArray("444444333333"));
   }
 
   @Test
@@ -221,7 +221,7 @@ public class FileDataAdapterTest {
   public void setContentP3_whenRecordIsNotSet_shouldPadWith0() {
     file.setContent(1, data1, 1);
     byte[] val = file.getContent(1);
-    assertThat(val).isEqualTo(ByteArrayUtil.fromHex("0011"));
+    assertThat(val).isEqualTo(HexUtil.toByteArray("0011"));
   }
 
   @Test
@@ -229,7 +229,7 @@ public class FileDataAdapterTest {
     file.setContent(1, data1);
     file.setContent(1, data2, 2);
     byte[] val = file.getContent(1);
-    assertThat(val).isEqualTo(ByteArrayUtil.fromHex("11002222"));
+    assertThat(val).isEqualTo(HexUtil.toByteArray("11002222"));
   }
 
   @Test
@@ -237,14 +237,14 @@ public class FileDataAdapterTest {
     file.setContent(1, data4);
     file.setContent(1, data2, 1);
     byte[] val = file.getContent(1);
-    assertThat(val).isEqualTo(ByteArrayUtil.fromHex("44222244"));
+    assertThat(val).isEqualTo(HexUtil.toByteArray("44222244"));
   }
 
   @Test
   public void fillContent_whenRecordIsNotSet_shouldPutContentAndPadWith0() {
     file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("002222"));
+    assertThat(content).isEqualTo(HexUtil.toByteArray("002222"));
   }
 
   @Test
@@ -253,7 +253,7 @@ public class FileDataAdapterTest {
     file.setContent(1, data2);
     file.fillContent(1, data4, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("2266444444"));
+    assertThat(content).isEqualTo(HexUtil.toByteArray("2266444444"));
   }
 
   @Test
@@ -261,7 +261,7 @@ public class FileDataAdapterTest {
     file.setContent(1, data4);
     file.fillContent(1, data2, 1);
     byte[] content = file.getContent(1);
-    assertThat(content).isEqualTo(ByteArrayUtil.fromHex("44666644"));
+    assertThat(content).isEqualTo(HexUtil.toByteArray("44666644"));
   }
 
   @Test
@@ -278,9 +278,9 @@ public class FileDataAdapterTest {
     file.addCyclicContent(data3);
     assertThat(file.getAllRecordsContent())
         .containsExactly(
-            entry(1, ByteArrayUtil.fromHex("333333")),
-            entry(2, ByteArrayUtil.fromHex("11")),
-            entry(3, ByteArrayUtil.fromHex("2222")));
+            entry(1, HexUtil.toByteArray("333333")),
+            entry(2, HexUtil.toByteArray("11")),
+            entry(3, HexUtil.toByteArray("2222")));
   }
 
   @Test

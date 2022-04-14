@@ -18,7 +18,7 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.BerTlvUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +143,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
                 (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("LID=" + ByteArrayUtil.toHex(dataIn));
+      addSubName("LID=" + HexUtil.toHex(dataIn));
     }
   }
 

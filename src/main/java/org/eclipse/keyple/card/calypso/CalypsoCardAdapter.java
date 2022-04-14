@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,7 +125,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     // FCI is not provided: we consider it is Calypso card rev 1, it's serial number is provided in
     // the ATR
-    byte[] atr = ByteArrayUtil.fromHex(powerOnData);
+    byte[] atr = HexUtil.toByteArray(powerOnData);
 
     // basic check: we expect to be here following a selection based on the ATR
     if (atr.length != CARD_REV1_ATR_LENGTH) {

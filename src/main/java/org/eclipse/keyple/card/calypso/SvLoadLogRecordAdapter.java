@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * (package-private)<br>
@@ -53,7 +54,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getAmount() {
-    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 8);
+    return ByteArrayUtil.extractInt(cardResponse, offset + 8, 3, true);
   }
 
   /**
@@ -63,7 +64,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
    */
   @Override
   public int getBalance() {
-    return ByteArrayUtil.threeBytesSignedToInt(cardResponse, offset + 5);
+    return ByteArrayUtil.extractInt(cardResponse, offset + 5, 3, true);
   }
 
   /**
@@ -137,7 +138,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
     final byte[] tnNum = new byte[2];
     tnNum[0] = cardResponse[offset + 20];
     tnNum[1] = cardResponse[offset + 21];
-    return ByteArrayUtil.twoBytesToInt(tnNum, 0);
+    return ByteArrayUtil.extractInt(tnNum, 0, 2, false);
   }
 
   /**
@@ -149,7 +150,7 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
   public int getSamTNum() {
     byte[] samTNum = new byte[3];
     System.arraycopy(cardResponse, offset + 17, samTNum, 0, 3);
-    return ByteArrayUtil.threeBytesToInt(samTNum, 0);
+    return ByteArrayUtil.extractInt(samTNum, 0, 3, false);
   }
 
   /**
@@ -165,15 +166,15 @@ class SvLoadLogRecordAdapter implements SvLoadLogRecord {
         + ", \"balance\":"
         + getBalance()
         + ", \"debitDate\":"
-        + ByteArrayUtil.toHex(getLoadDate())
+        + HexUtil.toHex(getLoadDate())
         + ", \"loadTime\":"
-        + ByteArrayUtil.toHex(getLoadDate())
+        + HexUtil.toHex(getLoadDate())
         + ", \"freeBytes\": \""
-        + ByteArrayUtil.toHex(getFreeData())
+        + HexUtil.toHex(getFreeData())
         + "\", \"kvc\":"
         + getKvc()
         + ", \"samId\": \""
-        + ByteArrayUtil.toHex(getSamId())
+        + HexUtil.toHex(getSamId())
         + "\", \"svTransactionNumber\":"
         + getSvTNum()
         + ", \"svSamTransactionNumber\":"

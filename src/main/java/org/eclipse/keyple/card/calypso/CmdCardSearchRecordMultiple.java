@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,8 +145,8 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
               data.getOffset(),
               data.isEnableRepeatedOffset(),
               data.isFetchFirstMatchingResult(),
-              ByteArrayUtil.toHex(data.getSearchData()),
-              ByteArrayUtil.toHex(data.getMask()));
+              HexUtil.toHex(data.getSearchData()),
+              HexUtil.toHex(data.getMask()));
       addSubName(extraInfo);
     }
   }
