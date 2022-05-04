@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
+import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.calypso.transaction.InvalidSignatureException;
 import org.calypsonet.terminal.calypso.transaction.ReaderIOException;
 import org.calypsonet.terminal.calypso.transaction.SamIOException;
@@ -87,7 +88,7 @@ abstract class CommonSamTransactionManagerAdapter
   /**
    * (package-private)<br>
    * Creates a new instance (to be used for instantiation of {@link
-   * ControlSamTransactionManagerAdapter} only).
+   * CommonControlSamTransactionManagerAdapter} only).
    *
    * @param targetSmartCard The target smartcard provided by the selection process.
    * @param securitySetting The card or SAM security settings.
@@ -255,12 +256,22 @@ abstract class CommonSamTransactionManagerAdapter
   }
 
   /**
+   * (package-private)<br>
+   * Returns a reference to the main list of SAM commands.
+   *
+   * @since 2.2.0
+   */
+  List<AbstractSamCommand> getSamCommands() {
+    return samCommands;
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.2.0
    */
   @Override
-  public final SamTransactionManager processCommands() {
+  public SamTransactionManager processCommands() {
     if (samCommands.isEmpty()) {
       return this;
     }
@@ -285,7 +296,8 @@ abstract class CommonSamTransactionManagerAdapter
             "The number of SAM commands/responses does not match: nb commands = "
                 + apduRequests.size()
                 + ", nb responses = "
-                + apduResponses.size());
+                + apduResponses.size()
+                + getTransactionAuditDataAsString());
       }
 
       // We go through all the responses (and not the requests) because there may be fewer in the
@@ -295,9 +307,15 @@ abstract class CommonSamTransactionManagerAdapter
         try {
           samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
         } catch (CalypsoSamCommandException e) {
-          if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
+          if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.DIGEST_AUTHENTICATE
+              && e instanceof CalypsoSamSecurityDataException) {
+            throw new InvalidCardSignatureException("Invalid card signature.", e);
+          } else if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
               && e instanceof CalypsoSamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
+          } else if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.SV_CHECK
+              && e instanceof CalypsoSamSecurityDataException) {
+            throw new InvalidCardSignatureException("Invalid SV card signature.", e);
           }
           throw new UnexpectedCommandStatusException(
               MSG_SAM_COMMAND_ERROR
@@ -315,7 +333,8 @@ abstract class CommonSamTransactionManagerAdapter
             "The number of SAM commands/responses does not match: nb commands = "
                 + apduRequests.size()
                 + ", nb responses = "
-                + apduResponses.size());
+                + apduResponses.size()
+                + getTransactionAuditDataAsString());
       }
     } finally {
       // Reset the list of commands.

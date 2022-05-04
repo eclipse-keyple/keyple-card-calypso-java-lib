@@ -45,25 +45,21 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param expectedResponseLength the expected response length.
-   * @throws IllegalArgumentException If the expected response length is wrong.
    * @since 2.0.1
    */
-  CmdSamDigestClose(CalypsoSam.ProductType productType, byte expectedResponseLength) {
+  CmdSamDigestClose(CalypsoSam.ProductType productType, int expectedResponseLength) {
+
     super(command, expectedResponseLength);
-
-    if (expectedResponseLength != 0x04 && expectedResponseLength != 0x08) {
-      throw new IllegalArgumentException(
-          String.format("Bad digest length! Expected 4 or 8, got %s", expectedResponseLength));
-    }
-
-    byte cla = SamUtilAdapter.getClassByte(productType);
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength)));
+                SamUtilAdapter.getClassByte(productType),
+                command.getInstructionByte(),
+                (byte) 0x00,
+                (byte) 0x00,
+                null,
+                (byte) expectedResponseLength)));
   }
 
   /**
