@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":9,"i15":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":9,"i17":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -165,20 +165,38 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.BasicSignatureComputationData</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createBasicSignatureComputationData()">createBasicSignatureComputationData</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Returns a new instance of <code>BasicSignatureComputationData</code> to use to define the parameters
+ of the <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code>
+ and <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code>
+ methods.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.BasicSignatureVerificationData</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createBasicSignatureVerificationData()">createBasicSignatureVerificationData</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Returns a new instance of <code>BasicSignatureVerificationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> methods.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.CardSecuritySetting</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createCardSecuritySetting()">createCardSecuritySetting</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Returns a new instance of <code>CardSecuritySetting</code> to use for secure card operations.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.card.CalypsoCardSelection</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createCardSelection()">createCardSelection</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Returns a new instance of <code>CalypsoCardSelection</code> to use when selecting a card.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.CardTransactionManager</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createCardTransaction(org.calypsonet.terminal.reader.CardReader,org.calypsonet.terminal.calypso.card.CalypsoCard,org.calypsonet.terminal.calypso.transaction.CardSecuritySetting)">createCardTransaction</a></span>&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;cardReader,
                      org.calypsonet.terminal.calypso.card.CalypsoCard&nbsp;calypsoCard,
@@ -187,7 +205,7 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <div class="block">Return a new card transaction manager to handle operations secured with a control SAM.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.CardTransactionManager</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createCardTransactionWithoutSecurity(org.calypsonet.terminal.reader.CardReader,org.calypsonet.terminal.calypso.card.CalypsoCard)">createCardTransactionWithoutSecurity</a></span>&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;cardReader,
                                     org.calypsonet.terminal.calypso.card.CalypsoCard&nbsp;calypsoCard)</code></th>
@@ -195,28 +213,28 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <div class="block">Returns a new card transaction manager to handle non-secured operations.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>org.eclipse.keyple.core.service.resource.spi.CardResourceProfileExtension</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamResourceProfileExtension(org.calypsonet.terminal.calypso.sam.CalypsoSamSelection)">createSamResourceProfileExtension</a></span>&#8203;(org.calypsonet.terminal.calypso.sam.CalypsoSamSelection&nbsp;calypsoSamSelection)</code></th>
 <td class="colLast">
 <div class="block">Returns a new instance of <code>CardResourceProfileExtension</code> to provide to the <code>CardResourceService</code> service.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SamSecuritySetting</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamSecuritySetting()">createSamSecuritySetting</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Returns a new instance of <code>SamSecuritySetting</code> to use for secure SAM operations.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.sam.CalypsoSamSelection</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamSelection()">createSamSelection</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Returns a new instance of <code>CalypsoSamSelection</code> to use when selecting a SAM.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SamTransactionManager</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamTransaction(org.calypsonet.terminal.reader.CardReader,org.calypsonet.terminal.calypso.sam.CalypsoSam,org.calypsonet.terminal.calypso.transaction.SamSecuritySetting)">createSamTransaction</a></span>&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
                     org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam,
@@ -225,7 +243,7 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <div class="block">Returns a new SAM transaction manager to handle operations secured with a control SAM.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SamTransactionManager</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamTransactionWithoutSecurity(org.calypsonet.terminal.reader.CardReader,org.calypsonet.terminal.calypso.sam.CalypsoSam)">createSamTransactionWithoutSecurity</a></span>&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
                                    org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam)</code></th>
@@ -233,7 +251,7 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <div class="block">Returns a new SAM transaction manager to handle non-secured operations.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SearchCommandData</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSearchCommandData()">createSearchCommandData</a></span>()</code></th>
 <td class="colLast">
@@ -241,38 +259,38 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
  <code>CardTransactionManager.prepareSearchRecords(SearchCommandData)</code> method.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
-<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SignatureComputationData</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSignatureComputationData()">createSignatureComputationData</a></span>()</code></th>
-<td class="colLast">
-<div class="block">Returns a new instance of <code>SignatureComputationData</code> to use to define the parameters of
- the <code>CommonTransactionManager.prepareComputeSignature(SignatureComputationData)</code> and <code>CommonTransactionManager.prepareComputeSignature(SignatureComputationData)</code> methods.</div>
-</td>
-</tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SignatureVerificationData</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSignatureVerificationData()">createSignatureVerificationData</a></span>()</code></th>
-<td class="colLast">
-<div class="block">Returns a new instance of <code>SignatureVerificationData</code> to use to define the parameters of
- the <code>CommonTransactionManager.prepareVerifySignature(SignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(SignatureVerificationData)</code> methods.</div>
-</td>
-</tr>
 <tr id="i12" class="altColor">
+<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.TraceableSignatureComputationData</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createTraceableSignatureComputationData()">createTraceableSignatureComputationData</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Returns a new instance of <code>TraceableSignatureComputationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code> and <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code> methods.</div>
+</td>
+</tr>
+<tr id="i13" class="rowColor">
+<td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.TraceableSignatureVerificationData</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createTraceableSignatureVerificationData()">createTraceableSignatureVerificationData</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Returns a new instance of <code>TraceableSignatureVerificationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> methods.</div>
+</td>
+</tr>
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCardApiVersion()">getCardApiVersion</a></span>()</code></th>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCommonApiVersion()">getCommonApiVersion</a></span>()</code></th>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>static <a href="CalypsoExtensionService.html" title="class in org.eclipse.keyple.card.calypso">CalypsoExtensionService</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getInstance()">getInstance</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Returns the service instance.</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getReaderApiVersion()">getReaderApiVersion</a></span>()</code></th>
 </tr>
@@ -378,15 +396,17 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 </dl>
 </li>
 </ul>
-<a id="createSignatureComputationData()">
+<a id="createBasicSignatureComputationData()">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>createSignatureComputationData</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SignatureComputationData&nbsp;createSignatureComputationData()</pre>
-<div class="block">Returns a new instance of <code>SignatureComputationData</code> to use to define the parameters of
- the <code>CommonTransactionManager.prepareComputeSignature(SignatureComputationData)</code> and <code>CommonTransactionManager.prepareComputeSignature(SignatureComputationData)</code> methods.</div>
+<h4>createBasicSignatureComputationData</h4>
+<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.BasicSignatureComputationData&nbsp;createBasicSignatureComputationData()</pre>
+<div class="block">Returns a new instance of <code>BasicSignatureComputationData</code> to use to define the parameters
+ of the <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code>
+ and <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code>
+ methods.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A not null reference.</dd>
@@ -395,15 +415,49 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 </dl>
 </li>
 </ul>
-<a id="createSignatureVerificationData()">
+<a id="createTraceableSignatureComputationData()">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>createSignatureVerificationData</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SignatureVerificationData&nbsp;createSignatureVerificationData()</pre>
-<div class="block">Returns a new instance of <code>SignatureVerificationData</code> to use to define the parameters of
- the <code>CommonTransactionManager.prepareVerifySignature(SignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(SignatureVerificationData)</code> methods.</div>
+<h4>createTraceableSignatureComputationData</h4>
+<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.TraceableSignatureComputationData&nbsp;createTraceableSignatureComputationData()</pre>
+<div class="block">Returns a new instance of <code>TraceableSignatureComputationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code> and <code>CommonTransactionManager.prepareComputeSignature(CommonSignatureComputationData)</code> methods.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A not null reference.</dd>
+<dt><span class="simpleTagLabel">Since:</span></dt>
+<dd>2.2.0</dd>
+</dl>
+</li>
+</ul>
+<a id="createBasicSignatureVerificationData()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createBasicSignatureVerificationData</h4>
+<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.BasicSignatureVerificationData&nbsp;createBasicSignatureVerificationData()</pre>
+<div class="block">Returns a new instance of <code>BasicSignatureVerificationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> methods.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A not null reference.</dd>
+<dt><span class="simpleTagLabel">Since:</span></dt>
+<dd>2.2.0</dd>
+</dl>
+</li>
+</ul>
+<a id="createTraceableSignatureVerificationData()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createTraceableSignatureVerificationData</h4>
+<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.TraceableSignatureVerificationData&nbsp;createTraceableSignatureVerificationData()</pre>
+<div class="block">Returns a new instance of <code>TraceableSignatureVerificationData</code> to use to define the
+ parameters of the <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> and <code>CommonTransactionManager.prepareVerifySignature(CommonSignatureVerificationData)</code> methods.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A not null reference.</dd>
