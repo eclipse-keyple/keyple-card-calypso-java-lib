@@ -37,6 +37,7 @@ enum CalypsoSamCommand implements CardCommand {
   SV_PREPARE_DEBIT("SV Prepare Debit", (byte) 0x54),
   SV_PREPARE_LOAD("SV Prepare Load", (byte) 0x56),
   SV_PREPARE_UNDEBIT("SV Prepare Undebit", (byte) 0x5C),
+  DATA_CIPHER("Data Cipher", (byte) 0x1C),
   PSO_COMPUTE_SIGNATURE("PSO Compute Signature", (byte) 0x2A),
   PSO_VERIFY_SIGNATURE("PSO Verify Signature", (byte) 0x2A),
   ;

@@ -57,7 +57,7 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
     STATUS_TABLE = m;
   }
 
-  private final SignatureVerificationDataAdapter data;
+  private final TraceableSignatureVerificationDataAdapter data;
 
   /**
    * (package-private)<br>
@@ -68,7 +68,7 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   CmdSamPsoVerifySignature(
-      CalypsoSam.ProductType productType, SignatureVerificationDataAdapter data) {
+      CalypsoSam.ProductType productType, TraceableSignatureVerificationDataAdapter data) {
 
     super(CalypsoSamCommand.PSO_VERIFY_SIGNATURE, 0);
     this.data = data;

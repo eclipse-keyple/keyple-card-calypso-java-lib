@@ -877,7 +877,7 @@ final class CardTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public CardTransactionManager prepareComputeSignature(SignatureComputationData data) {
+  public CardTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
     checkControlSam();
     controlSamTransactionManager.prepareComputeSignature(data);
     return this;
@@ -889,7 +889,7 @@ final class CardTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public CardTransactionManager prepareVerifySignature(SignatureVerificationData data) {
+  public CardTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
     checkControlSam();
     controlSamTransactionManager.prepareVerifySignature(data);
     return this;

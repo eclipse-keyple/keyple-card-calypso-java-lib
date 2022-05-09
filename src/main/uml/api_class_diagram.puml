@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-02-24)
+    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-05-05)
 end title
 
 ' == THEME ==
@@ -15,13 +15,19 @@ end title
 !define C_LINK 3498DB
 !define C_USE 27AE60
 
-skinparam Shadowing false
-skinparam ClassFontStyle italic
-skinparam ClassBorderColor #D4AC0D
+' -- Styles that don't work with new version of plantuml --
 skinparam stereotypeABorderColor #A9DCDF
 skinparam stereotypeIBorderColor #B4A7E5
 skinparam stereotypeCBorderColor #ADD1B2
 skinparam stereotypeEBorderColor #EB93DF
+' -- END --
+
+skinparam ClassBorderThickness 2
+skinparam ArrowThickness 2
+
+' Yellow
+skinparam ClassBackgroundColor #FEFECE
+skinparam ClassBorderColor #D4AC0D
 ' Red
 skinparam ClassBackgroundColor<<red>> #FDEDEC
 skinparam ClassBorderColor<<red>> #E74C3C
@@ -60,8 +66,10 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         +{static} CalypsoExtensionService getInstance ()
 
         +<back:pink>SearchCommandData</back> createSearchCommandData ()
-        +<back:pink>SignatureComputationData</back> createSignatureComputationData ()
-        +<back:pink>SignatureVerificationData</back> createSignatureVerificationData ()
+        +<back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
+        +<back:pink>TraceableSignatureComputationData</back> createTraceableSignatureComputationData ()
+        +<back:pink>BasicSignatureVerificationData</back> createBasicSignatureVerificationData ()
+        +<back:pink>TraceableSignatureVerificationData</back> createTraceableSignatureVerificationData ()
 
         +<back:pink>CalypsoCardSelection</back> createCardSelection ()
         +<back:pink>CalypsoSamSelection</back> createSamSelection ()

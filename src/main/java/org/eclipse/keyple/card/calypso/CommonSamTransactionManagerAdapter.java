@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.calypso.transaction.InvalidSignatureException;
@@ -23,8 +25,6 @@ import org.calypsonet.terminal.calypso.transaction.SamIOException;
 import org.calypsonet.terminal.calypso.transaction.SamRevokedException;
 import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
-import org.calypsonet.terminal.calypso.transaction.SignatureComputationData;
-import org.calypsonet.terminal.calypso.transaction.SignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.UnexpectedCommandStatusException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardBrokenCommunicationException;
@@ -55,6 +55,11 @@ abstract class CommonSamTransactionManagerAdapter
 
   private static final Logger logger =
       LoggerFactory.getLogger(CommonSamTransactionManagerAdapter.class);
+
+  private static final String MSG_INPUT_OUTPUT_DATA = "input/output data";
+  private static final String MSG_SIGNATURE_SIZE = "signature size";
+  private static final String MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8 =
+      "key diversifier size is in range [1..8]";
 
   /* Final fields */
   private final ProxyReaderApi samReader;
@@ -135,42 +140,66 @@ abstract class CommonSamTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public final SamTransactionManager prepareComputeSignature(SignatureComputationData data) {
+  public final SamTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
 
-    if (!(data instanceof SignatureComputationDataAdapter)) {
+    if (data instanceof BasicSignatureComputationDataAdapter) {
+      // Basic signature
+      BasicSignatureComputationDataAdapter dataAdapter =
+          (BasicSignatureComputationDataAdapter) data;
+
+      Assert.getInstance()
+          .notNull(dataAdapter, MSG_INPUT_OUTPUT_DATA)
+          .notNull(dataAdapter.getData(), "data to sign")
+          .isInRange(dataAdapter.getData().length, 1, 208, "length of data to sign")
+          .isTrue(
+              dataAdapter.getData().length % 8 == 0, "length of data to sign is a multiple of 8")
+          .isInRange(dataAdapter.getSignatureSize(), 1, 8, MSG_SIGNATURE_SIZE)
+          .isTrue(
+              dataAdapter.getKeyDiversifier() == null
+                  || (dataAdapter.getKeyDiversifier().length >= 1
+                      && dataAdapter.getKeyDiversifier().length <= 8),
+              MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
+
+      prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
+      samCommands.add(new CmdSamDataCipher(sam.getProductType(), dataAdapter, null));
+
+    } else if (data instanceof TraceableSignatureComputationDataAdapter) {
+      // Traceable signature
+      TraceableSignatureComputationDataAdapter dataAdapter =
+          (TraceableSignatureComputationDataAdapter) data;
+
+      Assert.getInstance()
+          .notNull(dataAdapter, MSG_INPUT_OUTPUT_DATA)
+          .notNull(dataAdapter.getData(), "data to sign")
+          .isInRange(
+              dataAdapter.getData().length,
+              1,
+              dataAdapter.isSamTraceabilityMode() ? 206 : 208,
+              "length of data to sign")
+          .isInRange(dataAdapter.getSignatureSize(), 1, 8, MSG_SIGNATURE_SIZE)
+          .isTrue(
+              !dataAdapter.isSamTraceabilityMode()
+                  || (dataAdapter.getTraceabilityOffset() >= 0
+                      && dataAdapter.getTraceabilityOffset()
+                          <= ((dataAdapter.getData().length * 8)
+                              - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))),
+              "traceability offset is in range [0.."
+                  + ((dataAdapter.getData().length * 8)
+                      - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))
+                  + "]")
+          .isTrue(
+              dataAdapter.getKeyDiversifier() == null
+                  || (dataAdapter.getKeyDiversifier().length >= 1
+                      && dataAdapter.getKeyDiversifier().length <= 8),
+              MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
+
+      prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
+      samCommands.add(new CmdSamPsoComputeSignature(sam.getProductType(), dataAdapter));
+
+    } else {
       throw new IllegalArgumentException(
-          "The provided data must be an instance of 'SignatureComputationDataAdapter'");
+          "The provided data must be an instance of 'BasicSignatureComputationDataAdapter' or 'TraceableSignatureComputationDataAdapter'");
     }
-
-    SignatureComputationDataAdapter dataAdapter = (SignatureComputationDataAdapter) data;
-
-    Assert.getInstance()
-        .notNull(dataAdapter, "input/output data")
-        .notNull(dataAdapter.getData(), "data to sign")
-        .isInRange(
-            dataAdapter.getData().length,
-            1,
-            dataAdapter.isSamTraceabilityMode() ? 206 : 208,
-            "length of data to sign")
-        .isInRange(dataAdapter.getSignatureSize(), 1, 8, "signature size")
-        .isTrue(
-            !dataAdapter.isSamTraceabilityMode()
-                || (dataAdapter.getTraceabilityOffset() >= 0
-                    && dataAdapter.getTraceabilityOffset()
-                        <= ((dataAdapter.getData().length * 8)
-                            - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))),
-            "traceability offset is in range [0.."
-                + ((dataAdapter.getData().length * 8)
-                    - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))
-                + "]")
-        .isTrue(
-            dataAdapter.getKeyDiversifier() == null
-                || (dataAdapter.getKeyDiversifier().length >= 1
-                    && dataAdapter.getKeyDiversifier().length <= 8),
-            "key diversifier size is in range [1..8]");
-
-    prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-    samCommands.add(new CmdSamPsoComputeSignature(sam.getProductType(), dataAdapter));
     return this;
   }
 
@@ -180,78 +209,103 @@ abstract class CommonSamTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public final SamTransactionManager prepareVerifySignature(SignatureVerificationData data) {
+  public final SamTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
 
-    if (!(data instanceof SignatureVerificationDataAdapter)) {
-      throw new IllegalArgumentException(
-          "The provided data must be an instance of 'SignatureVerificationDataAdapter'");
-    }
+    if (data instanceof BasicSignatureVerificationDataAdapter) {
+      // Basic signature
+      BasicSignatureVerificationDataAdapter dataAdapter =
+          (BasicSignatureVerificationDataAdapter) data;
 
-    SignatureVerificationDataAdapter dataAdapter = (SignatureVerificationDataAdapter) data;
-
-    Assert.getInstance()
-        .notNull(dataAdapter, "input/output data")
-        .notNull(dataAdapter.getData(), "signed data to verify")
-        .isInRange(
-            dataAdapter.getData().length,
-            1,
-            dataAdapter.isSamTraceabilityMode() ? 206 : 208,
-            "length of signed data to verify")
-        .notNull(dataAdapter.getSignature(), "signature")
-        .isInRange(dataAdapter.getSignature().length, 1, 8, "signature size")
-        .isTrue(
-            !dataAdapter.isSamTraceabilityMode()
-                || (dataAdapter.getTraceabilityOffset() >= 0
-                    && dataAdapter.getTraceabilityOffset()
-                        <= ((dataAdapter.getData().length * 8)
-                            - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))),
-            "traceability offset is in range [0.."
-                + ((dataAdapter.getData().length * 8)
-                    - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))
-                + "]")
-        .isTrue(
-            dataAdapter.getKeyDiversifier() == null
-                || (dataAdapter.getKeyDiversifier().length >= 1
-                    && dataAdapter.getKeyDiversifier().length <= 8),
-            "key diversifier size is in range [1..8]");
-
-    // Check SAM revocation status if requested.
-    if (dataAdapter.isSamRevocationStatusVerificationRequested()) {
       Assert.getInstance()
-          .notNull(securitySetting, "security settings")
-          .notNull(securitySetting.getSamRevocationServiceSpi(), "SAM revocation service");
+          .notNull(dataAdapter, MSG_INPUT_OUTPUT_DATA)
+          .notNull(dataAdapter.getData(), "signed data to verify")
+          .isInRange(dataAdapter.getData().length, 1, 208, "length of signed data to verify")
+          .isTrue(
+              dataAdapter.getData().length % 8 == 0, "length of data to verify is a multiple of 8")
+          .notNull(dataAdapter.getSignature(), "signature")
+          .isInRange(dataAdapter.getSignature().length, 1, 8, MSG_SIGNATURE_SIZE)
+          .isTrue(
+              dataAdapter.getKeyDiversifier() == null
+                  || (dataAdapter.getKeyDiversifier().length >= 1
+                      && dataAdapter.getKeyDiversifier().length <= 8),
+              MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
 
-      // Extract the SAM serial number and the counter value from the data.
-      byte[] samSerialNumber =
-          ByteArrayUtil.extractBytes(
-              dataAdapter.getData(),
-              dataAdapter.getTraceabilityOffset(),
-              dataAdapter.isPartialSamSerialNumber() ? 3 : 4);
+      prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
+      samCommands.add(new CmdSamDataCipher(sam.getProductType(), null, dataAdapter));
 
-      int samCounterValue =
-          ByteArrayUtil.extractInt(
-              ByteArrayUtil.extractBytes(
-                  dataAdapter.getData(),
-                  dataAdapter.getTraceabilityOffset()
-                      + (dataAdapter.isPartialSamSerialNumber() ? 3 * 8 : 4 * 8),
-                  3),
-              0,
-              3,
-              false);
+    } else if (data instanceof TraceableSignatureVerificationDataAdapter) {
+      // Traceable signature
+      TraceableSignatureVerificationDataAdapter dataAdapter =
+          (TraceableSignatureVerificationDataAdapter) data;
 
-      // Is SAM revoked ?
-      if (securitySetting
-          .getSamRevocationServiceSpi()
-          .isSamRevoked(samSerialNumber, samCounterValue)) {
-        throw new SamRevokedException(
-            String.format(
-                "SAM with serial number '%s' and counter value '%d' is revoked.",
-                HexUtil.toHex(samSerialNumber), samCounterValue));
+      Assert.getInstance()
+          .notNull(dataAdapter, MSG_INPUT_OUTPUT_DATA)
+          .notNull(dataAdapter.getData(), "signed data to verify")
+          .isInRange(
+              dataAdapter.getData().length,
+              1,
+              dataAdapter.isSamTraceabilityMode() ? 206 : 208,
+              "length of signed data to verify")
+          .notNull(dataAdapter.getSignature(), "signature")
+          .isInRange(dataAdapter.getSignature().length, 1, 8, MSG_SIGNATURE_SIZE)
+          .isTrue(
+              !dataAdapter.isSamTraceabilityMode()
+                  || (dataAdapter.getTraceabilityOffset() >= 0
+                      && dataAdapter.getTraceabilityOffset()
+                          <= ((dataAdapter.getData().length * 8)
+                              - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))),
+              "traceability offset is in range [0.."
+                  + ((dataAdapter.getData().length * 8)
+                      - (dataAdapter.isPartialSamSerialNumber() ? 7 * 8 : 8 * 8))
+                  + "]")
+          .isTrue(
+              dataAdapter.getKeyDiversifier() == null
+                  || (dataAdapter.getKeyDiversifier().length >= 1
+                      && dataAdapter.getKeyDiversifier().length <= 8),
+              MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
+
+      // Check SAM revocation status if requested.
+      if (dataAdapter.isSamRevocationStatusVerificationRequested()) {
+        Assert.getInstance()
+            .notNull(securitySetting, "security settings")
+            .notNull(securitySetting.getSamRevocationServiceSpi(), "SAM revocation service");
+
+        // Extract the SAM serial number and the counter value from the data.
+        byte[] samSerialNumber =
+            ByteArrayUtil.extractBytes(
+                dataAdapter.getData(),
+                dataAdapter.getTraceabilityOffset(),
+                dataAdapter.isPartialSamSerialNumber() ? 3 : 4);
+
+        int samCounterValue =
+            ByteArrayUtil.extractInt(
+                ByteArrayUtil.extractBytes(
+                    dataAdapter.getData(),
+                    dataAdapter.getTraceabilityOffset()
+                        + (dataAdapter.isPartialSamSerialNumber() ? 3 * 8 : 4 * 8),
+                    3),
+                0,
+                3,
+                false);
+
+        // Is SAM revoked ?
+        if (securitySetting
+            .getSamRevocationServiceSpi()
+            .isSamRevoked(samSerialNumber, samCounterValue)) {
+          throw new SamRevokedException(
+              String.format(
+                  "SAM with serial number '%s' and counter value '%d' is revoked.",
+                  HexUtil.toHex(samSerialNumber), samCounterValue));
+        }
       }
-    }
 
-    prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-    samCommands.add(new CmdSamPsoVerifySignature(sam.getProductType(), dataAdapter));
+      prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
+      samCommands.add(new CmdSamPsoVerifySignature(sam.getProductType(), dataAdapter));
+
+    } else {
+      throw new IllegalArgumentException(
+          "The provided data must be an instance of 'CommonSignatureVerificationDataAdapter'");
+    }
     return this;
   }
 
@@ -307,13 +361,15 @@ abstract class CommonSamTransactionManagerAdapter
         try {
           samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
         } catch (CalypsoSamCommandException e) {
-          if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.DIGEST_AUTHENTICATE
+          CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
+          if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE
               && e instanceof CalypsoSamSecurityDataException) {
             throw new InvalidCardSignatureException("Invalid card signature.", e);
-          } else if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
+          } else if ((commandRef == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
+                  || commandRef == CalypsoSamCommand.DATA_CIPHER)
               && e instanceof CalypsoSamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
-          } else if (samCommands.get(i).getCommandRef() == CalypsoSamCommand.SV_CHECK
+          } else if (commandRef == CalypsoSamCommand.SV_CHECK
               && e instanceof CalypsoSamSecurityDataException) {
             throw new InvalidCardSignatureException("Invalid SV card signature.", e);
           }

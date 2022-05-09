@@ -54,7 +54,7 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
     STATUS_TABLE = m;
   }
 
-  private final SignatureComputationDataAdapter data;
+  private final TraceableSignatureComputationDataAdapter data;
 
   /**
    * (package-private)<br>
@@ -65,7 +65,7 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   CmdSamPsoComputeSignature(
-      CalypsoSam.ProductType productType, SignatureComputationDataAdapter data) {
+      CalypsoSam.ProductType productType, TraceableSignatureComputationDataAdapter data) {
 
     super(CalypsoSamCommand.PSO_COMPUTE_SIGNATURE, 0);
     this.data = data;

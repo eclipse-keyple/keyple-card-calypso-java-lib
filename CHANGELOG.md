@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `CalypsoExtensionService.createSignatureComputationData` method.
-- `CalypsoExtensionService.createSignatureVerificationData` method.
+- `CalypsoExtensionService.createBasicSignatureComputationData` method.
+- `CalypsoExtensionService.createTraceableSignatureComputationData` method.
+- `CalypsoExtensionService.createBasicSignatureVerificationData` method.
+- `CalypsoExtensionService.createTraceableSignatureVerificationData` method.
 - `CalypsoExtensionService.createSamSecuritySetting` method.
 - `CalypsoExtensionService.createSamTransaction` method.
 - `CalypsoExtensionService.createSamTransactionWithoutSecurity` method.

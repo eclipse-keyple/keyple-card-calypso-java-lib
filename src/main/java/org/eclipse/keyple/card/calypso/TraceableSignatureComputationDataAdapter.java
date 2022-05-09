@@ -11,27 +11,23 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.transaction.SignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.TraceableSignatureComputationData;
 
 /**
  * (package-private)<br>
- * Implementation of {@link SignatureComputationData}.
+ * Implementation of {@link TraceableSignatureComputationData}.
  *
  * @since 2.2.0
  */
-final class SignatureComputationDataAdapter implements SignatureComputationData {
+final class TraceableSignatureComputationDataAdapter
+    extends CommonSignatureComputationDataAdapter<TraceableSignatureComputationData>
+    implements TraceableSignatureComputationData {
 
-  private byte[] data;
-  private byte kif;
-  private byte kvc;
-  private int signatureSize = 8;
-  private byte[] keyDiversifier;
   private boolean isSamTraceabilityMode;
   private int traceabilityOffset;
   private boolean isPartialSamSerialNumber;
   private boolean isBusyMode = true;
   private byte[] signedData;
-  private byte[] signature;
 
   /**
    * {@inheritDoc}
@@ -39,42 +35,7 @@ final class SignatureComputationDataAdapter implements SignatureComputationData 
    * @since 2.2.0
    */
   @Override
-  public SignatureComputationData setData(byte[] data, byte kif, byte kvc) {
-    this.data = data;
-    this.kif = kif;
-    this.kvc = kvc;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public SignatureComputationData setSignatureSize(int size) {
-    this.signatureSize = size;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public SignatureComputationData setKeyDiversifier(byte[] diversifier) {
-    this.keyDiversifier = diversifier;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public SignatureComputationData withSamTraceabilityMode(
+  public TraceableSignatureComputationData withSamTraceabilityMode(
       int offset, boolean usePartialSamSerialNumber) {
     this.isSamTraceabilityMode = true;
     this.traceabilityOffset = offset;
@@ -88,7 +49,7 @@ final class SignatureComputationDataAdapter implements SignatureComputationData 
    * @since 2.2.0
    */
   @Override
-  public SignatureComputationData withoutBusyMode() {
+  public TraceableSignatureComputationData withoutBusyMode() {
     this.isBusyMode = false;
     return this;
   }
@@ -104,69 +65,6 @@ final class SignatureComputationDataAdapter implements SignatureComputationData 
       throw new IllegalStateException("The command has not yet been processed");
     }
     return signedData;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public byte[] getSignature() {
-    if (signature == null) {
-      throw new IllegalStateException("The command has not yet been processed");
-    }
-    return signature;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty array of data. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte[] getData() {
-    return data;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The KIF. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte getKif() {
-    return kif;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The KVC. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte getKvc() {
-    return kvc;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The signature size.
-   * @since 2.2.0
-   */
-  int getSignatureSize() {
-    return signatureSize;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return Null if the key diversifier is not set.
-   * @since 2.2.0
-   */
-  byte[] getKeyDiversifier() {
-    return keyDiversifier;
   }
 
   /**
@@ -217,24 +115,9 @@ final class SignatureComputationDataAdapter implements SignatureComputationData 
    * Sets the data used for signature computation.
    *
    * @param signedData The signed data.
-   * @return The current instance.
    * @since 2.2.0
    */
-  SignatureComputationDataAdapter setSignedData(byte[] signedData) {
+  void setSignedData(byte[] signedData) {
     this.signedData = signedData;
-    return this;
-  }
-
-  /**
-   * (package-private)<br>
-   * Sets the computed signature.
-   *
-   * @param signature The computed signature.
-   * @return The current instance.
-   * @since 2.2.0
-   */
-  SignatureComputationDataAdapter setSignature(byte[] signature) {
-    this.signature = signature;
-    return this;
   }
 }
