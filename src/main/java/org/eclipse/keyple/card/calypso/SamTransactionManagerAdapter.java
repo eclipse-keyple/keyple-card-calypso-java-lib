@@ -29,7 +29,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
 
   /* Final fields */
   private final SamSecuritySettingAdapter securitySetting;
-  private final ControlSamTransactionManagerAdapter controlSamTransactionManager;
+  private final SamControlSamTransactionManagerAdapter controlSamTransactionManager;
 
   /**
    * (package-private)<br>
@@ -46,8 +46,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     this.securitySetting = securitySetting;
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       this.controlSamTransactionManager =
-          new ControlSamTransactionManagerAdapter(
-              sam, securitySetting, sam.getSerialNumber(), getTransactionAuditData());
+          new SamControlSamTransactionManagerAdapter(
+              sam, securitySetting, getTransactionAuditData());
     } else {
       this.controlSamTransactionManager = null;
     }

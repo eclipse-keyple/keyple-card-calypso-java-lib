@@ -11,27 +11,23 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.transaction.SignatureVerificationData;
+import org.calypsonet.terminal.calypso.transaction.TraceableSignatureVerificationData;
 
 /**
  * (package-private)<br>
- * Implementation of {@link SignatureVerificationData}.
+ * Implementation of {@link TraceableSignatureVerificationData}.
  *
  * @since 2.2.0
  */
-final class SignatureVerificationDataAdapter implements SignatureVerificationData {
+final class TraceableSignatureVerificationDataAdapter
+    extends CommonSignatureVerificationDataAdapter<TraceableSignatureVerificationData>
+    implements TraceableSignatureVerificationData {
 
-  private byte[] data;
-  private byte[] signature;
-  private byte kif;
-  private byte kvc;
-  private byte[] keyDiversifier;
   private boolean isSamTraceabilityMode;
   private int traceabilityOffset;
   private boolean isPartialSamSerialNumber;
   private boolean isSamRevocationStatusVerificationRequested;
   private boolean isBusyMode = true;
-  private Boolean isSignatureValid;
 
   /**
    * {@inheritDoc}
@@ -39,32 +35,7 @@ final class SignatureVerificationDataAdapter implements SignatureVerificationDat
    * @since 2.2.0
    */
   @Override
-  public SignatureVerificationData setData(byte[] data, byte[] signature, byte kif, byte kvc) {
-    this.data = data;
-    this.signature = signature;
-    this.kif = kif;
-    this.kvc = kvc;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public SignatureVerificationData setKeyDiversifier(byte[] diversifier) {
-    this.keyDiversifier = diversifier;
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public SignatureVerificationData withSamTraceabilityMode(
+  public TraceableSignatureVerificationData withSamTraceabilityMode(
       int offset, boolean isPartialSamSerialNumber, boolean checkSamRevocationStatus) {
     this.isSamTraceabilityMode = true;
     this.traceabilityOffset = offset;
@@ -79,72 +50,9 @@ final class SignatureVerificationDataAdapter implements SignatureVerificationDat
    * @since 2.2.0
    */
   @Override
-  public SignatureVerificationData withoutBusyMode() {
+  public TraceableSignatureVerificationData withoutBusyMode() {
     this.isBusyMode = false;
     return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  public boolean isSignatureValid() {
-    if (isSignatureValid == null) {
-      throw new IllegalStateException("The command has not yet been processed");
-    }
-    return isSignatureValid;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty array of data. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte[] getData() {
-    return data;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty array of the signature to check. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte[] getSignature() {
-    return signature;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The KIF. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte getKif() {
-    return kif;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The KVC. It is required to check input data first.
-   * @since 2.2.0
-   */
-  byte getKvc() {
-    return kvc;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return Null if the key diversifier is not set.
-   * @since 2.2.0
-   */
-  byte[] getKeyDiversifier() {
-    return keyDiversifier;
   }
 
   /**
@@ -199,16 +107,5 @@ final class SignatureVerificationDataAdapter implements SignatureVerificationDat
    */
   boolean isBusyMode() {
     return isBusyMode;
-  }
-
-  /**
-   * (package-private)<br>
-   * Sets the signature verification status.
-   *
-   * @param isSignatureValid True if the signature is valid.
-   * @since 2.2.0
-   */
-  void setSignatureValid(boolean isSignatureValid) {
-    this.isSignatureValid = isSignatureValid;
   }
 }

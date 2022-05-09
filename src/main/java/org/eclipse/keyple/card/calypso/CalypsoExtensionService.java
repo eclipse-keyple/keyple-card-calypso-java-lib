@@ -20,13 +20,17 @@ import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
 import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
+import org.calypsonet.terminal.calypso.transaction.BasicSignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.BasicSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
+import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.calypso.transaction.SearchCommandData;
-import org.calypsonet.terminal.calypso.transaction.SignatureComputationData;
-import org.calypsonet.terminal.calypso.transaction.SignatureVerificationData;
+import org.calypsonet.terminal.calypso.transaction.TraceableSignatureComputationData;
+import org.calypsonet.terminal.calypso.transaction.TraceableSignatureVerificationData;
 import org.calypsonet.terminal.card.CardApiProperties;
 import org.calypsonet.terminal.card.ProxyReaderApi;
 import org.calypsonet.terminal.reader.CardReader;
@@ -111,27 +115,55 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Returns a new instance of {@link SignatureComputationData} to use to define the parameters of
-   * the {@link CardTransactionManager#prepareComputeSignature(SignatureComputationData)} and {@link
-   * SamTransactionManager#prepareComputeSignature(SignatureComputationData)} methods.
+   * Returns a new instance of {@link BasicSignatureComputationData} to use to define the parameters
+   * of the {@link CardTransactionManager#prepareComputeSignature(CommonSignatureComputationData)}
+   * and {@link SamTransactionManager#prepareComputeSignature(CommonSignatureComputationData)}
+   * methods.
    *
    * @return A not null reference.
    * @since 2.2.0
    */
-  public SignatureComputationData createSignatureComputationData() {
-    return new SignatureComputationDataAdapter();
+  public BasicSignatureComputationData createBasicSignatureComputationData() {
+    return new BasicSignatureComputationDataAdapter();
   }
 
   /**
-   * Returns a new instance of {@link SignatureVerificationData} to use to define the parameters of
-   * the {@link CardTransactionManager#prepareVerifySignature(SignatureVerificationData)} and {@link
-   * SamTransactionManager#prepareVerifySignature(SignatureVerificationData)} methods.
+   * Returns a new instance of {@link TraceableSignatureComputationData} to use to define the
+   * parameters of the {@link
+   * CardTransactionManager#prepareComputeSignature(CommonSignatureComputationData)} and {@link
+   * SamTransactionManager#prepareComputeSignature(CommonSignatureComputationData)} methods.
    *
    * @return A not null reference.
    * @since 2.2.0
    */
-  public SignatureVerificationData createSignatureVerificationData() {
-    return new SignatureVerificationDataAdapter();
+  public TraceableSignatureComputationData createTraceableSignatureComputationData() {
+    return new TraceableSignatureComputationDataAdapter();
+  }
+
+  /**
+   * Returns a new instance of {@link BasicSignatureVerificationData} to use to define the
+   * parameters of the {@link
+   * CardTransactionManager#prepareVerifySignature(CommonSignatureVerificationData)} and {@link
+   * SamTransactionManager#prepareVerifySignature(CommonSignatureVerificationData)} methods.
+   *
+   * @return A not null reference.
+   * @since 2.2.0
+   */
+  public BasicSignatureVerificationData createBasicSignatureVerificationData() {
+    return new BasicSignatureVerificationDataAdapter();
+  }
+
+  /**
+   * Returns a new instance of {@link TraceableSignatureVerificationData} to use to define the
+   * parameters of the {@link
+   * CardTransactionManager#prepareVerifySignature(CommonSignatureVerificationData)} and {@link
+   * SamTransactionManager#prepareVerifySignature(CommonSignatureVerificationData)} methods.
+   *
+   * @return A not null reference.
+   * @since 2.2.0
+   */
+  public TraceableSignatureVerificationData createTraceableSignatureVerificationData() {
+    return new TraceableSignatureVerificationDataAdapter();
   }
 
   /**

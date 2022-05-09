@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `CalypsoExtensionService.createSignatureComputationData` method.
-- `CalypsoExtensionService.createSignatureVerificationData` method.
+- `CalypsoExtensionService.createBasicSignatureComputationData` method.
+- `CalypsoExtensionService.createTraceableSignatureComputationData` method.
+- `CalypsoExtensionService.createBasicSignatureVerificationData` method.
+- `CalypsoExtensionService.createTraceableSignatureVerificationData` method.
 - `CalypsoExtensionService.createSamSecuritySetting` method.
 - `CalypsoExtensionService.createSamTransaction` method.
 - `CalypsoExtensionService.createSamTransactionWithoutSecurity` method.
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional Calypso requirement related to the transaction audit data (issue [#68]).
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.2.0` (issue [#66]).
-- "Keyple Util Library" to version `2.1.0` by removing deprecated methods invocation.
+- "Keyple Util Library" to version `2.1.0`.
 ### Fixed
 - Null Pointer Exception raised when the "open secure session" command returns an unexpected status word [#70]
 - JSON serialization for interfaces in objects trees (issue [#71]).

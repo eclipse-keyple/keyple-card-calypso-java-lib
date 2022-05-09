@@ -95,17 +95,31 @@ public class CalypsoExtensionServiceTest {
   }
 
   @Test
-  public void createSignatureComputationData_shouldReturnNewReference() {
-    assertThat(service.createSignatureComputationData())
+  public void createBasicSignatureComputationData_shouldReturnNewReference() {
+    assertThat(service.createBasicSignatureComputationData())
         .isNotNull()
-        .isNotEqualTo(service.createSignatureComputationData());
+        .isNotEqualTo(service.createBasicSignatureComputationData());
   }
 
   @Test
-  public void createSignatureVerificationData_shouldReturnNewReference() {
-    assertThat(service.createSignatureVerificationData())
+  public void createTraceableSignatureComputationData_shouldReturnNewReference() {
+    assertThat(service.createTraceableSignatureComputationData())
         .isNotNull()
-        .isNotEqualTo(service.createSignatureVerificationData());
+        .isNotEqualTo(service.createTraceableSignatureComputationData());
+  }
+
+  @Test
+  public void createBasicSignatureVerificationData_shouldReturnNewReference() {
+    assertThat(service.createBasicSignatureVerificationData())
+        .isNotNull()
+        .isNotEqualTo(service.createBasicSignatureVerificationData());
+  }
+
+  @Test
+  public void createTraceableSignatureVerificationData_shouldReturnNewReference() {
+    assertThat(service.createTraceableSignatureVerificationData())
+        .isNotNull()
+        .isNotEqualTo(service.createTraceableSignatureVerificationData());
   }
 
   @Test

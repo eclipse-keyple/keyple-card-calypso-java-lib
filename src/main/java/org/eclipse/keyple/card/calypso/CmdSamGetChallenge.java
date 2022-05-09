@@ -42,24 +42,21 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    *
    * @param productType the SAM product type.
    * @param expectedResponseLength the expected response length.
-   * @throws IllegalArgumentException If the expected response length has wrong value.
    * @since 2.0.1
    */
-  CmdSamGetChallenge(CalypsoSam.ProductType productType, byte expectedResponseLength) {
-    super(command, expectedResponseLength);
+  CmdSamGetChallenge(CalypsoSam.ProductType productType, int expectedResponseLength) {
 
-    if (expectedResponseLength != 0x04 && expectedResponseLength != 0x08) {
-      throw new IllegalArgumentException(
-          String.format("Bad challenge length! Expected 4 or 8, got %s", expectedResponseLength));
-    }
-    byte cla = SamUtilAdapter.getClassByte(productType);
-    byte p1 = 0x00;
-    byte p2 = 0x00;
+    super(command, expectedResponseLength);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, command.getInstructionByte(), p1, p2, null, expectedResponseLength)));
+                SamUtilAdapter.getClassByte(productType),
+                command.getInstructionByte(),
+                (byte) 0,
+                (byte) 0,
+                null,
+                (byte) expectedResponseLength)));
   }
 
   /**
