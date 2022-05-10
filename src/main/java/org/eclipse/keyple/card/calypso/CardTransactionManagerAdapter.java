@@ -325,6 +325,20 @@ final class CardTransactionManagerAdapter
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.0
+   */
+  @Override
+  <E extends AbstractApduCommand> List<ApduRequestSpi> getApduRequests(List<E> commands) {
+    // Process SAM operations first for SV if needed.
+    if (svLastModifyingCommand != null) {
+      finalizeSvCommand();
+    }
+    return super.getApduRequests(commands);
+  }
+
+  /**
    * (private)<br>
    * Aborts the secure session without raising any exception.
    */
@@ -1227,13 +1241,6 @@ final class CardTransactionManagerAdapter
    */
   private CardResponseApi transmitCardRequest(
       CardRequestSpi cardRequest, ChannelControl channelControl) {
-
-    // Process SAM operations first for SV if needed.
-    if (svLastModifyingCommand != null) {
-      finalizeSvCommand();
-    }
-
-    // Process card request.
     CardResponseApi cardResponse;
     try {
       cardResponse = cardReader.transmitCardRequest(cardRequest, channelControl);
