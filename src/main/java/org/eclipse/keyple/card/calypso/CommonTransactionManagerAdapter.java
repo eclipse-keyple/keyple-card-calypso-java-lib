@@ -87,7 +87,7 @@ abstract class CommonTransactionManagerAdapter<
    * @return An empty list if there is no command.
    * @since 2.2.0
    */
-  <E extends AbstractApduCommand> List<ApduRequestSpi> getApduRequests(List<E> commands) {
+  final <E extends AbstractApduCommand> List<ApduRequestSpi> getApduRequests(List<E> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
       for (AbstractApduCommand command : commands) {

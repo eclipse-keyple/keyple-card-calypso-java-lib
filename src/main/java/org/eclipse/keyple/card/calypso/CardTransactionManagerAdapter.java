@@ -325,20 +325,6 @@ final class CardTransactionManagerAdapter
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  <E extends AbstractApduCommand> List<ApduRequestSpi> getApduRequests(List<E> commands) {
-    // Process SAM operations first for SV if needed.
-    if (svLastModifyingCommand != null) {
-      finalizeSvCommand();
-    }
-    return super.getApduRequests(commands);
-  }
-
-  /**
    * (private)<br>
    * Aborts the secure session without raising any exception.
    */
@@ -916,6 +902,7 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager processCommands() {
+    finalizeSvCommandIfNeeded();
     if (isSessionOpen) {
       processCommandsInsideSession();
     } else {
@@ -945,6 +932,7 @@ final class CardTransactionManagerAdapter
   public CardTransactionManager processClosing() {
     try {
       checkSession();
+      finalizeSvCommandIfNeeded();
 
       List<AbstractCardCommand> cardAtomicCommands = new ArrayList<AbstractCardCommand>();
       boolean isAtLeastOneReadCommand = false;
@@ -1060,6 +1048,8 @@ final class CardTransactionManagerAdapter
             "No commands should have been prepared prior to a PIN submission.");
       }
 
+      finalizeSvCommandIfNeeded();
+
       // CL-PIN-PENCRYPT.1
       if (securitySetting != null && !securitySetting.isPinPlainTransmissionEnabled()) {
 
@@ -1131,6 +1121,8 @@ final class CardTransactionManagerAdapter
         throw new IllegalStateException("'Change PIN' not allowed when a secure session is open.");
       }
 
+      finalizeSvCommandIfNeeded();
+
       // CL-PIN-MENCRYPT.1
       if (securitySetting.isPinPlainTransmissionEnabled()) {
         // transmission in plain mode
@@ -1188,6 +1180,8 @@ final class CardTransactionManagerAdapter
     }
 
     Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");
+
+    finalizeSvCommandIfNeeded();
 
     // CL-KEY-CHANGE.1
     cardCommands.add(new CmdCardGetChallenge(card.getCardClass()));
@@ -1270,9 +1264,13 @@ final class CardTransactionManagerAdapter
 
   /**
    * (private)<br>
-   * Finalizes the last SV modifying command.
+   * Finalizes the last SV modifying command using the control SAM if an SV operation is pending.
    */
-  private void finalizeSvCommand() {
+  private void finalizeSvCommandIfNeeded() {
+
+    if (svLastModifyingCommand == null) {
+      return;
+    }
 
     byte[] svComplementaryData;
 
