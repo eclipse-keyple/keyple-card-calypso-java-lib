@@ -19,8 +19,6 @@ import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -30,9 +28,6 @@ import org.slf4j.LoggerFactory;
  */
 final class CardControlSamTransactionManagerAdapter
     extends CommonControlSamTransactionManagerAdapter {
-
-  private static final Logger logger =
-      LoggerFactory.getLogger(CardControlSamTransactionManagerAdapter.class);
 
   private final CalypsoSamAdapter controlSam;
   private final CalypsoCardAdapter targetCard;

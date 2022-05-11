@@ -1285,10 +1285,6 @@ final class CardTransactionManagerAdapter
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svComplementaryData);
 
-      // when executed in session, this SV command returns 6200h
-      if (isSessionOpen) {
-        svCommand.getApduRequest().addSuccessfulStatusWord(0x6200);
-      }
     } else {
 
       // SV DEBIT/UNDEBIT: get the security data from the SAM
@@ -1303,11 +1299,6 @@ final class CardTransactionManagerAdapter
 
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svComplementaryData);
-
-      // when executed in session, this SV command returns 6200h
-      if (isSessionOpen) {
-        svCommand.getApduRequest().addSuccessfulStatusWord(0x6200);
-      }
     }
   }
 
