@@ -23,6 +23,8 @@ import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.HexUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * (package-private)<br>
@@ -35,11 +37,12 @@ import org.eclipse.keyple.core.util.HexUtil;
  */
 class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSpi {
 
+  private static final Logger logger = LoggerFactory.getLogger(CalypsoSamSelectionAdapter.class);
+  private static final int SW_NOT_LOCKED = 0x6985;
   private final CardSelectorAdapter samCardSelector;
-  private final ArrayList<AbstractSamCommand> samCommands;
   private CalypsoSam.ProductType productType;
   private String serialNumberRegex;
-  private String unlockData;
+  private CmdSamUnlock unlockCommand;
 
   /**
    * (package-private)<br>
@@ -49,7 +52,6 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    */
   CalypsoSamSelectionAdapter() {
     samCardSelector = new CardSelectorAdapter();
-    this.samCommands = new ArrayList<AbstractSamCommand>();
   }
 
   /**
@@ -59,19 +61,14 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    */
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
-    List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
-
-    // prepare the UNLOCK command if unlock data has been defined
-    if (unlockData != null) {
-      samCommands.add(new CmdSamUnlock(productType, HexUtil.toByteArray(unlockData)));
-      for (AbstractSamCommand samCommand : samCommands) {
-        cardSelectionApduRequests.add(samCommand.getApduRequest());
-      }
-    }
 
     samCardSelector.filterByPowerOnData(buildAtrRegex(productType, serialNumberRegex));
 
-    if (!cardSelectionApduRequests.isEmpty()) {
+    // prepare the UNLOCK command if unlock data has been defined
+    if (unlockCommand != null) {
+      List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
+      cardSelectionApduRequests.add(
+          unlockCommand.getApduRequest().addSuccessfulStatusWord(SW_NOT_LOCKED));
       return new CardSelectionRequestAdapter(
           samCardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
     } else {
@@ -87,7 +84,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   @Override
   public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
 
-    if (samCommands.size() == 1) {
+    if (unlockCommand != null) {
       // an unlock command has been requested
       if (cardSelectionResponse.getCardResponse() == null
           || cardSelectionResponse.getCardResponse().getApduResponses().isEmpty()) {
@@ -97,7 +94,9 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       // check the SAM response to the unlock command
       try {
-        samCommands.get(0).setApduResponse(apduResponse).checkStatus();
+        unlockCommand.setApduResponse(apduResponse).checkStatus();
+      } catch (CalypsoSamAccessForbiddenException e) {
+        logger.warn("SAM not locked or already unlocked");
       } catch (CalypsoSamCommandException e) {
         throw new ParseException("An exception occurred while parse the SAM responses.", e);
       }
@@ -150,9 +149,11 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   public CalypsoSamSelection setUnlockData(String unlockData) {
     Assert.getInstance()
         .notEmpty(unlockData, "unlockData")
-        .isTrue(unlockData.length() == 16 || unlockData.length() == 32, "unlockData")
+        .isTrue(
+            unlockData.length() == 16 || unlockData.length() == 32,
+            "unlock data length == 16 or 32")
         .isHexString(unlockData, "unlockData");
-    this.unlockData = unlockData;
+    this.unlockCommand = new CmdSamUnlock(productType, HexUtil.toByteArray(unlockData));
     return this;
   }
 
