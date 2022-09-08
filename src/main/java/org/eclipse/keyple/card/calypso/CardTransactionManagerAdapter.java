@@ -306,12 +306,16 @@ final class CardTransactionManagerAdapter
     Byte kif = controlSamTransactionManager.computeKif(writeAccessLevel, cardKif, kvc);
 
     if (!securitySetting.isSessionKeyAuthorized(kif, kvc)) {
+      if(card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_3) {
       throw new UnauthorizedKeyException(
           String.format(
               "Unauthorized key error: KIF=%s, KVC=%s %s",
               kif != null ? String.format(PATTERN_1_BYTE_HEX, kif) : null,
               kvc != null ? String.format(PATTERN_1_BYTE_HEX, kvc) : null,
               getTransactionAuditDataAsString()));
+      } else {
+        throw new UnauthorizedKeyException("No KIF was provided for card, which is necessary for rev < 3");
+      }
     }
 
     // Initialize a new SAM session.
