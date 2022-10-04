@@ -77,8 +77,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       // determine SAM product type from Application Subtype
       switch (applicationSubType) {
         case (byte) 0xC1:
-          samProductType =
-              softwareIssuer == (byte) 0x08 ? ProductType.SAM_C1_HSM : ProductType.SAM_C1;
+          samProductType = softwareIssuer == (byte) 0x08 ? ProductType.HSM_C1 : ProductType.SAM_C1;
           break;
         case (byte) 0xD0:
         case (byte) 0xD1:
@@ -155,7 +154,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   int getMaxDigestDataLength() {
     switch (samProductType) {
       case SAM_C1:
-      case SAM_C1_HSM:
+      case HSM_C1:
         return 255;
       case SAM_S1DX:
         return 70;

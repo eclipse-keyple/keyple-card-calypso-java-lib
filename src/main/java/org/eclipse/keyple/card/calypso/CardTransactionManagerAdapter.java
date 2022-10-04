@@ -2236,7 +2236,7 @@ final class CardTransactionManagerAdapter
         card.isExtendedModeSupported()
             && (calypsoSam == null
                 || calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1
-                || calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1_HSM);
+                || calypsoSam.getProductType() == CalypsoSam.ProductType.HSM_C1);
 
     if (securitySetting.isSvLoadAndDebitLogEnabled() && (!useExtendedMode)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
@@ -2308,7 +2308,7 @@ final class CardTransactionManagerAdapter
     CalypsoSam calypsoSam = securitySetting.getControlSam();
     return card.isExtendedModeSupported()
         && (calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1
-            || calypsoSam.getProductType() == CalypsoSam.ProductType.SAM_C1_HSM);
+            || calypsoSam.getProductType() == CalypsoSam.ProductType.HSM_C1);
   }
 
   /**

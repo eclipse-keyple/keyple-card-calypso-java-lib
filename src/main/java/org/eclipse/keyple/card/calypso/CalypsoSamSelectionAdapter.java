@@ -186,7 +186,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
     if (productType != null) {
       switch (productType) {
         case SAM_C1:
-        case SAM_C1_HSM:
+        case HSM_C1:
           applicationTypeMask = "C1";
           break;
         case SAM_S1DX:

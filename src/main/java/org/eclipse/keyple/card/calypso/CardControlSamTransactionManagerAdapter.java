@@ -432,6 +432,9 @@ final class CardControlSamTransactionManagerAdapter
      * Prepares the "Digest Update" SAM command.
      */
     private void prepareDigestUpdate() {
+      if (cardApdus.isEmpty()) {
+        return;
+      }
       // CL-SAM-DUPDATE.1
       if (controlSam.getProductType() == CalypsoSam.ProductType.SAM_C1) {
         // Digest Update Multiple
