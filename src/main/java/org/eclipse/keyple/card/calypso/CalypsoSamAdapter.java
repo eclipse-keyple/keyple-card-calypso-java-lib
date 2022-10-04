@@ -70,11 +70,14 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       platform = atrSubElements[0];
       applicationType = atrSubElements[1];
       applicationSubType = atrSubElements[2];
+      softwareIssuer = atrSubElements[3];
+      softwareVersion = atrSubElements[4];
+      softwareRevision = atrSubElements[5];
 
       // determine SAM product type from Application Subtype
       switch (applicationSubType) {
         case (byte) 0xC1:
-          samProductType = ProductType.SAM_C1;
+          samProductType = softwareIssuer == (byte) 0x08 ? ProductType.HSM_C1 : ProductType.SAM_C1;
           break;
         case (byte) 0xD0:
         case (byte) 0xD1:
@@ -89,9 +92,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
           break;
       }
 
-      softwareIssuer = atrSubElements[3];
-      softwareVersion = atrSubElements[4];
-      softwareRevision = atrSubElements[5];
       System.arraycopy(atrSubElements, 6, serialNumber, 0, 4);
       if (logger.isTraceEnabled()) {
         logger.trace(
@@ -154,6 +154,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   int getMaxDigestDataLength() {
     switch (samProductType) {
       case SAM_C1:
+      case HSM_C1:
         return 255;
       case SAM_S1DX:
         return 70;
