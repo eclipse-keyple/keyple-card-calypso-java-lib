@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -432,10 +433,36 @@ final class CardControlSamTransactionManagerAdapter
      */
     private void prepareDigestUpdate() {
       // CL-SAM-DUPDATE.1
-      // TODO optimization with the use of "Digest Update Multiple" whenever possible.
-      for (byte[] cardApdu : cardApdus) {
-        getSamCommands()
-            .add(new CmdSamDigestUpdate(controlSam.getProductType(), isSessionEncrypted, cardApdu));
+      if (controlSam.getProductType() == CalypsoSam.ProductType.SAM_C1) {
+        // Digest Update Multiple
+        // Construct list of DataIn
+        List<byte[]> digestDataList = new ArrayList<byte[]>(1);
+        byte[] buffer = new byte[255];
+        int i = 0;
+        for (byte[] cardApdu : cardApdus) {
+          if (i + cardApdu.length > 254) {
+            // Copy buffer to digestDataList and reset buffer
+            digestDataList.add(Arrays.copyOf(buffer, i));
+            i = 0;
+          }
+          // Add [length][apdu] to current buffer
+          buffer[i++] = (byte) cardApdu.length;
+          System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
+          i += cardApdu.length;
+        }
+        // Copy buffer to digestDataList
+        digestDataList.add(Arrays.copyOf(buffer, i));
+        // Add commands
+        for (byte[] dataIn : digestDataList) {
+          getSamCommands()
+                  .add(new CmdSamDigestUpdateMultiple(controlSam.getProductType(), isSessionEncrypted, dataIn));
+        }
+      } else {
+        // Digest Update (simple)
+        for (byte[] cardApdu : cardApdus) {
+          getSamCommands()
+              .add(new CmdSamDigestUpdate(controlSam.getProductType(), isSessionEncrypted, cardApdu));
+        }
       }
     }
 

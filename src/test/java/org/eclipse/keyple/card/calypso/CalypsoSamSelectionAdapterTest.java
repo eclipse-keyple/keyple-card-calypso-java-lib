@@ -56,7 +56,7 @@ public class CalypsoSamSelectionAdapterTest {
       filterByProductType_whenProductTypeIsDefined_shouldReturnResponseContainingACardSelectorWithPowerDataRegex() {
     samSelection.filterByProductType(CalypsoSam.ProductType.SAM_C1);
     CardSelectorSpi cardSelector = samSelection.getCardSelectionRequest().getCardSelector();
-    assertThat(cardSelector.getPowerOnDataRegex()).contains("80C120");
+    assertThat(cardSelector.getPowerOnDataRegex()).contains("80C1.{6}");
   }
 
   @Test(expected = IllegalArgumentException.class)

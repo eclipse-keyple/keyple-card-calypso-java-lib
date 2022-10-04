@@ -186,6 +186,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
     if (productType != null) {
       switch (productType) {
         case SAM_C1:
+        case SAM_C1_HSM:
           applicationTypeMask = "C1";
           break;
         case SAM_S1DX:
@@ -201,7 +202,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
         default:
           throw new IllegalArgumentException("Unknown SAM subtype.");
       }
-      atrRegex = "3B(.{6}|.{10})805A..80" + applicationTypeMask + "20.{4}" + snRegex + "829000";
+      atrRegex = "3B(.{6}|.{10})805A..80" + applicationTypeMask + ".{6}" + snRegex + "829000";
     } else {
       /* match any ATR */
       atrRegex = ".*";
