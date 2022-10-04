@@ -51,17 +51,15 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
    * Instantiates a new CmdSamDigestUpdateMultiple.
    *
    * @param productType the product type.
-   * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData the digest data.
    * @since 2.0.1
    */
-  CmdSamDigestUpdateMultiple(
-      CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
+  CmdSamDigestUpdateMultiple(CalypsoSam.ProductType productType, byte[] digestData) {
     super(command, 0);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
-    byte p1 = (byte) 0x00;
-    byte p2 = encryptedSession ? (byte) 0x80 : (byte) 0x00;
+    byte p1 = (byte) 0x80;
+    byte p2 = (byte) 0x00;
 
     if (digestData == null || digestData.length > 255) {
       throw new IllegalArgumentException("Digest data null or too long!");

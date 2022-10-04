@@ -454,14 +454,15 @@ final class CardControlSamTransactionManagerAdapter
         digestDataList.add(Arrays.copyOf(buffer, i));
         // Add commands
         for (byte[] dataIn : digestDataList) {
-          getSamCommands()
-                  .add(new CmdSamDigestUpdateMultiple(controlSam.getProductType(), isSessionEncrypted, dataIn));
+          getSamCommands().add(new CmdSamDigestUpdateMultiple(controlSam.getProductType(), dataIn));
         }
       } else {
         // Digest Update (simple)
         for (byte[] cardApdu : cardApdus) {
           getSamCommands()
-              .add(new CmdSamDigestUpdate(controlSam.getProductType(), isSessionEncrypted, cardApdu));
+              .add(
+                  new CmdSamDigestUpdate(
+                      controlSam.getProductType(), isSessionEncrypted, cardApdu));
         }
       }
     }
