@@ -160,7 +160,20 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
    */
   @Override
   public SamTransactionManager prepareReadEventCeiling(int eventCeilingNumber) {
-    return null;
+
+    Assert.getInstance()
+        .isInRange(
+            eventCeilingNumber,
+            CalypsoSamAdapter.MIN_EVENT_CEILING_NUMBER,
+            CalypsoSamAdapter.MAX_EVENT_CEILING_NUMBER,
+            "eventCeilingNumber");
+    getSamCommands()
+        .add(
+            new CmdSamReadCeilings(
+                getCalypsoSam().getProductType(),
+                CmdSamReadCeilings.CeilingsOperationType.READ_SINGLE_CEILING,
+                eventCeilingNumber));
+    return this;
   }
 
   /**
