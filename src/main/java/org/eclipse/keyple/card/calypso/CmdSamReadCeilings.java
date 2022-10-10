@@ -11,10 +11,11 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -26,17 +27,17 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.READ_CEILINGS;
 
-  private static final int MAX_CEILING_NUMB = 26;
-
-  private static final int MAX_CEILING_REC_NUMB = 3;
-
   /** Ceiling operation type */
   enum CeilingsOperationType {
-    /** Ceiling record */
-    CEILING_RECORD,
     /** Single ceiling */
-    SINGLE_CEILING
+    READ_SINGLE_CEILING,
+    /** Ceiling record */
+    READ_CEILING_RECORD
   }
+
+  private final CeilingsOperationType ceilingsOperationType;
+  private final int firstEventCeilingNumber;
+  private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -59,12 +60,13 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * Instantiates a new CmdSamReadCeilings.
    *
    * @param productType the SAM product type.
-   * @param operationType the counter operation type.
-   * @param index the counter index.
+   * @param ceilingsOperationType the ceiling operation type.
+   * @param target the ceiling index (0-26) if READ_SINGLE_CEILING, the record index (1-3) if
+   *     READ_CEILING_RECORD.
    * @since 2.0.1
    */
   CmdSamReadCeilings(
-      CalypsoSam.ProductType productType, CeilingsOperationType operationType, int index) {
+      CalypsoSam.ProductType productType, CeilingsOperationType ceilingsOperationType, int target) {
 
     super(command, 0);
 
@@ -72,39 +74,20 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
 
     byte p1;
     byte p2;
-
-    if (operationType == CeilingsOperationType.CEILING_RECORD) {
-      if (index < 0 || index > MAX_CEILING_REC_NUMB) {
-        throw new IllegalArgumentException(
-            "Record Number must be between 1 and " + MAX_CEILING_REC_NUMB + ".");
-      }
-      p1 = (byte) 0x00;
-      p2 = (byte) (0xB0 + index);
-    } else {
-      // SINGLE_CEILING:
-
-      if (index < 0 || index > MAX_CEILING_NUMB) {
-        throw new IllegalArgumentException(
-            "Counter Number must be between 0 and " + MAX_CEILING_NUMB + ".");
-      }
-      p1 = (byte) index;
+    this.ceilingsOperationType = ceilingsOperationType;
+    if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
+      this.firstEventCeilingNumber = target;
+      p1 = (byte) target;
       p2 = (byte) (0xB8);
+    } else {
+      this.firstEventCeilingNumber = (target - 1) * 9;
+      p1 = (byte) 0x00;
+      p2 = (byte) (0xB0 + target);
     }
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the key parameters.
-   *
-   * @return The ceiling data (Value or Record)
-   * @since 2.0.1
-   */
-  byte[] getCeilingsData() {
-    return isSuccessful() ? getApduResponse().getDataOut() : null;
   }
 
   /**
@@ -115,5 +98,42 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.0
+   */
+  @Override
+  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
+    super.setApduResponse(apduResponse);
+    if (apduResponse.getDataOut().length == 48) {
+      byte[] dataOut = apduResponse.getDataOut();
+      if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
+        eventCeilings.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+      } else {
+        for (int i = 0; i < 8; i++) {
+          eventCeilings.put(
+              firstEventCeilingNumber + i,
+              ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
+        }
+      }
+    } else {
+      throw new IllegalStateException(
+          "Invalid response length to command SAM Read Ceilings: "
+              + apduResponse.getDataOut().length);
+    }
+    return this;
+  }
+
+  /**
+   * (package-private)<br>
+   *
+   * @return A not empty map containing 1 or 9 ceiling values according to ceilingsOperationType.
+   * @since 2.1.0
+   */
+  public SortedMap<Integer, Integer> getEventCeilings() {
+    return eventCeilings;
   }
 }

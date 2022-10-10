@@ -11,13 +11,16 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
+import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.HexUtil;
-import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +43,12 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareIssuer;
   private final byte softwareVersion;
   private final byte softwareRevision;
+  private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
+  private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
+  static final int MIN_EVENT_COUNTER_NUMBER = 0;
+  static final int MAX_EVENT_COUNTER_NUMBER = 26;
+  static final int MIN_EVENT_CEILING_NUMBER = 0;
+  static final int MAX_EVENT_CEILING_NUMBER = 26;
 
   /**
    * Constructor.
@@ -194,7 +203,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final CalypsoSam.ProductType getProductType() {
+  public CalypsoSam.ProductType getProductType() {
     return samProductType;
   }
 
@@ -214,7 +223,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte[] getSerialNumber() {
+  public byte[] getSerialNumber() {
     return serialNumber;
   }
 
@@ -224,7 +233,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getPlatform() {
+  public byte getPlatform() {
     return platform;
   }
 
@@ -234,7 +243,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getApplicationType() {
+  public byte getApplicationType() {
     return applicationType;
   }
 
@@ -244,7 +253,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getApplicationSubType() {
+  public byte getApplicationSubType() {
     return applicationSubType;
   }
 
@@ -254,7 +263,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareIssuer() {
+  public byte getSoftwareIssuer() {
     return softwareIssuer;
   }
 
@@ -264,7 +273,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareVersion() {
+  public byte getSoftwareVersion() {
     return softwareVersion;
   }
 
@@ -274,18 +283,81 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareRevision() {
+  public byte getSoftwareRevision() {
     return softwareRevision;
   }
 
   /**
-   * Gets the object content as a Json string.
+   * (package-private)<br>
+   * Sets a event counter value.
    *
-   * @return A not empty string.
-   * @since 2.1.1
+   * @param counters A map of counter values.
+   * @since 2.2.3
+   */
+  void setEventCounter(Map<Integer, Integer> counters) {
+    eventCounters.putAll(counters);
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets a event ceiling value.
+   *
+   * @param ceilings A map of ceiling values.
+   * @since 2.2.3
+   */
+  void setEventCeilingValue(Map<Integer, Integer> ceilings) {
+    eventCeilings.putAll(ceilings);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
    */
   @Override
-  public String toString() {
-    return JsonUtil.toJson(this);
+  public Integer getEventCounter(int eventCounterNumber) {
+    Assert.getInstance()
+        .isInRange(
+            eventCounterNumber,
+            MIN_EVENT_COUNTER_NUMBER,
+            MAX_EVENT_COUNTER_NUMBER,
+            "eventCounterNumber");
+    return eventCounters.get(eventCounterNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SortedMap<Integer, Integer> getEventCounters() {
+    return eventCounters;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public Integer getEventCeiling(int eventCeilingNumber) {
+    Assert.getInstance()
+        .isInRange(
+            eventCeilingNumber,
+            MIN_EVENT_CEILING_NUMBER,
+            MAX_EVENT_CEILING_NUMBER,
+            "eventCeilingNumber");
+    return eventCeilings.get(eventCeilingNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SortedMap<Integer, Integer> getEventCeilings() {
+    return eventCeilings;
   }
 }

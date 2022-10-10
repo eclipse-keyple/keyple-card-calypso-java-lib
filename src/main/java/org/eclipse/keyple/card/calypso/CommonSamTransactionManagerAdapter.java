@@ -360,6 +360,17 @@ abstract class CommonSamTransactionManagerAdapter
       for (int i = 0; i < apduResponses.size(); i++) {
         try {
           samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
+          CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
+          switch (commandRef) {
+            case READ_CEILINGS:
+              sam.setEventCeilingValue(
+                  ((CmdSamReadCeilings) samCommands.get(i)).getEventCeilings());
+              break;
+            case READ_EVENT_COUNTER:
+              sam.setEventCeilingValue(
+                  ((CmdSamReadEventCounter) samCommands.get(i)).getEventCounters());
+              break;
+          }
         } catch (CalypsoSamCommandException e) {
           CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
           if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE
@@ -475,5 +486,74 @@ abstract class CommonSamTransactionManagerAdapter
    */
   private void prepareSelectDiversifier() {
     samCommands.add(new CmdSamSelectDiversifier(sam.getProductType(), currentKeyDiversifier));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
+    Assert.getInstance()
+        .isInRange(
+            eventCounterNumber,
+            CalypsoSamAdapter.MIN_EVENT_COUNTER_NUMBER,
+            CalypsoSamAdapter.MAX_EVENT_COUNTER_NUMBER,
+            "eventCounterNumber");
+    throw new UnsupportedOperationException("prepareReadEventCounter");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCounters(
+      int fromEventCounterNumber, int toEventCounterNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCounters");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCeiling(int eventCeilingNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCeiling");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCeilings(
+      int fromEventCeilingNumber, int toEventCeilingNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCeilings");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareWriteEventCeiling(int eventCeilingNumber, int newValue) {
+    throw new UnsupportedOperationException("prepareWriteEventCeiling");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareWriteEventCeilings(
+      int fromEventCeilingNumber, List<Integer> newValues) {
+    throw new UnsupportedOperationException("prepareWriteEventCeilings");
   }
 }
