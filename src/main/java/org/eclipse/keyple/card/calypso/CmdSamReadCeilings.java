@@ -51,7 +51,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
     m.put(
         0x6A00,
         new StatusProperties("Incorrect P1 or P2.", CalypsoSamIllegalParameterException.class));
-    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed.", null));
+    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed."));
     STATUS_TABLE = m;
   }
 
@@ -68,7 +68,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   CmdSamReadCeilings(
       CalypsoSam.ProductType productType, CeilingsOperationType ceilingsOperationType, int target) {
 
-    super(command, 0);
+    super(command, 48);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
 
@@ -108,21 +108,17 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   @Override
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length == 48) {
+    if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
       if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
         eventCeilings.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
       } else {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 9; i++) {
           eventCeilings.put(
               firstEventCeilingNumber + i,
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-    } else {
-      throw new IllegalStateException(
-          "Invalid response length to command SAM Read Ceilings: "
-              + apduResponse.getDataOut().length);
     }
     return this;
   }

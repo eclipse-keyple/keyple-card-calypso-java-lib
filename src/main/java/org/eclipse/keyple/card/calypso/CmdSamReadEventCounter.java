@@ -52,7 +52,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
         new StatusProperties(
             "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
     m.put(0x6A00, new StatusProperties("Incorrect P2.", CalypsoSamIllegalParameterException.class));
-    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed.", null));
+    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed."));
     STATUS_TABLE = m;
   }
 
@@ -69,7 +69,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   CmdSamReadEventCounter(
       CalypsoSam.ProductType productType, CounterOperationType counterOperationType, int target) {
 
-    super(command, 0);
+    super(command, 48);
 
     byte cla = SamUtilAdapter.getClassByte(productType);
     byte p2;
@@ -105,21 +105,17 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   @Override
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length == 48) {
+    if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
       if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
         eventCounters.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
       } else {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 9; i++) {
           eventCounters.put(
               firstEventCounterNumber + i,
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-    } else {
-      throw new IllegalStateException(
-          "Invalid response length to command SAM Read Event Counter: "
-              + apduResponse.getDataOut().length);
     }
     return this;
   }
