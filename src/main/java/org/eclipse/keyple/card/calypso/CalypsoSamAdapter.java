@@ -34,6 +34,11 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoSamAdapter.class);
 
+  static final int MIN_EVENT_COUNTER_NUMBER = 0;
+  static final int MAX_EVENT_COUNTER_NUMBER = 26;
+  static final int MIN_EVENT_CEILING_NUMBER = 0;
+  static final int MAX_EVENT_CEILING_NUMBER = 26;
+
   private final String powerOnData;
   private final CalypsoSam.ProductType samProductType;
   private final byte[] serialNumber;
@@ -45,10 +50,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareRevision;
   private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
   private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
-  static final int MIN_EVENT_COUNTER_NUMBER = 0;
-  static final int MAX_EVENT_COUNTER_NUMBER = 26;
-  static final int MIN_EVENT_CEILING_NUMBER = 0;
-  static final int MAX_EVENT_CEILING_NUMBER = 26;
+
 
   /**
    * Constructor.
@@ -289,24 +291,24 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
   /**
    * (package-private)<br>
-   * Sets a event counter value.
+   * Adds or replace one or more event counters.
    *
-   * @param counters A map of counter values.
+   * @param eventCounters A map of counter values.
    * @since 2.2.3
    */
-  void setEventCounter(Map<Integer, Integer> counters) {
-    eventCounters.putAll(counters);
+  void putEventCounters(Map<Integer, Integer> eventCounters) {
+    this.eventCounters.putAll(eventCounters);
   }
 
   /**
    * (package-private)<br>
-   * Sets a event ceiling value.
+   * Adds or replace one or more event counters.
    *
-   * @param ceilings A map of ceiling values.
+   * @param eventCeilings A map of ceiling values.
    * @since 2.2.3
    */
-  void setEventCeilingValue(Map<Integer, Integer> ceilings) {
-    eventCeilings.putAll(ceilings);
+  void putEventCeilings(Map<Integer, Integer> eventCeilings) {
+    this.eventCeilings.putAll(eventCeilings);
   }
 
   /**
@@ -316,12 +318,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    */
   @Override
   public Integer getEventCounter(int eventCounterNumber) {
-    Assert.getInstance()
-        .isInRange(
-            eventCounterNumber,
-            MIN_EVENT_COUNTER_NUMBER,
-            MAX_EVENT_COUNTER_NUMBER,
-            "eventCounterNumber");
     return eventCounters.get(eventCounterNumber);
   }
 
@@ -342,12 +338,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    */
   @Override
   public Integer getEventCeiling(int eventCeilingNumber) {
-    Assert.getInstance()
-        .isInRange(
-            eventCeilingNumber,
-            MIN_EVENT_CEILING_NUMBER,
-            MAX_EVENT_CEILING_NUMBER,
-            "eventCeilingNumber");
     return eventCeilings.get(eventCeilingNumber);
   }
 
