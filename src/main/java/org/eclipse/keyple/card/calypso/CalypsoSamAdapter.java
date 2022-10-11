@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
@@ -40,6 +42,8 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareIssuer;
   private final byte softwareVersion;
   private final byte softwareRevision;
+  private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
+  private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
 
   /**
    * Constructor.
@@ -194,7 +198,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final CalypsoSam.ProductType getProductType() {
+  public CalypsoSam.ProductType getProductType() {
     return samProductType;
   }
 
@@ -214,7 +218,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte[] getSerialNumber() {
+  public byte[] getSerialNumber() {
     return serialNumber;
   }
 
@@ -224,7 +228,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getPlatform() {
+  public byte getPlatform() {
     return platform;
   }
 
@@ -234,7 +238,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getApplicationType() {
+  public byte getApplicationType() {
     return applicationType;
   }
 
@@ -244,7 +248,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getApplicationSubType() {
+  public byte getApplicationSubType() {
     return applicationSubType;
   }
 
@@ -254,7 +258,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareIssuer() {
+  public byte getSoftwareIssuer() {
     return softwareIssuer;
   }
 
@@ -264,7 +268,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareVersion() {
+  public byte getSoftwareVersion() {
     return softwareVersion;
   }
 
@@ -274,8 +278,72 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
    * @since 2.0.0
    */
   @Override
-  public final byte getSoftwareRevision() {
+  public byte getSoftwareRevision() {
     return softwareRevision;
+  }
+
+  /**
+   * (package-private)<br>
+   * Adds or replace an event counter.
+   *
+   * @param eventCounterNumber The number of the counter.
+   * @param eventCounterValue The counter value.
+   * @since 2.2.3
+   */
+  void putEventCounter(int eventCounterNumber, int eventCounterValue) {
+    this.eventCounters.put(eventCounterNumber, eventCounterValue);
+  }
+
+  /**
+   * (package-private)<br>
+   * Adds or replace an event counter.
+   *
+   * @param eventCeilingNumber The number of the ceiling.
+   * @param eventCeilingValue The ceiling value.
+   * @since 2.2.3
+   */
+  void putEventCeiling(int eventCeilingNumber, int eventCeilingValue) {
+    this.eventCeilings.put(eventCeilingNumber, eventCeilingValue);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public Integer getEventCounter(int eventCounterNumber) {
+    return eventCounters.get(eventCounterNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SortedMap<Integer, Integer> getEventCounters() {
+    return eventCounters;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public Integer getEventCeiling(int eventCeilingNumber) {
+    return eventCeilings.get(eventCeilingNumber);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SortedMap<Integer, Integer> getEventCeilings() {
+    return eventCeilings;
   }
 
   /**

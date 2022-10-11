@@ -13,8 +13,9 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -26,17 +27,17 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   /** The command reference. */
   private static final CalypsoSamCommand command = CalypsoSamCommand.READ_EVENT_COUNTER;
 
-  private static final int MAX_COUNTER_NUMB = 26;
-
-  private static final int MAX_COUNTER_REC_NUMB = 3;
-
   /** Event counter operation type */
-  enum SamEventCounterOperationType {
-    /** Counter record */
-    COUNTER_RECORD,
+  enum CounterOperationType {
     /** Single counter */
-    SINGLE_COUNTER
+    READ_SINGLE_COUNTER,
+    /** Counter record */
+    READ_COUNTER_RECORD
   }
+
+  private final CalypsoSamAdapter sam;
+  private final CounterOperationType counterOperationType;
+  private final int firstEventCounterNumber;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -48,7 +49,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
         new StatusProperties(
             "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
     m.put(0x6A00, new StatusProperties("Incorrect P2.", CalypsoSamIllegalParameterException.class));
-    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed.", null));
+    m.put(0x6200, new StatusProperties("Correct execution with warning: data not signed."));
     STATUS_TABLE = m;
   }
 
@@ -56,48 +57,32 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiate a new CmdSamReadEventCounter
    *
-   * @param productType the SAM product type.
-   * @param operationType the counter operation type.
-   * @param index the counter index.
+   * @param sam the SAM.
+   * @param counterOperationType the counter operation type.
+   * @param target the counter index (0-26) if READ_SINGLE_COUNTER, the record index (1-3) if
+   *     READ_COUNTER_RECORD.
    * @since 2.0.1
    */
   CmdSamReadEventCounter(
-      CalypsoSam.ProductType productType, SamEventCounterOperationType operationType, int index) {
+      CalypsoSamAdapter sam, CounterOperationType counterOperationType, int target) {
 
-    super(command, 0);
+    super(command, 48);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    this.sam = sam;
+    byte cla = SamUtilAdapter.getClassByte(sam.getProductType());
     byte p2;
-
-    if (operationType == SamEventCounterOperationType.COUNTER_RECORD) {
-      if (index < 1 || index > MAX_COUNTER_REC_NUMB) {
-        throw new IllegalArgumentException(
-            "Record Number must be between 1 and " + MAX_COUNTER_REC_NUMB + ".");
-      }
-      p2 = (byte) (0xE0 + index);
+    this.counterOperationType = counterOperationType;
+    if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
+      this.firstEventCounterNumber = target;
+      p2 = (byte) (0x81 + target);
     } else {
-      // SINGLE_COUNTER
-      if (index < 0 || index > MAX_COUNTER_NUMB) {
-        throw new IllegalArgumentException(
-            "Counter Number must be between 0 and " + MAX_COUNTER_NUMB + ".");
-      }
-      p2 = (byte) (0x80 + index);
+      this.firstEventCounterNumber = (target - 1) * 9;
+      p2 = (byte) (0xE0 + target);
     }
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, command.getInstructionByte(), (byte) 0x00, p2, null, (byte) 0x00)));
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the key parameters.
-   *
-   * @return the counter data (Value or Record)
-   * @since 2.0.1
-   */
-  byte[] getCounterData() {
-    return isSuccessful() ? getApduResponse().getDataOut() : null;
   }
 
   /**
@@ -108,5 +93,28 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
+    super.setApduResponse(apduResponse);
+    if (isSuccessful()) {
+      byte[] dataOut = apduResponse.getDataOut();
+      if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
+        sam.putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+      } else {
+        for (int i = 0; i < 9; i++) {
+          sam.putEventCounter(
+              firstEventCounterNumber + i,
+              ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
+        }
+      }
+    }
+    return this;
   }
 }

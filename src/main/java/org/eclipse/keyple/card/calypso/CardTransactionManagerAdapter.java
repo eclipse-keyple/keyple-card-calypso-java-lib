@@ -196,7 +196,7 @@ final class CardTransactionManagerAdapter
 
   /**
    * (private)<br>
-   * Process the eventually prepared SAM commands if control SAM is set.
+   * Process any prepared SAM commands if control SAM is set.
    */
   private void processSamPreparedCommands() {
     if (controlSamTransactionManager != null) {

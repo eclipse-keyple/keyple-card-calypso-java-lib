@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
@@ -130,7 +129,7 @@ abstract class CommonSamTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public final CalypsoSam getCalypsoSam() {
+  public final CalypsoSamAdapter getCalypsoSam() {
     return sam;
   }
 
@@ -475,5 +474,68 @@ abstract class CommonSamTransactionManagerAdapter
    */
   private void prepareSelectDiversifier() {
     samCommands.add(new CmdSamSelectDiversifier(sam.getProductType(), currentKeyDiversifier));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCounter");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCounters(
+      int fromEventCounterNumber, int toEventCounterNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCounters");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCeiling(int eventCeilingNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCeiling");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareReadEventCeilings(
+      int fromEventCeilingNumber, int toEventCeilingNumber) {
+    throw new UnsupportedOperationException("prepareReadEventCeilings");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareWriteEventCeiling(int eventCeilingNumber, int newValue) {
+    throw new UnsupportedOperationException("prepareWriteEventCeiling");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  public SamTransactionManager prepareWriteEventCeilings(
+      int fromEventCeilingNumber, List<Integer> newValues) {
+    throw new UnsupportedOperationException("prepareWriteEventCeilings");
   }
 }
