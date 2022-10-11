@@ -269,14 +269,4 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       int fromEventCeilingNumber, List<Integer> newValues) {
     return null;
   }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager processCommands() {
-    return super.processCommands();
-  }
 }
