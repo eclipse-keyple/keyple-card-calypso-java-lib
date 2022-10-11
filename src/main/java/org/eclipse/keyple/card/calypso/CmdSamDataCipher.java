@@ -125,8 +125,8 @@ final class CmdSamDataCipher extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       if (signatureComputationData != null) {
         signatureComputationData.setSignature(
@@ -139,20 +139,9 @@ final class CmdSamDataCipher extends AbstractSamCommand {
         signatureVerificationData.setSignatureValid(
             Arrays.equals(computedSignature, signatureVerificationData.getSignature()));
       }
-    }
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.0
-   */
-  @Override
-  void checkStatus() throws CalypsoSamCommandException {
-    super.checkStatus();
-    if (signatureVerificationData != null && !signatureVerificationData.isSignatureValid()) {
-      throw new CalypsoSamSecurityDataException("Incorrect signature.", getCommandRef(), 0);
+      if (signatureVerificationData != null && !signatureVerificationData.isSignatureValid()) {
+        throw new CalypsoSamSecurityDataException("Incorrect signature.", getCommandRef(), 0);
+      }
     }
   }
 }

@@ -81,14 +81,14 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void initializeWithFci_whenBadFci_shouldThrowIAE() {
+  public void initializeWithFci_whenBadFci_shouldThrowIAE() throws Exception {
     ApduResponseApi selectApplicationResponse =
         new ApduResponseAdapter(HexUtil.toByteArray("1122339000"));
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
   }
 
   @Test
-  public void initializeWithFci_withEmptyFCI_shouldInitUnknownProductType() {
+  public void initializeWithFci_withEmptyFCI_shouldInitUnknownProductType() throws Exception {
     ApduResponseApi selectApplicationResponse =
         new ApduResponseAdapter(HexUtil.toByteArray("9000"));
     calypsoCardAdapter.initializeWithFci(selectApplicationResponse);
@@ -96,7 +96,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void initializeWithFci_whenAppTypeIs_00_shouldThrowIAE() {
+  public void initializeWithFci_whenAppTypeIs_00_shouldThrowIAE() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_APP_TYPE_00, SW1SW2_OK);
@@ -104,7 +104,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenAppTypeIs_FF_shouldInitUnknownProductType() {
+  public void initializeWithFci_whenAppTypeIs_FF_shouldInitUnknownProductType() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_APP_TYPE_FF, SW1SW2_OK);
@@ -113,8 +113,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void
-      initializeWithFci_whenAppTypeIsBetween_01_and_1F_shouldInitPrimeRevision2ProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_01_and_1F_shouldInitPrimeRevision2ProductType()
+      throws Exception {
     ApduResponseApi selectApplicationResponse;
     for (int appType = 1; appType <= 0x1F; appType++) {
       selectApplicationResponse =
@@ -130,8 +130,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void
-      initializeWithFci_whenAppTypeIsBetween_20_and_89_shouldInitPrimeRevision3ProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_20_and_89_shouldInitPrimeRevision3ProductType()
+      throws Exception {
     ApduResponseApi selectApplicationResponse;
     for (int appType = 0x20; appType <= 0x89; appType++) {
       selectApplicationResponse =
@@ -147,7 +147,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenAppTypeIsBetween_90_and_97_shouldInitLightProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_90_and_97_shouldInitLightProductType()
+      throws Exception {
     ApduResponseApi selectApplicationResponse;
     for (int appType = 0x90; appType <= 0x97; appType++) {
       selectApplicationResponse =
@@ -162,7 +163,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenAppTypeIsBetween_98_and_9F_shouldInitBasicProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_98_and_9F_shouldInitBasicProductType()
+      throws Exception {
     ApduResponseApi selectApplicationResponse;
     for (int appType = 0x98; appType <= 0x9F; appType++) {
       selectApplicationResponse =
@@ -177,8 +179,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void
-      initializeWithFci_whenAppTypeIsBetween_A0_and_FE_shouldInitPrimeRevision3ProductType() {
+  public void initializeWithFci_whenAppTypeIsBetween_A0_and_FE_shouldInitPrimeRevision3ProductType()
+      throws Exception {
     ApduResponseApi selectApplicationResponse;
     for (int appType = 0xA0; appType <= 0xFE; appType++) {
       selectApplicationResponse =
@@ -194,7 +196,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenStatusWord_9000_shouldInitNotInvalidated() {
+  public void initializeWithFci_whenStatusWord_9000_shouldInitNotInvalidated() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -203,7 +205,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenStatusWord_6283_shouldInitInvalidated() {
+  public void initializeWithFci_whenStatusWord_6283_shouldInitInvalidated() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_INVALIDATED);
@@ -212,7 +214,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenSerialNumberNotHce_shouldInitHceFalse() {
+  public void initializeWithFci_whenSerialNumberNotHce_shouldInitHceFalse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -221,7 +223,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenSerialNumberHce_shouldInitHceTrue() {
+  public void initializeWithFci_whenSerialNumberHce_shouldInitHceTrue() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER_HCE, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -230,7 +232,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeInf_shouldIAE() {
+  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeInf_shouldIAE()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -241,7 +244,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeSup_shouldIAE() {
+  public void initializeWithFci_whenSessionModificationByteIsOutOfRangeSup_shouldIAE()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -252,7 +256,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void initializeWithFci_whenStartupInfoIsShorter_shouldThrowParsingException() {
+  public void initializeWithFci_whenStartupInfoIsShorter_shouldThrowParsingException()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER_HCE, STARTUP_INFO_TOO_SHORT, SW1SW2_OK);
@@ -260,7 +265,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenStartupInfoIsLarger_shouldProvideWholeData() {
+  public void initializeWithFci_whenStartupInfoIsLarger_shouldProvideWholeData() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -273,7 +278,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void initializeWithFci_whenTagsAreInADifferentOrder_shouldProvideSameResult() {
+  public void initializeWithFci_whenTagsAreInADifferentOrder_shouldProvideSameResult()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         new ApduResponseAdapter(
             HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_DIFFERENT_TAGS_ORDER));
@@ -302,7 +308,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSelectApplicationResponse_shouldSelectApplicationResponse() {
+  public void getSelectApplicationResponse_shouldSelectApplicationResponse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -312,7 +318,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getDfName_shouldReturnDfNameFromFCI() {
+  public void getDfName_shouldReturnDfNameFromFCI() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -321,7 +327,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getApplicationSerialNumber_shouldReturnApplicationSerialNumberFromFCI() {
+  public void getApplicationSerialNumber_shouldReturnApplicationSerialNumberFromFCI()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -331,7 +338,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getStartupInfoRawData_shouldReturnFromFCI() {
+  public void getStartupInfoRawData_shouldReturnFromFCI() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -341,7 +348,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isPinFeatureAvailable_whenAppTypeBit0IsNotSet_shouldReturnFalse() {
+  public void isPinFeatureAvailable_whenAppTypeBit0IsNotSet_shouldReturnFalse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -350,7 +357,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isPinFeatureAvailable_whenAppTypeBit0IsSet_shouldReturnTrue() {
+  public void isPinFeatureAvailable_whenAppTypeBit0IsSet_shouldReturnTrue() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_PIN, SW1SW2_OK);
@@ -359,7 +366,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isSvFeatureAvailable_whenAppTypeBit1IsNotSet_shouldReturnFalse() {
+  public void isSvFeatureAvailable_whenAppTypeBit1IsNotSet_shouldReturnFalse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -368,7 +375,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isSvFeatureAvailable_whenAppTypeBit1IsSet_shouldReturnTrue() {
+  public void isSvFeatureAvailable_whenAppTypeBit1IsSet_shouldReturnTrue() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_STORED_VALUE, SW1SW2_OK);
@@ -377,7 +384,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsNotSet_shouldReturnTrue() {
+  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsNotSet_shouldReturnTrue()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -386,7 +394,8 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsSet_shouldReturnFalse() {
+  public void isRatificationOnDeselectSupported_whenAppTypeBit2IsSet_shouldReturnFalse()
+      throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -398,7 +407,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isExtendedModeSupported_whenAppTypeBit3IsNotSet_shouldReturnFalse() {
+  public void isExtendedModeSupported_whenAppTypeBit3IsNotSet_shouldReturnFalse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -407,7 +416,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isExtendedModeSupported_whenAppTypeBit3IsSet_shouldReturnTrue() {
+  public void isExtendedModeSupported_whenAppTypeBit3IsSet_shouldReturnTrue() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_EXTENDED_MODE, SW1SW2_OK);
@@ -416,7 +425,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isPkiModeSupported_whenAppTypeBit4IsNotSet_shouldReturnFalse() {
+  public void isPkiModeSupported_whenAppTypeBit4IsNotSet_shouldReturnFalse() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK);
@@ -425,7 +434,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void isPkiModeSupported_whenAppTypeBit4IsSet_shouldReturnTrue() {
+  public void isPkiModeSupported_whenAppTypeBit4IsSet_shouldReturnTrue() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3_PKI_MODE, SW1SW2_OK);
@@ -434,7 +443,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSessionModification_shouldReturnSessionModification() {
+  public void getSessionModification_shouldReturnSessionModification() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -446,7 +455,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getPlatform_shouldReturnPlatformByte() {
+  public void getPlatform_shouldReturnPlatformByte() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -458,7 +467,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getApplicationType_shouldReturnApplicationType() {
+  public void getApplicationType_shouldReturnApplicationType() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -470,7 +479,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void getApplicationSubType_whenValueIs00_shouldThrowIAE() {
+  public void getApplicationSubType_whenValueIs00_shouldThrowIAE() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -482,7 +491,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void getApplicationSubType_whenValueIsFF_shouldThrowIAE() {
+  public void getApplicationSubType_whenValueIsFF_shouldThrowIAE() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -494,7 +503,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getApplicationSubType_shouldReturnApplicationSubType() {
+  public void getApplicationSubType_shouldReturnApplicationSubType() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -506,7 +515,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSoftwareIssuer_shouldReturnSoftwareIssuer() {
+  public void getSoftwareIssuer_shouldReturnSoftwareIssuer() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -518,7 +527,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSoftwareVersion_shouldReturnSoftwareVersion() {
+  public void getSoftwareVersion_shouldReturnSoftwareVersion() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,
@@ -530,7 +539,7 @@ public class CalypsoCardAdapterTest {
   }
 
   @Test
-  public void getSoftwareRevision_shouldReturnSoftwareRevision() {
+  public void getSoftwareRevision_shouldReturnSoftwareRevision() throws Exception {
     ApduResponseApi selectApplicationResponse =
         buildSelectApplicationResponse(
             DF_NAME,

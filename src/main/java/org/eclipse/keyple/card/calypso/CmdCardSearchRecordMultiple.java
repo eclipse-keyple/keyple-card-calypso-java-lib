@@ -178,8 +178,8 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardSearchRecordMultiple setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
       int nbRecords = dataOut[0];
@@ -190,7 +190,6 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
         firstMatchingRecordContent = Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length);
       }
     }
-    return this;
   }
 
   /**

@@ -101,20 +101,16 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    * @since 2.2.3
    */
   @Override
-  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
-    if (isSuccessful()) {
-      byte[] dataOut = apduResponse.getDataOut();
-      if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
-        sam.putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
-      } else {
-        for (int i = 0; i < 9; i++) {
-          sam.putEventCounter(
-              firstEventCounterNumber + i,
-              ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
-        }
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+    super.parseApduResponse(apduResponse);
+    byte[] dataOut = apduResponse.getDataOut();
+    if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
+      sam.putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+    } else {
+      for (int i = 0; i < 9; i++) {
+        sam.putEventCounter(
+            firstEventCounterNumber + i, ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
       }
     }
-    return this;
   }
 }

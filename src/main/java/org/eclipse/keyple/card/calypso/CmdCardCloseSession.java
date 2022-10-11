@@ -146,8 +146,8 @@ final class CmdCardCloseSession extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardCloseSession setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     byte[] responseData = getApduResponse().getDataOut();
     if (calypsoCard.isExtendedModeSupported()) {
       // 8-byte signature
@@ -198,7 +198,6 @@ final class CmdCardCloseSession extends AbstractCardCommand {
         postponedData = new byte[0];
       }
     }
-    return this;
   }
 
   /**

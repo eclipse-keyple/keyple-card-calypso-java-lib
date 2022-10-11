@@ -163,8 +163,8 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardIncreaseOrDecreaseMultiple setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
       int nbCounters = dataOut.length / 4;
@@ -173,7 +173,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
             dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
       }
     }
-    return this;
   }
 
   /**

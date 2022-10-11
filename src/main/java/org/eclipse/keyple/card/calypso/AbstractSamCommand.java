@@ -124,19 +124,9 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * @since 2.0.1
    */
   @Override
-  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
-    return (AbstractSamCommand) super.setApduResponse(apduResponse);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.1
-   */
-  @Override
-  void checkStatus() throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
     try {
-      super.checkStatus();
+      super.parseApduResponse(apduResponse);
     } catch (CalypsoApduCommandException e) {
       throw (CalypsoSamCommandException) e;
     }

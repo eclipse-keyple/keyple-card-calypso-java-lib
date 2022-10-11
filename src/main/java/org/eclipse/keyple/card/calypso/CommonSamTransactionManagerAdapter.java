@@ -358,7 +358,7 @@ abstract class CommonSamTransactionManagerAdapter
       // exception.
       for (int i = 0; i < apduResponses.size(); i++) {
         try {
-          samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
+          samCommands.get(i).parseApduResponse(apduResponses.get(i));
         } catch (CalypsoSamCommandException e) {
           CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
           if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE

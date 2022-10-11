@@ -133,8 +133,8 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       if (data.isSamTraceabilityMode()) {
         data.setSignedData(Arrays.copyOf(apduResponse.getDataOut(), data.getData().length));
@@ -147,6 +147,5 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
               apduResponse.getDataOut().length - data.getSignatureSize(),
               apduResponse.getDataOut().length));
     }
-    return this;
   }
 }

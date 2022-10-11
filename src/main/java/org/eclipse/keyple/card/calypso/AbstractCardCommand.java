@@ -109,19 +109,9 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
    * @since 2.0.1
    */
   @Override
-  AbstractCardCommand setApduResponse(ApduResponseApi apduResponse) {
-    return (AbstractCardCommand) super.setApduResponse(apduResponse);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.1
-   */
-  @Override
-  void checkStatus() throws CardCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     try {
-      super.checkStatus();
+      super.parseApduResponse(apduResponse);
     } catch (CalypsoApduCommandException e) {
       throw (CardCommandException) e;
     }

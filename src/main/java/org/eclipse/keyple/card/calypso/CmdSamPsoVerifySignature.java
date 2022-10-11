@@ -140,13 +140,13 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
-    if (isSuccessful()) {
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+    try {
+      super.parseApduResponse(apduResponse);
       data.setSignatureValid(true);
-    } else if (apduResponse.getStatusWord() == 0x6988) {
+    } catch (CalypsoSamSecurityDataException e) {
       data.setSignatureValid(false);
+      throw e;
     }
-    return this;
   }
 }

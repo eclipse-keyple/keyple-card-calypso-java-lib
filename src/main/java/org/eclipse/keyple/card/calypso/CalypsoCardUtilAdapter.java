@@ -50,7 +50,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardOpenSession.setApduResponse(apduResponse).checkStatus();
+    cmdCardOpenSession.parseApduResponse(apduResponse);
     // CL-CSS-INFORAT.1
     calypsoCard.setDfRatified(cmdCardOpenSession.wasRatified());
     // CL-CSS-INFOTCNT.1
@@ -75,7 +75,7 @@ final class CalypsoCardUtilAdapter {
   private static void updateCalypsoCardCloseSession(
       CmdCardCloseSession cmdCardCloseSession, ApduResponseApi apduResponse)
       throws CardCommandException {
-    cmdCardCloseSession.setApduResponse(apduResponse).checkStatus();
+    cmdCardCloseSession.parseApduResponse(apduResponse);
   }
 
   /**
@@ -97,8 +97,11 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    cmdCardReadRecords.setApduResponse(apduResponse);
-    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecords, isSessionOpen);
+    try {
+      cmdCardReadRecords.parseApduResponse(apduResponse);
+    } catch (CardDataAccessException e) {
+      checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecords, isSessionOpen, e);
+    }
 
     // iterate over read records to fill the CalypsoCard
     for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecords.getRecords().entrySet()) {
@@ -115,19 +118,16 @@ final class CalypsoCardUtilAdapter {
    * @throws CardCommandException If needed.
    */
   private static void checkResponseStatusForStrictAndBestEffortMode(
-      AbstractCardCommand command, boolean isSessionOpen) throws CardCommandException {
+      AbstractCardCommand command, boolean isSessionOpen, CardDataAccessException e)
+      throws CardCommandException {
     if (isSessionOpen) {
-      command.checkStatus();
+      throw e;
     } else {
-      try {
-        command.checkStatus();
-      } catch (CardDataAccessException e) {
-        // best effort mode, do not throw exception for "file not found" and "record not found"
-        // errors.
-        if (command.getApduResponse().getStatusWord() != 0x6A82
-            && command.getApduResponse().getStatusWord() != 0x6A83) {
-          throw e;
-        }
+      // best effort mode, do not throw exception for "file not found" and "record not found"
+      // errors.
+      if (command.getApduResponse().getStatusWord() != 0x6A82
+          && command.getApduResponse().getStatusWord() != 0x6A83) {
+        throw e;
       }
     }
   }
@@ -152,8 +152,11 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    cmdCardSearchRecordMultiple.setApduResponse(apduResponse);
-    checkResponseStatusForStrictAndBestEffortMode(cmdCardSearchRecordMultiple, isSessionOpen);
+    try {
+      cmdCardSearchRecordMultiple.parseApduResponse(apduResponse);
+    } catch (CardDataAccessException e) {
+      checkResponseStatusForStrictAndBestEffortMode(cmdCardSearchRecordMultiple, isSessionOpen, e);
+    }
 
     if (cmdCardSearchRecordMultiple.getFirstMatchingRecordContent().length > 0) {
       calypsoCard.setContent(
@@ -182,8 +185,11 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    cmdCardReadRecordMultiple.setApduResponse(apduResponse);
-    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecordMultiple, isSessionOpen);
+    try {
+      cmdCardReadRecordMultiple.parseApduResponse(apduResponse);
+    } catch (CardDataAccessException e) {
+      checkResponseStatusForStrictAndBestEffortMode(cmdCardReadRecordMultiple, isSessionOpen, e);
+    }
 
     for (Map.Entry<Integer, byte[]> entry : cmdCardReadRecordMultiple.getResults().entrySet()) {
       calypsoCard.setContent(
@@ -213,8 +219,11 @@ final class CalypsoCardUtilAdapter {
       boolean isSessionOpen)
       throws CardCommandException {
 
-    cmdCardReadBinary.setApduResponse(apduResponse);
-    checkResponseStatusForStrictAndBestEffortMode(cmdCardReadBinary, isSessionOpen);
+    try {
+      cmdCardReadBinary.parseApduResponse(apduResponse);
+    } catch (CardDataAccessException e) {
+      checkResponseStatusForStrictAndBestEffortMode(cmdCardReadBinary, isSessionOpen, e);
+    }
 
     calypsoCard.setContent(
         cmdCardReadBinary.getSfi(), 1, apduResponse.getDataOut(), cmdCardReadBinary.getOffset());
@@ -236,7 +245,7 @@ final class CalypsoCardUtilAdapter {
       CalypsoCardAdapter calypsoCard, AbstractCardCommand command, ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    command.setApduResponse(apduResponse).checkStatus();
+    command.parseApduResponse(apduResponse);
 
     byte[] proprietaryInformation;
     if (command.getCommandRef() == CalypsoCardCommand.SELECT_FILE) {
@@ -278,7 +287,7 @@ final class CalypsoCardUtilAdapter {
       CalypsoCardAdapter calypsoCard, CmdCardGetDataEfList command, ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    command.setApduResponse(apduResponse).checkStatus();
+    command.parseApduResponse(apduResponse);
 
     Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = command.getEfHeaders();
 
@@ -304,7 +313,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    command.setApduResponse(apduResponse).checkStatus();
+    command.parseApduResponse(apduResponse);
 
     calypsoCard.setTraceabilityInformation(apduResponse.getDataOut());
   }
@@ -325,7 +334,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardUpdateRecord.setApduResponse(apduResponse).checkStatus();
+    cmdCardUpdateRecord.parseApduResponse(apduResponse);
 
     calypsoCard.setContent(
         (byte) cmdCardUpdateRecord.getSfi(),
@@ -349,7 +358,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardWriteRecord.setApduResponse(apduResponse).checkStatus();
+    cmdCardWriteRecord.parseApduResponse(apduResponse);
 
     calypsoCard.fillContent(
         (byte) cmdCardWriteRecord.getSfi(),
@@ -374,7 +383,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardUpdateBinary.setApduResponse(apduResponse).checkStatus();
+    cmdCardUpdateBinary.parseApduResponse(apduResponse);
 
     calypsoCard.setContent(
         cmdCardUpdateBinary.getSfi(),
@@ -399,7 +408,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardWriteBinary.setApduResponse(apduResponse).checkStatus();
+    cmdCardWriteBinary.parseApduResponse(apduResponse);
 
     calypsoCard.fillContent(
         cmdCardWriteBinary.getSfi(),
@@ -425,7 +434,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardAppendRecord.setApduResponse(apduResponse).checkStatus();
+    cmdCardAppendRecord.parseApduResponse(apduResponse);
 
     calypsoCard.addCyclicContent(
         (byte) cmdCardAppendRecord.getSfi(), cmdCardAppendRecord.getData());
@@ -448,7 +457,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardIncreaseOrDecrease.setApduResponse(apduResponse).checkStatus();
+    cmdCardIncreaseOrDecrease.parseApduResponse(apduResponse);
 
     calypsoCard.setCounter(
         (byte) cmdCardIncreaseOrDecrease.getSfi(),
@@ -473,7 +482,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardIncreaseOrDecreaseMultiple.setApduResponse(apduResponse).checkStatus();
+    cmdCardIncreaseOrDecreaseMultiple.parseApduResponse(apduResponse);
 
     for (Map.Entry<Integer, byte[]> entry :
         cmdCardIncreaseOrDecreaseMultiple.getNewCounterValues().entrySet()) {
@@ -498,7 +507,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardGetChallenge.setApduResponse(apduResponse).checkStatus();
+    cmdCardGetChallenge.parseApduResponse(apduResponse);
     calypsoCard.setCardChallenge(cmdCardGetChallenge.getCardChallenge());
   }
 
@@ -521,18 +530,19 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardVerifyPin.setApduResponse(apduResponse);
-    calypsoCard.setPinAttemptRemaining(cmdCardVerifyPin.getRemainingAttemptCounter());
-
     try {
-      cmdCardVerifyPin.checkStatus();
-    } catch (CardPinException ex) {
-      // forward the exception if the operation do not target the reading of the attempt
-      // counter.
-      // catch it silently otherwise
-      if (!cmdCardVerifyPin.isReadCounterOnly()) {
-        throw ex;
+      try {
+        cmdCardVerifyPin.parseApduResponse(apduResponse);
+      } catch (CardPinException ex) {
+        // forward the exception if the operation do not target the reading of the attempt
+        // counter.
+        // catch it silently otherwise
+        if (!cmdCardVerifyPin.isReadCounterOnly()) {
+          throw ex;
+        }
       }
+    } finally {
+      calypsoCard.setPinAttemptRemaining(cmdCardVerifyPin.getRemainingAttemptCounter());
     }
   }
 
@@ -545,7 +555,7 @@ final class CalypsoCardUtilAdapter {
    */
   private static void updateCalypsoChangePin(
       CmdCardChangePin cmdCardChangePin, ApduResponseApi apduResponse) throws CardCommandException {
-    cmdCardChangePin.setApduResponse(apduResponse).checkStatus();
+    cmdCardChangePin.parseApduResponse(apduResponse);
   }
 
   /**
@@ -557,7 +567,7 @@ final class CalypsoCardUtilAdapter {
    */
   private static void updateCalypsoChangeKey(
       CmdCardChangeKey cmdCardChangeKey, ApduResponseApi apduResponse) throws CardCommandException {
-    cmdCardChangeKey.setApduResponse(apduResponse).checkStatus();
+    cmdCardChangeKey.parseApduResponse(apduResponse);
   }
 
   /**
@@ -576,7 +586,7 @@ final class CalypsoCardUtilAdapter {
       CalypsoCardAdapter calypsoCard, CmdCardSvGet cmdCardSvGet, ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardSvGet.setApduResponse(apduResponse).checkStatus();
+    cmdCardSvGet.parseApduResponse(apduResponse);
 
     calypsoCard.setSvData(
         cmdCardSvGet.getCurrentKVC(),
@@ -606,7 +616,7 @@ final class CalypsoCardUtilAdapter {
       ApduResponseApi apduResponse)
       throws CardCommandException {
 
-    cmdCardSvOperation.setApduResponse(apduResponse).checkStatus();
+    cmdCardSvOperation.parseApduResponse(apduResponse);
     calypsoCard.setSvOperationSignature(cmdCardSvOperation.getApduResponse().getDataOut());
   }
 
@@ -621,7 +631,7 @@ final class CalypsoCardUtilAdapter {
   private static void updateCalypsoInvalidateRehabilitate(
       AbstractCardCommand cmdCardInvalidateRehabilitate, ApduResponseApi apduResponse)
       throws CardCommandException {
-    cmdCardInvalidateRehabilitate.setApduResponse(apduResponse).checkStatus();
+    cmdCardInvalidateRehabilitate.parseApduResponse(apduResponse);
   }
 
   /**

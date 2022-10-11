@@ -94,7 +94,7 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       // check the SAM response to the unlock command
       try {
-        unlockCommand.setApduResponse(apduResponse).checkStatus();
+        unlockCommand.parseApduResponse(apduResponse);
       } catch (CalypsoSamAccessForbiddenException e) {
         logger.warn("SAM not locked or already unlocked");
       } catch (CalypsoSamCommandException e) {

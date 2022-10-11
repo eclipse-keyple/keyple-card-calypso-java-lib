@@ -231,14 +231,13 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardSvReload setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
-    return this;
   }
 
   /**
