@@ -363,11 +363,10 @@ abstract class CommonSamTransactionManagerAdapter
           CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
           switch (commandRef) {
             case READ_CEILINGS:
-              sam.setEventCeilingValue(
-                  ((CmdSamReadCeilings) samCommands.get(i)).getEventCeilings());
+              sam.putEventCeilings(((CmdSamReadCeilings) samCommands.get(i)).getEventCeilings());
               break;
             case READ_EVENT_COUNTER:
-              sam.setEventCeilingValue(
+              sam.putEventCeilings(
                   ((CmdSamReadEventCounter) samCommands.get(i)).getEventCounters());
               break;
           }
@@ -495,12 +494,6 @@ abstract class CommonSamTransactionManagerAdapter
    */
   @Override
   public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
-    Assert.getInstance()
-        .isInRange(
-            eventCounterNumber,
-            CalypsoSamAdapter.MIN_EVENT_COUNTER_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_COUNTER_NUMBER,
-            "eventCounterNumber");
     throw new UnsupportedOperationException("prepareReadEventCounter");
   }
 

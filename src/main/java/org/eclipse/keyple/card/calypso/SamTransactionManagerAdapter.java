@@ -29,6 +29,12 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
 
   private static final Logger logger = LoggerFactory.getLogger(SamTransactionManagerAdapter.class);
 
+  /* Constants */
+  private static final int MIN_EVENT_COUNTER_NUMBER = 0;
+  private static final int MAX_EVENT_COUNTER_NUMBER = 26;
+  private static final int MIN_EVENT_CEILING_NUMBER = 0;
+  private static final int MAX_EVENT_CEILING_NUMBER = 26;
+
   /* Final fields */
   private final SamSecuritySettingAdapter securitySetting;
   private final SamControlSamTransactionManagerAdapter controlSamTransactionManager;
@@ -89,8 +95,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     Assert.getInstance()
         .isInRange(
             eventCounterNumber,
-            CalypsoSamAdapter.MIN_EVENT_COUNTER_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_COUNTER_NUMBER,
+            MIN_EVENT_COUNTER_NUMBER,
+            MAX_EVENT_COUNTER_NUMBER,
             "eventCounterNumber");
     getSamCommands()
         .add(
@@ -112,14 +118,14 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     Assert.getInstance()
         .isInRange(
             fromEventCounterNumber,
-            CalypsoSamAdapter.MIN_EVENT_COUNTER_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_COUNTER_NUMBER,
+            MIN_EVENT_COUNTER_NUMBER,
+            MAX_EVENT_COUNTER_NUMBER,
             "fromEventCounterNumber");
     Assert.getInstance()
         .isInRange(
             toEventCounterNumber,
-            CalypsoSamAdapter.MIN_EVENT_COUNTER_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_COUNTER_NUMBER,
+            MIN_EVENT_COUNTER_NUMBER,
+            MAX_EVENT_COUNTER_NUMBER,
             "toEventCounterNumber");
     Assert.getInstance()
         .greaterOrEqual(
@@ -164,8 +170,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     Assert.getInstance()
         .isInRange(
             eventCeilingNumber,
-            CalypsoSamAdapter.MIN_EVENT_CEILING_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_CEILING_NUMBER,
+            MIN_EVENT_CEILING_NUMBER,
+            MAX_EVENT_CEILING_NUMBER,
             "eventCeilingNumber");
     getSamCommands()
         .add(
@@ -187,14 +193,14 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     Assert.getInstance()
         .isInRange(
             fromEventCeilingNumber,
-            CalypsoSamAdapter.MIN_EVENT_CEILING_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_CEILING_NUMBER,
+            MIN_EVENT_CEILING_NUMBER,
+            MAX_EVENT_CEILING_NUMBER,
             "fromEventCeilingNumber");
     Assert.getInstance()
         .isInRange(
             toEventCeilingNumber,
-            CalypsoSamAdapter.MIN_EVENT_CEILING_NUMBER,
-            CalypsoSamAdapter.MAX_EVENT_CEILING_NUMBER,
+            MIN_EVENT_CEILING_NUMBER,
+            MAX_EVENT_CEILING_NUMBER,
             "toEventCeilingNumber");
     Assert.getInstance()
         .greaterOrEqual(
