@@ -360,16 +360,6 @@ abstract class CommonSamTransactionManagerAdapter
       for (int i = 0; i < apduResponses.size(); i++) {
         try {
           samCommands.get(i).setApduResponse(apduResponses.get(i)).checkStatus();
-          CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
-          switch (commandRef) {
-            case READ_CEILINGS:
-              sam.putEventCeilings(((CmdSamReadCeilings) samCommands.get(i)).getEventCeilings());
-              break;
-            case READ_EVENT_COUNTER:
-              sam.putEventCounters(
-                  ((CmdSamReadEventCounter) samCommands.get(i)).getEventCounters());
-              break;
-          }
         } catch (CalypsoSamCommandException e) {
           CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
           if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE

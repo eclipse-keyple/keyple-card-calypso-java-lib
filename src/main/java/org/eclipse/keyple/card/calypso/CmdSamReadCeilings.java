@@ -35,9 +35,9 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
     READ_CEILING_RECORD
   }
 
+  private final CalypsoSam calypsoSam;
   private final CeilingsOperationType ceilingsOperationType;
   private final int firstEventCeilingNumber;
-  private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -59,18 +59,19 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadCeilings.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam the current {@link CalypsoSam}.
    * @param ceilingsOperationType the ceiling operation type.
    * @param target the ceiling index (0-26) if READ_SINGLE_CEILING, the record index (1-3) if
    *     READ_CEILING_RECORD.
    * @since 2.0.1
    */
   CmdSamReadCeilings(
-      CalypsoSam.ProductType productType, CeilingsOperationType ceilingsOperationType, int target) {
+      CalypsoSam calypsoSam, CeilingsOperationType ceilingsOperationType, int target) {
 
     super(command, 48);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    this.calypsoSam = calypsoSam;
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p1;
     byte p2;
@@ -103,12 +104,13 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.2.0
+   * @since 2.2.3
    */
   @Override
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (isSuccessful()) {
+      SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
       byte[] dataOut = apduResponse.getDataOut();
       if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
         eventCeilings.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
@@ -119,17 +121,8 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
+      ((CalypsoSamAdapter) calypsoSam).putEventCeilings(eventCeilings);
     }
     return this;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty map containing 1 or 9 ceiling values according to ceilingsOperationType.
-   * @since 2.1.0
-   */
-  public SortedMap<Integer, Integer> getEventCeilings() {
-    return eventCeilings;
   }
 }

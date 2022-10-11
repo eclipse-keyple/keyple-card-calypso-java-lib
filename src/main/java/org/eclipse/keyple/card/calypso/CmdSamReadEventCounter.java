@@ -38,9 +38,9 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
     READ_COUNTER_RECORD
   }
 
+  private final CalypsoSam calypsoSam;
   private final CounterOperationType counterOperationType;
   private final int firstEventCounterNumber;
-  private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -67,11 +67,12 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamReadEventCounter(
-      CalypsoSam.ProductType productType, CounterOperationType counterOperationType, int target) {
+      CalypsoSam calypsoSam, CounterOperationType counterOperationType, int target) {
 
     super(command, 48);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    this.calypsoSam = calypsoSam;
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p2;
     this.counterOperationType = counterOperationType;
     if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
@@ -106,6 +107,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (isSuccessful()) {
+      SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
       byte[] dataOut = apduResponse.getDataOut();
       if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
         eventCounters.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
@@ -116,17 +118,8 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
+      ((CalypsoSamAdapter) calypsoSam).putEventCounters(eventCounters);
     }
     return this;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty map containing 1 or 9 counters values according to counterOperationType.
-   * @since 2.1.0
-   */
-  public SortedMap<Integer, Integer> getEventCounters() {
-    return eventCounters;
   }
 }

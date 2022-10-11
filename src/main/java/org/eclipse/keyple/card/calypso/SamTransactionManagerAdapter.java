@@ -101,7 +101,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     getSamCommands()
         .add(
             new CmdSamReadEventCounter(
-                getCalypsoSam().getProductType(),
+                getCalypsoSam(),
                 CmdSamReadEventCounter.CounterOperationType.READ_SINGLE_COUNTER,
                 eventCounterNumber));
     return this;
@@ -136,7 +136,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
                   1));
     }
@@ -144,7 +144,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
                   2));
     }
@@ -152,7 +152,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
                   3));
     }
@@ -176,7 +176,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     getSamCommands()
         .add(
             new CmdSamReadCeilings(
-                getCalypsoSam().getProductType(),
+                getCalypsoSam(),
                 CmdSamReadCeilings.CeilingsOperationType.READ_SINGLE_CEILING,
                 eventCeilingNumber));
     return this;
@@ -211,7 +211,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadCeilings(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
                   1));
     }
@@ -219,7 +219,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadCeilings(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
                   2));
     }
@@ -227,7 +227,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
       getSamCommands()
           .add(
               new CmdSamReadCeilings(
-                  getCalypsoSam().getProductType(),
+                  getCalypsoSam(),
                   CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
                   3));
     }
