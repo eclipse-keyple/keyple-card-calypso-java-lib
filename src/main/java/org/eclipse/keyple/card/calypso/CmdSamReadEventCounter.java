@@ -13,8 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -106,18 +104,16 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (isSuccessful()) {
-      SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
       byte[] dataOut = apduResponse.getDataOut();
       if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
-        eventCounters.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+        sam.putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
       } else {
         for (int i = 0; i < 9; i++) {
-          eventCounters.put(
+          sam.putEventCounter(
               firstEventCounterNumber + i,
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-      sam.putEventCounters(eventCounters);
     }
     return this;
   }

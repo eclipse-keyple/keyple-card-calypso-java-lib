@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -285,24 +284,26 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
 
   /**
    * (package-private)<br>
-   * Adds or replace one or more event counters.
+   * Adds or replace an event counter.
    *
-   * @param eventCounters A map of counter values.
+   * @param eventCounterNumber The number of the counter.
+   * @param eventCounterValue The counter value.
    * @since 2.2.3
    */
-  void putEventCounters(Map<Integer, Integer> eventCounters) {
-    this.eventCounters.putAll(eventCounters);
+  void putEventCounter(int eventCounterNumber, int eventCounterValue) {
+    this.eventCounters.put(eventCounterNumber, eventCounterValue);
   }
 
   /**
    * (package-private)<br>
-   * Adds or replace one or more event counters.
+   * Adds or replace an event counter.
    *
-   * @param eventCeilings A map of ceiling values.
+   * @param eventCeilingNumber The number of the ceiling.
+   * @param eventCeilingValue The ceiling value.
    * @since 2.2.3
    */
-  void putEventCeilings(Map<Integer, Integer> eventCeilings) {
-    this.eventCeilings.putAll(eventCeilings);
+  void putEventCeiling(int eventCeilingNumber, int eventCeilingValue) {
+    this.eventCeilings.put(eventCeilingNumber, eventCeilingValue);
   }
 
   /**

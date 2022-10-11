@@ -109,18 +109,16 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
     if (isSuccessful()) {
-      SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
       byte[] dataOut = apduResponse.getDataOut();
       if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
-        eventCeilings.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+        sam.putEventCeiling(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
       } else {
         for (int i = 0; i < 9; i++) {
-          eventCeilings.put(
+          sam.putEventCeiling(
               firstEventCeilingNumber + i,
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-      sam.putEventCeilings(eventCeilings);
     }
     return this;
   }
