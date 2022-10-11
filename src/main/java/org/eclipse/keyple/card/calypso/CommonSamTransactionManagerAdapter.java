@@ -366,7 +366,7 @@ abstract class CommonSamTransactionManagerAdapter
               sam.putEventCeilings(((CmdSamReadCeilings) samCommands.get(i)).getEventCeilings());
               break;
             case READ_EVENT_COUNTER:
-              sam.putEventCeilings(
+              sam.putEventCounters(
                   ((CmdSamReadEventCounter) samCommands.get(i)).getEventCounters());
               break;
           }
