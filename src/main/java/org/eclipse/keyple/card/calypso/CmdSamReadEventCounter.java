@@ -105,7 +105,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
   @Override
   AbstractSamCommand setApduResponse(ApduResponseApi apduResponse) {
     super.setApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
+    if (isSuccessful()) {
       byte[] dataOut = apduResponse.getDataOut();
       if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
         eventCounters.put((int) dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
