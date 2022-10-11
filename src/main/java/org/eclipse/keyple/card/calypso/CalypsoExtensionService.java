@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.JsonAdapter.*;
+
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
@@ -58,6 +60,9 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
     JsonUtil.registerTypeAdapter(FileHeader.class, new FileHeaderJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvLoadLogRecord.class, new SvLoadLogRecordJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvDebitLogRecord.class, new SvDebitLogRecordJsonAdapter(), false);
+    JsonUtil.registerTypeAdapter(
+        AbstractCardCommand.class, new AbstractCardCommandJsonAdapter(), false);
+    JsonUtil.registerTypeAdapter(CardCommand.class, new CardCommandJsonAdapter(), true);
   }
 
   /** Private constructor. */

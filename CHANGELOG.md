@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- JSON serializers for the new import/export feature of the card selection manager.
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.4.0` (issues [#40], [#41], [#42]).
 
 ## [2.2.2] - 2022-10-04
 ### Changed
@@ -104,6 +108,9 @@ It also brings many major API changes.
 [#57]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/57
 [#55]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/55
 [#53]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/53
+[#42]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/42
+[#41]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/41
+[#40]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/40
 [#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
 [#38]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/38
 [#37]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/37
