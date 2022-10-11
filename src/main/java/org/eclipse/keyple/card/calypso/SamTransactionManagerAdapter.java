@@ -34,6 +34,12 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
   private static final int MAX_EVENT_COUNTER_NUMBER = 26;
   private static final int MIN_EVENT_CEILING_NUMBER = 0;
   private static final int MAX_EVENT_CEILING_NUMBER = 26;
+  private static final int FIRST_COUNTER_REC1 = 0;
+  private static final int LAST_COUNTER_REC1 = 8;
+  private static final int FIRST_COUNTER_REC2 = 9;
+  private static final int LAST_COUNTER_REC2 = 17;
+  private static final int FIRST_COUNTER_REC3 = 18;
+  private static final int LAST_COUNTER_REC3 = 26;
 
   /* Final fields */
   private final SamSecuritySettingAdapter securitySetting;
@@ -92,12 +98,14 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
    */
   @Override
   public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
+
     Assert.getInstance()
         .isInRange(
             eventCounterNumber,
             MIN_EVENT_COUNTER_NUMBER,
             MAX_EVENT_COUNTER_NUMBER,
             "eventCounterNumber");
+
     getSamCommands()
         .add(
             new CmdSamReadEventCounter(
@@ -115,24 +123,25 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
   @Override
   public SamTransactionManager prepareReadEventCounters(
       int fromEventCounterNumber, int toEventCounterNumber) {
+
     Assert.getInstance()
         .isInRange(
             fromEventCounterNumber,
             MIN_EVENT_COUNTER_NUMBER,
             MAX_EVENT_COUNTER_NUMBER,
-            "fromEventCounterNumber");
-    Assert.getInstance()
+            "fromEventCounterNumber")
         .isInRange(
             toEventCounterNumber,
             MIN_EVENT_COUNTER_NUMBER,
             MAX_EVENT_COUNTER_NUMBER,
-            "toEventCounterNumber");
-    Assert.getInstance()
+            "toEventCounterNumber")
         .greaterOrEqual(
             toEventCounterNumber,
             fromEventCounterNumber,
             "fromEventCounterNumber/toEventCounterNumber");
-    if (areIntervalsOverlapping(0, 8, fromEventCounterNumber, toEventCounterNumber)) {
+
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCounterNumber, toEventCounterNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
@@ -140,7 +149,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
                   CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
                   1));
     }
-    if (areIntervalsOverlapping(9, 17, fromEventCounterNumber, toEventCounterNumber)) {
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCounterNumber, toEventCounterNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
@@ -148,7 +158,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
                   CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
                   2));
     }
-    if (areIntervalsOverlapping(18, 26, fromEventCounterNumber, toEventCounterNumber)) {
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCounterNumber, toEventCounterNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadEventCounter(
@@ -173,6 +184,7 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
             MIN_EVENT_CEILING_NUMBER,
             MAX_EVENT_CEILING_NUMBER,
             "eventCeilingNumber");
+
     getSamCommands()
         .add(
             new CmdSamReadCeilings(
@@ -190,24 +202,25 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
   @Override
   public SamTransactionManager prepareReadEventCeilings(
       int fromEventCeilingNumber, int toEventCeilingNumber) {
+
     Assert.getInstance()
         .isInRange(
             fromEventCeilingNumber,
             MIN_EVENT_CEILING_NUMBER,
             MAX_EVENT_CEILING_NUMBER,
-            "fromEventCeilingNumber");
-    Assert.getInstance()
+            "fromEventCeilingNumber")
         .isInRange(
             toEventCeilingNumber,
             MIN_EVENT_CEILING_NUMBER,
             MAX_EVENT_CEILING_NUMBER,
-            "toEventCeilingNumber");
-    Assert.getInstance()
+            "toEventCeilingNumber")
         .greaterOrEqual(
             toEventCeilingNumber,
             fromEventCeilingNumber,
             "fromEventCeilingNumber/toEventCeilingNumber");
-    if (areIntervalsOverlapping(0, 8, fromEventCeilingNumber, toEventCeilingNumber)) {
+
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCeilingNumber, toEventCeilingNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadCeilings(
@@ -215,7 +228,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
                   CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
                   1));
     }
-    if (areIntervalsOverlapping(9, 17, fromEventCeilingNumber, toEventCeilingNumber)) {
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCeilingNumber, toEventCeilingNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadCeilings(
@@ -223,7 +237,8 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
                   CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
                   2));
     }
-    if (areIntervalsOverlapping(18, 26, fromEventCeilingNumber, toEventCeilingNumber)) {
+    if (areIntervalsOverlapping(
+        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCeilingNumber, toEventCeilingNumber)) {
       getSamCommands()
           .add(
               new CmdSamReadCeilings(

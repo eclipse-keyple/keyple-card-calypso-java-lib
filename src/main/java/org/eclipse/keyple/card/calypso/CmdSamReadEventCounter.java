@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -38,7 +37,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
     READ_COUNTER_RECORD
   }
 
-  private final CalypsoSam calypsoSam;
+  private final CalypsoSamAdapter sam;
   private final CounterOperationType counterOperationType;
   private final int firstEventCounterNumber;
 
@@ -60,19 +59,19 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiate a new CmdSamReadEventCounter
    *
-   * @param productType the SAM product type.
+   * @param sam the SAM.
    * @param counterOperationType the counter operation type.
    * @param target the counter index (0-26) if READ_SINGLE_COUNTER, the record index (1-3) if
    *     READ_COUNTER_RECORD.
    * @since 2.0.1
    */
   CmdSamReadEventCounter(
-      CalypsoSam calypsoSam, CounterOperationType counterOperationType, int target) {
+      CalypsoSamAdapter sam, CounterOperationType counterOperationType, int target) {
 
     super(command, 48);
 
-    this.calypsoSam = calypsoSam;
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    this.sam = sam;
+    byte cla = SamUtilAdapter.getClassByte(sam.getProductType());
     byte p2;
     this.counterOperationType = counterOperationType;
     if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
@@ -118,7 +117,7 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-      ((CalypsoSamAdapter) calypsoSam).putEventCounters(eventCounters);
+      sam.putEventCounters(eventCounters);
     }
     return this;
   }

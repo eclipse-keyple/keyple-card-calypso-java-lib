@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -35,7 +34,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
     READ_CEILING_RECORD
   }
 
-  private final CalypsoSam calypsoSam;
+  private final CalypsoSamAdapter sam;
   private final CeilingsOperationType ceilingsOperationType;
   private final int firstEventCeilingNumber;
 
@@ -59,19 +58,19 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadCeilings.
    *
-   * @param calypsoSam the current {@link CalypsoSam}.
+   * @param sam the SAM.
    * @param ceilingsOperationType the ceiling operation type.
    * @param target the ceiling index (0-26) if READ_SINGLE_CEILING, the record index (1-3) if
    *     READ_CEILING_RECORD.
    * @since 2.0.1
    */
   CmdSamReadCeilings(
-      CalypsoSam calypsoSam, CeilingsOperationType ceilingsOperationType, int target) {
+      CalypsoSamAdapter sam, CeilingsOperationType ceilingsOperationType, int target) {
 
     super(command, 48);
 
-    this.calypsoSam = calypsoSam;
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    this.sam = sam;
+    byte cla = SamUtilAdapter.getClassByte(sam.getProductType());
 
     byte p1;
     byte p2;
@@ -121,7 +120,7 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
               ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
         }
       }
-      ((CalypsoSamAdapter) calypsoSam).putEventCeilings(eventCeilings);
+      sam.putEventCeilings(eventCeilings);
     }
     return this;
   }

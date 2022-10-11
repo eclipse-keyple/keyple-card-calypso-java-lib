@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
@@ -130,7 +129,7 @@ abstract class CommonSamTransactionManagerAdapter
    * @since 2.2.0
    */
   @Override
-  public final CalypsoSam getCalypsoSam() {
+  public final CalypsoSamAdapter getCalypsoSam() {
     return sam;
   }
 
