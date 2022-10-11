@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - JSON serializers for the new import/export feature of the card selection manager.
 ### Upgraded
+- "Calypsonet Terminal Reader API" to version `1.1.0`.
 - "Calypsonet Terminal Calypso API" to version `1.4.0` (issues [#40], [#41], [#42]).
 
 ## [2.2.2] - 2022-10-04
