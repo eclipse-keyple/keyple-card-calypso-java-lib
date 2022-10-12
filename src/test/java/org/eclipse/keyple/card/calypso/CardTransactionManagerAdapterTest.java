@@ -412,7 +412,7 @@ public class CardTransactionManagerAdapterTest {
   interface ReaderMock extends CardReader, ProxyReaderApi {}
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     cardReader = mock(ReaderMock.class);
     calypsoCard = spy(new CalypsoCardAdapter());
     calypsoCard.initializeWithFci(
@@ -953,7 +953,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void processVerifyPin_whenPINIsNotFirstCommand_shouldThrowISE() {
+  public void processVerifyPin_whenPINIsNotFirstCommand_shouldThrowISE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
@@ -1542,7 +1542,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
+  public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareSearchRecords(null);
@@ -1857,7 +1857,8 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE() {
+  public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE()
+      throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 1);
@@ -1987,7 +1988,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
+  public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[1]);
@@ -2205,7 +2206,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareWriteBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() {
+  public void prepareWriteBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[1]);
@@ -2701,7 +2702,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() {
+  public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
@@ -2709,7 +2710,7 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() {
+  public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() throws Exception {
     calypsoCard.initializeWithFci(
         new ApduResponseAdapter(
             HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));

@@ -159,7 +159,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @throws IllegalArgumentException If the FCI is inconsistent.
    * @since 2.0.0
    */
-  void initializeWithFci(ApduResponseApi selectApplicationResponse) {
+  void initializeWithFci(ApduResponseApi selectApplicationResponse) throws CardCommandException {
 
     this.selectApplicationResponse = selectApplicationResponse;
 
@@ -170,8 +170,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
-    CmdCardGetDataFci cmdCardGetDataFci =
-        new CmdCardGetDataFci().setApduResponse(selectApplicationResponse);
+    CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci();
+    cmdCardGetDataFci.parseApduResponse(selectApplicationResponse);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");

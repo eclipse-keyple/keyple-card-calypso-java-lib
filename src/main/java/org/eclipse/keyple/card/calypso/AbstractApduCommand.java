@@ -130,15 +130,16 @@ abstract class AbstractApduCommand {
 
   /**
    * (package-private)<br>
-   * Sets the command {@link ApduResponseApi}.
+   * Parses the response {@link ApduResponseApi} and checks the status word.
    *
    * @param apduResponse The APDU response.
-   * @return The current instance.
+   * @throws CalypsoApduCommandException if status is not successful or if the length of the
+   *     response is not equal to the LE field in the request.
    * @since 2.0.1
    */
-  AbstractApduCommand setApduResponse(ApduResponseApi apduResponse) {
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoApduCommandException {
     this.apduResponse = apduResponse;
-    return this;
+    checkStatus();
   }
 
   /**
@@ -211,16 +212,15 @@ abstract class AbstractApduCommand {
   }
 
   /**
-   * (package-private)<br>
+   * (private)<br>
    * This method check the status word and if the length of the response is equal to the LE field in
    * the request.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CalypsoApduCommandException if status is not successful or if the length of the
    *     response is not equal to the LE field in the request.
-   * @since 2.0.1
    */
-  void checkStatus() throws CalypsoApduCommandException {
+  private void checkStatus() throws CalypsoApduCommandException {
 
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {

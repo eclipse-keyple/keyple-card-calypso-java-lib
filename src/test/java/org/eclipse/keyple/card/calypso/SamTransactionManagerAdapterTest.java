@@ -1768,9 +1768,6 @@ public class SamTransactionManagerAdapterTest {
     assertThat(data.isSignatureValid()).isFalse();
   }
 
-  //  @Test
-  //  public void prepare
-
   @Test
   public void processCommands_whenNoError_shouldClearCommandList() throws Exception {
 

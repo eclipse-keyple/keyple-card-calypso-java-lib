@@ -47,9 +47,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
-    m.put(
-        0x6283,
-        new StatusProperties("Successful execution, FCI request and DF is invalidated.", null));
+    m.put(0x6283, new StatusProperties("Successful execution, FCI request and DF is invalidated."));
     STATUS_TABLE = m;
   }
 
@@ -115,11 +113,11 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
    *
    * <p>The expected FCI structure of a Calypso card follows this scheme: <code>
    * T=6F L=XX (C)                FCI Template
-   *      T=84 L=XX (P)           DF Name
-   *      T=A5 L=22 (C)           FCI Proprietary Template
-   *           T=BF0C L=19 (C)    FCI Issuer Discretionary Data
-   *                T=C7 L=8 (P)  Application Serial Number
-   *                T=53 L=7 (P)  Discretionary Data (Startup Information)
+   * T=84 L=XX (P)           DF Name
+   * T=A5 L=22 (C)           FCI Proprietary Template
+   * T=BF0C L=19 (C)    FCI Issuer Discretionary Data
+   * T=C7 L=8 (P)  Application Serial Number
+   * T=53 L=7 (P)  Discretionary Data (Startup Information)
    * </code>
    *
    * <p>The ApduResponseApi provided in argument is parsed according to the above expected
@@ -135,8 +133,8 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardGetDataFci setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     Map<Integer, byte[]> tags;
 
     /* check the command status to determine if the DF has been invalidated */
@@ -159,11 +157,11 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
       dfName = tags.get(TAG_DF_NAME);
       if (dfName == null) {
         logger.error("DF name tag (84h) not found.");
-        return this;
+        return;
       }
       if (dfName.length < 5 || dfName.length > 16) {
         logger.error("Invalid DF name length: {}. Should be between 5 and 16.", dfName.length);
-        return this;
+        return;
       }
       if (logger.isDebugEnabled()) {
         logger.debug("DF name = {}", HexUtil.toHex(dfName));
@@ -172,13 +170,13 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
       applicationSN = tags.get(TAG_APPLICATION_SERIAL_NUMBER);
       if (applicationSN == null) {
         logger.error("Serial Number tag (C7h) not found.");
-        return this;
+        return;
       }
       // CL-SEL-CSN.1
       if (applicationSN.length != 8) {
         logger.error(
             "Invalid application serial number length: {}. Should be 8.", applicationSN.length);
-        return this;
+        return;
       }
       if (logger.isDebugEnabled()) {
         logger.debug("Application Serial Number = {}", HexUtil.toHex(applicationSN));
@@ -187,11 +185,11 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
       discretionaryData = tags.get(TAG_DISCRETIONARY_DATA);
       if (discretionaryData == null) {
         logger.error("Discretionary data tag (53h) not found.");
-        return this;
+        return;
       }
       if (discretionaryData.length < 7) {
         logger.error("Invalid startup info length: {}. Should be >= 7.", discretionaryData.length);
-        return this;
+        return;
       }
       if (logger.isDebugEnabled()) {
         logger.debug("Discretionary Data = {}", HexUtil.toHex(discretionaryData));
@@ -204,7 +202,6 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
       /* Silently ignore problems decoding TLV structure. Just log. */
       logger.debug("Error while parsing the FCI BER-TLV data structure ({})", e.getMessage());
     }
-    return this;
   }
 
   /**

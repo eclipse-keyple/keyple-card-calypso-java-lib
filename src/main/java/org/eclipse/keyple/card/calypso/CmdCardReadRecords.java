@@ -163,8 +163,8 @@ final class CmdCardReadRecords extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardReadRecords setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
         records.put(firstRecordNumber, apduResponse.getDataOut());
@@ -181,7 +181,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
         }
       }
     }
-    return this;
   }
 
   /**

@@ -153,8 +153,8 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   @Override
-  CmdCardReadRecordMultiple setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       byte[] dataOut = apduResponse.getDataOut();
       int nbRecords = dataOut.length / length;
@@ -162,7 +162,6 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
         results.put(recordNumber + i, Arrays.copyOfRange(dataOut, i * length, (i + 1) * length));
       }
     }
-    return this;
   }
 
   /**

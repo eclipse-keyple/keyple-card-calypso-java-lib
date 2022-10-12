@@ -125,8 +125,8 @@ final class CmdCardSvGet extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardSvGet setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     byte[] cardResponse = apduResponse.getDataOut();
     switch (cardResponse.length) {
       case 0x21: /* Compatibility mode, Reload */
@@ -163,7 +163,6 @@ final class CmdCardSvGet extends AbstractCardCommand {
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");
     }
-    return this;
   }
 
   /**

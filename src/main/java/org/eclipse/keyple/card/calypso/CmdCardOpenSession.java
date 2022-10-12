@@ -298,8 +298,8 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * @since 2.0.1
    */
   @Override
-  CmdCardOpenSession setApduResponse(ApduResponseApi apduResponse) {
-    super.setApduResponse(apduResponse);
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
     byte[] dataOut = getApduResponse().getDataOut();
     if (dataOut.length > 0) {
       switch (productType) {
@@ -313,7 +313,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
           parseRev3(dataOut);
       }
     }
-    return this;
   }
 
   /**
