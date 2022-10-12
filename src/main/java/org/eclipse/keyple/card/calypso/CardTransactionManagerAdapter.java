@@ -1005,8 +1005,7 @@ final class CardTransactionManagerAdapter
     CardResponseApi cardResponse = transmitCardRequest(cardRequest, channelControl);
     try {
       cmdCardCloseSession.parseApduResponse(
-          cardResponse.getApduResponses().get(0)) // NOSONAR cardResponse is not null
-      ;
+          cardResponse.getApduResponses().get(0)); // NOSONAR cardResponse is not null
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
