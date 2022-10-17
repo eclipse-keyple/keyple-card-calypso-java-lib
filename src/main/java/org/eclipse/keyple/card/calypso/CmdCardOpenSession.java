@@ -90,7 +90,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * (package-private)<br>
    * Constructor.
    *
-   * @param productType The card product type.
+   * @param calypsoCard The Calypso card.
    * @param keyIndex The key index.
    * @param samChallenge The SAM challenge.
    * @param sfi The optional SFI of the file to read.
@@ -100,17 +100,17 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    * @since 2.0.1
    */
   CmdCardOpenSession(
-      CalypsoCard.ProductType productType,
+      CalypsoCardAdapter calypsoCard,
       byte keyIndex,
       byte[] samChallenge,
       int sfi,
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CalypsoCardCommand.OPEN_SESSION, 0);
+    super(CalypsoCardCommand.OPEN_SESSION, 0, calypsoCard);
 
     this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.productType = productType;
+    this.productType = calypsoCard.getProductType();
     switch (productType) {
       case PRIME_REVISION_1:
         createRev10(keyIndex, samChallenge, sfi, recordNumber);

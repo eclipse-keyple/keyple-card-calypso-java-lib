@@ -59,14 +59,68 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
+   * @param calypsoCard The Calypso card.
+   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
+   * @since 2.2.3
+   */
+  CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass(), selectFileControl);
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
+   *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
    * @since 2.0.1
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass, selectFileControl);
+  }
 
-    super(command, 0);
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
+   *
+   * @param calypsoCard The Calypso card.
+   * @param lid The LID.
+   * @since 2.2.3
+   */
+  CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid);
+  }
 
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
+   *
+   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param productType The target product type.
+   * @param lid The LID.
+   * @since 2.0.1
+   */
+  CmdCardSelectFile(
+      CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass, productType, lid);
+  }
+
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
+   */
+  private void buildCommand(
+      CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
     byte cla = calypsoCardClass.getValue();
     byte p1;
     byte p2;
@@ -100,20 +154,15 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
+   * (private)<br>
+   * Builds the command.
    *
    * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param productType The target product type.
    * @param lid The LID.
-   * @since 2.0.1
    */
-  CmdCardSelectFile(
+  private void buildCommand(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-
-    super(command, 0);
-
     // handle the REV1 case
     // CL-KEY-KIFSF.1
     // If legacy and rev2 then 02h else if legacy then 08h else 09h

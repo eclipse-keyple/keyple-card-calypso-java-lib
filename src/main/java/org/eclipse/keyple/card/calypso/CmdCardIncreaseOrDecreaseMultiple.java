@@ -80,7 +80,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    *
    * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
    *     "Increase Multiple" command.
-   * @param calypsoCardClass The CLA field value.
+   * @param calypsoCard The Calypso card.
    * @param sfi The SFI.
    * @param counterNumberToIncDecValueMap The map containing the counter numbers to be incremented
    *     and their associated increment values.
@@ -88,7 +88,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    */
   CmdCardIncreaseOrDecreaseMultiple(
       boolean isDecreaseCommand,
-      CalypsoCardClass calypsoCardClass,
+      CalypsoCardAdapter calypsoCard,
       byte sfi,
       SortedMap<Integer, Integer> counterNumberToIncDecValueMap) {
 
@@ -96,7 +96,8 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
         isDecreaseCommand
             ? CalypsoCardCommand.DECREASE_MULTIPLE
             : CalypsoCardCommand.INCREASE_MULTIPLE,
-        0);
+        0,
+        calypsoCard);
 
     this.sfi = sfi;
     this.counterNumberToIncDecValueMap = counterNumberToIncDecValueMap;
@@ -115,7 +116,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 p2,

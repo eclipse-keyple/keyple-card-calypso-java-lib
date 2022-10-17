@@ -21,16 +21,32 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 abstract class AbstractCardCommand extends AbstractApduCommand {
 
+  private CalypsoCardAdapter calypsoCard;
+
   /**
    * (package-private)<br>
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef a command reference from the Calypso command table.
    * @param le The value of the LE field.
+   * @param calypsoCard The Calypso card (it may be null if the card selection has not yet been
+   *     made).
    * @since 2.0.1
    */
-  AbstractCardCommand(CalypsoCardCommand commandRef, int le) {
+  AbstractCardCommand(CalypsoCardCommand commandRef, int le, CalypsoCardAdapter calypsoCard) {
     super(commandRef, le);
+    this.calypsoCard = calypsoCard;
+  }
+
+  /**
+   * (package-private)<br>
+   * Returns the Calypso card.
+   *
+   * @return Null if the card selection has not yet been made.
+   * @since 2.2.3
+   */
+  CalypsoCardAdapter getCalypsoCard() {
+    return calypsoCard;
   }
 
   /**
@@ -115,5 +131,17 @@ abstract class AbstractCardCommand extends AbstractApduCommand {
     } catch (CalypsoApduCommandException e) {
       throw (CardCommandException) e;
     }
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the Calypso card and invoke the {@link #parseApduResponse(ApduResponseApi)} method.
+   *
+   * @since 2.2.3
+   */
+  void parseApduResponse(ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard)
+      throws CardCommandException {
+    this.calypsoCard = calypsoCard;
+    parseApduResponse(apduResponse);
   }
 }

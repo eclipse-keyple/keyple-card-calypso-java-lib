@@ -79,10 +79,32 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   // Construction arguments used for parsing
-  private final int sfi;
-  private final int firstRecordNumber;
-  private final ReadMode readMode;
-  private final SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
+  private int sfi;
+  private int firstRecordNumber;
+  private ReadMode readMode;
+  private SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new read records cmd build.
+   *
+   * @param calypsoCard The Calypso card.
+   * @param sfi the sfi top select.
+   * @param firstRecordNumber the record number to read (or first record to read in case of several.
+   *     records)
+   * @param readMode read mode, requests the reading of one or all the records.
+   * @param expectedLength the expected length of the record(s).
+   * @since 2.2.3
+   */
+  CmdCardReadRecords(
+      CalypsoCardAdapter calypsoCard,
+      int sfi,
+      int firstRecordNumber,
+      ReadMode readMode,
+      int expectedLength) {
+    super(command, expectedLength, calypsoCard);
+    buildCommand(calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength);
+  }
 
   /**
    * (package-private)<br>
@@ -94,8 +116,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
    *     records)
    * @param readMode read mode, requests the reading of one or all the records.
    * @param expectedLength the expected length of the record(s).
-   * @throws IllegalArgumentException If record number &lt; 1
-   * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.0.1
    */
   CmdCardReadRecords(
@@ -104,8 +124,27 @@ final class CmdCardReadRecords extends AbstractCardCommand {
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength) {
+    super(command, expectedLength, null);
+    buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength);
+  }
 
-    super(command, expectedLength);
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param sfi the sfi top select.
+   * @param firstRecordNumber the record number to read (or first record to read in case of several.
+   *     records)
+   * @param readMode read mode, requests the reading of one or all the records.
+   * @param expectedLength the expected length of the record(s).
+   */
+  private void buildCommand(
+      CalypsoCardClass calypsoCardClass,
+      int sfi,
+      int firstRecordNumber,
+      ReadMode readMode,
+      int expectedLength) {
 
     this.sfi = sfi;
     this.firstRecordNumber = firstRecordNumber;

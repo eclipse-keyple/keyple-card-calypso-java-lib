@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -46,18 +45,20 @@ final class CmdSamSvCheck extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamSvCheck to authenticate a card SV transaction.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param svCardSignature null if the operation is to abort the SV transaction, a 3 or 6-byte
    *     array. containing the card signature from SV Debit, SV Load or SV Undebit.
    * @since 2.0.1
    */
-  CmdSamSvCheck(CalypsoSam.ProductType productType, byte[] svCardSignature) {
-    super(command, 0);
+  CmdSamSvCheck(CalypsoSamAdapter calypsoSam, byte[] svCardSignature) {
+
+    super(command, 0, calypsoSam);
+
     if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svCardSignature.");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

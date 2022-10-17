@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -42,13 +41,13 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
    * (package-private)<br>
    * Creates a new instance.
    *
-   * @param productType The SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param diversifier The key diversifier.
    * @since 2.0.1
    */
-  CmdSamSelectDiversifier(CalypsoSam.ProductType productType, byte[] diversifier) {
+  CmdSamSelectDiversifier(CalypsoSamAdapter calypsoSam, byte[] diversifier) {
 
-    super(CalypsoSamCommand.SELECT_DIVERSIFIER, 0);
+    super(CalypsoSamCommand.SELECT_DIVERSIFIER, 0, calypsoSam);
 
     // Format the diversifier on 4 or 8 bytes if needed.
     if (diversifier.length != 4 && diversifier.length != 8) {
@@ -61,7 +60,7 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                SamUtilAdapter.getClassByte(productType),
+                SamUtilAdapter.getClassByte(calypsoSam.getProductType()),
                 getCommandRef().getInstructionByte(),
                 (byte) 0,
                 (byte) 0,

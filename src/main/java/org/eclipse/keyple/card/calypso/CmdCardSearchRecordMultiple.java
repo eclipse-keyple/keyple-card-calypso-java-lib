@@ -84,13 +84,13 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
    * (package-private)<br>
    * Constructor.
    *
-   * @param calypsoCardClass The CLA field value.
+   * @param calypsoCard The Calypso card.
    * @param data The search command input/output data.
    * @since 2.1.0
    */
-  CmdCardSearchRecordMultiple(CalypsoCardClass calypsoCardClass, SearchCommandDataAdapter data) {
+  CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
 
-    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE, 0);
+    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE, 0, calypsoCard);
 
     this.data = data;
 
@@ -129,7 +129,7 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) data.getRecordNumber(),
                 p2,

@@ -74,19 +74,18 @@ final class CmdCardSvGet extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardSvGet.
    *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param svOperation the desired SV operation.
    * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
-  CmdCardSvGet(
-      CalypsoCardClass calypsoCardClass, SvOperation svOperation, boolean useExtendedMode) {
+  CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
     byte cla =
-        calypsoCardClass == CalypsoCardClass.LEGACY
+        calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
             ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
             : CalypsoCardClass.ISO.getValue();
 

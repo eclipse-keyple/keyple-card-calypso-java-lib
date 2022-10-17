@@ -324,13 +324,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
 
-    List<ApduResponseApi> apduResponses;
-
-    if (cardResponse != null) {
-      apduResponses = cardResponse.getApduResponses();
-    } else {
-      apduResponses = Collections.emptyList();
-    }
+    List<ApduResponseApi> apduResponses =
+        cardResponse != null
+            ? cardResponse.getApduResponses()
+            : Collections.<ApduResponseApi>emptyList();
 
     if (commands.size() != apduResponses.size()) {
       throw new ParseException("Mismatch in the number of requests/responses.");
@@ -338,13 +335,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     CalypsoCardAdapter calypsoCard;
     try {
-      calypsoCard = new CalypsoCardAdapter();
-      if (cardSelectionResponse.getSelectApplicationResponse() != null) {
-        calypsoCard.initializeWithFci(cardSelectionResponse.getSelectApplicationResponse());
-      } else if (cardSelectionResponse.getPowerOnData() != null) {
-        calypsoCard.initializeWithPowerOnData(cardSelectionResponse.getPowerOnData());
-      }
-
+      calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
       if (!commands.isEmpty()) {
         CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commands, apduResponses, false);
       }

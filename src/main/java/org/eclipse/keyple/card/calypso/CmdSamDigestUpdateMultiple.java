@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -50,14 +49,14 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdateMultiple.
    *
-   * @param productType the product type.
+   * @param calypsoSam The Calypso SAM.
    * @param digestData the digest data.
    * @since 2.0.1
    */
-  CmdSamDigestUpdateMultiple(CalypsoSam.ProductType productType, byte[] digestData) {
-    super(command, 0);
+  CmdSamDigestUpdateMultiple(CalypsoSamAdapter calypsoSam, byte[] digestData) {
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x80;
     byte p2 = (byte) 0x00;
 

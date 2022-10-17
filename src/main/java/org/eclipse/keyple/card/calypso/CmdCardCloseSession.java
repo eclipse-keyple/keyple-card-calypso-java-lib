@@ -50,8 +50,6 @@ final class CmdCardCloseSession extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCard calypsoCard;
-
   /** The signatureLo. */
   private byte[] signatureLo;
 
@@ -70,11 +68,9 @@ final class CmdCardCloseSession extends AbstractCardCommand {
    * @since 2.0.1
    */
   CmdCardCloseSession(
-      CalypsoCard calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
+      CalypsoCardAdapter calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
 
-    super(command, 0);
-
-    this.calypsoCard = calypsoCard;
+    super(command, 0, calypsoCard);
 
     // The optional parameter terminalSessionSignature could contain 4 or 8
     // bytes.
@@ -93,7 +89,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
+                calypsoCard.getCardClass().getValue(),
                 command.getInstructionByte(),
                 p1,
                 (byte) 0x00,
@@ -109,17 +105,15 @@ final class CmdCardCloseSession extends AbstractCardCommand {
    * @param calypsoCard The {@link CalypsoCard}.
    * @since 2.0.1
    */
-  CmdCardCloseSession(CalypsoCard calypsoCard) {
+  CmdCardCloseSession(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0);
-
-    this.calypsoCard = calypsoCard;
+    super(command, 0, calypsoCard);
 
     // CL-CSS-ABORTCMD.1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                ((CalypsoCardAdapter) calypsoCard).getCardClass().getValue(),
+                calypsoCard.getCardClass().getValue(),
                 command.getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
@@ -149,7 +143,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
     byte[] responseData = getApduResponse().getDataOut();
-    if (calypsoCard.isExtendedModeSupported()) {
+    if (getCalypsoCard().isExtendedModeSupported()) {
       // 8-byte signature
       if (responseData.length == 8) {
         // signature only

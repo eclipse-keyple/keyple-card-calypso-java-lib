@@ -92,7 +92,6 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCardClass calypsoCardClass;
   private final boolean isExtendedModeAllowed;
   /** apdu data array */
   private final byte[] dataIn;
@@ -103,9 +102,8 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    *
    * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
    *     command.
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param amount amount to debit or undebit (positive integer from 0 to 32767).
-   * @param kvc the KVC.
    * @param date operation date (not checked by the card).
    * @param time operation time (not checked by the card).
    * @param isExtendedModeAllowed True if the extended mode is allowed.
@@ -114,14 +112,16 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    */
   CmdCardSvDebitOrUndebit(
       boolean isDebitCommand,
-      CalypsoCardClass calypsoCardClass,
+      CalypsoCardAdapter calypsoCard,
       int amount,
-      byte kvc,
       byte[] date,
       byte[] time,
       boolean isExtendedModeAllowed) {
 
-    super(isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT, 0);
+    super(
+        isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT,
+        0,
+        calypsoCard);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -137,7 +137,6 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     }
 
     // keeps a copy of these fields until the command is finalized
-    this.calypsoCardClass = calypsoCardClass;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
 
     // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
@@ -152,7 +151,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     dataIn[4] = date[1];
     dataIn[5] = time[0];
     dataIn[6] = time[1];
-    dataIn[7] = kvc;
+    dataIn[7] = calypsoCard.getSvKvc();
     // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
   }
 
@@ -194,7 +193,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
-                    calypsoCardClass == CalypsoCardClass.LEGACY
+                    getCalypsoCard().getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
                     getCommandRef().getInstructionByte(),

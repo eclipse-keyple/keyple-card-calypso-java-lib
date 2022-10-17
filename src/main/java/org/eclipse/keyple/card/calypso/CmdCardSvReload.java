@@ -82,7 +82,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCardClass calypsoCardClass;
   private final boolean isExtendedModeAllowed;
   /** apdu data array */
   private final byte[] dataIn;
@@ -94,9 +93,8 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * <p>The process is carried out in two steps: first to check and store the card and application
    * data, then to create the final APDU with the data from the SAM (see finalizeCommand).
    *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param amount amount to debit (signed integer from -8388608 to 8388607).
-   * @param kvc debit key KVC (not checked by the card).
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
    * @param free 2 free bytes stored in the log but not processed by the card.
@@ -105,15 +103,14 @@ final class CmdCardSvReload extends AbstractCardCommand {
    * @since 2.0.1
    */
   CmdCardSvReload(
-      CalypsoCardClass calypsoCardClass,
+      CalypsoCardAdapter calypsoCard,
       int amount,
-      byte kvc,
       byte[] date,
       byte[] time,
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(
@@ -127,7 +124,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
     }
 
     // keeps a copy of these fields until the builder is finalized
-    this.calypsoCardClass = calypsoCardClass;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
@@ -138,7 +134,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     dataIn[1] = date[0];
     dataIn[2] = date[1];
     dataIn[3] = free[0];
-    dataIn[4] = kvc;
+    dataIn[4] = calypsoCard.getSvKvc();
     dataIn[5] = free[1];
     dataIn[6] = (byte) ((amount >> 16) & 0xFF);
     dataIn[7] = (byte) ((amount >> 8) & 0xFF);
@@ -182,7 +178,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
-                    calypsoCardClass == CalypsoCardClass.LEGACY
+                    getCalypsoCard().getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
                     command.getInstructionByte(),

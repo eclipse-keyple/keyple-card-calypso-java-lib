@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -67,14 +66,14 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the null key.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @since 2.0.1
    */
-  CmdSamReadKeyParameters(CalypsoSam.ProductType productType) {
+  CmdSamReadKeyParameters(CalypsoSamAdapter calypsoSam) {
 
-    super(command, 0);
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p2 = (byte) 0xE0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -89,15 +88,15 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the provided kif.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param kif the kif
    * @since 2.0.1
    */
-  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif) {
+  CmdSamReadKeyParameters(CalypsoSamAdapter calypsoSam, byte kif) {
 
-    super(command, 0);
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p2 = (byte) 0xC0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -114,16 +113,16 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the provided kif and kvc.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param kif the kif
    * @param kvc the kvc
    * @since 2.0.1
    */
-  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, byte kvc) {
+  CmdSamReadKeyParameters(CalypsoSamAdapter calypsoSam, byte kif, byte kvc) {
 
-    super(command, 0);
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p2 = (byte) 0xF0;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -141,22 +140,21 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the provided key reference and record number.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param sourceKeyRef the source key reference
    * @param recordNumber the record number
    * @since 2.0.1
    */
-  CmdSamReadKeyParameters(
-      CalypsoSam.ProductType productType, SourceRef sourceKeyRef, int recordNumber) {
+  CmdSamReadKeyParameters(CalypsoSamAdapter calypsoSam, SourceRef sourceKeyRef, int recordNumber) {
 
-    super(command, 0);
+    super(command, 0, calypsoSam);
 
     if (recordNumber < 1 || recordNumber > MAX_WORK_KEY_REC_NUMB) {
       throw new IllegalArgumentException(
           "Record Number must be between 1 and " + MAX_WORK_KEY_REC_NUMB + ".");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};
@@ -184,16 +182,16 @@ final class CmdSamReadKeyParameters extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadKeyParameters for the provided kif and navigation control flag.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param kif the kif
    * @param navControl the navigation control flag
    * @since 2.0.1
    */
-  CmdSamReadKeyParameters(CalypsoSam.ProductType productType, byte kif, NavControl navControl) {
+  CmdSamReadKeyParameters(CalypsoSamAdapter calypsoSam, byte kif, NavControl navControl) {
 
-    super(command, 0);
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p2;
     byte[] sourceKeyId = new byte[] {0x00, 0x00};

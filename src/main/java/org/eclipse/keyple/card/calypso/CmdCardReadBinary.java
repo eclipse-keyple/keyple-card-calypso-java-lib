@@ -66,15 +66,15 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * (package-private)<br>
    * Constructor.
    *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param sfi The sfi to select.
    * @param offset The offset.
    * @param length The number of bytes to read.
    * @since 2.1.0
    */
-  CmdCardReadBinary(CalypsoCardClass calypsoCardClass, byte sfi, int offset, byte length) {
+  CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte length) {
 
-    super(CalypsoCardCommand.READ_BINARY, length);
+    super(CalypsoCardCommand.READ_BINARY, length, calypsoCard);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -89,7 +89,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,

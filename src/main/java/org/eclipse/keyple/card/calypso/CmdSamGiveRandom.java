@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -40,16 +39,16 @@ final class CmdSamGiveRandom extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param random the random data.
    * @throws IllegalArgumentException If the random data is null or has a length not equal to 8 TODO
    *     implement specific settings for rev less than 3
    * @since 2.0.1
    */
-  CmdSamGiveRandom(CalypsoSam.ProductType productType, byte[] random) {
-    super(command, 0);
+  CmdSamGiveRandom(CalypsoSamAdapter calypsoSam, byte[] random) {
+    super(command, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 

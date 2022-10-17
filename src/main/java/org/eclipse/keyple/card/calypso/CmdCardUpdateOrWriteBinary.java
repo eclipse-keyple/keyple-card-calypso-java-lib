@@ -78,20 +78,19 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    *
    * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
    *     Binary" command.
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param sfi the sfi to select.
    * @param offset the offset.
    * @param data the data to write.
    * @since 2.1.0
    */
   CmdCardUpdateOrWriteBinary(
-      boolean isUpdateCommand,
-      CalypsoCardClass calypsoCardClass,
-      byte sfi,
-      int offset,
-      byte[] data) {
+      boolean isUpdateCommand, CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte[] data) {
 
-    super(isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY, 0);
+    super(
+        isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY,
+        0,
+        calypsoCard);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -107,7 +106,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,

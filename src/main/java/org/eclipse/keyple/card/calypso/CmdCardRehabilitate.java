@@ -51,12 +51,12 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardRehabilitate.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @since 2.0.1
    */
-  CmdCardRehabilitate(CalypsoCardClass calypsoCardClass) {
+  CmdCardRehabilitate(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -64,7 +64,12 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, null)));
+                calypsoCard.getCardClass().getValue(),
+                command.getInstructionByte(),
+                p1,
+                p2,
+                null,
+                null)));
   }
 
   /**

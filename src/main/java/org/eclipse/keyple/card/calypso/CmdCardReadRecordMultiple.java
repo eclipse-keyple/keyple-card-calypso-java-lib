@@ -87,7 +87,7 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
    * (package-private)<br>
    * Constructor.
    *
-   * @param calypsoCardClass The CLA field value.
+   * @param calypsoCard The Calypso card.
    * @param sfi The SFI.
    * @param recordNumber The number of the first record to read.
    * @param offset The offset from which to read in each record.
@@ -95,9 +95,9 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   CmdCardReadRecordMultiple(
-      CalypsoCardClass calypsoCardClass, byte sfi, byte recordNumber, byte offset, byte length) {
+      CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CalypsoCardCommand.READ_RECORD_MULTIPLE, 0);
+    super(CalypsoCardCommand.READ_RECORD_MULTIPLE, 0, calypsoCard);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -110,7 +110,7 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 recordNumber,
                 p2,

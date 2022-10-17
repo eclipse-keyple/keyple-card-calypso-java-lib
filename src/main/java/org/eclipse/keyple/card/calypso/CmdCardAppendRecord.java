@@ -72,17 +72,17 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardUpdateRecord.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param sfi the sfi to select.
-   * @param newRecordData the new record data to write.
+   * @param calypsoCard The Calypso card.
+   * @param sfi The sfi to select.
+   * @param newRecordData The new record data to write.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
-  CmdCardAppendRecord(CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
+  CmdCardAppendRecord(CalypsoCardAdapter calypsoCard, byte sfi, byte[] newRecordData) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
 
     this.sfi = sfi;
     this.data = newRecordData;

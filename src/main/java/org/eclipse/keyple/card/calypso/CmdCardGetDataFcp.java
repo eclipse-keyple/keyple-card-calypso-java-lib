@@ -57,13 +57,33 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetDataFci.
    *
+   * @param calypsoCard The Calypso card.
+   * @since 2.2.3
+   */
+  CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardGetDataFci.
+   *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.0.1
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass);
+  }
 
-    super(command, 0);
-
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   */
+  private void buildCommand(CalypsoCardClass calypsoCardClass) {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

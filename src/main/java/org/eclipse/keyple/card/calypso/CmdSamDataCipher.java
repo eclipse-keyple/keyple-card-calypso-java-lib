@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
@@ -61,22 +60,22 @@ final class CmdSamDataCipher extends AbstractSamCommand {
    * (package-private)<br>
    * Builds a new instance based on the provided data.
    *
-   * @param productType The SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param signatureComputationData The signature computation data (optional).
    * @param signatureVerificationData The signature computation data (optional).
    * @since 2.2.0
    */
   CmdSamDataCipher(
-      CalypsoSam.ProductType productType,
+      CalypsoSamAdapter calypsoSam,
       BasicSignatureComputationDataAdapter signatureComputationData,
       BasicSignatureVerificationDataAdapter signatureVerificationData) {
 
-    super(CalypsoSamCommand.DATA_CIPHER, 0);
+    super(CalypsoSamCommand.DATA_CIPHER, 0, calypsoSam);
 
     this.signatureComputationData = signatureComputationData;
     this.signatureVerificationData = signatureVerificationData;
 
-    final byte cla = SamUtilAdapter.getClassByte(productType);
+    final byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     final byte inst = getCommandRef().getInstructionByte();
     final byte p1 = (byte) 0x40; // TODO implement the other modes (cipher, decipher)
     final byte p2 = (byte) 0x00;

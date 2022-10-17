@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
@@ -107,7 +108,15 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @since 2.0.0
    */
-  CalypsoCardAdapter() {}
+  CalypsoCardAdapter(CardSelectionResponseApi cardSelectionResponse) throws CardCommandException {
+    if (cardSelectionResponse != null) {
+      if (cardSelectionResponse.getSelectApplicationResponse() != null) {
+        initializeWithFci(cardSelectionResponse.getSelectApplicationResponse());
+      } else if (cardSelectionResponse.getPowerOnData() != null) {
+        initializeWithPowerOnData(cardSelectionResponse.getPowerOnData());
+      }
+    }
+  }
 
   /**
    * (package-private)<br>
@@ -120,6 +129,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void initializeWithPowerOnData(String powerOnData) {
+
+    productType = ProductType.PRIME_REVISION_1;
+    calypsoCardClass = CalypsoCardClass.LEGACY;
 
     this.powerOnData = powerOnData;
 
@@ -146,9 +158,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     System.arraycopy(atr, 6, startupInfo, 1, 6);
 
     isRatificationOnDeselectSupported = true;
-
-    productType = ProductType.PRIME_REVISION_1;
-    calypsoCardClass = CalypsoCardClass.LEGACY;
   }
 
   /**
@@ -170,7 +179,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
-    CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci();
+    CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci(CalypsoCardClass.ISO);
     cmdCardGetDataFci.parseApduResponse(selectApplicationResponse);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {

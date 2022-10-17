@@ -27,12 +27,12 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetChallenge.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @since 2.0.1
    */
-  CmdCardGetChallenge(CalypsoCardClass calypsoCardClass) {
+  CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0x08);
+    super(command, 0x08, calypsoCard);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -41,7 +41,12 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
+                calypsoCard.getCardClass().getValue(),
+                command.getInstructionByte(),
+                p1,
+                p2,
+                null,
+                le)));
   }
 
   /**

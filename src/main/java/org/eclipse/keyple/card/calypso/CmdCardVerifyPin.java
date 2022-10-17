@@ -72,15 +72,15 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    * (package-private)<br>
    * Verify the PIN
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param encryptPinTransmission true if the PIN transmission has to be encrypted.
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
    *     transmission (@see setCipheredPinData).
    * @since 2.0.1
    */
-  CmdCardVerifyPin(CalypsoCardClass calypsoCardClass, boolean encryptPinTransmission, byte[] pin) {
+  CmdCardVerifyPin(CalypsoCardAdapter calypsoCard, boolean encryptPinTransmission, byte[] pin) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
     if (pin == null
         || (!encryptPinTransmission && pin.length != 4)
@@ -88,7 +88,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
       throw new IllegalArgumentException("The PIN must be 4 bytes long");
     }
 
-    cla = calypsoCardClass.getValue();
+    cla = calypsoCard.getCardClass().getValue();
 
     // CL-PIN-PP1P2.1
     byte p1 = (byte) 0x00;
@@ -109,14 +109,14 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    * (package-private)<br>
    * Alternate command dedicated to the reading of the wrong presentation counter
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @since 2.0.1
    */
-  CmdCardVerifyPin(CalypsoCardClass calypsoCardClass) {
+  CmdCardVerifyPin(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
-    cla = calypsoCardClass.getValue();
+    cla = calypsoCard.getCardClass().getValue();
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
