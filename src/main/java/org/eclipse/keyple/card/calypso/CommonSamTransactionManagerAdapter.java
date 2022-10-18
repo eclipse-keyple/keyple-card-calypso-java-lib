@@ -160,7 +160,7 @@ abstract class CommonSamTransactionManagerAdapter
               MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
 
       prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-      samCommands.add(new CmdSamDataCipher(sam.getProductType(), dataAdapter, null));
+      samCommands.add(new CmdSamDataCipher(sam, dataAdapter, null));
 
     } else if (data instanceof TraceableSignatureComputationDataAdapter) {
       // Traceable signature
@@ -193,7 +193,7 @@ abstract class CommonSamTransactionManagerAdapter
               MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
 
       prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-      samCommands.add(new CmdSamPsoComputeSignature(sam.getProductType(), dataAdapter));
+      samCommands.add(new CmdSamPsoComputeSignature(sam, dataAdapter));
 
     } else {
       throw new IllegalArgumentException(
@@ -230,7 +230,7 @@ abstract class CommonSamTransactionManagerAdapter
               MSG_KEY_DIVERSIFIER_SIZE_IS_IN_RANGE_1_8);
 
       prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-      samCommands.add(new CmdSamDataCipher(sam.getProductType(), null, dataAdapter));
+      samCommands.add(new CmdSamDataCipher(sam, null, dataAdapter));
 
     } else if (data instanceof TraceableSignatureVerificationDataAdapter) {
       // Traceable signature
@@ -299,7 +299,7 @@ abstract class CommonSamTransactionManagerAdapter
       }
 
       prepareSelectDiversifierIfNeeded(dataAdapter.getKeyDiversifier());
-      samCommands.add(new CmdSamPsoVerifySignature(sam.getProductType(), dataAdapter));
+      samCommands.add(new CmdSamPsoVerifySignature(sam, dataAdapter));
 
     } else {
       throw new IllegalArgumentException(
@@ -473,7 +473,7 @@ abstract class CommonSamTransactionManagerAdapter
    * @return The current instance.
    */
   private void prepareSelectDiversifier() {
-    samCommands.add(new CmdSamSelectDiversifier(sam.getProductType(), currentKeyDiversifier));
+    samCommands.add(new CmdSamSelectDiversifier(sam, currentKeyDiversifier));
   }
 
   /**

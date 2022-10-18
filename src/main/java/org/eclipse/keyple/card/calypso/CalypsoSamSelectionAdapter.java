@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.sam.CalypsoSamSelection;
-import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.*;
@@ -83,26 +82,28 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
    */
   @Override
   public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
-
     if (unlockCommand != null) {
       // an unlock command has been requested
       if (cardSelectionResponse.getCardResponse() == null
           || cardSelectionResponse.getCardResponse().getApduResponses().isEmpty()) {
-        throw new InconsistentDataException("Mismatch in the number of requests/responses");
+        throw new ParseException("Mismatch in the number of requests/responses");
       }
+      // check the SAM response to the unlock command
       ApduResponseApi apduResponse =
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
-      // check the SAM response to the unlock command
       try {
         unlockCommand.parseApduResponse(apduResponse);
       } catch (CalypsoSamAccessForbiddenException e) {
         logger.warn("SAM not locked or already unlocked");
       } catch (CalypsoSamCommandException e) {
-        throw new ParseException("An exception occurred while parse the SAM responses.", e);
+        throw new ParseException("An exception occurred while parsing the SAM response.", e);
       }
     }
-
-    return new CalypsoSamAdapter(cardSelectionResponse);
+    try {
+      return new CalypsoSamAdapter(cardSelectionResponse);
+    } catch (RuntimeException e) {
+      throw new ParseException("An exception occurred while parsing the SAM response.", e);
+    }
   }
 
   /**

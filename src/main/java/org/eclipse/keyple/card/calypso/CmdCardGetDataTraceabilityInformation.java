@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -47,13 +48,33 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetDataTrace.
    *
+   * @param calypsoCard The Calypso card.
+   * @since 2.2.3
+   */
+  CmdCardGetDataTraceabilityInformation(CalypsoCardAdapter calypsoCard) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardGetDataTrace.
+   *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.1.0
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass);
+  }
 
-    super(command, 0);
-
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   */
+  private void buildCommand(CalypsoCardClass calypsoCardClass) {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -63,6 +84,17 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
                 (byte) 0x85,
                 null,
                 (byte) 0x00)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setTraceabilityInformation(apduResponse.getDataOut());
   }
 
   /**

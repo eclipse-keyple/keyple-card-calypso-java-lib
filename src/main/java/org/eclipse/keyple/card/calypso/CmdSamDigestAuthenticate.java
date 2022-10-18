@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -47,13 +46,14 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamDigestAuthenticate .
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param signature the signature.
    * @throws IllegalArgumentException If the signature is null or has a wrong length.
    * @since 2.0.1
    */
-  CmdSamDigestAuthenticate(CalypsoSam.ProductType productType, byte[] signature) {
-    super(command, 0);
+  CmdSamDigestAuthenticate(CalypsoSamAdapter calypsoSam, byte[] signature) {
+
+    super(command, 0, calypsoSam);
 
     if (signature == null) {
       throw new IllegalArgumentException("Signature can't be null");
@@ -62,7 +62,7 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
       throw new IllegalArgumentException(
           "Signature is not the right length : length is " + signature.length);
     }
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = 0x00;
     byte p2 = (byte) 0x00;
 

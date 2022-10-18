@@ -63,19 +63,19 @@ final class CmdCardChangePin extends AbstractCardCommand {
    * (package-private)<br>
    * Builds a Calypso Change PIN command
    *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param newPinData The new PIN data either plain or encrypted.
    * @since 2.0.1
    */
-  CmdCardChangePin(CalypsoCardClass calypsoCardClass, byte[] newPinData) {
+  CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] newPinData) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
     if (newPinData == null || (newPinData.length != 0x04 && newPinData.length != 0x10)) {
       throw new IllegalArgumentException("Bad PIN data length.");
     }
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0xFF; // CL-PIN-MP1P2.1
 

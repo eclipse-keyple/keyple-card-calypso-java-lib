@@ -63,16 +63,16 @@ final class CmdCardChangeKey extends AbstractCardCommand {
    * (package-private)<br>
    * Change Key Calypso command
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param keyIndex index of the key of the current DF to change.
    * @param cryptogram key encrypted with Issuer key (key #1).
    * @since 2.1.0
    */
-  CmdCardChangeKey(CalypsoCardClass calypsoCardClass, byte keyIndex, byte[] cryptogram) {
+  CmdCardChangeKey(CalypsoCardAdapter calypsoCard, byte keyIndex, byte[] cryptogram) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
     byte p1 = (byte) 0x00;
 
     setApduRequest(

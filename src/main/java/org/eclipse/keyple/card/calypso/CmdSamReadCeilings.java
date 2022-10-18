@@ -34,7 +34,6 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
     READ_CEILING_RECORD
   }
 
-  private final CalypsoSamAdapter sam;
   private final CeilingsOperationType ceilingsOperationType;
   private final int firstEventCeilingNumber;
 
@@ -58,19 +57,18 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamReadCeilings.
    *
-   * @param sam the SAM.
+   * @param calypsoSam The Calypso SAM.
    * @param ceilingsOperationType the ceiling operation type.
    * @param target the ceiling index (0-26) if READ_SINGLE_CEILING, the record index (1-3) if
    *     READ_CEILING_RECORD.
    * @since 2.0.1
    */
   CmdSamReadCeilings(
-      CalypsoSamAdapter sam, CeilingsOperationType ceilingsOperationType, int target) {
+      CalypsoSamAdapter calypsoSam, CeilingsOperationType ceilingsOperationType, int target) {
 
-    super(command, 48);
+    super(command, 48, calypsoSam);
 
-    this.sam = sam;
-    byte cla = SamUtilAdapter.getClassByte(sam.getProductType());
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p1;
     byte p2;
@@ -110,11 +108,13 @@ final class CmdSamReadCeilings extends AbstractSamCommand {
     super.parseApduResponse(apduResponse);
     byte[] dataOut = apduResponse.getDataOut();
     if (ceilingsOperationType == CeilingsOperationType.READ_SINGLE_CEILING) {
-      sam.putEventCeiling(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+      getCalypsoSam().putEventCeiling(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
     } else {
       for (int i = 0; i < 9; i++) {
-        sam.putEventCeiling(
-            firstEventCeilingNumber + i, ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
+        getCalypsoSam()
+            .putEventCeiling(
+                firstEventCeilingNumber + i,
+                ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
       }
     }
   }

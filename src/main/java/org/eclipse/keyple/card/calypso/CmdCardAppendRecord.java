@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,17 +73,17 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardUpdateRecord.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param sfi the sfi to select.
-   * @param newRecordData the new record data to write.
+   * @param calypsoCard The Calypso card.
+   * @param sfi The sfi to select.
+   * @param newRecordData The new record data to write.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
-  CmdCardAppendRecord(CalypsoCardClass calypsoCardClass, byte sfi, byte[] newRecordData) {
+  CmdCardAppendRecord(CalypsoCardAdapter calypsoCard, byte sfi, byte[] newRecordData) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
 
     this.sfi = sfi;
     this.data = newRecordData;
@@ -103,32 +104,23 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().addCyclicContent((byte) sfi, data);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return True
    * @since 2.0.1
    */
   @Override
   boolean isSessionBufferUsed() {
     return true;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI of the accessed file
-   * @since 2.0.1
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The data sent to the card
-   * @since 2.0.1
-   */
-  byte[] getData() {
-    return data;
   }
 
   /**

@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -65,16 +64,18 @@ final class CmdSamWriteKey extends AbstractSamCommand {
    * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param writingMode the writing mode (P1).
    * @param keyReference the key reference (P2).
    * @param keyData the key data.
    * @since 2.0.1
    */
   CmdSamWriteKey(
-      CalypsoSam.ProductType productType, byte writingMode, byte keyReference, byte[] keyData) {
-    super(command, 0);
-    byte cla = SamUtilAdapter.getClassByte(productType);
+      CalypsoSamAdapter calypsoSam, byte writingMode, byte keyReference, byte[] keyData) {
+
+    super(command, 0, calypsoSam);
+
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     if (keyData == null) {
       throw new IllegalArgumentException("Key data null!");

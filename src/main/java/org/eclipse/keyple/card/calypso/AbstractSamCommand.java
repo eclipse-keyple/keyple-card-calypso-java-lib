@@ -23,6 +23,8 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 abstract class AbstractSamCommand extends AbstractApduCommand {
 
+  private CalypsoSamAdapter calypsoSam;
+
   /**
    * (package-private)<br>
    * Default SAM product type.
@@ -57,12 +59,25 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
    * (package-private)<br>
    * Constructor dedicated for the building of referenced Calypso commands
    *
-   * @param commandRef a command reference from the Calypso command table.
+   * @param commandRef A command reference from the Calypso command table.
    * @param le The value of the LE field.
+   * @param calypsoSam The Calypso SAM (it may be null if the SAM selection has not yet been made).
    * @since 2.0.1
    */
-  AbstractSamCommand(CalypsoSamCommand commandRef, int le) {
+  AbstractSamCommand(CalypsoSamCommand commandRef, int le, CalypsoSamAdapter calypsoSam) {
     super(commandRef, le);
+    this.calypsoSam = calypsoSam;
+  }
+
+  /**
+   * (package-private)<br>
+   * Returns the Calypso SAM.
+   *
+   * @return Null if the SAM selection has not yet been made.
+   * @since 2.2.3
+   */
+  CalypsoSamAdapter getCalypsoSam() {
+    return calypsoSam;
   }
 
   /**
@@ -130,5 +145,17 @@ abstract class AbstractSamCommand extends AbstractApduCommand {
     } catch (CalypsoApduCommandException e) {
       throw (CalypsoSamCommandException) e;
     }
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the Calypso SAM and invoke the {@link #parseApduResponse(ApduResponseApi)} method.
+   *
+   * @since 2.2.3
+   */
+  void parseApduResponse(ApduResponseApi apduResponse, CalypsoSamAdapter calypsoSam)
+      throws CalypsoSamCommandException {
+    this.calypsoSam = calypsoSam;
+    parseApduResponse(apduResponse);
   }
 }

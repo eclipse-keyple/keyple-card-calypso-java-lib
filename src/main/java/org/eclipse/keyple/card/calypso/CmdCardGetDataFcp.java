@@ -13,9 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.Assert;
-import org.eclipse.keyple.core.util.BerTlvUtil;
 
 /**
  * (package-private)<br>
@@ -57,13 +56,33 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetDataFci.
    *
+   * @param calypsoCard The Calypso card.
+   * @since 2.2.3
+   */
+  CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardGetDataFci.
+   *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.0.1
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass);
+  }
 
-    super(command, 0);
-
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   */
+  private void buildCommand(CalypsoCardClass calypsoCardClass) {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -78,31 +97,23 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    CmdCardSelectFile.parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return False
    * @since 2.0.1
    */
   @Override
   boolean isSessionBufferUsed() {
     return false;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The content of the proprietary information tag present in the response to the Get Data
-   *     (FCP) command
-   * @since 2.0.1
-   */
-  byte[] getProprietaryInformation() {
-    if (proprietaryInformation == null) {
-      Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(getApduResponse().getDataOut(), true);
-      proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
-      if (proprietaryInformation == null) {
-        throw new IllegalStateException("Proprietary information: tag not found.");
-      }
-      Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
-    }
-    return proprietaryInformation;
   }
 
   /**

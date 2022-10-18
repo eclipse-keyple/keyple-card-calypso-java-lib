@@ -411,12 +411,65 @@ public class CardTransactionManagerAdapterTest {
 
   interface ReaderMock extends CardReader, ProxyReaderApi {}
 
+  private void initCalypsoCard(String selectApplicationResponse) throws Exception {
+    calypsoCard =
+        spy(
+            new CalypsoCardAdapter(
+                new CardSelectionResponseAdapter(
+                    new ApduResponseAdapter(HexUtil.toByteArray(selectApplicationResponse)))));
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+  }
+
+  private CardRequestSpi createCardRequest(String... apduCommands) {
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+    for (String apduCommand : apduCommands) {
+      apduRequests.add(new ApduRequestAdapter(HexUtil.toByteArray(apduCommand)));
+    }
+    return new CardRequestAdapter(apduRequests, false);
+  }
+
+  private CardResponseApi createCardResponse(String... apduCommandResponses) {
+    List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
+    for (String apduResponse : apduCommandResponses) {
+      apduResponses.add(new ApduResponseAdapter(HexUtil.toByteArray(apduResponse)));
+    }
+    return new CardResponseAdapter(apduResponses, true);
+  }
+
+  public static class CardRequestMatcher implements ArgumentMatcher<CardRequestSpi> {
+    List<ApduRequestSpi> leftApduRequests;
+
+    CardRequestMatcher(CardRequestSpi cardRequest) {
+      leftApduRequests = cardRequest.getApduRequests();
+    }
+
+    @Override
+    public boolean matches(CardRequestSpi right) {
+      if (right == null) {
+        return false;
+      }
+      List<ApduRequestSpi> rightApduRequests = right.getApduRequests();
+      if (leftApduRequests.size() != rightApduRequests.size()) {
+        return false;
+      }
+      Iterator<ApduRequestSpi> itLeft = leftApduRequests.iterator();
+      Iterator<ApduRequestSpi> itRight = rightApduRequests.iterator();
+      while (itLeft.hasNext() && itRight.hasNext()) {
+        byte[] leftApdu = itLeft.next().getApdu();
+        byte[] rightApdu = itRight.next().getApdu();
+        if (!Arrays.equals(leftApdu, rightApdu)) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
   @Before
   public void setUp() throws Exception {
     cardReader = mock(ReaderMock.class);
-    calypsoCard = spy(new CalypsoCardAdapter());
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3)));
     samReader = mock(ReaderMock.class);
     CardSelectionResponseApi samCardSelectionResponse = mock(CardSelectionResponseApi.class);
     when(samCardSelectionResponse.getPowerOnData()).thenReturn(SAM_C1_POWER_ON_DATA);
@@ -425,9 +478,7 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardSecuritySetting()
             .setControlSamResource(samReader, calypsoSam);
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
   }
 
   @Test
@@ -954,9 +1005,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = IllegalStateException.class)
   public void processVerifyPin_whenPINIsNotFirstCommand_shouldThrowISE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     cardTransactionManager.prepareReadRecord(FILE7, 1);
     cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
   }
@@ -974,12 +1023,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardSecuritySetting()
             .setControlSamResource(samReader, calypsoSam)
             .enablePinPlainTransmission();
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -1002,12 +1046,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardSecuritySetting()
             .enablePinPlainTransmission()
             .setControlSamResource(samReader, calypsoSam);
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
     calypsoCard.setPinAttemptRemaining(3);
 
@@ -1038,12 +1077,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardSecuritySetting()
             .setPinModificationCipheringKey(PIN_CIPHERING_KEY_KIF, PIN_CIPHERING_KEY_KVC)
             .setControlSamResource(samReader, calypsoSam);
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
     CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
     CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
@@ -1098,12 +1132,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardSecuritySetting()
             .setControlSamResource(samReader, calypsoSam)
             .enablePinPlainTransmission();
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
     CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
     CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
@@ -1189,8 +1218,7 @@ public class CardTransactionManagerAdapterTest {
       prepareSelectFile_whenLidIs1234AndCardIsPrimeRevision2_shouldPrepareSelectFileApduWith1234()
           throws Exception {
     short lid = 0x1234;
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD_PRIME_REV2);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP_PRIME_REV2);
     when(cardReader.transmitCardRequest(
@@ -1543,8 +1571,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareSearchRecords(null);
   }
 
@@ -1859,8 +1886,7 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = UnsupportedOperationException.class)
   public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE()
       throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 1);
   }
 
@@ -1989,8 +2015,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -2207,8 +2232,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareWriteBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -2590,9 +2614,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void prepareCheckPinStatus_whenPinFeatureIsAvailable_shouldPrepareCheckPinStatusApdu()
       throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -2623,9 +2645,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_DEBIT_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_DEBIT_RSP);
     when(cardReader.transmitCardRequest(
@@ -2641,9 +2661,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
@@ -2660,9 +2678,7 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void prepareSvGet_whenSvOperationReloadWithPrimeRev2_shouldPrepareSvGetReloadApdu()
       throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_PRIME_REV2_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
@@ -2703,17 +2719,13 @@ public class CardTransactionManagerAdapterTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
     cardTransactionManager.prepareSvReadAllLogs();
   }
 
   @Test(expected = IllegalStateException.class)
   public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED);
     cardTransactionManager.prepareInvalidate();
   }
 
@@ -2739,9 +2751,7 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu() throws Exception {
-    calypsoCard.initializeWithFci(
-        new ApduResponseAdapter(
-            HexUtil.toByteArray(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED)));
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_REHABILITATE_CMD);
     CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
     when(cardReader.transmitCardRequest(
@@ -2753,50 +2763,5 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
-  }
-
-  private CardRequestSpi createCardRequest(String... apduCommands) {
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
-    for (String apduCommand : apduCommands) {
-      apduRequests.add(new ApduRequestAdapter(HexUtil.toByteArray(apduCommand)));
-    }
-    return new CardRequestAdapter(apduRequests, false);
-  }
-
-  private CardResponseApi createCardResponse(String... apduCommandResponses) {
-    List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
-    for (String apduResponse : apduCommandResponses) {
-      apduResponses.add(new ApduResponseAdapter(HexUtil.toByteArray(apduResponse)));
-    }
-    return new CardResponseAdapter(apduResponses, true);
-  }
-
-  public static class CardRequestMatcher implements ArgumentMatcher<CardRequestSpi> {
-    List<ApduRequestSpi> leftApduRequests;
-
-    CardRequestMatcher(CardRequestSpi cardRequest) {
-      leftApduRequests = cardRequest.getApduRequests();
-    }
-
-    @Override
-    public boolean matches(CardRequestSpi right) {
-      if (right == null) {
-        return false;
-      }
-      List<ApduRequestSpi> rightApduRequests = right.getApduRequests();
-      if (leftApduRequests.size() != rightApduRequests.size()) {
-        return false;
-      }
-      Iterator<ApduRequestSpi> itLeft = leftApduRequests.iterator();
-      Iterator<ApduRequestSpi> itRight = rightApduRequests.iterator();
-      while (itLeft.hasNext() && itRight.hasNext()) {
-        byte[] leftApdu = itLeft.next().getApdu();
-        byte[] rightApdu = itRight.next().getApdu();
-        if (!Arrays.equals(leftApdu, rightApdu)) {
-          return false;
-        }
-      }
-      return true;
-    }
   }
 }

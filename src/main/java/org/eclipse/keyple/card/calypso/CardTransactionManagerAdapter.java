@@ -248,7 +248,7 @@ final class CardTransactionManagerAdapter
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
         new CmdCardOpenSession(
-            card.getProductType(),
+            card,
             (byte) (writeAccessLevel.ordinal() + 1),
             samChallenge,
             sfi,
@@ -276,7 +276,7 @@ final class CardTransactionManagerAdapter
 
     // Parse all the responses and fills the CalypsoCard object with the command data.
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, true);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -381,7 +381,7 @@ final class CardTransactionManagerAdapter
     }
 
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, isSessionOpen);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -391,6 +391,87 @@ final class CardTransactionManagerAdapter
           e);
     } catch (InconsistentDataException e) {
       throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Parses the APDU responses and updates the Calypso card image.
+   *
+   * @param commands The list of commands that get the responses.
+   * @param apduResponses The APDU responses returned by the card to all commands.
+   * @throws CardCommandException If a response from the card was unexpected.
+   * @throws InconsistentDataException If the number of commands/responses does not match.
+   */
+  private void parseApduResponses(
+      List<AbstractCardCommand> commands, List<ApduResponseApi> apduResponses)
+      throws CardCommandException {
+
+    // If there are more responses than requests, then we are unable to fill the card image. In this
+    // case we stop processing immediately because it may be a case of fraud, and we throw a
+    // desynchronized exception.
+    if (apduResponses.size() > commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
+
+    // We go through all the responses (and not the requests) because there may be fewer in the
+    // case of an error that occurred in strict mode. In this case the last response will raise an
+    // exception.
+    for (int i = 0; i < apduResponses.size(); i++) {
+      try {
+        commands.get(i).parseApduResponse(apduResponses.get(i));
+      } catch (CardCommandException e) {
+        CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
+        if (e instanceof CardDataAccessException
+            && (commandRef == CalypsoCardCommand.READ_RECORDS
+                || commandRef == CalypsoCardCommand.READ_RECORD_MULTIPLE
+                || commandRef == CalypsoCardCommand.SEARCH_RECORD_MULTIPLE
+                || commandRef == CalypsoCardCommand.READ_BINARY)) {
+          checkResponseStatusForStrictAndBestEffortMode(commands.get(i), e);
+        } else {
+          throw new UnexpectedCommandStatusException(
+              MSG_CARD_COMMAND_ERROR
+                  + "while processing responses to card commands: "
+                  + e.getCommand()
+                  + getTransactionAuditDataAsString(),
+              e);
+        }
+      }
+    }
+
+    // Finally, if no error has occurred and there are fewer responses than requests, then we
+    // throw a desynchronized exception.
+    if (apduResponses.size() < commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Sets the response to the command and check the status for strict and best effort mode.
+   *
+   * @param command The command.
+   * @throws CardCommandException If needed.
+   */
+  private void checkResponseStatusForStrictAndBestEffortMode(
+      AbstractCardCommand command, CardCommandException e) throws CardCommandException {
+    if (isSessionOpen) {
+      throw e;
+    } else {
+      // best effort mode, do not throw exception for "file not found" and "record not found"
+      // errors.
+      if (command.getApduResponse().getStatusWord() != 0x6A82
+          && command.getApduResponse().getStatusWord() != 0x6A83) {
+        throw e;
+      }
     }
   }
 
@@ -521,7 +602,7 @@ final class CardTransactionManagerAdapter
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, true);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -537,8 +618,7 @@ final class CardTransactionManagerAdapter
 
     // Check the card's response to Close Secure Session
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(
-          card, cmdCardCloseSession, closeSecureSessionApduResponse, false);
+      cmdCardCloseSession.parseApduResponse(closeSecureSessionApduResponse);
     } catch (CardSecurityDataException e) {
       throw new UnexpectedCommandStatusException(
           "Invalid card session" + getTransactionAuditDataAsString(), e);
@@ -1052,7 +1132,7 @@ final class CardTransactionManagerAdapter
       if (securitySetting != null && !securitySetting.isPinPlainTransmissionEnabled()) {
 
         // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(card.getCardClass()));
+        cardCommands.add(new CmdCardGetChallenge(card));
 
         // transmit and receive data with the card
         processAtomicCardCommands(cardCommands, ChannelControl.KEEP_OPEN);
@@ -1063,9 +1143,9 @@ final class CardTransactionManagerAdapter
         // Get the encrypted PIN with the help of the SAM
         byte[] cipheredPin = processSamCardCipherPin(pin, null);
 
-        cardCommands.add(new CmdCardVerifyPin(card.getCardClass(), true, cipheredPin));
+        cardCommands.add(new CmdCardVerifyPin(card, true, cipheredPin));
       } else {
-        cardCommands.add(new CmdCardVerifyPin(card.getCardClass(), false, pin));
+        cardCommands.add(new CmdCardVerifyPin(card, false, pin));
       }
 
       // transmit and receive data with the card
@@ -1125,11 +1205,11 @@ final class CardTransactionManagerAdapter
       if (securitySetting.isPinPlainTransmissionEnabled()) {
         // transmission in plain mode
         if (card.getPinAttemptRemaining() >= 0) {
-          cardCommands.add(new CmdCardChangePin(card.getCardClass(), newPin));
+          cardCommands.add(new CmdCardChangePin(card, newPin));
         }
       } else {
         // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(card.getCardClass()));
+        cardCommands.add(new CmdCardGetChallenge(card));
 
         // transmit and receive data with the card
         processAtomicCardCommands(cardCommands, ChannelControl.KEEP_OPEN);
@@ -1141,7 +1221,7 @@ final class CardTransactionManagerAdapter
         byte[] currentPin = new byte[4]; // all zeros as required
         byte[] newPinData = processSamCardCipherPin(currentPin, newPin);
 
-        cardCommands.add(new CmdCardChangePin(card.getCardClass(), newPinData));
+        cardCommands.add(new CmdCardChangePin(card, newPinData));
       }
 
       // transmit and receive data with the card
@@ -1182,7 +1262,7 @@ final class CardTransactionManagerAdapter
     finalizeSvCommandIfNeeded();
 
     // CL-KEY-CHANGE.1
-    cardCommands.add(new CmdCardGetChallenge(card.getCardClass()));
+    cardCommands.add(new CmdCardGetChallenge(card));
 
     // transmit and receive data with the card
     processAtomicCardCommands(cardCommands, ChannelControl.KEEP_OPEN);
@@ -1193,7 +1273,7 @@ final class CardTransactionManagerAdapter
     // Get the encrypted key with the help of the SAM
     byte[] encryptedKey = processSamCardGenerateKey(issuerKif, issuerKvc, newKif, newKvc);
 
-    cardCommands.add(new CmdCardChangeKey(card.getCardClass(), (byte) keyIndex, encryptedKey));
+    cardCommands.add(new CmdCardChangeKey(card, (byte) keyIndex, encryptedKey));
 
     // transmit and receive data with the card
     processAtomicCardCommands(cardCommands, channelControl);
@@ -1531,7 +1611,7 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSelectFile(short lid) {
-    cardCommands.add(new CmdCardSelectFile(card.getCardClass(), card.getProductType(), lid));
+    cardCommands.add(new CmdCardSelectFile(card, lid));
     return this;
   }
 
@@ -1546,7 +1626,7 @@ final class CardTransactionManagerAdapter
     Assert.getInstance().notNull(selectFileControl, "selectFileControl");
 
     // create the command and add it to the list of commands
-    cardCommands.add(new CmdCardSelectFile(card.getCardClass(), selectFileControl));
+    cardCommands.add(new CmdCardSelectFile(card, selectFileControl));
 
     return this;
   }
@@ -1564,16 +1644,16 @@ final class CardTransactionManagerAdapter
     // create the command and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        cardCommands.add(new CmdCardGetDataFci(card.getCardClass()));
+        cardCommands.add(new CmdCardGetDataFci(card));
         break;
       case FCP_FOR_CURRENT_FILE:
-        cardCommands.add(new CmdCardGetDataFcp(card.getCardClass()));
+        cardCommands.add(new CmdCardGetDataFcp(card));
         break;
       case EF_LIST:
-        cardCommands.add(new CmdCardGetDataEfList(card.getCardClass()));
+        cardCommands.add(new CmdCardGetDataEfList(card));
         break;
       case TRACEABILITY_INFORMATION:
-        cardCommands.add(new CmdCardGetDataTraceabilityInformation(card.getCardClass()));
+        cardCommands.add(new CmdCardGetDataTraceabilityInformation(card));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -1642,8 +1722,7 @@ final class CardTransactionManagerAdapter
     }
 
     CmdCardReadRecords cmdCardReadRecords =
-        new CmdCardReadRecords(
-            card.getCardClass(), sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0);
+        new CmdCardReadRecords(card, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0);
     cardCommands.add(cmdCardReadRecords);
 
     return this;
@@ -1672,16 +1751,11 @@ final class CardTransactionManagerAdapter
       // create the command and add it to the list of commands
       cardCommands.add(
           new CmdCardReadRecords(
-              card.getCardClass(),
-              sfi,
-              fromRecordNumber,
-              CmdCardReadRecords.ReadMode.ONE_RECORD,
-              recordSize));
+              card, sfi, fromRecordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, recordSize));
     } else {
       // Manages the reading of multiple records taking into account the transmission capacity
       // of the card and the response format (2 extra bytes).
       // Multiple APDUs can be generated depending on record size and transmission capacity.
-      final CalypsoCardClass cardClass = card.getCardClass();
       final int nbBytesPerRecord = recordSize + 2;
       final int nbRecordsPerApdu = card.getPayloadCapacity() / nbBytesPerRecord;
       final int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
@@ -1698,7 +1772,7 @@ final class CardTransactionManagerAdapter
 
         cardCommands.add(
             new CmdCardReadRecords(
-                cardClass,
+                card,
                 sfi,
                 currentRecordNumber,
                 CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
@@ -1712,7 +1786,7 @@ final class CardTransactionManagerAdapter
       if (currentRecordNumber == toRecordNumber) {
         cardCommands.add(
             new CmdCardReadRecords(
-                cardClass,
+                card,
                 sfi,
                 currentRecordNumber,
                 CmdCardReadRecords.ReadMode.ONE_RECORD,
@@ -1754,7 +1828,6 @@ final class CardTransactionManagerAdapter
             CalypsoCardConstant.DATA_LENGTH_MAX - offset,
             "nbBytesToRead");
 
-    final CalypsoCardClass cardClass = card.getCardClass();
     final int nbRecordsPerApdu = card.getPayloadCapacity() / nbBytesToRead;
 
     int currentRecordNumber = fromRecordNumber;
@@ -1762,7 +1835,7 @@ final class CardTransactionManagerAdapter
     while (currentRecordNumber <= toRecordNumber) {
       cardCommands.add(
           new CmdCardReadRecordMultiple(
-              cardClass, sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
+              card, sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
       currentRecordNumber += nbRecordsPerApdu;
     }
 
@@ -1790,11 +1863,10 @@ final class CardTransactionManagerAdapter
 
     if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      cardCommands.add(new CmdCardReadBinary(card.getCardClass(), sfi, 0, (byte) 1));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, (byte) 1));
     }
 
     final int payloadCapacity = card.getPayloadCapacity();
-    final CalypsoCardClass cardClass = card.getCardClass();
 
     int currentLength;
     int currentOffset = offset;
@@ -1802,7 +1874,7 @@ final class CardTransactionManagerAdapter
     do {
       currentLength = Math.min(nbBytesRemainingToRead, payloadCapacity);
 
-      cardCommands.add(new CmdCardReadBinary(cardClass, sfi, currentOffset, (byte) currentLength));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, (byte) currentLength));
 
       currentOffset += currentLength;
       nbBytesRemainingToRead -= currentLength;
@@ -1873,7 +1945,7 @@ final class CardTransactionManagerAdapter
               "mask");
     }
 
-    cardCommands.add(new CmdCardSearchRecordMultiple(card.getCardClass(), dataAdapter));
+    cardCommands.add(new CmdCardSearchRecordMultiple(card, dataAdapter));
 
     return this;
   }
@@ -1890,7 +1962,7 @@ final class CardTransactionManagerAdapter
         .notNull(recordData, "recordData");
 
     // create the command and add it to the list of commands
-    cardCommands.add(new CmdCardAppendRecord(card.getCardClass(), sfi, recordData));
+    cardCommands.add(new CmdCardAppendRecord(card, sfi, recordData));
 
     return this;
   }
@@ -1912,7 +1984,7 @@ final class CardTransactionManagerAdapter
         .notNull(recordData, "recordData");
 
     // create the command and add it to the list of commands
-    cardCommands.add(new CmdCardUpdateRecord(card.getCardClass(), sfi, recordNumber, recordData));
+    cardCommands.add(new CmdCardUpdateRecord(card, sfi, recordNumber, recordData));
 
     return this;
   }
@@ -1933,7 +2005,7 @@ final class CardTransactionManagerAdapter
             RECORD_NUMBER);
 
     // create the command and add it to the list of commands
-    cardCommands.add(new CmdCardWriteRecord(card.getCardClass(), sfi, recordNumber, recordData));
+    cardCommands.add(new CmdCardWriteRecord(card, sfi, recordNumber, recordData));
 
     return this;
   }
@@ -1985,12 +2057,11 @@ final class CardTransactionManagerAdapter
 
     if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      cardCommands.add(new CmdCardReadBinary(card.getCardClass(), sfi, 0, (byte) 1));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, (byte) 1));
     }
 
     final int dataLength = data.length;
     final int payloadCapacity = card.getPayloadCapacity();
-    final CalypsoCardClass cardClass = card.getCardClass();
 
     int currentLength;
     int currentOffset = offset;
@@ -2001,7 +2072,7 @@ final class CardTransactionManagerAdapter
       cardCommands.add(
           new CmdCardUpdateOrWriteBinary(
               isUpdateCommand,
-              cardClass,
+              card,
               sfi,
               currentOffset,
               Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
@@ -2034,8 +2105,7 @@ final class CardTransactionManagerAdapter
 
     // create the command and add it to the list of commands
     cardCommands.add(
-        new CmdCardIncreaseOrDecrease(
-            isDecreaseCommand, card.getCardClass(), sfi, counterNumber, incDecValue));
+        new CmdCardIncreaseOrDecrease(isDecreaseCommand, card, sfi, counterNumber, incDecValue));
 
     return this;
   }
@@ -2100,7 +2170,7 @@ final class CardTransactionManagerAdapter
       cardCommands.add(
           new CmdCardIncreaseOrDecreaseMultiple(
               isDecreaseCommand,
-              card.getCardClass(),
+              card,
               sfi,
               new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap)));
     } else {
@@ -2113,15 +2183,13 @@ final class CardTransactionManagerAdapter
         if (i == nbCountersPerApdu) {
           cardCommands.add(
               new CmdCardIncreaseOrDecreaseMultiple(
-                  isDecreaseCommand, card.getCardClass(), sfi, new TreeMap<Integer, Integer>(map)));
+                  isDecreaseCommand, card, sfi, new TreeMap<Integer, Integer>(map)));
           i = 0;
           map.clear();
         }
       }
       if (!map.isEmpty()) {
-        cardCommands.add(
-            new CmdCardIncreaseOrDecreaseMultiple(
-                isDecreaseCommand, card.getCardClass(), sfi, map));
+        cardCommands.add(new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
       }
     }
 
@@ -2209,7 +2277,7 @@ final class CardTransactionManagerAdapter
       throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
     }
     // create the command and add it to the list of commands
-    cardCommands.add(new CmdCardVerifyPin(card.getCardClass()));
+    cardCommands.add(new CmdCardVerifyPin(card));
 
     return this;
   }
@@ -2242,10 +2310,9 @@ final class CardTransactionManagerAdapter
       // CL-SV-GETNUMBER.1
       SvOperation operation1 =
           SvOperation.RELOAD.equals(svOperation) ? SvOperation.DEBIT : SvOperation.RELOAD;
-      addStoredValueCommand(new CmdCardSvGet(card.getCardClass(), operation1, false), operation1);
+      addStoredValueCommand(new CmdCardSvGet(card, operation1, false), operation1);
     }
-    addStoredValueCommand(
-        new CmdCardSvGet(card.getCardClass(), svOperation, useExtendedMode), svOperation);
+    addStoredValueCommand(new CmdCardSvGet(card, svOperation, useExtendedMode), svOperation);
     this.svAction = svAction;
 
     return this;
@@ -2263,14 +2330,7 @@ final class CardTransactionManagerAdapter
 
     // create the initial command with the application data
     CmdCardSvReload svReloadCmdBuild =
-        new CmdCardSvReload(
-            card.getCardClass(),
-            amount,
-            card.getSvKvc(),
-            date,
-            time,
-            free,
-            isExtendedModeAllowed());
+        new CmdCardSvReload(card, amount, date, time, free, isExtendedModeAllowed());
 
     // create and keep the CalypsoCardCommand
     addStoredValueCommand(svReloadCmdBuild, SvOperation.RELOAD);
@@ -2341,13 +2401,7 @@ final class CardTransactionManagerAdapter
     // create the initial command with the application data
     CmdCardSvDebitOrUndebit command =
         new CmdCardSvDebitOrUndebit(
-            svAction == SvAction.DO,
-            card.getCardClass(),
-            amount,
-            card.getSvKvc(),
-            date,
-            time,
-            isExtendedModeAllowed());
+            svAction == SvAction.DO, card, amount, date, time, isExtendedModeAllowed());
 
     // create and keep the CalypsoCardCommand
     addStoredValueCommand(command, SvOperation.DEBIT);
@@ -2408,7 +2462,7 @@ final class CardTransactionManagerAdapter
     if (card.isDfInvalidated()) {
       throw new IllegalStateException("This card is already invalidated.");
     }
-    cardCommands.add(new CmdCardInvalidate(card.getCardClass()));
+    cardCommands.add(new CmdCardInvalidate(card));
 
     return this;
   }
@@ -2423,7 +2477,7 @@ final class CardTransactionManagerAdapter
     if (!card.isDfInvalidated()) {
       throw new IllegalStateException("This card is not invalidated.");
     }
-    cardCommands.add(new CmdCardRehabilitate(card.getCardClass()));
+    cardCommands.add(new CmdCardRehabilitate(card));
 
     return this;
   }

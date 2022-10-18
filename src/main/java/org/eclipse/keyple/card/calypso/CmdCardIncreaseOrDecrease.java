@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,25 +80,26 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
    *
    * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
    *     command.
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param sfi SFI of the file to select or 00h for current EF.
    * @param counterNumber &gt;= 01h: Counters file, number of the counter. 00h: Simulated Counter.
    *     file.
    * @param incDecValue Value to subtract or add to the counter (defined as a positive int &lt;=
    *     16777215 [FFFFFFh])
-   * @throws IllegalArgumentException If the decrement value is out of range
-   * @throws IllegalArgumentException If the command is inconsistent
    */
   CmdCardIncreaseOrDecrease(
       boolean isDecreaseCommand,
-      CalypsoCardClass calypsoCardClass,
+      CalypsoCardAdapter calypsoCard,
       byte sfi,
       int counterNumber,
       int incDecValue) {
 
-    super(isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE, 0);
+    super(
+        isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE,
+        0,
+        calypsoCard);
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
     this.sfi = sfi;
     this.counterNumber = counterNumber;
     this.incDecValue = incDecValue;
@@ -129,6 +131,17 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
               sfi, counterNumber, isDecreaseCommand ? "DECREMENT" : "INCREMENT", incDecValue);
       addSubName(extraInfo);
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
   }
 
   /**

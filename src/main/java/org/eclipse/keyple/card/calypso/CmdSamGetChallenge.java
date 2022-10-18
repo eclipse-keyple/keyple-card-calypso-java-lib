@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -40,18 +39,18 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamGetChallenge.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param expectedResponseLength the expected response length.
    * @since 2.0.1
    */
-  CmdSamGetChallenge(CalypsoSam.ProductType productType, int expectedResponseLength) {
+  CmdSamGetChallenge(CalypsoSamAdapter calypsoSam, int expectedResponseLength) {
 
-    super(command, expectedResponseLength);
+    super(command, expectedResponseLength, calypsoSam);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                SamUtilAdapter.getClassByte(productType),
+                SamUtilAdapter.getClassByte(calypsoSam.getProductType()),
                 command.getInstructionByte(),
                 (byte) 0,
                 (byte) 0,

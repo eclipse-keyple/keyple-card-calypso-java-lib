@@ -35,7 +35,6 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
     READ_COUNTER_RECORD
   }
 
-  private final CalypsoSamAdapter sam;
   private final CounterOperationType counterOperationType;
   private final int firstEventCounterNumber;
 
@@ -57,19 +56,18 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiate a new CmdSamReadEventCounter
    *
-   * @param sam the SAM.
+   * @param calypsoSam The Calypso SAM.
    * @param counterOperationType the counter operation type.
    * @param target the counter index (0-26) if READ_SINGLE_COUNTER, the record index (1-3) if
    *     READ_COUNTER_RECORD.
    * @since 2.0.1
    */
   CmdSamReadEventCounter(
-      CalypsoSamAdapter sam, CounterOperationType counterOperationType, int target) {
+      CalypsoSamAdapter calypsoSam, CounterOperationType counterOperationType, int target) {
 
-    super(command, 48);
+    super(command, 48, calypsoSam);
 
-    this.sam = sam;
-    byte cla = SamUtilAdapter.getClassByte(sam.getProductType());
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p2;
     this.counterOperationType = counterOperationType;
     if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
@@ -105,11 +103,13 @@ final class CmdSamReadEventCounter extends AbstractSamCommand {
     super.parseApduResponse(apduResponse);
     byte[] dataOut = apduResponse.getDataOut();
     if (counterOperationType == CounterOperationType.READ_SINGLE_COUNTER) {
-      sam.putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
+      getCalypsoSam().putEventCounter(dataOut[8], ByteArrayUtil.extractInt(dataOut, 9, 3, false));
     } else {
       for (int i = 0; i < 9; i++) {
-        sam.putEventCounter(
-            firstEventCounterNumber + i, ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
+        getCalypsoSam()
+            .putEventCounter(
+                firstEventCounterNumber + i,
+                ByteArrayUtil.extractInt(dataOut, 8 + (3 * i), 3, false));
       }
     }
   }

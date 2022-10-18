@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -57,20 +56,21 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
    * <p>Build the SvPrepareLoad APDU from the SvGet command and response, the SvReload partial
    * command
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param svGetHeader the SV Get command header.
    * @param svGetData a byte array containing the data from the SV get command and response.
    * @param svReloadCmdBuildData the SV reload command data.
    * @since 2.0.1
    */
   CmdSamSvPrepareLoad(
-      CalypsoSam.ProductType productType,
+      CalypsoSamAdapter calypsoSam,
       byte[] svGetHeader,
       byte[] svGetData,
       byte[] svReloadCmdBuildData) {
-    super(command, 0);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    super(command, 0, calypsoSam);
+
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x01;
     byte p2 = (byte) 0xFF;
     byte[] data = new byte[19 + svGetData.length]; // header(4) + SvReload data (15) = 19 bytes

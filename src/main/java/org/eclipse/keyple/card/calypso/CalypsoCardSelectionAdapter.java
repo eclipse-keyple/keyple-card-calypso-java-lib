@@ -20,6 +20,8 @@ import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
+import org.calypsonet.terminal.calypso.transaction.UnexpectedCommandStatusException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -39,6 +41,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   private static final int AID_MIN_LENGTH = 5;
   private static final int AID_MAX_LENGTH = 16;
   private static final int SW_CARD_INVALIDATED = 0x6283;
+  private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
   private final List<AbstractCardCommand> commands;
   private final CardSelectorAdapter cardSelector;
@@ -324,13 +327,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
 
-    List<ApduResponseApi> apduResponses;
-
-    if (cardResponse != null) {
-      apduResponses = cardResponse.getApduResponses();
-    } else {
-      apduResponses = Collections.emptyList();
-    }
+    List<ApduResponseApi> apduResponses =
+        cardResponse != null
+            ? cardResponse.getApduResponses()
+            : Collections.<ApduResponseApi>emptyList();
 
     if (commands.size() != apduResponses.size()) {
       throw new ParseException("Mismatch in the number of requests/responses.");
@@ -338,15 +338,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     CalypsoCardAdapter calypsoCard;
     try {
-      calypsoCard = new CalypsoCardAdapter();
-      if (cardSelectionResponse.getSelectApplicationResponse() != null) {
-        calypsoCard.initializeWithFci(cardSelectionResponse.getSelectApplicationResponse());
-      } else if (cardSelectionResponse.getPowerOnData() != null) {
-        calypsoCard.initializeWithPowerOnData(cardSelectionResponse.getPowerOnData());
-      }
-
+      calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
       if (!commands.isEmpty()) {
-        CalypsoCardUtilAdapter.updateCalypsoCard(calypsoCard, commands, apduResponses, false);
+        parseApduResponses(calypsoCard, commands, apduResponses);
       }
     } catch (Exception e) {
       throw new ParseException("Invalid card response: " + e.getMessage(), e);
@@ -360,5 +354,68 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     }
 
     return calypsoCard;
+  }
+
+  /**
+   * (private)<br>
+   * Parses the APDU responses and updates the Calypso card image.
+   *
+   * @param calypsoCard The Calypso card.
+   * @param commands The list of commands that get the responses.
+   * @param apduResponses The APDU responses returned by the card to all commands.
+   * @throws CardCommandException If a response from the card was unexpected.
+   * @throws InconsistentDataException If the number of commands/responses does not match.
+   */
+  private void parseApduResponses(
+      CalypsoCardAdapter calypsoCard,
+      List<AbstractCardCommand> commands,
+      List<ApduResponseApi> apduResponses)
+      throws CardCommandException {
+
+    // If there are more responses than requests, then we are unable to fill the card image. In this
+    // case we stop processing immediately because it may be a case of fraud, and we throw a
+    // desynchronized exception.
+    if (apduResponses.size() > commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
+
+    // We go through all the responses (and not the requests) because there may be fewer in the
+    // case of an error that occurred in strict mode. In this case the last response will raise an
+    // exception.
+    for (int i = 0; i < apduResponses.size(); i++) {
+      try {
+        commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
+      } catch (CardCommandException e) {
+        CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
+        if (e instanceof CardDataAccessException && commandRef == CalypsoCardCommand.READ_RECORDS) {
+          // best effort mode, do not throw exception for "file not found" and "record not found"
+          // errors.
+          if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
+              && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
+            throw e;
+          }
+        } else {
+          throw new UnexpectedCommandStatusException(
+              MSG_CARD_COMMAND_ERROR
+                  + "while processing responses to card commands: "
+                  + e.getCommand(),
+              e);
+        }
+      }
+    }
+
+    // Finally, if no error has occurred and there are fewer responses than requests, then we
+    // throw a desynchronized exception.
+    if (apduResponses.size() < commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
   }
 }

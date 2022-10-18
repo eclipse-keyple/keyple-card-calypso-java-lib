@@ -127,8 +127,7 @@ final class CardControlSamTransactionManagerAdapter
   CmdSamGetChallenge prepareGetChallenge() {
     prepareSelectDiversifierIfNeeded();
     CmdSamGetChallenge cmd =
-        new CmdSamGetChallenge(
-            controlSam.getProductType(), targetCard.isExtendedModeSupported() ? 8 : 4);
+        new CmdSamGetChallenge(controlSam, targetCard.isExtendedModeSupported() ? 8 : 4);
     getSamCommands().add(cmd);
     return cmd;
   }
@@ -141,8 +140,7 @@ final class CardControlSamTransactionManagerAdapter
    */
   void prepareGiveRandom() {
     prepareSelectDiversifierIfNeeded();
-    getSamCommands()
-        .add(new CmdSamGiveRandom(controlSam.getProductType(), targetCard.getCardChallenge()));
+    getSamCommands().add(new CmdSamGiveRandom(controlSam, targetCard.getCardChallenge()));
   }
 
   /**
@@ -159,8 +157,7 @@ final class CardControlSamTransactionManagerAdapter
   CmdSamCardGenerateKey prepareCardGenerateKey(
       byte cipheringKif, byte cipheringKvc, byte sourceKif, byte sourceKvc) {
     CmdSamCardGenerateKey cmd =
-        new CmdSamCardGenerateKey(
-            controlSam.getProductType(), cipheringKif, cipheringKvc, sourceKif, sourceKvc);
+        new CmdSamCardGenerateKey(controlSam, cipheringKif, cipheringKvc, sourceKif, sourceKvc);
     getSamCommands().add(cmd);
     return cmd;
   }
@@ -204,8 +201,7 @@ final class CardControlSamTransactionManagerAdapter
       }
     }
     CmdSamCardCipherPin cmd =
-        new CmdSamCardCipherPin(
-            controlSam.getProductType(), pinCipheringKif, pinCipheringKvc, currentPin, newPin);
+        new CmdSamCardCipherPin(controlSam, pinCipheringKif, pinCipheringKvc, currentPin, newPin);
     getSamCommands().add(cmd);
     return cmd;
   }
@@ -225,7 +221,7 @@ final class CardControlSamTransactionManagerAdapter
     prepareSelectDiversifierIfNeeded();
     CmdSamSvPrepareLoad cmd =
         new CmdSamSvPrepareLoad(
-            controlSam.getProductType(), svGetHeader, svGetData, cmdCardSvReload.getSvReloadData());
+            controlSam, svGetHeader, svGetData, cmdCardSvReload.getSvReloadData());
     getSamCommands().add(cmd);
     return cmd;
   }
@@ -250,7 +246,7 @@ final class CardControlSamTransactionManagerAdapter
     CmdSamSvPrepareDebitOrUndebit cmd =
         new CmdSamSvPrepareDebitOrUndebit(
             isDebitCommand,
-            controlSam.getProductType(),
+            controlSam,
             svGetHeader,
             svGetData,
             cmdCardSvDebitOrUndebit.getSvDebitOrUndebitData());
@@ -266,7 +262,7 @@ final class CardControlSamTransactionManagerAdapter
    * @since 2.2.0
    */
   void prepareSvCheck(byte[] svOperationData) {
-    getSamCommands().add(new CmdSamSvCheck(controlSam.getProductType(), svOperationData));
+    getSamCommands().add(new CmdSamSvCheck(controlSam, svOperationData));
   }
 
   /**
@@ -328,8 +324,7 @@ final class CardControlSamTransactionManagerAdapter
    * @since 2.2.0
    */
   void prepareDigestAuthenticate(byte[] cardSignatureLo) {
-    getSamCommands()
-        .add(new CmdSamDigestAuthenticate(controlSam.getProductType(), cardSignatureLo));
+    getSamCommands().add(new CmdSamDigestAuthenticate(controlSam, cardSignatureLo));
   }
 
   /**
@@ -418,7 +413,7 @@ final class CardControlSamTransactionManagerAdapter
       getSamCommands()
           .add(
               new CmdSamDigestInit(
-                  controlSam.getProductType(),
+                  controlSam,
                   isVerificationMode,
                   targetCard.isExtendedModeSupported(),
                   sessionKif,
@@ -457,15 +452,12 @@ final class CardControlSamTransactionManagerAdapter
         digestDataList.add(Arrays.copyOf(buffer, i));
         // Add commands
         for (byte[] dataIn : digestDataList) {
-          getSamCommands().add(new CmdSamDigestUpdateMultiple(controlSam.getProductType(), dataIn));
+          getSamCommands().add(new CmdSamDigestUpdateMultiple(controlSam, dataIn));
         }
       } else {
         // Digest Update (simple)
         for (byte[] cardApdu : cardApdus) {
-          getSamCommands()
-              .add(
-                  new CmdSamDigestUpdate(
-                      controlSam.getProductType(), isSessionEncrypted, cardApdu));
+          getSamCommands().add(new CmdSamDigestUpdate(controlSam, isSessionEncrypted, cardApdu));
         }
       }
     }
@@ -477,9 +469,7 @@ final class CardControlSamTransactionManagerAdapter
     private void prepareDigestClose() {
       // CL-SAM-DCLOSE.1
       getSamCommands()
-          .add(
-              new CmdSamDigestClose(
-                  controlSam.getProductType(), targetCard.isExtendedModeSupported() ? 8 : 4));
+          .add(new CmdSamDigestClose(controlSam, targetCard.isExtendedModeSupported() ? 8 : 4));
     }
   }
 }

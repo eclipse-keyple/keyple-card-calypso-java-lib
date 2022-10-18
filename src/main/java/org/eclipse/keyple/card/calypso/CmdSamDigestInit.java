@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -53,7 +52,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamDigestInit.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param verificationMode the verification mode.
    * @param confidentialSessionMode the confidential session mode (rev 3.2).
    * @param workKif from the card response.
@@ -65,13 +64,14 @@ final class CmdSamDigestInit extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamDigestInit(
-      CalypsoSam.ProductType productType,
+      CalypsoSamAdapter calypsoSam,
       boolean verificationMode,
       boolean confidentialSessionMode,
       byte workKif,
       byte workKvc,
       byte[] digestData) {
-    super(command, 0);
+
+    super(command, 0, calypsoSam);
 
     if (workKif == 0x00 || workKvc == 0x00) {
       throw new IllegalArgumentException("Bad kif or kvc!");
@@ -79,7 +79,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
     if (digestData == null) {
       throw new IllegalArgumentException("Digest data is null!");
     }
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = 0x00;
     if (verificationMode) {
       p1 = (byte) (p1 + 1);

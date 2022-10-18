@@ -11,6 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -27,12 +28,12 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetChallenge.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @since 2.0.1
    */
-  CmdCardGetChallenge(CalypsoCardClass calypsoCardClass) {
+  CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0x08);
+    super(command, 0x08, calypsoCard);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -41,7 +42,23 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
+                calypsoCard.getCardClass().getValue(),
+                command.getInstructionByte(),
+                p1,
+                p2,
+                null,
+                le)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setCardChallenge(getApduResponse().getDataOut());
   }
 
   /**
@@ -53,16 +70,5 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the card challenge
-   *
-   * @return An array of bytes
-   * @since 2.0.1
-   */
-  byte[] getCardChallenge() {
-    return getApduResponse().getDataOut();
   }
 }

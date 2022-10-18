@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ final class CmdCardUpdateRecord extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardUpdateRecord.
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param sfi the sfi to select.
    * @param recordNumber the record number to update.
    * @param newRecordData the new record data to write.
@@ -88,11 +89,11 @@ final class CmdCardUpdateRecord extends AbstractCardCommand {
    * @since 2.0.1
    */
   CmdCardUpdateRecord(
-      CalypsoCardClass calypsoCardClass, byte sfi, int recordNumber, byte[] newRecordData) {
+      CalypsoCardAdapter calypsoCard, byte sfi, int recordNumber, byte[] newRecordData) {
 
-    super(command, 0);
+    super(command, 0, calypsoCard);
 
-    byte cla = calypsoCardClass.getValue();
+    byte cla = calypsoCard.getCardClass().getValue();
     this.sfi = sfi;
     this.recordNumber = recordNumber;
     this.data = newRecordData;
@@ -113,6 +114,17 @@ final class CmdCardUpdateRecord extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setContent((byte) sfi, recordNumber, data);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
@@ -121,36 +133,6 @@ final class CmdCardUpdateRecord extends AbstractCardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return true;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI of the accessed file
-   * @since 2.0.1
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The number of the accessed record
-   * @since 2.0.1
-   */
-  int getRecordNumber() {
-    return recordNumber;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The data sent to the card
-   * @since 2.0.1
-   */
-  byte[] getData() {
-    return data;
   }
 
   /**

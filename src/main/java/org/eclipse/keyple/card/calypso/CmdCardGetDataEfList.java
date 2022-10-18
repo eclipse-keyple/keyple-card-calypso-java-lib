@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import java.util.*;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -53,13 +54,33 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
    * (package-private)<br>
    * Instantiates a new CmdCardGetDataEfList.
    *
+   * @param calypsoCard The Calypso card.
+   * @since 2.2.3
+   */
+  CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
+    super(command, 0, calypsoCard);
+    buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * (package-private)<br>
+   * Instantiates a new CmdCardGetDataEfList.
+   *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
+    super(command, 0, null);
+    buildCommand(calypsoCardClass);
+  }
 
-    super(command, 0);
-
+  /**
+   * (private)<br>
+   * Builds the command.
+   *
+   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   */
+  private void buildCommand(CalypsoCardClass calypsoCardClass) {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -69,6 +90,20 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
                 (byte) 0xC0,
                 null,
                 (byte) 0x00)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = getEfHeaders();
+    for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
+      getCalypsoCard().setFileHeader(entry.getValue(), entry.getKey());
+    }
   }
 
   /**

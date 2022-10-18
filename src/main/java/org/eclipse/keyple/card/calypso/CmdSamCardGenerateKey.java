@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -60,7 +59,7 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
    * <p>If bot KIF and KVC of the ciphering are equal to 0, the source key is ciphered with the null
    * key.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param cipheringKif The KIF of the ciphering key.
    * @param cipheringKvc The KVC of the ciphering key.
    * @param sourceKif The KIF of the source key.
@@ -68,14 +67,15 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamCardGenerateKey(
-      CalypsoSam.ProductType productType,
+      CalypsoSamAdapter calypsoSam,
       byte cipheringKif,
       byte cipheringKvc,
       byte sourceKif,
       byte sourceKvc) {
-    super(command, 0);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    super(command, 0, calypsoSam);
+
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p1;
     byte p2;

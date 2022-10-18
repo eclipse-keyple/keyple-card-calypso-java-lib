@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -102,7 +101,7 @@ public class CalypsoSamSelectionAdapterTest {
         .isEqualTo(HexUtil.toByteArray("802000001000112233445566778899AABBCCDDEEFF"));
   }
 
-  @Test(expected = InconsistentDataException.class)
+  @Test(expected = ParseException.class)
   public void parse_whenCommandsResponsesMismatch_shouldThrowIDE() throws Exception {
     CardSelectionResponseApi cardSelectionResponseApi = mock(CardSelectionResponseApi.class);
     when(cardSelectionResponseApi.getPowerOnData()).thenReturn(SAM_ATR);

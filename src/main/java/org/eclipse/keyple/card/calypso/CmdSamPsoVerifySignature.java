@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
@@ -63,17 +62,17 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
    * (package-private)<br>
    * Builds a new instance based on the provided signature verification data.
    *
-   * @param productType The SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param data The signature verification data.
    * @since 2.2.0
    */
   CmdSamPsoVerifySignature(
-      CalypsoSam.ProductType productType, TraceableSignatureVerificationDataAdapter data) {
+      CalypsoSamAdapter calypsoSam, TraceableSignatureVerificationDataAdapter data) {
 
-    super(CalypsoSamCommand.PSO_VERIFY_SIGNATURE, 0);
+    super(CalypsoSamCommand.PSO_VERIFY_SIGNATURE, 0, calypsoSam);
     this.data = data;
 
-    final byte cla = SamUtilAdapter.getClassByte(productType);
+    final byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     final byte inst = getCommandRef().getInstructionByte();
     final byte p1 = (byte) 0x00;
     final byte p2 = (byte) 0xA8;

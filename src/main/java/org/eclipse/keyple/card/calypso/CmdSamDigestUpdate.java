@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -55,17 +54,17 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
    * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate.
    *
-   * @param productType of the SAM.
+   * @param calypsoSam The Calypso SAM.
    * @param encryptedSession the encrypted session flag, true if encrypted.
    * @param digestData all bytes from command sent by the card or response from the command.
    * @throws IllegalArgumentException If the digest data is null or has a length &gt; 255
    * @since 2.0.1
    */
-  CmdSamDigestUpdate(
-      CalypsoSam.ProductType productType, boolean encryptedSession, byte[] digestData) {
-    super(command, 0);
+  CmdSamDigestUpdate(CalypsoSamAdapter calypsoSam, boolean encryptedSession, byte[] digestData) {
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    super(command, 0, calypsoSam);
+
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x00;
     byte p2 = encryptedSession ? (byte) 0x80 : (byte) 0x00;
 

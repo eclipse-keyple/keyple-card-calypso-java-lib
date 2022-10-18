@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,20 +79,19 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
    *
    * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
    *     Binary" command.
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
+   * @param calypsoCard The Calypso card.
    * @param sfi the sfi to select.
    * @param offset the offset.
    * @param data the data to write.
    * @since 2.1.0
    */
   CmdCardUpdateOrWriteBinary(
-      boolean isUpdateCommand,
-      CalypsoCardClass calypsoCardClass,
-      byte sfi,
-      int offset,
-      byte[] data) {
+      boolean isUpdateCommand, CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte[] data) {
 
-    super(isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY, 0);
+    super(
+        isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY,
+        0,
+        calypsoCard);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -107,7 +107,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,
@@ -123,6 +123,21 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    if (getCommandRef() == CalypsoCardCommand.UPDATE_BINARY) {
+      getCalypsoCard().setContent(sfi, 1, data, offset);
+    } else {
+      getCalypsoCard().fillContent(sfi, 1, data, offset);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>This command modified the contents of the card and therefore uses the session buffer.
    *
    * @return True
@@ -131,36 +146,6 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return true;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI.
-   * @since 2.1.0
-   */
-  byte getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The offset.
-   * @since 2.1.0
-   */
-  int getOffset() {
-    return offset;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The data.
-   * @since 2.1.0
-   */
-  byte[] getData() {
-    return data;
   }
 
   /**

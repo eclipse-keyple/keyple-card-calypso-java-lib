@@ -54,10 +54,10 @@ public class CalypsoExtensionServiceTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     reader = mock(ReaderMock.class);
 
-    calypsoCard = new CalypsoCardAdapter();
+    calypsoCard = new CalypsoCardAdapter(null);
     cardSecuritySetting = mock(CardSecuritySettingAdapter.class);
 
     calypsoSamSelection = mock(CalypsoSamSelection.class);
@@ -207,8 +207,9 @@ public class CalypsoExtensionServiceTest {
   }
 
   @Test
-  public void createCardTransactionWithoutSecurity_whenInvoked_shouldReturnANewReference() {
-    calypsoCard.initializeWithPowerOnData(POWER_ON_DATA);
+  public void createCardTransactionWithoutSecurity_whenInvoked_shouldReturnANewReference()
+      throws Exception {
+    calypsoCard = new CalypsoCardAdapter(new CardSelectionResponseAdapter(POWER_ON_DATA));
     CardTransactionManager cardTransaction =
         service.createCardTransactionWithoutSecurity(reader, calypsoCard);
     assertThat(service.createCardTransactionWithoutSecurity(reader, calypsoCard))

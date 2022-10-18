@@ -14,8 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
@@ -81,13 +79,12 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   private final byte recordNumber;
   private final byte offset;
   private final byte length;
-  private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
    * Constructor.
    *
-   * @param calypsoCardClass The CLA field value.
+   * @param calypsoCard The Calypso card.
    * @param sfi The SFI.
    * @param recordNumber The number of the first record to read.
    * @param offset The offset from which to read in each record.
@@ -95,9 +92,9 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
    * @since 2.1.0
    */
   CmdCardReadRecordMultiple(
-      CalypsoCardClass calypsoCardClass, byte sfi, byte recordNumber, byte offset, byte length) {
+      CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CalypsoCardCommand.READ_RECORD_MULTIPLE, 0);
+    super(CalypsoCardCommand.READ_RECORD_MULTIPLE, 0, calypsoCard);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -110,7 +107,7 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                calypsoCard.getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 recordNumber,
                 p2,
@@ -155,43 +152,15 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
-      byte[] dataOut = apduResponse.getDataOut();
-      int nbRecords = dataOut.length / length;
-      for (int i = 0; i < nbRecords; i++) {
-        results.put(recordNumber + i, Arrays.copyOfRange(dataOut, i * length, (i + 1) * length));
-      }
+    byte[] dataOut = apduResponse.getDataOut();
+    int nbRecords = dataOut.length / length;
+    for (int i = 0; i < nbRecords; i++) {
+      getCalypsoCard()
+          .setContent(
+              sfi,
+              recordNumber + i,
+              Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
+              offset);
     }
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI.
-   * @since 2.1.0
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The offset.
-   * @since 2.1.0
-   */
-  public byte getOffset() {
-    return offset;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty sorted map of read bytes by record number, or an empty map if no data is
-   *     available.
-   * @since 2.1.0
-   */
-  SortedMap<Integer, byte[]> getResults() {
-    return results;
   }
 }

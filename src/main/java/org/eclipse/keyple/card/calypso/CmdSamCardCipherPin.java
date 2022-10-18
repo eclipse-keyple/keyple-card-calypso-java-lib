@@ -13,7 +13,6 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -60,7 +59,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
    *
    * <p>In the case of a PIN update, the current and new PINs must be provided.
    *
-   * @param productType the SAM product type.
+   * @param calypsoSam The Calypso SAM.
    * @param cipheringKif the KIF of the key used to encipher the PIN data.
    * @param cipheringKvc the KVC of the key used to encipher the PIN data.
    * @param currentPin the current PIN (a 4-byte byte array).
@@ -69,12 +68,13 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamCardCipherPin(
-      CalypsoSam.ProductType productType,
+      CalypsoSamAdapter calypsoSam,
       byte cipheringKif,
       byte cipheringKvc,
       byte[] currentPin,
       byte[] newPin) {
-    super(command, 0);
+
+    super(command, 0, calypsoSam);
 
     if (currentPin == null || currentPin.length != 4) {
       throw new IllegalArgumentException("Bad current PIN value.");
@@ -84,7 +84,7 @@ final class CmdSamCardCipherPin extends AbstractSamCommand {
       throw new IllegalArgumentException("Bad new PIN value.");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
 
     byte p1;
     byte p2;
