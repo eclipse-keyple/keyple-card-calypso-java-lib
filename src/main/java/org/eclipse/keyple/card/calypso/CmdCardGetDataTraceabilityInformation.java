@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -83,6 +84,17 @@ final class CmdCardGetDataTraceabilityInformation extends AbstractCardCommand {
                 (byte) 0x85,
                 null,
                 (byte) 0x00)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setTraceabilityInformation(apduResponse.getDataOut());
   }
 
   /**

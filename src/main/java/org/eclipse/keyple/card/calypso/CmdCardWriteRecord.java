@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,42 +114,23 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().fillContent((byte) sfi, recordNumber, data, 0);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return True
    * @since 2.0.1
    */
   @Override
   boolean isSessionBufferUsed() {
     return true;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the SFI of the accessed file
-   * @since 2.0.1
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the number of the accessed record
-   * @since 2.0.1
-   */
-  int getRecordNumber() {
-    return recordNumber;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return the data sent to the card
-   * @since 2.0.1
-   */
-  byte[] getData() {
-    return data;
   }
 
   /**

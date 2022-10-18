@@ -78,7 +78,6 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
   }
 
   private final SearchCommandDataAdapter data;
-  private byte[] firstMatchingRecordContent;
 
   /**
    * (package-private)<br>
@@ -180,36 +179,17 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
-      byte[] dataOut = apduResponse.getDataOut();
-      int nbRecords = dataOut[0];
-      for (int i = 1; i <= nbRecords; i++) {
-        data.getMatchingRecordNumbers().add((int) dataOut[i]);
-      }
-      if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
-        firstMatchingRecordContent = Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length);
-      }
+    byte[] dataOut = apduResponse.getDataOut();
+    int nbRecords = dataOut[0];
+    for (int i = 1; i <= nbRecords; i++) {
+      data.getMatchingRecordNumbers().add((int) dataOut[i]);
     }
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The search command input/output data.
-   * @since 2.1.0
-   */
-  SearchCommandDataAdapter getSearchCommandData() {
-    return data;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return An empty array if fetching of first matching record is not requested or if no record
-   *     has matched.
-   * @since 2.1.0
-   */
-  byte[] getFirstMatchingRecordContent() {
-    return firstMatchingRecordContent != null ? firstMatchingRecordContent : new byte[0];
+    if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
+      getCalypsoCard()
+          .setContent(
+              data.getSfi(),
+              data.getMatchingRecordNumbers().get(0),
+              Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length));
+    }
   }
 }

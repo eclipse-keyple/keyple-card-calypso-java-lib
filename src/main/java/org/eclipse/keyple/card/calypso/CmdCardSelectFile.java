@@ -11,10 +11,38 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_BINARY;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_COUNTERS;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_CYCLIC;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_LINEAR;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.FILE_TYPE_DF;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.FILE_TYPE_EF;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.FILE_TYPE_MF;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_AC_LENGTH;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_AC_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_DATA_REF_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_DF_STATUS_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_EF_TYPE_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_KIFS_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_KVCS_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_LID_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NKEY_LENGTH;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NKEY_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NUM_REC_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_REC_SIZE_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_SFI_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_TYPE_OFFSET;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
+import org.calypsonet.terminal.calypso.card.DirectoryHeader;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.BerTlvUtil;
@@ -199,31 +227,23 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return False
    * @since 2.0.1
    */
   @Override
   boolean isSessionBufferUsed() {
     return false;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The content of the proprietary information tag present in the response to the Select
-   *     File command
-   * @since 2.0.1
-   */
-  byte[] getProprietaryInformation() {
-    if (proprietaryInformation == null) {
-      Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(getApduResponse().getDataOut(), true);
-      proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
-      if (proprietaryInformation == null) {
-        throw new IllegalStateException("Proprietary information: tag not found.");
-      }
-      Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
-    }
-    return proprietaryInformation;
   }
 
   /**
@@ -234,5 +254,172 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
+  }
+
+  /**
+   * (package-private)<br>
+   * Parses the proprietary information and updates the corresponding Calypso card.
+   *
+   * @param dataOut The dataOut block to parse.
+   * @param calypsoCard The Calypso card to update.
+   * @since 2.2.3
+   */
+  static void parseProprietaryInformation(byte[] dataOut, CalypsoCardAdapter calypsoCard) {
+    byte[] proprietaryInformation = getProprietaryInformation(dataOut);
+    byte sfi = proprietaryInformation[SEL_SFI_OFFSET];
+    byte fileType = proprietaryInformation[SEL_TYPE_OFFSET];
+    switch (fileType) {
+      case FILE_TYPE_MF:
+      case FILE_TYPE_DF:
+        DirectoryHeader directoryHeader = createDirectoryHeader(proprietaryInformation);
+        calypsoCard.setDirectoryHeader(directoryHeader);
+        break;
+      case FILE_TYPE_EF:
+        FileHeaderAdapter fileHeader = createFileHeader(proprietaryInformation);
+        calypsoCard.setFileHeader(sfi, fileHeader);
+        break;
+      default:
+        throw new IllegalStateException(String.format("Unknown file type: %02Xh", fileType));
+    }
+  }
+
+  /**
+   * (private)<br>
+   *
+   * @return The content of the proprietary information tag present in the response to the Select
+   *     File command
+   */
+  private static byte[] getProprietaryInformation(byte[] dataOut) {
+    byte[] proprietaryInformation;
+    Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(dataOut, true);
+    proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
+    if (proprietaryInformation == null) {
+      throw new IllegalStateException("Proprietary information: tag not found.");
+    }
+    Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
+    return proprietaryInformation;
+  }
+
+  /**
+   * (private)<br>
+   * Parses the proprietaryInformation field of a file identified as an DF and create a {@link
+   * DirectoryHeader}
+   *
+   * @param proprietaryInformation from the response to a Select File command.
+   * @return A {@link DirectoryHeader} object
+   */
+  private static DirectoryHeader createDirectoryHeader(byte[] proprietaryInformation) {
+
+    byte[] accessConditions = new byte[SEL_AC_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
+
+    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
+
+    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
+
+    short lid =
+        (short)
+            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+
+    return DirectoryHeaderAdapter.builder()
+        .lid(lid)
+        .accessConditions(accessConditions)
+        .keyIndexes(keyIndexes)
+        .dfStatus(dfStatus)
+        .kvc(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KVCS_OFFSET])
+        .kvc(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KVCS_OFFSET + 1])
+        .kvc(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KVCS_OFFSET + 2])
+        .kif(WriteAccessLevel.PERSONALIZATION, proprietaryInformation[SEL_KIFS_OFFSET])
+        .kif(WriteAccessLevel.LOAD, proprietaryInformation[SEL_KIFS_OFFSET + 1])
+        .kif(WriteAccessLevel.DEBIT, proprietaryInformation[SEL_KIFS_OFFSET + 2])
+        .build();
+  }
+
+  /**
+   * (private)<br>
+   * Parses the proprietaryInformation field of a file identified as an EF and create a {@link
+   * FileHeaderAdapter}
+   *
+   * @param proprietaryInformation from the response to a Select File command.
+   * @return A {@link FileHeaderAdapter} object
+   */
+  private static FileHeaderAdapter createFileHeader(byte[] proprietaryInformation) {
+
+    ElementaryFile.Type fileType =
+        getEfTypeFromCardValue(proprietaryInformation[SEL_EF_TYPE_OFFSET]);
+
+    int recordSize;
+    int recordsNumber;
+    if (fileType == ElementaryFile.Type.BINARY) {
+      recordSize =
+          ((proprietaryInformation[SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
+              | (proprietaryInformation[SEL_NUM_REC_OFFSET] & 0x000000ff);
+      recordsNumber = 1;
+    } else {
+      recordSize = proprietaryInformation[SEL_REC_SIZE_OFFSET];
+      recordsNumber = proprietaryInformation[SEL_NUM_REC_OFFSET];
+    }
+
+    byte[] accessConditions = new byte[SEL_AC_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
+
+    byte[] keyIndexes = new byte[SEL_NKEY_LENGTH];
+    System.arraycopy(proprietaryInformation, SEL_NKEY_OFFSET, keyIndexes, 0, SEL_NKEY_LENGTH);
+
+    byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
+
+    short sharedReference =
+        (short)
+            (((proprietaryInformation[SEL_DATA_REF_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_DATA_REF_OFFSET + 1] & 0x00ff));
+
+    short lid =
+        (short)
+            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
+                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+
+    return FileHeaderAdapter.builder()
+        .lid(lid)
+        .recordsNumber(recordsNumber)
+        .recordSize(recordSize)
+        .type(fileType)
+        .accessConditions(Arrays.copyOf(accessConditions, accessConditions.length))
+        .keyIndexes(Arrays.copyOf(keyIndexes, keyIndexes.length))
+        .dfStatus(dfStatus)
+        .sharedReference(sharedReference)
+        .build();
+  }
+
+  /**
+   * (private)<br>
+   * Converts the EF type value from the card into a {@link ElementaryFile.Type} enum
+   *
+   * @param efType the value returned by the card.
+   * @return The corresponding {@link ElementaryFile.Type}
+   */
+  private static ElementaryFile.Type getEfTypeFromCardValue(byte efType) {
+    ElementaryFile.Type fileType;
+    switch (efType) {
+      case EF_TYPE_BINARY:
+        fileType = ElementaryFile.Type.BINARY;
+        break;
+      case EF_TYPE_LINEAR:
+        fileType = ElementaryFile.Type.LINEAR;
+        break;
+      case EF_TYPE_CYCLIC:
+        fileType = ElementaryFile.Type.CYCLIC;
+        break;
+      case EF_TYPE_SIMULATED_COUNTERS:
+        fileType = ElementaryFile.Type.SIMULATED_COUNTERS;
+        break;
+      case EF_TYPE_COUNTERS:
+        fileType = ElementaryFile.Type.COUNTERS;
+        break;
+      default:
+        throw new IllegalStateException("Unknown EF Type: " + efType);
+    }
+    return fileType;
   }
 }

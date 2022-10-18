@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -77,7 +76,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCard.ProductType productType;
   private final boolean isExtendedModeAllowed;
 
   private int sfi;
@@ -110,8 +108,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     super(CalypsoCardCommand.OPEN_SESSION, 0, calypsoCard);
 
     this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.productType = calypsoCard.getProductType();
-    switch (productType) {
+    switch (getCalypsoCard().getProductType()) {
       case PRIME_REVISION_1:
         createRev10(keyIndex, samChallenge, sfi, recordNumber);
         break;
@@ -124,7 +121,8 @@ final class CmdCardOpenSession extends AbstractCardCommand {
         createRev3(keyIndex, samChallenge, sfi, recordNumber);
         break;
       default:
-        throw new IllegalArgumentException("Product type " + productType + " isn't supported");
+        throw new IllegalArgumentException(
+            "Product type " + getCalypsoCard().getProductType() + " isn't supported");
     }
   }
 
@@ -301,17 +299,24 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
     byte[] dataOut = getApduResponse().getDataOut();
-    if (dataOut.length > 0) {
-      switch (productType) {
-        case PRIME_REVISION_1:
-          parseRev10(dataOut);
-          break;
-        case PRIME_REVISION_2:
-          parseRev24(dataOut);
-          break;
-        default:
-          parseRev3(dataOut);
-      }
+    switch (getCalypsoCard().getProductType()) {
+      case PRIME_REVISION_1:
+        parseRev10(dataOut);
+        break;
+      case PRIME_REVISION_2:
+        parseRev24(dataOut);
+        break;
+      default:
+        parseRev3(dataOut);
+    }
+    // CL-CSS-INFORAT.1
+    getCalypsoCard().setDfRatified(secureSession.isPreviousSessionRatified());
+    // CL-CSS-INFOTCNT.1
+    getCalypsoCard()
+        .setTransactionCounter(
+            ByteArrayUtil.extractInt(secureSession.getChallengeTransactionCounter(), 0, 3, false));
+    if (secureSession.getOriginalData().length > 0) {
+      getCalypsoCard().setContent((byte) sfi, recordNumber, secureSession.getOriginalData());
     }
   }
 
@@ -506,26 +511,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   /**
    * (package-private)<br>
    *
-   * @return A non negative number.
-   * @since 2.0.1
-   */
-  int getTransactionCounterValue() {
-    return ByteArrayUtil.extractInt(secureSession.getChallengeTransactionCounter(), 0, 3, false);
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return True if the previous session was ratified.
-   * @since 2.0.1
-   */
-  boolean wasRatified() {
-    return secureSession.isPreviousSessionRatified();
-  }
-
-  /**
-   * (package-private)<br>
-   *
    * @return True if the managed secure session is authorized.
    * @since 2.0.1
    */
@@ -551,16 +536,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
    */
   Byte getSelectedKvc() {
     return secureSession.getKVC();
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The optional read data.
-   * @since 2.0.1
-   */
-  byte[] getRecordDataRead() {
-    return secureSession.getOriginalData();
   }
 
   /**

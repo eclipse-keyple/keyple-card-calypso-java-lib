@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 
 /**
  * (package-private)<br>
@@ -53,8 +52,6 @@ abstract class AbstractApduCommand {
   private String name;
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
-
-  private SmartCard smartCard;
 
   /**
    * (package-private)<br>

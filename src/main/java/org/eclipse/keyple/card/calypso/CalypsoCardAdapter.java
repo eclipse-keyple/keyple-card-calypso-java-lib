@@ -119,16 +119,15 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
+   * (private)<br>
    * Initializes the object with the card power-on data.
    *
    * <p>This method should be invoked only when no response to select application is available.
    *
    * @param powerOnData The card's power-on data.
    * @throws IllegalArgumentException If powerOnData is inconsistent.
-   * @since 2.0.0
    */
-  void initializeWithPowerOnData(String powerOnData) {
+  private void initializeWithPowerOnData(String powerOnData) {
 
     productType = ProductType.PRIME_REVISION_1;
     calypsoCardClass = CalypsoCardClass.LEGACY;
@@ -161,30 +160,40 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
+   * (private)<br>
    * Initializes or post-initializes the object with the application FCI data.
    *
    * @param selectApplicationResponse The select application response.
    * @throws IllegalArgumentException If the FCI is inconsistent.
    * @since 2.0.0
    */
-  void initializeWithFci(ApduResponseApi selectApplicationResponse) throws CardCommandException {
-
+  private void initializeWithFci(ApduResponseApi selectApplicationResponse)
+      throws CardCommandException {
     this.selectApplicationResponse = selectApplicationResponse;
-
     if (selectApplicationResponse.getDataOut().length == 0) {
       // No FCI provided. May be filled later with a Get Data response.
       return;
     }
-
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
     CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci(CalypsoCardClass.ISO);
-    cmdCardGetDataFci.parseApduResponse(selectApplicationResponse);
+    cmdCardGetDataFci.parseApduResponse(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");
     }
+  }
+
+  /**
+   * (package-private)<br>
+   * Initializes or post-initializes the object with the application FCI data.
+   *
+   * @param cmdCardGetDataFci The command containing the parsed FCI data.
+   * @throws IllegalArgumentException If the FCI is inconsistent.
+   * @since 2.2.3
+   */
+  void initializeWithFci(CmdCardGetDataFci cmdCardGetDataFci) {
+
     isDfInvalidated = cmdCardGetDataFci.isDfInvalidated();
 
     // CL-SEL-DATA.1

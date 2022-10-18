@@ -14,8 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
@@ -81,7 +79,6 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   private final byte recordNumber;
   private final byte offset;
   private final byte length;
-  private final SortedMap<Integer, byte[]> results = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -155,43 +152,15 @@ final class CmdCardReadRecordMultiple extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
-      byte[] dataOut = apduResponse.getDataOut();
-      int nbRecords = dataOut.length / length;
-      for (int i = 0; i < nbRecords; i++) {
-        results.put(recordNumber + i, Arrays.copyOfRange(dataOut, i * length, (i + 1) * length));
-      }
+    byte[] dataOut = apduResponse.getDataOut();
+    int nbRecords = dataOut.length / length;
+    for (int i = 0; i < nbRecords; i++) {
+      getCalypsoCard()
+          .setContent(
+              sfi,
+              recordNumber + i,
+              Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
+              offset);
     }
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI.
-   * @since 2.1.0
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The offset.
-   * @since 2.1.0
-   */
-  public byte getOffset() {
-    return offset;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty sorted map of read bytes by record number, or an empty map if no data is
-   *     available.
-   * @since 2.1.0
-   */
-  SortedMap<Integer, byte[]> getResults() {
-    return results;
   }
 }

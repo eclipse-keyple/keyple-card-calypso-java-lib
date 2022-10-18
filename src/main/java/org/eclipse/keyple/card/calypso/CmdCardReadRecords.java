@@ -14,8 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
@@ -82,7 +80,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   private int sfi;
   private int firstRecordNumber;
   private ReadMode readMode;
-  private SortedMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -204,20 +201,19 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
-      if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-        records.put(firstRecordNumber, apduResponse.getDataOut());
-      } else {
-        byte[] apdu = apduResponse.getDataOut();
-        int apduLen = apdu.length;
-        int index = 0;
-        while (apduLen > 0) {
-          byte recordNb = apdu[index++];
-          byte len = apdu[index++];
-          records.put((int) recordNb, Arrays.copyOfRange(apdu, index, index + len));
-          index = index + len;
-          apduLen = apduLen - 2 - len;
-        }
+    if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
+      getCalypsoCard().setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
+    } else {
+      byte[] apdu = apduResponse.getDataOut();
+      int apduLen = apdu.length;
+      int index = 0;
+      while (apduLen > 0) {
+        byte recordNb = apdu[index++];
+        byte len = apdu[index++];
+        getCalypsoCard()
+            .setContent((byte) sfi, recordNb, Arrays.copyOfRange(apdu, index, index + len));
+        index = index + len;
+        apduLen = apduLen - 2 - len;
       }
     }
   }
@@ -250,16 +246,5 @@ final class CmdCardReadRecords extends AbstractCardCommand {
    */
   ReadMode getReadMode() {
     return readMode;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty map of records content by record numbers, or an empty map if no data is
-   *     available.
-   * @since 2.0.1
-   */
-  SortedMap<Integer, byte[]> getRecords() {
-    return records;
   }
 }

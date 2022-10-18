@@ -276,7 +276,7 @@ final class CardTransactionManagerAdapter
 
     // Parse all the responses and fills the CalypsoCard object with the command data.
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, true);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -381,7 +381,7 @@ final class CardTransactionManagerAdapter
     }
 
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, isSessionOpen);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -391,6 +391,87 @@ final class CardTransactionManagerAdapter
           e);
     } catch (InconsistentDataException e) {
       throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Parses the APDU responses and updates the Calypso card image.
+   *
+   * @param commands The list of commands that get the responses.
+   * @param apduResponses The APDU responses returned by the card to all commands.
+   * @throws CardCommandException If a response from the card was unexpected.
+   * @throws InconsistentDataException If the number of commands/responses does not match.
+   */
+  private void parseApduResponses(
+      List<AbstractCardCommand> commands, List<ApduResponseApi> apduResponses)
+      throws CardCommandException {
+
+    // If there are more responses than requests, then we are unable to fill the card image. In this
+    // case we stop processing immediately because it may be a case of fraud, and we throw a
+    // desynchronized exception.
+    if (apduResponses.size() > commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
+
+    // We go through all the responses (and not the requests) because there may be fewer in the
+    // case of an error that occurred in strict mode. In this case the last response will raise an
+    // exception.
+    for (int i = 0; i < apduResponses.size(); i++) {
+      try {
+        commands.get(i).parseApduResponse(apduResponses.get(i));
+      } catch (CardCommandException e) {
+        CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
+        if (e instanceof CardDataAccessException
+            && (commandRef == CalypsoCardCommand.READ_RECORDS
+                || commandRef == CalypsoCardCommand.READ_RECORD_MULTIPLE
+                || commandRef == CalypsoCardCommand.SEARCH_RECORD_MULTIPLE
+                || commandRef == CalypsoCardCommand.READ_BINARY)) {
+          checkResponseStatusForStrictAndBestEffortMode(commands.get(i), e);
+        } else {
+          throw new UnexpectedCommandStatusException(
+              MSG_CARD_COMMAND_ERROR
+                  + "while processing responses to card commands: "
+                  + e.getCommand()
+                  + getTransactionAuditDataAsString(),
+              e);
+        }
+      }
+    }
+
+    // Finally, if no error has occurred and there are fewer responses than requests, then we
+    // throw a desynchronized exception.
+    if (apduResponses.size() < commands.size()) {
+      throw new InconsistentDataException(
+          "The number of commands/responses does not match: nb commands = "
+              + commands.size()
+              + ", nb responses = "
+              + apduResponses.size());
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Sets the response to the command and check the status for strict and best effort mode.
+   *
+   * @param command The command.
+   * @throws CardCommandException If needed.
+   */
+  private void checkResponseStatusForStrictAndBestEffortMode(
+      AbstractCardCommand command, CardCommandException e) throws CardCommandException {
+    if (isSessionOpen) {
+      throw e;
+    } else {
+      // best effort mode, do not throw exception for "file not found" and "record not found"
+      // errors.
+      if (command.getApduResponse().getStatusWord() != 0x6A82
+          && command.getApduResponse().getStatusWord() != 0x6A83) {
+        throw e;
+      }
     }
   }
 
@@ -521,7 +602,7 @@ final class CardTransactionManagerAdapter
     // Check the commands executed before closing the secure session (only responses to these
     // commands will be taken into account)
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(card, cardCommands, apduResponses, true);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -537,8 +618,7 @@ final class CardTransactionManagerAdapter
 
     // Check the card's response to Close Secure Session
     try {
-      CalypsoCardUtilAdapter.updateCalypsoCard(
-          card, cmdCardCloseSession, closeSecureSessionApduResponse, false);
+      cmdCardCloseSession.parseApduResponse(closeSecureSessionApduResponse);
     } catch (CardSecurityDataException e) {
       throw new UnexpectedCommandStatusException(
           "Invalid card session" + getTransactionAuditDataAsString(), e);

@@ -72,7 +72,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
 
   private final byte sfi;
   private final Map<Integer, Integer> counterNumberToIncDecValueMap;
-  private final SortedMap<Integer, byte[]> newCounterValues = new TreeMap<Integer, byte[]>();
 
   /**
    * (package-private)<br>
@@ -170,8 +169,9 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
       byte[] dataOut = apduResponse.getDataOut();
       int nbCounters = dataOut.length / 4;
       for (int i = 0; i < nbCounters; i++) {
-        newCounterValues.put(
-            dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
+        getCalypsoCard()
+            .setCounter(
+                sfi, dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
       }
     }
   }
@@ -194,16 +194,5 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
    */
   public Map<Integer, Integer> getCounterNumberToIncDecValueMap() {
     return counterNumberToIncDecValueMap;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return A not empty sorted map of counter values as 3-byte array by counter number, or an empty
-   *     map if no data is available.
-   * @since 2.1.0
-   */
-  SortedMap<Integer, byte[]> getNewCounterValues() {
-    return newCounterValues;
   }
 }

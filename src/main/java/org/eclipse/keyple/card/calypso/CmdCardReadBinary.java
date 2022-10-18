@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,32 +106,23 @@ final class CmdCardReadBinary extends AbstractCardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.2.3
+   */
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return false
    * @since 2.1.0
    */
   @Override
   boolean isSessionBufferUsed() {
     return false;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The SFI.
-   * @since 2.1.0
-   */
-  byte getSfi() {
-    return sfi;
-  }
-
-  /**
-   * (package-private)<br>
-   *
-   * @return The offset.
-   * @since 2.1.0
-   */
-  int getOffset() {
-    return offset;
   }
 
   /**

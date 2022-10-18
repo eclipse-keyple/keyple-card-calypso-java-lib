@@ -234,6 +234,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
+    getCalypsoCard().setSvOperationSignature(apduResponse.getDataOut());
   }
 
   /**

@@ -145,6 +145,7 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
+
     Map<Integer, byte[]> tags;
 
     /* check the command status to determine if the DF has been invalidated */
@@ -212,6 +213,8 @@ final class CmdCardGetDataFci extends AbstractCardCommand {
       /* Silently ignore problems decoding TLV structure. Just log. */
       logger.debug("Error while parsing the FCI BER-TLV data structure ({})", e.getMessage());
     }
+
+    getCalypsoCard().initializeWithFci(this);
   }
 
   /**

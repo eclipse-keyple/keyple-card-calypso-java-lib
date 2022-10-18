@@ -249,19 +249,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
     }
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the SV signature. <br>
-   * The signature can be empty here in the case of a secure session where the transmission of the
-   * signature is postponed until the end of the session.
-   *
-   * @return A byte array containing the SV signature
-   * @since 2.0.1
-   */
-  byte[] getSignatureLo() {
-    return getApduResponse().getDataOut();
+    getCalypsoCard().setSvOperationSignature(apduResponse.getDataOut());
   }
 
   /**
