@@ -83,8 +83,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       Collections.newSetFromMap(new ConcurrentHashMap<ElementaryFile, Boolean>());
   private final Set<ElementaryFile> filesBackup =
       Collections.newSetFromMap(new ConcurrentHashMap<ElementaryFile, Boolean>());
-  private byte currentSfi;
-  private short currentLid;
+  private ElementaryFileAdapter currentEf;
   private Boolean isDfRatified;
   private Integer transactionCounter;
   private Integer pinAttemptCounter;
@@ -804,57 +803,40 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   /**
    * (private)<br>
-   * Updates the SFI information of the current selected file.
+   * Returns a reference to the currently selected EF.<br>
+   * If the file having the provided non-zero SFI or LID does not exist, then a new EF is created.
+   * <br>
+   * If the SFI and LID are both equal to 0, then the previously selected EF is returned.
    *
-   * @param sfi The SFI.
-   */
-  private void updateCurrentSfi(byte sfi) {
-    if (sfi != 0) {
-      this.currentSfi = sfi;
-    }
-  }
-
-  /**
-   * (private)<br>
-   * Updates the LID information of the current selected file.
-   *
-   * @param lid The LID.
-   */
-  private void updateCurrentLid(short lid) {
-    if (lid != 0) {
-      this.currentLid = lid;
-    }
-  }
-
-  /**
-   * (private)<br>
-   * Gets or creates the EF having the current non-zero SFI, or the current non-zero LID if the SFI
-   * is 0.
-   *
-   * <p>The current SFI and LID cannot both be equal to 0.
-   *
+   * @param sfi The SFI (0 if not specified in the current command).
+   * @param lid The LID (0 if not specified in the current command).
    * @return a not null reference.
    */
-  private ElementaryFileAdapter getOrCreateFile() {
-    if (currentSfi != 0) {
+  private ElementaryFileAdapter getOrCreateFile(byte sfi, short lid) {
+    if (sfi == 0 && lid == 0 && currentEf != null) {
+      return currentEf;
+    }
+    if (sfi != 0) {
       // Search by SFI
       for (ElementaryFile ef : files) {
-        if (ef.getSfi() == currentSfi) {
-          return (ElementaryFileAdapter) ef;
+        if (ef.getSfi() == sfi) {
+          currentEf = (ElementaryFileAdapter) ef;
+          return currentEf;
         }
       }
-    } else if (currentLid != 0) {
+    } else if (lid != 0) {
       // Search by LID
       for (ElementaryFile ef : files) {
-        if (ef.getHeader() != null && ef.getHeader().getLid() == currentLid) {
-          return (ElementaryFileAdapter) ef;
+        if (ef.getHeader() != null && ef.getHeader().getLid() == lid) {
+          currentEf = (ElementaryFileAdapter) ef;
+          return currentEf;
         }
       }
     }
     // Create a new EF with the provided SFI
-    ElementaryFileAdapter ef = new ElementaryFileAdapter(currentSfi);
-    files.add(ef);
-    return ef;
+    currentEf = new ElementaryFileAdapter(sfi);
+    files.add(currentEf);
+    return currentEf;
   }
 
   /**
@@ -903,9 +885,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void setFileHeader(byte sfi, FileHeaderAdapter header) {
-    updateCurrentSfi(sfi);
-    updateCurrentLid(header.getLid());
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, header.getLid());
     if (ef.getHeader() == null) {
       ef.setHeader(header);
     } else {
@@ -925,8 +905,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void setContent(byte sfi, int numRecord, byte[] content) {
-    updateCurrentSfi(sfi);
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, (short) 0);
     ef.getData().setContent(numRecord, content);
   }
 
@@ -941,8 +920,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void setCounter(byte sfi, int numCounter, byte[] content) {
-    updateCurrentSfi(sfi);
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, (short) 0);
     ef.getData().setCounter(numCounter, content);
   }
 
@@ -961,8 +939,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void setContent(byte sfi, int numRecord, byte[] content, int offset) {
-    updateCurrentSfi(sfi);
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, (short) 0);
     ef.getData().setContent(numRecord, content, offset);
   }
 
@@ -980,8 +957,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.1.0
    */
   void fillContent(byte sfi, int numRecord, byte[] content, int offset) {
-    updateCurrentSfi(sfi);
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, (short) 0);
     ef.getData().fillContent(numRecord, content, offset);
   }
 
@@ -998,8 +974,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   void addCyclicContent(byte sfi, byte[] content) {
-    updateCurrentSfi(sfi);
-    ElementaryFileAdapter ef = getOrCreateFile();
+    ElementaryFileAdapter ef = getOrCreateFile(sfi, (short) 0);
     ef.getData().addCyclicContent(content);
   }
 

@@ -21,6 +21,7 @@ import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
+import org.calypsonet.terminal.calypso.transaction.SelectFileException;
 import org.calypsonet.terminal.calypso.transaction.UnexpectedCommandStatusException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
@@ -391,12 +392,16 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
-        if (e instanceof CardDataAccessException && commandRef == CalypsoCardCommand.READ_RECORDS) {
-          // best effort mode, do not throw exception for "file not found" and "record not found"
-          // errors.
-          if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
-              && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
-            throw e;
+        if (e instanceof CardDataAccessException) {
+          if (commandRef == CalypsoCardCommand.READ_RECORDS) {
+            // best effort mode, do not throw exception for "file not found" and "record not found"
+            // errors.
+            if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
+                && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
+              throw e;
+            }
+          } else if (commandRef == CalypsoCardCommand.SELECT_FILE) {
+            throw new SelectFileException("File not found", e);
           }
         } else {
           throw new UnexpectedCommandStatusException(

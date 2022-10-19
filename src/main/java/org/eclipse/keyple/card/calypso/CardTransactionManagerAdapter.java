@@ -426,12 +426,15 @@ final class CardTransactionManagerAdapter
         commands.get(i).parseApduResponse(apduResponses.get(i));
       } catch (CardCommandException e) {
         CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
-        if (e instanceof CardDataAccessException
-            && (commandRef == CalypsoCardCommand.READ_RECORDS
-                || commandRef == CalypsoCardCommand.READ_RECORD_MULTIPLE
-                || commandRef == CalypsoCardCommand.SEARCH_RECORD_MULTIPLE
-                || commandRef == CalypsoCardCommand.READ_BINARY)) {
-          checkResponseStatusForStrictAndBestEffortMode(commands.get(i), e);
+        if (e instanceof CardDataAccessException) {
+          if (commandRef == CalypsoCardCommand.READ_RECORDS
+              || commandRef == CalypsoCardCommand.READ_RECORD_MULTIPLE
+              || commandRef == CalypsoCardCommand.SEARCH_RECORD_MULTIPLE
+              || commandRef == CalypsoCardCommand.READ_BINARY) {
+            checkResponseStatusForStrictAndBestEffortMode(commands.get(i), e);
+          } else if (commandRef == CalypsoCardCommand.SELECT_FILE) {
+            throw new SelectFileException("File not found", e);
+          }
         } else {
           throw new UnexpectedCommandStatusException(
               MSG_CARD_COMMAND_ERROR

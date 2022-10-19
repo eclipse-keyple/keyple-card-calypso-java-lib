@@ -50,8 +50,6 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private byte[] proprietaryInformation;
-
   /**
    * (package-private)<br>
    * Instantiates a new CmdCardGetDataFci.
