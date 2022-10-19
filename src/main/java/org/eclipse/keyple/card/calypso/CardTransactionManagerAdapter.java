@@ -1750,11 +1750,15 @@ final class CardTransactionManagerAdapter
         .isInRange(
             toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber");
 
-    if (toRecordNumber == fromRecordNumber) {
-      // create the command and add it to the list of commands
-      cardCommands.add(
-          new CmdCardReadRecords(
-              card, sfi, fromRecordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, recordSize));
+    if (toRecordNumber == fromRecordNumber
+        || (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+            && card.getProductType() != CalypsoCard.ProductType.LIGHT)) {
+      // Creates N unitary "Read Records" commands
+      for (int i = fromRecordNumber; i <= toRecordNumber; i++) {
+        cardCommands.add(
+            new CmdCardReadRecords(
+                card, sfi, i, CmdCardReadRecords.ReadMode.ONE_RECORD, recordSize));
+      }
     } else {
       // Manages the reading of multiple records taking into account the transmission capacity
       // of the card and the response format (2 extra bytes).

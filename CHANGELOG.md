@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merge of internal `setApduResponse` and `checkStatus` methods to `parseApduResponse` method.
 - Improvement of the card command parsing process.
 - Internal identification of the currently selected file.
+### Fixed
+- Management of "Read Records" card command for cards not supporting multiple record reads.
 ### Upgraded
 - "Calypsonet Terminal Reader API" to version `1.1.0`.
 - "Calypsonet Terminal Calypso API" to version `1.4.0` (issues [#40], [#41], [#42]).
