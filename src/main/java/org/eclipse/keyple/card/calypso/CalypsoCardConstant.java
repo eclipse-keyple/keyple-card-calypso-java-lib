@@ -76,6 +76,7 @@ final class CalypsoCardConstant {
   static final int SEL_KIFS_OFFSET = 17;
   static final int SEL_DATA_REF_OFFSET = 14;
   static final int SEL_LID_OFFSET = 21;
+  static final int SEL_LID_OFFSET_REV2 = 20;
 
   // PIN Code
   static final int PIN_LENGTH = 4;

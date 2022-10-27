@@ -27,6 +27,7 @@ import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_EF_TYPE_OF
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_KIFS_OFFSET;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_KVCS_OFFSET;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_LID_OFFSET;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_LID_OFFSET_REV2;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NKEY_LENGTH;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NKEY_OFFSET;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NUM_REC_OFFSET;
@@ -269,11 +270,12 @@ final class CmdCardSelectFile extends AbstractCardCommand {
     switch (fileType) {
       case FILE_TYPE_MF:
       case FILE_TYPE_DF:
-        DirectoryHeader directoryHeader = createDirectoryHeader(proprietaryInformation);
+        DirectoryHeader directoryHeader =
+            createDirectoryHeader(proprietaryInformation, calypsoCard);
         calypsoCard.setDirectoryHeader(directoryHeader);
         break;
       case FILE_TYPE_EF:
-        FileHeaderAdapter fileHeader = createFileHeader(proprietaryInformation);
+        FileHeaderAdapter fileHeader = createFileHeader(proprietaryInformation, calypsoCard);
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
       default:
@@ -304,9 +306,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * DirectoryHeader}
    *
    * @param proprietaryInformation from the response to a Select File command.
+   * @param calypsoCard the Calypso card.
    * @return A {@link DirectoryHeader} object
    */
-  private static DirectoryHeader createDirectoryHeader(byte[] proprietaryInformation) {
+  private static DirectoryHeader createDirectoryHeader(
+      byte[] proprietaryInformation, CalypsoCardAdapter calypsoCard) {
 
     byte[] accessConditions = new byte[SEL_AC_LENGTH];
     System.arraycopy(proprietaryInformation, SEL_AC_OFFSET, accessConditions, 0, SEL_AC_LENGTH);
@@ -316,10 +320,15 @@ final class CmdCardSelectFile extends AbstractCardCommand {
 
     byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
 
+    int lidOffset =
+        calypsoCard.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2
+            ? SEL_LID_OFFSET_REV2
+            : SEL_LID_OFFSET;
+
     short lid =
         (short)
-            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[lidOffset] << 8) & 0xff00)
+                | (proprietaryInformation[lidOffset + 1] & 0x00ff));
 
     return DirectoryHeaderAdapter.builder()
         .lid(lid)
@@ -341,9 +350,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * FileHeaderAdapter}
    *
    * @param proprietaryInformation from the response to a Select File command.
+   * @param calypsoCard the Calypso card.
    * @return A {@link FileHeaderAdapter} object
    */
-  private static FileHeaderAdapter createFileHeader(byte[] proprietaryInformation) {
+  private static FileHeaderAdapter createFileHeader(
+      byte[] proprietaryInformation, CalypsoCardAdapter calypsoCard) {
 
     ElementaryFile.Type fileType =
         getEfTypeFromCardValue(proprietaryInformation[SEL_EF_TYPE_OFFSET]);
@@ -373,10 +384,15 @@ final class CmdCardSelectFile extends AbstractCardCommand {
             (((proprietaryInformation[SEL_DATA_REF_OFFSET] << 8) & 0xff00)
                 | (proprietaryInformation[SEL_DATA_REF_OFFSET + 1] & 0x00ff));
 
+    int lidOffset =
+        calypsoCard.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2
+            ? SEL_LID_OFFSET_REV2
+            : SEL_LID_OFFSET;
+
     short lid =
         (short)
-            (((proprietaryInformation[SEL_LID_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_LID_OFFSET + 1] & 0x00ff));
+            (((proprietaryInformation[lidOffset] << 8) & 0xff00)
+                | (proprietaryInformation[lidOffset + 1] & 0x00ff));
 
     return FileHeaderAdapter.builder()
         .lid(lid)
