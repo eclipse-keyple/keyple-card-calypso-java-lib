@@ -306,45 +306,45 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
     this.eventCeilings.put(eventCeilingNumber, eventCeilingValue);
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public Integer getEventCounter(int eventCounterNumber) {
-    return eventCounters.get(eventCounterNumber);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SortedMap<Integer, Integer> getEventCounters() {
-    return eventCounters;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public Integer getEventCeiling(int eventCeilingNumber) {
-    return eventCeilings.get(eventCeilingNumber);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SortedMap<Integer, Integer> getEventCeilings() {
-    return eventCeilings;
-  }
+  //    /**
+  //     * {@inheritDoc}
+  //     *
+  //     * @since 2.2.3
+  //     */
+  //    @Override
+  //    public Integer getEventCounter(int eventCounterNumber) {
+  //      return eventCounters.get(eventCounterNumber);
+  //    }
+  //
+  //    /**
+  //     * {@inheritDoc}
+  //     *
+  //     * @since 2.2.3
+  //     */
+  //    @Override
+  //    public SortedMap<Integer, Integer> getEventCounters() {
+  //      return eventCounters;
+  //    }
+  //
+  //    /**
+  //     * {@inheritDoc}
+  //     *
+  //     * @since 2.2.3
+  //     */
+  //    @Override
+  //    public Integer getEventCeiling(int eventCeilingNumber) {
+  //      return eventCeilings.get(eventCeilingNumber);
+  //    }
+  //
+  //    /**
+  //     * {@inheritDoc}
+  //     *
+  //     * @since 2.2.3
+  //     */
+  //    @Override
+  //    public SortedMap<Integer, Integer> getEventCeilings() {
+  //      return eventCeilings;
+  //    }
 
   /**
    * Gets the object content as a Json string.

@@ -11,11 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.List;
 import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.SamTransactionManager;
 import org.calypsonet.terminal.card.ProxyReaderApi;
-import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,182 +89,182 @@ final class SamTransactionManagerAdapter extends CommonSamTransactionManagerAdap
     return startA <= endB && endA >= startB;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
-
-    Assert.getInstance()
-        .isInRange(
-            eventCounterNumber,
-            MIN_EVENT_COUNTER_NUMBER,
-            MAX_EVENT_COUNTER_NUMBER,
-            "eventCounterNumber");
-
-    getSamCommands()
-        .add(
-            new CmdSamReadEventCounter(
-                getCalypsoSam(),
-                CmdSamReadEventCounter.CounterOperationType.READ_SINGLE_COUNTER,
-                eventCounterNumber));
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareReadEventCounters(
-      int fromEventCounterNumber, int toEventCounterNumber) {
-
-    Assert.getInstance()
-        .isInRange(
-            fromEventCounterNumber,
-            MIN_EVENT_COUNTER_NUMBER,
-            MAX_EVENT_COUNTER_NUMBER,
-            "fromEventCounterNumber")
-        .isInRange(
-            toEventCounterNumber,
-            MIN_EVENT_COUNTER_NUMBER,
-            MAX_EVENT_COUNTER_NUMBER,
-            "toEventCounterNumber")
-        .greaterOrEqual(
-            toEventCounterNumber,
-            fromEventCounterNumber,
-            "fromEventCounterNumber/toEventCounterNumber");
-
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCounterNumber, toEventCounterNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadEventCounter(
-                  getCalypsoSam(),
-                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
-                  1));
-    }
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCounterNumber, toEventCounterNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadEventCounter(
-                  getCalypsoSam(),
-                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
-                  2));
-    }
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCounterNumber, toEventCounterNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadEventCounter(
-                  getCalypsoSam(),
-                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
-                  3));
-    }
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareReadEventCeiling(int eventCeilingNumber) {
-
-    Assert.getInstance()
-        .isInRange(
-            eventCeilingNumber,
-            MIN_EVENT_CEILING_NUMBER,
-            MAX_EVENT_CEILING_NUMBER,
-            "eventCeilingNumber");
-
-    getSamCommands()
-        .add(
-            new CmdSamReadCeilings(
-                getCalypsoSam(),
-                CmdSamReadCeilings.CeilingsOperationType.READ_SINGLE_CEILING,
-                eventCeilingNumber));
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareReadEventCeilings(
-      int fromEventCeilingNumber, int toEventCeilingNumber) {
-
-    Assert.getInstance()
-        .isInRange(
-            fromEventCeilingNumber,
-            MIN_EVENT_CEILING_NUMBER,
-            MAX_EVENT_CEILING_NUMBER,
-            "fromEventCeilingNumber")
-        .isInRange(
-            toEventCeilingNumber,
-            MIN_EVENT_CEILING_NUMBER,
-            MAX_EVENT_CEILING_NUMBER,
-            "toEventCeilingNumber")
-        .greaterOrEqual(
-            toEventCeilingNumber,
-            fromEventCeilingNumber,
-            "fromEventCeilingNumber/toEventCeilingNumber");
-
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCeilingNumber, toEventCeilingNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadCeilings(
-                  getCalypsoSam(),
-                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
-                  1));
-    }
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCeilingNumber, toEventCeilingNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadCeilings(
-                  getCalypsoSam(),
-                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
-                  2));
-    }
-    if (areIntervalsOverlapping(
-        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCeilingNumber, toEventCeilingNumber)) {
-      getSamCommands()
-          .add(
-              new CmdSamReadCeilings(
-                  getCalypsoSam(),
-                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
-                  3));
-    }
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareWriteEventCeiling(int eventCeilingNumber, int newValue) {
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  public SamTransactionManager prepareWriteEventCeilings(
-      int fromEventCeilingNumber, List<Integer> newValues) {
-    return null;
-  }
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareReadEventCounter(int eventCounterNumber) {
+  //
+  //    Assert.getInstance()
+  //        .isInRange(
+  //            eventCounterNumber,
+  //            MIN_EVENT_COUNTER_NUMBER,
+  //            MAX_EVENT_COUNTER_NUMBER,
+  //            "eventCounterNumber");
+  //
+  //    getSamCommands()
+  //        .add(
+  //            new CmdSamReadEventCounter(
+  //                getCalypsoSam(),
+  //                CmdSamReadEventCounter.CounterOperationType.READ_SINGLE_COUNTER,
+  //                eventCounterNumber));
+  //    return this;
+  //  }
+  //
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareReadEventCounters(
+  //      int fromEventCounterNumber, int toEventCounterNumber) {
+  //
+  //    Assert.getInstance()
+  //        .isInRange(
+  //            fromEventCounterNumber,
+  //            MIN_EVENT_COUNTER_NUMBER,
+  //            MAX_EVENT_COUNTER_NUMBER,
+  //            "fromEventCounterNumber")
+  //        .isInRange(
+  //            toEventCounterNumber,
+  //            MIN_EVENT_COUNTER_NUMBER,
+  //            MAX_EVENT_COUNTER_NUMBER,
+  //            "toEventCounterNumber")
+  //        .greaterOrEqual(
+  //            toEventCounterNumber,
+  //            fromEventCounterNumber,
+  //            "fromEventCounterNumber/toEventCounterNumber");
+  //
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCounterNumber, toEventCounterNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadEventCounter(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
+  //                  1));
+  //    }
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCounterNumber, toEventCounterNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadEventCounter(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
+  //                  2));
+  //    }
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCounterNumber, toEventCounterNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadEventCounter(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadEventCounter.CounterOperationType.READ_COUNTER_RECORD,
+  //                  3));
+  //    }
+  //    return this;
+  //  }
+  //
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareReadEventCeiling(int eventCeilingNumber) {
+  //
+  //    Assert.getInstance()
+  //        .isInRange(
+  //            eventCeilingNumber,
+  //            MIN_EVENT_CEILING_NUMBER,
+  //            MAX_EVENT_CEILING_NUMBER,
+  //            "eventCeilingNumber");
+  //
+  //    getSamCommands()
+  //        .add(
+  //            new CmdSamReadCeilings(
+  //                getCalypsoSam(),
+  //                CmdSamReadCeilings.CeilingsOperationType.READ_SINGLE_CEILING,
+  //                eventCeilingNumber));
+  //    return this;
+  //  }
+  //
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareReadEventCeilings(
+  //      int fromEventCeilingNumber, int toEventCeilingNumber) {
+  //
+  //    Assert.getInstance()
+  //        .isInRange(
+  //            fromEventCeilingNumber,
+  //            MIN_EVENT_CEILING_NUMBER,
+  //            MAX_EVENT_CEILING_NUMBER,
+  //            "fromEventCeilingNumber")
+  //        .isInRange(
+  //            toEventCeilingNumber,
+  //            MIN_EVENT_CEILING_NUMBER,
+  //            MAX_EVENT_CEILING_NUMBER,
+  //            "toEventCeilingNumber")
+  //        .greaterOrEqual(
+  //            toEventCeilingNumber,
+  //            fromEventCeilingNumber,
+  //            "fromEventCeilingNumber/toEventCeilingNumber");
+  //
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC1, LAST_COUNTER_REC1, fromEventCeilingNumber, toEventCeilingNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadCeilings(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
+  //                  1));
+  //    }
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC2, LAST_COUNTER_REC2, fromEventCeilingNumber, toEventCeilingNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadCeilings(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
+  //                  2));
+  //    }
+  //    if (areIntervalsOverlapping(
+  //        FIRST_COUNTER_REC3, LAST_COUNTER_REC3, fromEventCeilingNumber, toEventCeilingNumber)) {
+  //      getSamCommands()
+  //          .add(
+  //              new CmdSamReadCeilings(
+  //                  getCalypsoSam(),
+  //                  CmdSamReadCeilings.CeilingsOperationType.READ_CEILING_RECORD,
+  //                  3));
+  //    }
+  //    return this;
+  //  }
+  //
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareWriteEventCeiling(int eventCeilingNumber, int newValue) {
+  //    return null;
+  //  }
+  //
+  //  /**
+  //   * {@inheritDoc}
+  //   *
+  //   * @since 2.2.3
+  //   */
+  //  @Override
+  //  public SamTransactionManager prepareWriteEventCeilings(
+  //      int fromEventCeilingNumber, List<Integer> newValues) {
+  //    return null;
+  //  }
 }

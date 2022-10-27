@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-05-05)
+    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-10-26)
 end title
 
 ' == THEME ==
@@ -83,21 +83,31 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         +<back:pink>SamSecuritySetting</back> createSamSecuritySetting ()
         +<back:pink>SamTransactionManager</back> createSamTransaction (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam, <back:pink>SamSecuritySetting</back> samSecuritySetting)
         +<back:pink>SamTransactionManager</back> createSamTransactionWithoutSecurity (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam)
+        '+void forceCardProductType (<back:pink>CalypsoCard.ProductType</back> productType, <back:pink>CalypsoCard</back> calypsoCard)
+        '+void checkSamExtension (CalypsoSamExtension samExtension)
 
         -- **KeypleCardExtension** --
         +String getCommonApiVersion ()
         +String getReaderApiVersion ()
         +String getCardApiVersion ()
     }
+
+    'package spi {
+    '    +interface CalypsoSamExtension {
+    '        +String getCalypsoLibVersion ()
+    '    }
+    '}
 }
 
 ' Associations
+
+'CalypsoExtensionService ..> CalypsoSamExtension #C_USE : use >
 
 ' == LAYOUT ==
 
 ' == STYLE ==
 
 package calypso #C_GREY1 {}
-
+'package spi #C_GREY2 {}
 
 @enduml
