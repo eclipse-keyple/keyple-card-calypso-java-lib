@@ -2429,12 +2429,32 @@ public class CardTransactionManagerAdapterTest {
         .isEqualTo(4286);
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void prepareIncreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() {
+  @Test
+  public void prepareIncreaseCounters_whenCardIsLowerThanPrime3__shouldAddMultipleIncreaseCommands()
+      throws Exception {
     when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_INCREASE_SFI11_CNT1_100U_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_INCREASE_SFI11_CNT1_8821U_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
-    counterNumberToIncValueMap.put(1, 1);
-    cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+    counterNumberToIncValueMap.put(1, 100);
+
+    cardTransactionManager.prepareIncreaseCounters((byte) 1, counterNumberToIncValueMap);
+    cardTransactionManager.processCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(8821);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2533,12 +2553,31 @@ public class CardTransactionManagerAdapterTest {
         .isEqualTo(0x33);
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void prepareDecreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() {
+  @Test
+  public void prepareDecreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() throws Exception {
     when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
-    Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
-    counterNumberToIncValueMap.put(1, 1);
-    cardTransactionManager.prepareDecreaseCounters(FILE7, counterNumberToIncValueMap);
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_DECREASE_SFI10_CNT1_100U_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_DECREASE_SFI10_CNT1_4286U_RSP);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    Map<Integer, Integer> counterNumberToDecValueMap = new HashMap<Integer, Integer>(1);
+    counterNumberToDecValueMap.put(1, 100);
+
+    cardTransactionManager.prepareDecreaseCounters((byte) 1, counterNumberToDecValueMap);
+    cardTransactionManager.processCommands();
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(4286);
   }
 
   @Test(expected = IllegalArgumentException.class)

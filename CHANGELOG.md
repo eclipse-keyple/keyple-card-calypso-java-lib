@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Take card revision into account when parsing the FCP structure (issue [#83]).
+- Generate multiple increase/decrease counter commands when the card does not support Increase/DecreaseMultiple
+  commands (issue [#84]).
 
 ## [2.2.3] - 2022-10-27
 ### Added
@@ -110,6 +112,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#84]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/84
 [#83]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/83
 [#71]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/71
 [#70]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/70
