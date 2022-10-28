@@ -2168,6 +2168,14 @@ final class CardTransactionManagerAdapter
 
     if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
         && card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
+      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
+        if (isDecreaseCommand) {
+          prepareDecreaseCounter(sfi, entry.getKey(), entry.getValue());
+        } else {
+          prepareIncreaseCounter(sfi, entry.getKey(), entry.getValue());
+        }
+      }
+    } else {
       final int nbCountersPerApdu = card.getPayloadCapacity() / 4;
       if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
         // create the command and add it to the list of commands
@@ -2196,14 +2204,6 @@ final class CardTransactionManagerAdapter
         if (!map.isEmpty()) {
           cardCommands.add(
               new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
-        }
-      }
-    } else {
-      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-        if (isDecreaseCommand) {
-          prepareDecreaseCounter(sfi, entry.getKey(), entry.getValue());
-        } else {
-          prepareIncreaseCounter(sfi, entry.getKey(), entry.getValue());
         }
       }
     }
