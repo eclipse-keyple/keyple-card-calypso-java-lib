@@ -1858,8 +1858,13 @@ final class CardTransactionManagerAdapter
   public CardTransactionManager prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
 
     if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      throw new UnsupportedOperationException(
-          "The 'Read Binary' command is not available for this card.");
+      if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
+        logger.warn(
+            "The 'Read Binary' command may not be supported by this PRIME_REVISION_2 card.");
+      } else {
+        throw new UnsupportedOperationException(
+            "The 'Read Binary' command is not available for this card.");
+      }
     }
 
     Assert.getInstance()
@@ -2052,8 +2057,13 @@ final class CardTransactionManagerAdapter
       boolean isUpdateCommand, byte sfi, int offset, byte[] data) {
 
     if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      throw new UnsupportedOperationException(
-          "The 'Update/Write Binary' command is not available for this card.");
+      if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
+        logger.warn(
+            "The 'Update/Write Binary' command may not be supported by this PRIME_REVISION_2 card.");
+      } else {
+        throw new UnsupportedOperationException(
+            "The 'Update/Write Binary' command is not available for this card.");
+      }
     }
 
     Assert.getInstance()

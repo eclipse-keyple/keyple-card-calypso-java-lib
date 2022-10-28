@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Take card revision into account when parsing the FCP structure (issue [#83]).
 - Generate multiple increase/decrease counter commands when the card does not support Increase/DecreaseMultiple
   commands (issue [#84]).
+### Changed
+- Enable binary commands with `PRIME_REVISION_2` cards.
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.4.1`.
 
 ## [2.2.3] - 2022-10-27
 ### Added

@@ -47,6 +47,8 @@ public class CardTransactionManagerAdapterTest {
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C12051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C20051410016283";
+  private static final String SELECT_APPLICATION_RESPONSE_LIGHT =
+      "6F238409315449432E49434134A516BF0C13C70800000000112233445307064390312B01009000";
   private static final String SAM_C1_POWER_ON_DATA = "3B3F9600805A4880C120501711223344829000";
   private static final String HSM_C1_POWER_ON_DATA = "3B3F9600805A4880C108501711223344829000";
   private static final String FCI_REV10 =
@@ -2014,8 +2016,9 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
+  public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev2OrRev3_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_LIGHT);
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -2231,8 +2234,9 @@ public class CardTransactionManagerAdapterTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void prepareWriteBinary_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
+  public void prepareWriteBinary_whenProductTypeIsNotPrimeRev2OrRev3_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_LIGHT);
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[1]);
   }
 
