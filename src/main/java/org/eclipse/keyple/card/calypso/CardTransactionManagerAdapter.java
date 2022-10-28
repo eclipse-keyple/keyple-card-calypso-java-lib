@@ -2144,12 +2144,6 @@ final class CardTransactionManagerAdapter
   private CardTransactionManager prepareIncreaseOrDecreaseCounters(
       boolean isDecreaseCommand, byte sfi, Map<Integer, Integer> counterNumberToIncDecValueMap) {
 
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
-        && card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
-      throw new UnsupportedOperationException(
-          "The 'Increase/Decrease Multiple' commands are not available for this card.");
-    }
-
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
@@ -2171,32 +2165,46 @@ final class CardTransactionManagerAdapter
               CalypsoCardConstant.CNT_VALUE_MAX,
               "counterNumberToIncDecValueMapValue");
     }
-    final int nbCountersPerApdu = card.getPayloadCapacity() / 4;
-    if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
-      // create the command and add it to the list of commands
-      cardCommands.add(
-          new CmdCardIncreaseOrDecreaseMultiple(
-              isDecreaseCommand,
-              card,
-              sfi,
-              new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap)));
-    } else {
-      // the number of counters exceeds the payload capacity, let's split into several apdu commands
-      int i = 0;
-      TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
-      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-        i++;
-        map.put(entry.getKey(), entry.getValue());
-        if (i == nbCountersPerApdu) {
+
+    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+        && card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
+      final int nbCountersPerApdu = card.getPayloadCapacity() / 4;
+      if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
+        // create the command and add it to the list of commands
+        cardCommands.add(
+            new CmdCardIncreaseOrDecreaseMultiple(
+                isDecreaseCommand,
+                card,
+                sfi,
+                new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap)));
+      } else {
+        // the number of counters exceeds the payload capacity, let's split into several apdu
+        // commands
+        int i = 0;
+        TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
+        for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
+          i++;
+          map.put(entry.getKey(), entry.getValue());
+          if (i == nbCountersPerApdu) {
+            cardCommands.add(
+                new CmdCardIncreaseOrDecreaseMultiple(
+                    isDecreaseCommand, card, sfi, new TreeMap<Integer, Integer>(map)));
+            i = 0;
+            map.clear();
+          }
+        }
+        if (!map.isEmpty()) {
           cardCommands.add(
-              new CmdCardIncreaseOrDecreaseMultiple(
-                  isDecreaseCommand, card, sfi, new TreeMap<Integer, Integer>(map)));
-          i = 0;
-          map.clear();
+              new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
         }
       }
-      if (!map.isEmpty()) {
-        cardCommands.add(new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
+    } else {
+      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
+        if (isDecreaseCommand) {
+          prepareDecreaseCounter(sfi, entry.getKey(), entry.getValue());
+        } else {
+          prepareIncreaseCounter(sfi, entry.getKey(), entry.getValue());
+        }
       }
     }
 
