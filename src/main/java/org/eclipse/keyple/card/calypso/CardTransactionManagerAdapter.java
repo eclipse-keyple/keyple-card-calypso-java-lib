@@ -114,6 +114,8 @@ final class CardTransactionManagerAdapter
   private AbstractCardCommand svLastModifyingCommand;
   private boolean isSvOperationInsideSession;
   private boolean isSvOperationComplete;
+  private int svPostponedDataIndex;
+  private int nbPostponedData;
 
   /**
    * (package-private)<br>
@@ -218,6 +220,7 @@ final class CardTransactionManagerAdapter
     }
 
     card.backupFiles();
+    nbPostponedData = 0;
 
     if (cardCommands == null) {
       cardCommands = new ArrayList<AbstractCardCommand>();
@@ -642,7 +645,7 @@ final class CardTransactionManagerAdapter
     // closed.
     // CL-SV-POSTPON.1
     if (isSvOperationCompleteOneTime()) {
-      processSamSvCheck(cmdCardCloseSession.getPostponedData());
+      processSamSvCheck(cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex));
     }
   }
 
@@ -694,23 +697,40 @@ final class CardTransactionManagerAdapter
   }
 
   /**
-   * Builds an anticipated response to an Increase/Decrease command
+   * (private)<br>
+   * Builds the anticipated data of an Increase/Decrease command.
    *
-   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
+   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
    *     command.
    * @param currentCounterValue The current counter value.
    * @param incDecValue The increment/decrement value.
-   * @return An {@link ApduResponseApi} containing the expected bytes
+   * @return A 3-byte array containing the expected bytes.
    */
-  private ApduResponseApi buildAnticipatedIncreaseDecreaseResponse(
+  private byte[] buildAnticipatedIncreaseDecreaseResponseData(
       boolean isDecreaseCommand, int currentCounterValue, int incDecValue) {
     int newValue =
         isDecreaseCommand ? currentCounterValue - incDecValue : currentCounterValue + incDecValue;
     // response = NNNNNN9000
+    byte[] data = new byte[3];
+    data[0] = (byte) ((newValue & 0x00FF0000) >> 16);
+    data[1] = (byte) ((newValue & 0x0000FF00) >> 8);
+    data[2] = (byte) (newValue & 0x000000FF);
+    return data;
+  }
+
+  /**
+   * (private)<br>
+   * Builds an anticipated response to an Increase/Decrease command.
+   *
+   * @param data The expected new counter value.
+   * @return An {@link ApduResponseApi} containing the expected bytes.
+   */
+  private ApduResponseApi buildAnticipatedIncreaseDecreaseResponse(byte[] data) {
+    // response = NNNNNN9000
     byte[] response = new byte[5];
-    response[0] = (byte) ((newValue & 0x00FF0000) >> 16);
-    response[1] = (byte) ((newValue & 0x0000FF00) >> 8);
-    response[2] = (byte) (newValue & 0x000000FF);
+    response[0] = data[0];
+    response[1] = data[1];
+    response[2] = data[2];
     response[3] = (byte) 0x90;
     response[4] = (byte) 0x00;
     return new ApduResponseAdapter(response);
@@ -767,11 +787,18 @@ final class CardTransactionManagerAdapter
           case INCREASE:
           case DECREASE:
             CmdCardIncreaseOrDecrease cmdA = (CmdCardIncreaseOrDecrease) command;
-            apduResponses.add(
-                buildAnticipatedIncreaseDecreaseResponse(
+            byte[] anticipatedValue =
+                buildAnticipatedIncreaseDecreaseResponseData(
                     cmdA.getCommandRef() == CalypsoCardCommand.DECREASE,
                     getCounterValue(cmdA.getSfi(), cmdA.getCounterNumber()),
-                    cmdA.getIncDecValue()));
+                    cmdA.getIncDecValue());
+            if (card.isCounterValuePostponed()) {
+              cmdA.setComputedData(anticipatedValue);
+              apduResponses.add(RESPONSE_OK_POSTPONED);
+              nbPostponedData++;
+            } else {
+              apduResponses.add(buildAnticipatedIncreaseDecreaseResponse(anticipatedValue));
+            }
             break;
           case INCREASE_MULTIPLE:
           case DECREASE_MULTIPLE:
@@ -788,6 +815,8 @@ final class CardTransactionManagerAdapter
           case SV_DEBIT:
           case SV_UNDEBIT:
             apduResponses.add(RESPONSE_OK_POSTPONED);
+            svPostponedDataIndex = nbPostponedData;
+            nbPostponedData++;
             break;
           default: // Append/Update/Write Record: response = 9000
             apduResponses.add(RESPONSE_OK);

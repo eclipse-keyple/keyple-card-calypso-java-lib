@@ -62,16 +62,12 @@ import org.eclipse.keyple.core.util.ApduUtil;
  */
 final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
-  private static final int SV_POSTPONED_DATA_IN_SESSION = 0x6200;
+  private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
         new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
-    m.put(
-        SV_POSTPONED_DATA_IN_SESSION,
-        new StatusProperties(
-            "Successful execution, response data postponed until session closing.", null));
     m.put(
         0x6400,
         new StatusProperties(
@@ -89,6 +85,10 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
         new StatusProperties(
             "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
     m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
+    m.put(
+        SW_POSTPONED_DATA,
+        new StatusProperties(
+            "Successful execution, response data postponed until session closing."));
     STATUS_TABLE = m;
   }
 
@@ -201,7 +201,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
                     p2,
                     dataIn,
                     null))
-            .addSuccessfulStatusWord(SV_POSTPONED_DATA_IN_SESSION));
+            .addSuccessfulStatusWord(SW_POSTPONED_DATA));
   }
 
   /**

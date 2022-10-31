@@ -28,6 +28,8 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardIncreaseOrDecrease.class);
 
+  private static final int SW_POSTPONED_DATA = 0x6200;
+
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
@@ -64,8 +66,11 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
+    m.put(0x6103, new StatusProperties("Successful execution (possible only in ISO7816 T=0)."));
     m.put(
-        0x6103, new StatusProperties("Successful execution (possible only in ISO7816 T=0).", null));
+        SW_POSTPONED_DATA,
+        new StatusProperties(
+            "Successful execution, response data postponed until session closing."));
     STATUS_TABLE = m;
   }
 
@@ -73,6 +78,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   private final int sfi;
   private final int counterNumber;
   private final int incDecValue;
+  private byte[] computedData;
 
   /**
    * (package-private)<br>
@@ -114,7 +120,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
     byte p2 = (byte) (sfi * 8);
 
     /* this is a case4 command, we set Le = 0 */
-    setApduRequest(
+    ApduRequestAdapter apduRequest =
         new ApduRequestAdapter(
             ApduUtil.build(
                 cla,
@@ -122,7 +128,13 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
                 (byte) counterNumber,
                 p2,
                 valueBuffer,
-                (byte) 0x00)));
+                (byte) 0x00));
+
+    if (calypsoCard.isCounterValuePostponed()) {
+      apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
+    }
+
+    setApduRequest(apduRequest);
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
@@ -141,7 +153,17 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    getCalypsoCard().setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
+    if (apduResponse.getStatusWord() == SW_POSTPONED_DATA) {
+      if (!getCalypsoCard().isCounterValuePostponed()) {
+        throw new CardUnknownStatusException(
+            "Unexpected status word: 6200h", getCommandRef(), SW_POSTPONED_DATA);
+      }
+      // Set computed value
+      getCalypsoCard().setCounter((byte) sfi, counterNumber, computedData);
+    } else {
+      // Set returned value
+      getCalypsoCard().setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
+    }
   }
 
   /**
@@ -183,6 +205,17 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
    */
   int getIncDecValue() {
     return incDecValue;
+  }
+
+  /**
+   * (package-private)<br>
+   * Sets the computed data.
+   *
+   * @param data A 3-byte array containing the computed data.
+   * @since 2.2.4
+   */
+  void setComputedData(byte[] data) {
+    this.computedData = data;
   }
 
   /**

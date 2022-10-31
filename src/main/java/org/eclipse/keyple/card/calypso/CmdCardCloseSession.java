@@ -11,8 +11,10 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -54,7 +56,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
   private byte[] signatureLo;
 
   /** The postponed data. */
-  private byte[] postponedData;
+  private final List<byte[]> postponedData = new ArrayList<byte[]>(0);
 
   /**
    * (package-private)<br>
@@ -143,54 +145,18 @@ final class CmdCardCloseSession extends AbstractCardCommand {
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
     byte[] responseData = getApduResponse().getDataOut();
-    if (getCalypsoCard().isExtendedModeSupported()) {
-      // 8-byte signature
-      if (responseData.length == 8) {
-        // signature only
-        signatureLo = Arrays.copyOfRange(responseData, 0, 8);
-        postponedData = new byte[0];
-      } else if (responseData.length == 12) {
-        // signature + 3 postponed bytes (+1)
-        signatureLo = Arrays.copyOfRange(responseData, 4, 12);
-        postponedData = Arrays.copyOfRange(responseData, 1, 4);
-      } else if (responseData.length == 15) {
-        // signature + 6 postponed bytes (+1)
-        signatureLo = Arrays.copyOfRange(responseData, 7, 15);
-        postponedData = Arrays.copyOfRange(responseData, 1, 7);
-      } else {
-        if (responseData.length != 0) {
-          throw new IllegalArgumentException(
-              "Unexpected length in response to CloseSecureSession command: "
-                  + responseData.length);
-        }
-        // session abort case
-        signatureLo = new byte[0];
-        postponedData = new byte[0];
+    if (responseData.length > 0) {
+      int signatureLength = getCalypsoCard().isExtendedModeSupported() ? 8 : 4;
+      int i = 0;
+      while (i < responseData.length - signatureLength) {
+        byte[] data = Arrays.copyOfRange(responseData, i + 1, i + responseData[i]);
+        postponedData.add(data);
+        i += responseData[i];
       }
+      signatureLo = Arrays.copyOfRange(responseData, i, signatureLength);
     } else {
-      // 4-byte signature
-      if (responseData.length == 4) {
-        // signature only
-        signatureLo = Arrays.copyOfRange(responseData, 0, 4);
-        postponedData = new byte[0];
-      } else if (responseData.length == 8) {
-        // signature + 3 postponed bytes (+1)
-        signatureLo = Arrays.copyOfRange(responseData, 4, 8);
-        postponedData = Arrays.copyOfRange(responseData, 1, 4);
-      } else if (responseData.length == 11) {
-        // signature + 6 postponed bytes (+1)
-        signatureLo = Arrays.copyOfRange(responseData, 7, 11);
-        postponedData = Arrays.copyOfRange(responseData, 1, 7);
-      } else {
-        if (responseData.length != 0) {
-          throw new IllegalArgumentException(
-              "Unexpected length in response to CloseSecureSession command: "
-                  + responseData.length);
-        }
-        // session abort case
-        signatureLo = new byte[0];
-        postponedData = new byte[0];
-      }
+      // session abort case
+      signatureLo = new byte[0];
     }
   }
 
@@ -207,13 +173,12 @@ final class CmdCardCloseSession extends AbstractCardCommand {
 
   /**
    * (package-private)<br>
-   * Gets the secure session postponed data (e.g. Sv Signature).
+   * Returns the secure session postponed data (e.g. Sv Signature).
    *
-   * @return A 0, 3 or 6-byte array of bytes according to presence of postponed data and the
-   *     extended mode usage.
+   * @return An empty list if there is no postponed data.
    * @since 2.0.1
    */
-  byte[] getPostponedData() {
+  List<byte[]> getPostponedData() {
     return postponedData;
   }
 

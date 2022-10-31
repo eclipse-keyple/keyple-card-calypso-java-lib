@@ -45,7 +45,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private static final int SI_SOFTWARE_ISSUER = 4;
   private static final int SI_SOFTWARE_VERSION = 5;
   private static final int SI_SOFTWARE_REVISION = 6;
-  private static final int PAY_LOAD_CAPACITY = 250;
+  private static final int DEFAULT_PAYLOAD_CAPACITY = 250;
 
   // Application type bitmasks features
   private static final byte APP_TYPE_WITH_CALYPSO_PIN = 0x01;
@@ -62,7 +62,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         27554, 32768, 38967, 46340, 55108, 65536, 77935, 92681, 110217, 131072, 155871, 185363,
         220435, 262144, 311743, 370727, 440871, 524288, 623487, 741455, 881743, 1048576
       };
-
   private ApduResponseApi selectApplicationResponse;
   private String powerOnData;
   private boolean isExtendedModeSupported;
@@ -101,6 +100,27 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte applicationSubType;
   private byte applicationType;
   private byte sessionModification;
+  private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
+  private boolean isCounterValuePostponed;
+
+  private static final List<PatchRev3> patchesRev3 = new ArrayList<PatchRev3>();
+  private static final List<PatchRev12> patchesRev12 = new ArrayList<PatchRev12>();
+
+  static {
+    // Patches for revision 3:
+    // XX 3C XX XX XX 10 XX
+    patchesRev3.add(new PatchRev3("003C0000001000", "00FF000000FF00").setPayloadCapacity(235));
+
+    // Patches for revision 1 & 2:
+    // 06 XX 01 03 XX XX XX
+    patchesRev12.add(new PatchRev12("06000103000000", "FF00FFFF000000").setCounterValuePostponed());
+    // 06 0A 01 02 XX XX XX
+    patchesRev12.add(new PatchRev12("060A0102000000", "FFFFFFFF000000").setCounterValuePostponed());
+    // XX XX 0X XX 15 XX XX
+    patchesRev12.add(new PatchRev12("00000000150000", "0000F000FF0000").setCounterValuePostponed());
+    // XX XX 1X XX 15 XX XX
+    patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
+  }
 
   /**
    * Constructor.
@@ -260,6 +280,43 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
 
     isHce = (calypsoSerialNumber[3] & (byte) 0x80) == (byte) 0x80;
+
+    applyPatchIfNeeded();
+  }
+
+  private long convertStartupInfoToLong() {
+    long startupInfoLong = 0L;
+    int nbBytes = startupInfo.length;
+    int offset = 0;
+    while (nbBytes > 0) {
+      startupInfoLong |= ((long) (startupInfo[offset++] & 0xFF) << (8 * (--nbBytes)));
+    }
+    return startupInfoLong;
+  }
+
+  /**
+   * (private)<br>
+   * Some cards have specific features that need to be taken into account. This method identifies
+   * them and applies the necessary modifications.
+   */
+  private void applyPatchIfNeeded() {
+    long startupInfoLong = convertStartupInfoToLong();
+    if (productType == ProductType.PRIME_REVISION_3) {
+      applyPatchIfNeededForRevision(patchesRev3, startupInfoLong);
+    } else if (productType == ProductType.PRIME_REVISION_2
+        || productType == ProductType.PRIME_REVISION_1) {
+      payloadCapacity = 128;
+      applyPatchIfNeededForRevision(patchesRev12, startupInfoLong);
+    }
+  }
+
+  private void applyPatchIfNeededForRevision(List<? extends Patch> patches, long startupInfoLong) {
+    for (Patch patch : patches) {
+      if (patch.isApplicableTo(startupInfoLong)) {
+        patch.apply(this);
+        return;
+      }
+    }
   }
 
   /**
@@ -373,8 +430,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @since 2.0.0
    */
   int getPayloadCapacity() {
-    // TODO make this value dependent on the type of card identified
-    return PAY_LOAD_CAPACITY;
+    return payloadCapacity;
   }
 
   /**
@@ -1137,6 +1193,18 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
+   * (package-private)<br>
+   * Indicates if the response of the Increase/Decrease counter command is postponed to the close
+   * secure session (old revision 2 cards).
+   *
+   * @return true if the response of the Increase/Decrease counter command is postponed.
+   * @since 2.2.4
+   */
+  boolean isCounterValuePostponed() {
+    return isCounterValuePostponed;
+  }
+
+  /**
    * Gets the object content as a Json string.
    *
    * @return A not empty string.
@@ -1145,5 +1213,91 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public String toString() {
     return JsonUtil.toJson(this);
+  }
+
+  /**
+   * (private)<br>
+   * POJO containing card specificities to be applied according to startup info.
+   */
+  private abstract static class Patch {
+
+    private final long startupInfo;
+    private final Long mask;
+
+    private Patch(String startupInfo) {
+      this.startupInfo = HexUtil.toLong(startupInfo);
+      this.mask = null;
+    }
+
+    private Patch(String startupInfo, String mask) {
+      this.startupInfo = HexUtil.toLong(startupInfo);
+      this.mask = HexUtil.toLong(mask);
+    }
+
+    private boolean isApplicableTo(long startupInfo) {
+      return mask == null
+          ? this.startupInfo == startupInfo
+          : this.startupInfo == (startupInfo & mask);
+    }
+
+    abstract void apply(CalypsoCardAdapter calypsoCard);
+  }
+
+  /**
+   * (private)<br>
+   * POJO containing card rev 3 specificities to be applied according to startup info.
+   */
+  private static class PatchRev3 extends Patch {
+
+    private Integer payloadCapacity;
+
+    private PatchRev3(String startupInfo) {
+      super(startupInfo);
+    }
+
+    private PatchRev3(String startupInfo, String mask) {
+      super(startupInfo, mask);
+    }
+
+    @Override
+    void apply(CalypsoCardAdapter calypsoCard) {
+      if (payloadCapacity != null) {
+        calypsoCard.payloadCapacity = payloadCapacity;
+      }
+    }
+
+    private PatchRev3 setPayloadCapacity(Integer payloadCapacity) {
+      this.payloadCapacity = payloadCapacity;
+      return this;
+    }
+  }
+
+  /**
+   * (private)<br>
+   * POJO containing card rev 1 & 2 specificities to be applied according to startup info.
+   */
+  private static class PatchRev12 extends Patch {
+
+    private Boolean isCounterValuePostponed;
+
+    private PatchRev12(String startupInfo) {
+      super(startupInfo);
+    }
+
+    private PatchRev12(String startupInfo, String mask) {
+      super(startupInfo, mask);
+    }
+
+    @Override
+    void apply(CalypsoCardAdapter calypsoCard) {
+      if (isCounterValuePostponed != null) {
+        calypsoCard.isCounterValuePostponed = isCounterValuePostponed;
+      }
+    }
+
+    private PatchRev12 setCounterValuePostponed() {
+      isCounterValuePostponed = true;
+      return this;
+    }
   }
 }

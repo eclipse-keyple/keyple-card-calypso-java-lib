@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generate multiple increase/decrease counter commands when the card does not support Increase/DecreaseMultiple
   commands (issue [#84]).
 - Expected length issue in "Read Binary" card command.
+- Set payload capacity to 235 for cards revision 3 having the following startup information pattern: `xx 3C xx xx xx 10 xx`
+- Set payload capacity to 128 for cards revision 1 & 2.
+- Fix postponed data issue for increase/decrease counter commands for cards revision 1 & 2 having the following startup 
+  information pattern:
+  - `06 xx 01 03 xx xx xx`
+  - `06 0a 01 02 xx xx xx`
+  - `xx xx 0x xx 15 xx xx`
+  - `xx xx 1x xx 15 xx xx`
+  
 ### Changed
 - Enable binary commands with `PRIME_REVISION_2` cards.
 ### Upgraded
