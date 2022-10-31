@@ -73,7 +73,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    * @param length The number of bytes to read.
    * @since 2.1.0
    */
-  CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte length) {
+  CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, int length) {
 
     super(CalypsoCardCommand.READ_BINARY, length, calypsoCard);
 
@@ -95,7 +95,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
                 p1,
                 lsb,
                 null,
-                length)));
+                (byte) length)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI:%02Xh, OFFSET:%d, LENGTH:%d", sfi, offset, length);

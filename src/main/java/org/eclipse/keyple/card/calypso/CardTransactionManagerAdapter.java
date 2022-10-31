@@ -1875,7 +1875,7 @@ final class CardTransactionManagerAdapter
 
     if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, (byte) 1));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
     }
 
     final int payloadCapacity = card.getPayloadCapacity();
@@ -1886,7 +1886,7 @@ final class CardTransactionManagerAdapter
     do {
       currentLength = Math.min(nbBytesRemainingToRead, payloadCapacity);
 
-      cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, (byte) currentLength));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, currentLength));
 
       currentOffset += currentLength;
       nbBytesRemainingToRead -= currentLength;
@@ -2074,7 +2074,7 @@ final class CardTransactionManagerAdapter
 
     if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, (byte) 1));
+      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
     }
 
     final int dataLength = data.length;
