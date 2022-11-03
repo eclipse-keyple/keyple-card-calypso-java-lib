@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -110,8 +111,7 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
 
     // TraceOffset (optional): Bit offset in MessageIn of the SAM traceability data.
     if (data.isSamTraceabilityMode()) {
-      dataIn[4] = (byte) (data.getTraceabilityOffset() >> 8);
-      dataIn[5] = (byte) data.getTraceabilityOffset();
+      ByteArrayUtil.copyBytes(data.getTraceabilityOffset(), dataIn, 4, 2);
     }
 
     // MessageIn: Message to sign.

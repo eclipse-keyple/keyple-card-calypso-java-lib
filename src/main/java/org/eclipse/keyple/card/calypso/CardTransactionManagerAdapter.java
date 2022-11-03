@@ -710,12 +710,7 @@ final class CardTransactionManagerAdapter
       boolean isDecreaseCommand, int currentCounterValue, int incDecValue) {
     int newValue =
         isDecreaseCommand ? currentCounterValue - incDecValue : currentCounterValue + incDecValue;
-    // response = NNNNNN9000
-    byte[] data = new byte[3];
-    data[0] = (byte) ((newValue & 0x00FF0000) >> 16);
-    data[1] = (byte) ((newValue & 0x0000FF00) >> 8);
-    data[2] = (byte) (newValue & 0x000000FF);
-    return data;
+    return ByteArrayUtil.extractBytes(newValue, 3);
   }
 
   /**
@@ -760,9 +755,7 @@ final class CardTransactionManagerAdapter
       } else {
         newCounterValue = counterNumberToCurrentValueMap.get(entry.getKey()) + entry.getValue();
       }
-      response[index + 1] = (byte) ((newCounterValue & 0x00FF0000) >> 16);
-      response[index + 2] = (byte) ((newCounterValue & 0x0000FF00) >> 8);
-      response[index + 3] = (byte) (newCounterValue & 0x000000FF);
+      ByteArrayUtil.copyBytes(newCounterValue, response, index + 1, 3);
       index += 4;
     }
     response[index] = (byte) 0x90;
@@ -2625,8 +2618,7 @@ final class CardTransactionManagerAdapter
     /** Constructor */
     public ApduResponseAdapter(byte[] apdu) {
       this.apdu = apdu;
-      statusWord =
-          ((apdu[apdu.length - 2] & 0x000000FF) << 8) + (apdu[apdu.length - 1] & 0x000000FF);
+      statusWord = ByteArrayUtil.extractInt(apdu, apdu.length - 2, 2, false);
     }
 
     /** {@inheritDoc} */

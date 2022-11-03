@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `06 0a 01 02 xx xx xx`
   - `xx xx 0x xx 15 xx xx`
   - `xx xx 1x xx 15 xx xx`
+### Upgraded
+- "Keyple Util Library" to version `2.3.0`.
   
 ### Changed
 - Enable binary commands with `PRIME_REVISION_2` cards.
