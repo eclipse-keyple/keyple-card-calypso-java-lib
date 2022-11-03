@@ -16,6 +16,7 @@ import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -186,7 +187,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
         throw new IllegalStateException("Unexpected EF type");
     }
     return FileHeaderAdapter.builder()
-        .lid((short) (efDescriptorByteArray[0] << 8 | efDescriptorByteArray[1] & 0xFF))
+        .lid(ByteArrayUtil.extractShort(efDescriptorByteArray, 0))
         .type(efType)
         .recordSize(efDescriptorByteArray[4])
         .recordsNumber(efDescriptorByteArray[5])

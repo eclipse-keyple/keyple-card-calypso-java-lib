@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -136,9 +137,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
     dataIn[3] = free[0];
     dataIn[4] = calypsoCard.getSvKvc();
     dataIn[5] = free[1];
-    dataIn[6] = (byte) ((amount >> 16) & 0xFF);
-    dataIn[7] = (byte) ((amount >> 8) & 0xFF);
-    dataIn[8] = (byte) (amount & 0xFF);
+    ByteArrayUtil.copyBytes(amount, dataIn, 6, 3);
     dataIn[9] = time[0];
     dataIn[10] = time[1];
     // dataIn[11]..dataIn[11+7+sigLen] will be filled in at the finalization phase.

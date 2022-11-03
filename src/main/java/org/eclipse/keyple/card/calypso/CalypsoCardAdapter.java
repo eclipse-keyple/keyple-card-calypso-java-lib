@@ -17,6 +17,7 @@ import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.SmartCardSpi;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
@@ -284,23 +285,13 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     applyPatchIfNeeded();
   }
 
-  private long convertStartupInfoToLong() {
-    long startupInfoLong = 0L;
-    int nbBytes = startupInfo.length;
-    int offset = 0;
-    while (nbBytes > 0) {
-      startupInfoLong |= ((long) (startupInfo[offset++] & 0xFF) << (8 * (--nbBytes)));
-    }
-    return startupInfoLong;
-  }
-
   /**
    * (private)<br>
    * Some cards have specific features that need to be taken into account. This method identifies
    * them and applies the necessary modifications.
    */
   private void applyPatchIfNeeded() {
-    long startupInfoLong = convertStartupInfoToLong();
+    long startupInfoLong = ByteArrayUtil.extractLong(startupInfo, 0, startupInfo.length, false);
     if (productType == ProductType.PRIME_REVISION_3) {
       applyPatchIfNeededForRevision(patchesRev3, startupInfoLong);
     } else if (productType == ProductType.PRIME_REVISION_2

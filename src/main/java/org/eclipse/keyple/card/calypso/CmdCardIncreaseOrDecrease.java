@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,10 +113,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
 
     // convert the integer value into a 3-byte buffer
     // CL-COUN-DATAIN.1
-    byte[] valueBuffer = new byte[3];
-    valueBuffer[0] = (byte) ((incDecValue >> 16) & 0xFF);
-    valueBuffer[1] = (byte) ((incDecValue >> 8) & 0xFF);
-    valueBuffer[2] = (byte) (incDecValue & 0xFF);
+    byte[] valueBuffer = ByteArrayUtil.extractBytes(incDecValue, 3);
 
     byte p2 = (byte) (sfi * 8);
 

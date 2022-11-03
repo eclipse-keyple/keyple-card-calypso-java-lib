@@ -47,6 +47,7 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.BerTlvUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,10 +204,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
       p1 = (byte) 0x09;
     }
 
-    byte[] dataIn =
-        new byte[] {
-          (byte) ((lid >> 8) & 0xFF), (byte) (lid & 0xFF),
-        };
+    byte[] dataIn = ByteArrayUtil.extractBytes(lid, 2);
 
     setApduRequest(
         new ApduRequestAdapter(
@@ -325,10 +323,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
             ? SEL_LID_OFFSET_REV2
             : SEL_LID_OFFSET;
 
-    short lid =
-        (short)
-            (((proprietaryInformation[lidOffset] << 8) & 0xff00)
-                | (proprietaryInformation[lidOffset + 1] & 0x00ff));
+    short lid = ByteArrayUtil.extractShort(proprietaryInformation, lidOffset);
 
     return DirectoryHeaderAdapter.builder()
         .lid(lid)
@@ -362,9 +357,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
     int recordSize;
     int recordsNumber;
     if (fileType == ElementaryFile.Type.BINARY) {
-      recordSize =
-          ((proprietaryInformation[SEL_REC_SIZE_OFFSET] << 8) & 0x0000ff00)
-              | (proprietaryInformation[SEL_NUM_REC_OFFSET] & 0x000000ff);
+      recordSize = ByteArrayUtil.extractInt(proprietaryInformation, SEL_REC_SIZE_OFFSET, 2, false);
       recordsNumber = 1;
     } else {
       recordSize = proprietaryInformation[SEL_REC_SIZE_OFFSET];
@@ -379,20 +372,14 @@ final class CmdCardSelectFile extends AbstractCardCommand {
 
     byte dfStatus = proprietaryInformation[SEL_DF_STATUS_OFFSET];
 
-    short sharedReference =
-        (short)
-            (((proprietaryInformation[SEL_DATA_REF_OFFSET] << 8) & 0xff00)
-                | (proprietaryInformation[SEL_DATA_REF_OFFSET + 1] & 0x00ff));
+    short sharedReference = ByteArrayUtil.extractShort(proprietaryInformation, SEL_DATA_REF_OFFSET);
 
     int lidOffset =
         calypsoCard.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2
             ? SEL_LID_OFFSET_REV2
             : SEL_LID_OFFSET;
 
-    short lid =
-        (short)
-            (((proprietaryInformation[lidOffset] << 8) & 0xff00)
-                | (proprietaryInformation[lidOffset + 1] & 0x00ff));
+    short lid = ByteArrayUtil.extractShort(proprietaryInformation, lidOffset);
 
     return FileHeaderAdapter.builder()
         .lid(lid)

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
  * (package-private)<br>
@@ -145,8 +146,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
     // dataIn[0] will be filled in at the finalization phase.
     short amountShort = isDebitCommand ? (short) -amount : (short) amount;
-    dataIn[1] = (byte) ((amountShort >> 8) & 0xFF);
-    dataIn[2] = (byte) (amountShort & 0xFF);
+    ByteArrayUtil.copyBytes(amountShort, dataIn, 1, 2);
     dataIn[3] = date[0];
     dataIn[4] = date[1];
     dataIn[5] = time[0];

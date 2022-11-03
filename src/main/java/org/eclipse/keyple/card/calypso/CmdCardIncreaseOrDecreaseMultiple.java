@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import java.util.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,9 +108,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
     for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
       dataIn[index] = entry.getKey().byteValue();
       Integer incDecValue = entry.getValue();
-      dataIn[index + 1] = (byte) ((incDecValue >> 16) & 0xFF);
-      dataIn[index + 2] = (byte) ((incDecValue >> 8) & 0xFF);
-      dataIn[index + 3] = (byte) (incDecValue & 0xFF);
+      ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
       index += 4;
     }
     setApduRequest(
