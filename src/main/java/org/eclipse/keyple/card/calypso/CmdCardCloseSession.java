@@ -153,7 +153,7 @@ final class CmdCardCloseSession extends AbstractCardCommand {
         postponedData.add(data);
         i += responseData[i];
       }
-      signatureLo = Arrays.copyOfRange(responseData, i, signatureLength);
+      signatureLo = Arrays.copyOfRange(responseData, i, responseData.length);
     } else {
       // session abort case
       signatureLo = new byte[0];
