@@ -1,5 +1,6 @@
 | Version | Documents |
 |:---:|---|
+| 2.2.6-SNAPSHOT | [API documentation](2.2.6-SNAPSHOT)<br>[API class diagram](2.2.6-SNAPSHOT/api_class_diagram.svg) |
 | 2.2.5 | [API documentation](2.2.5)<br>[API class diagram](2.2.5/api_class_diagram.svg) |
 | 2.2.4 | [API documentation](2.2.4)<br>[API class diagram](2.2.4/api_class_diagram.svg) |
 | 2.2.3 | [API documentation](2.2.3)<br>[API class diagram](2.2.3/api_class_diagram.svg) |
