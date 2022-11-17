@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.2.4] - 2022-10-17
 ### Fixed
 - Take card revision into account when parsing the FCP structure (issue [#83]).
 - Generate multiple increase/decrease counter commands when the card does not support Increase/DecreaseMultiple
@@ -15,16 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix postponed data issue for increase/decrease counter commands for cards revision 1 & 2 having the following startup 
   information pattern:
   - `06 xx 01 03 xx xx xx`
-  - `06 0a 01 02 xx xx xx`
+  - `06 0A 01 02 xx xx xx`
   - `xx xx 0x xx 15 xx xx`
   - `xx xx 1x xx 15 xx xx`
-### Upgraded
-- "Keyple Util Library" to version `2.3.0`.
-  
 ### Changed
 - Enable binary commands with `PRIME_REVISION_2` cards.
 ### Upgraded
 - "Calypsonet Terminal Calypso API" to version `1.4.1`.
+- "Keyple Util Library" to version `2.3.0`.
 
 ## [2.2.3] - 2022-10-27
 ### Added
