@@ -438,7 +438,12 @@ final class CardControlSamTransactionManagerAdapter
         byte[] buffer = new byte[255];
         int i = 0;
         for (byte[] cardApdu : cardApdus) {
-          if (i + cardApdu.length > 254) {
+          /*
+           * The maximum buffer length of the "Digest Update Multiple" SAM command is set to 230
+           * bytes instead of the 254 theoretically allowed by the SAM in order to be compatible
+           * with certain unpredictable applications (e.g. 237 for the Hoplink application).
+           */
+          if (i + cardApdu.length > 230) {
             // Copy buffer to digestDataList and reset buffer
             digestDataList.add(Arrays.copyOf(buffer, i));
             i = 0;
