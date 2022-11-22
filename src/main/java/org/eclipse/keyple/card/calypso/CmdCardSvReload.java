@@ -156,23 +156,22 @@ final class CmdCardSvReload extends AbstractCardCommand {
    *
    * <p>5 or 10 byte signature (hi part)
    *
-   * @param reloadComplementaryData the sam id and the data out from the SvPrepareReload SAM
-   *     command.
+   * @param svCommandSecurityData the sam id and the data out from the SvPrepareReload SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(byte[] reloadComplementaryData) {
-    if ((isExtendedModeAllowed && reloadComplementaryData.length != 20)
-        || (!isExtendedModeAllowed && reloadComplementaryData.length != 15)) {
-      throw new IllegalArgumentException("Bad SV prepare load data length.");
-    }
+  void finalizeCommand(SvCommandSecurityData svCommandSecurityData) {
 
-    byte p1 = reloadComplementaryData[4];
-    byte p2 = reloadComplementaryData[5];
-
-    dataIn[0] = reloadComplementaryData[6];
-    System.arraycopy(reloadComplementaryData, 0, dataIn, 11, 4);
-    System.arraycopy(reloadComplementaryData, 7, dataIn, 15, 3);
-    System.arraycopy(reloadComplementaryData, 10, dataIn, 18, reloadComplementaryData.length - 10);
+    byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
+    byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
+    dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
+    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 11, 4);
+    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 7, dataIn, 15, 3);
+    System.arraycopy(
+        svCommandSecurityData.getTerminalSvMac(),
+        10,
+        dataIn,
+        18,
+        svCommandSecurityData.getTerminalSvMac().length - 10);
 
     setApduRequest(
         new ApduRequestAdapter(

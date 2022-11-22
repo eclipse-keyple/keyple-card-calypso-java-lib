@@ -168,27 +168,22 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    *
    * <p>5 or 10 byte signature (hi part)
    *
-   * @param debitOrUndebitComplementaryData the data out from the SvPrepareDebit SAM command.
+   * @param svCommandSecurityData the data out from the SvPrepareDebit SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(byte[] debitOrUndebitComplementaryData) {
-    if ((isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 20)
-        || (!isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 15)) {
-      throw new IllegalArgumentException("Bad SV prepare load data length.");
-    }
+  void finalizeCommand(SvCommandSecurityData svCommandSecurityData) {
 
-    byte p1 = debitOrUndebitComplementaryData[4];
-    byte p2 = debitOrUndebitComplementaryData[5];
-
-    dataIn[0] = debitOrUndebitComplementaryData[6];
-    System.arraycopy(debitOrUndebitComplementaryData, 0, dataIn, 8, 4);
-    System.arraycopy(debitOrUndebitComplementaryData, 7, dataIn, 12, 3);
+    byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
+    byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
+    dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
+    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 11, 4);
+    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 7, dataIn, 15, 3);
     System.arraycopy(
-        debitOrUndebitComplementaryData,
+        svCommandSecurityData.getTerminalSvMac(),
         10,
         dataIn,
-        15,
-        debitOrUndebitComplementaryData.length - 10);
+        18,
+        svCommandSecurityData.getTerminalSvMac().length - 10);
 
     setApduRequest(
         new ApduRequestAdapter(

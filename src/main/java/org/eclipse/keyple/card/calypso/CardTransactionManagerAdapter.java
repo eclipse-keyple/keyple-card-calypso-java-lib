@@ -100,7 +100,6 @@ final class CardTransactionManagerAdapter
   private final ProxyReaderApi cardReader;
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting;
-  private final CardControlSamTransactionManagerAdapter controlSamTransactionManager;
   private final SymmetricCryptoServiceAdapter symmetricCryptoService;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
   private final int cardPayloadCapacity;
@@ -170,7 +169,6 @@ final class CardTransactionManagerAdapter
               getTransactionAuditData());
     } else {
       // Non-secure operations mode
-      this.controlSamTransactionManager = null;
       this.symmetricCryptoService = null;
     }
 
@@ -215,9 +213,65 @@ final class CardTransactionManagerAdapter
    *
    * @throws IllegalStateException If control SAM is not set.
    */
-  private void checkControlSam() {
-    if (controlSamTransactionManager == null) {
-      throw new IllegalStateException("Control SAM is not set.");
+  private void checkSymmetricCryptoService() {
+    if (symmetricCryptoService == null) {
+      throw new IllegalStateException("Crypto service is not set.");
+    }
+  }
+
+  /**
+   * (private)<br>
+   * Returns the KVC to use according to the provided write access and the card's KVC.
+   *
+   * @param writeAccessLevel The write access level.
+   * @param kvc The card KVC value.
+   * @return Null if the card did not provide a KVC value and if there's no default KVC value.
+   * @since 2.2.0
+   */
+  private Byte computeKvc(WriteAccessLevel writeAccessLevel, Byte kvc) {
+    if (kvc != null) {
+      return kvc;
+    }
+    return securitySetting.getDefaultKvc(writeAccessLevel);
+  }
+
+  /**
+   * (private)<br>
+   * Returns the KIF to use according to the provided write access level and KVC.
+   *
+   * @param writeAccessLevel The write access level.
+   * @param kif The card KIF value.
+   * @param kvc The previously computed KVC value.
+   * @return Null if the card did not provide a KIF value and if there's no default KIF value.
+   * @since 2.2.0
+   */
+  private Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
+    // CL-KEY-KIF.1
+    if ((kif != null && kif != (byte) 0xFF) || (kvc == null)) {
+      return kif;
+    }
+    // CL-KEY-KIFUNK.1
+    Byte result = securitySetting.getKif(writeAccessLevel, kvc);
+    if (result == null) {
+      result = securitySetting.getDefaultKif(writeAccessLevel);
+    }
+    return result;
+  }
+
+  /**
+   * (private)<br>
+   * Provides data to be processed by the symmetric key crypto service to prepare the computation of
+   * the secure session MAC.
+   *
+   * @param apduRequests A list of APDU commands.
+   * @param apduResponses A list of APDU responses.
+   * @param startIndex The index from which to start in the provided lists.
+   */
+  private void updateTerminalSessionMac(
+      List<ApduRequestSpi> apduRequests, List<ApduResponseApi> apduResponses, int startIndex) {
+    for (int i = startIndex; i < apduRequests.size(); i++) {
+      symmetricCryptoService.updateTerminalSessionMac(apduRequests.get(i).getApdu());
+      symmetricCryptoService.updateTerminalSessionMac(apduResponses.get(i).getApdu());
     }
   }
 
@@ -226,8 +280,8 @@ final class CardTransactionManagerAdapter
    * Process any prepared SAM commands if control SAM is set.
    */
   private void processSamPreparedCommands() {
-    if (controlSamTransactionManager != null) {
-      controlSamTransactionManager.processCommands();
+    if (symmetricCryptoService != null) {
+      symmetricCryptoService.processCommands();
     }
   }
 
@@ -270,8 +324,8 @@ final class CardTransactionManagerAdapter
       }
     }
 
-    // Compute the SAM challenge and process all pending SAM commands
-    byte[] samChallenge = processSamGetChallenge();
+    // initialize the crypto service for a new secure session and retrieve the terminal challenge
+    byte[] samChallenge = symmetricCryptoService.initTerminalSecureSessionContext();
 
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
@@ -330,8 +384,8 @@ final class CardTransactionManagerAdapter
           cardKvc != null ? String.format(PATTERN_1_BYTE_HEX, cardKvc) : null);
     }
 
-    Byte kvc = controlSamTransactionManager.computeKvc(writeAccessLevel, cardKvc);
-    Byte kif = controlSamTransactionManager.computeKif(writeAccessLevel, cardKif, kvc);
+    Byte kvc = computeKvc(writeAccessLevel, cardKvc);
+    Byte kif = computeKif(writeAccessLevel, cardKif, kvc);
 
     if (!securitySetting.isSessionKeyAuthorized(kif, kvc)) {
       throw new UnauthorizedKeyException(
@@ -342,14 +396,13 @@ final class CardTransactionManagerAdapter
               getTransactionAuditDataAsString()));
     }
 
-    // Initialize a new SAM session.
-    controlSamTransactionManager.initializeSession(
-        apduResponses.get(0).getDataOut(), kif, kvc, false, false);
+    // Initialize a new secure session.
+    symmetricCryptoService.initTerminalSessionMac(apduResponses.get(0).getDataOut(), kif, kvc);
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
     // we skip it and start the loop at index 1.
-    controlSamTransactionManager.updateSession(apduRequests, apduResponses, 1);
+    updateTerminalSessionMac(apduRequests, apduResponses, 1);
   }
 
   /**
@@ -418,7 +471,7 @@ final class CardTransactionManagerAdapter
     // If this method is invoked within a secure session, then add all commands data to the digest
     // computation.
     if (isSessionOpen) {
-      controlSamTransactionManager.updateSession(apduRequests, apduResponses, 0);
+      updateTerminalSessionMac(apduRequests, apduResponses, 0);
     }
   }
 
@@ -569,11 +622,11 @@ final class CardTransactionManagerAdapter
     List<ApduResponseApi> expectedApduResponses = buildAnticipatedResponses(cardCommands);
 
     // Add all commands data to the digest computation.
-    controlSamTransactionManager.updateSession(apduRequests, expectedApduResponses, 0);
+    updateTerminalSessionMac(apduRequests, expectedApduResponses, 0);
 
     // All SAM digest operations will now run at once.
     // Get Terminal Signature from the latest response.
-    byte[] sessionTerminalSignature = processSamSessionClosing();
+    byte[] sessionTerminalSignature = symmetricCryptoService.finalizeTerminalSessionMac();
 
     // Build the last "Close Secure Session" card command.
     CmdCardCloseSession cmdCardCloseSession =
@@ -664,13 +717,25 @@ final class CardTransactionManagerAdapter
 
     // Check the card signature
     // CL-CSS-MACVERIF.1
-    processSamDigestAuthenticate(cmdCardCloseSession.getSignatureLo());
-
+    try {
+      symmetricCryptoService.verifyCardSessionMac(cmdCardCloseSession.getSignatureLo());
+    } catch (ReaderIOException e) {
+      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
+    } catch (SamIOException e) {
+      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
+    }
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
     // CL-SV-POSTPON.1
     if (isSvOperationCompleteOneTime()) {
-      processSamSvCheck(cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex));
+      try {
+        symmetricCryptoService.verifyCardSvMac(
+            cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex));
+      } catch (ReaderIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      } catch (SamIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      }
     }
   }
 
@@ -933,8 +998,13 @@ final class CardTransactionManagerAdapter
 
     // If an SV transaction was performed, we check the signature returned by the card here
     if (isSvOperationCompleteOneTime()) {
-      // Execute all prepared SAM commands and check SV status.
-      processSamSvCheck(card.getSvOperationSignature());
+      try {
+        symmetricCryptoService.verifyCardSvMac(card.getSvOperationSignature());
+      } catch (ReaderIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      } catch (SamIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      }
     } else {
       // Execute all prepared SAM commands.
       processSamPreparedCommands();
@@ -1008,8 +1078,8 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
-    checkControlSam();
-    controlSamTransactionManager.prepareComputeSignature(data);
+    checkSymmetricCryptoService();
+    symmetricCryptoService.prepareComputeSignature(data);
     return this;
   }
 
@@ -1020,8 +1090,8 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
-    checkControlSam();
-    controlSamTransactionManager.prepareVerifySignature(data);
+    checkSymmetricCryptoService();
+    symmetricCryptoService.prepareVerifySignature(data);
     return this;
   }
 
@@ -1190,8 +1260,13 @@ final class CardTransactionManagerAdapter
         // sets the flag indicating that the commands have been executed
         notifyCommandsProcessed();
 
-        // Get the encrypted PIN with the help of the SAM
-        byte[] cipheredPin = processSamCardCipherPin(pin, null);
+        // Get the encrypted PIN with the help of the symmetric key crypto service
+        byte[] cipheredPin =
+            symmetricCryptoService.cipherPinForPresentation(
+                card.getCardChallenge(),
+                pin,
+                securitySetting.getPinVerificationCipheringKif(),
+                securitySetting.getPinVerificationCipheringKvc());
 
         cardCommands.add(new CmdCardVerifyPin(card, true, cipheredPin));
       } else {
@@ -1211,22 +1286,6 @@ final class CardTransactionManagerAdapter
       abortSecureSessionSilently();
       throw e;
     }
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "Card Cipher PIN" command on the control SAM.
-   *
-   * @param currentPin The current PIN.
-   * @param newPin The new PIN, or null in case of a PIN presentation.
-   * @return The cipher PIN data from the SAM (ciphered PIN transmission or PIN change).
-   */
-  private byte[] processSamCardCipherPin(byte[] currentPin, byte[] newPin) {
-    controlSamTransactionManager.prepareGiveRandom();
-    CmdSamCardCipherPin cmdSamCardCipherPin =
-        controlSamTransactionManager.prepareCardCipherPin(currentPin, newPin);
-    controlSamTransactionManager.processCommands();
-    return cmdSamCardCipherPin.getCipheredData();
   }
 
   /**
@@ -1269,7 +1328,14 @@ final class CardTransactionManagerAdapter
 
         // Get the encrypted PIN with the help of the SAM
         byte[] currentPin = new byte[4]; // all zeros as required
-        byte[] newPinData = processSamCardCipherPin(currentPin, newPin);
+        // Get the encrypted PIN with the help of the symmetric key crypto service
+        byte[] newPinData =
+            symmetricCryptoService.cipherPinForModification(
+                card.getCardChallenge(),
+                currentPin,
+                newPin,
+                securitySetting.getPinVerificationCipheringKif(),
+                securitySetting.getPinVerificationCipheringKvc());
 
         cardCommands.add(new CmdCardChangePin(card, newPinData));
       }
@@ -1321,7 +1387,9 @@ final class CardTransactionManagerAdapter
     notifyCommandsProcessed();
 
     // Get the encrypted key with the help of the SAM
-    byte[] encryptedKey = processSamCardGenerateKey(issuerKif, issuerKvc, newKif, newKvc);
+    byte[] encryptedKey =
+        symmetricCryptoService.generateCardKey(
+            card.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
 
     cardCommands.add(new CmdCardChangeKey(card, (byte) keyIndex, encryptedKey));
 
@@ -1332,25 +1400,6 @@ final class CardTransactionManagerAdapter
     notifyCommandsProcessed();
 
     return this;
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "Card Generate Key" command on the control SAM.
-   *
-   * @param issuerKif The KIF of the key used for encryption.
-   * @param issuerKvc The KVC of the key used for encryption.
-   * @param newKif The KIF of the key to encrypt.
-   * @param newKvc The KVC of the key to encrypt.
-   * @return The value of the encrypted key.
-   */
-  private byte[] processSamCardGenerateKey(
-      byte issuerKif, byte issuerKvc, byte newKif, byte newKvc) {
-    controlSamTransactionManager.prepareGiveRandom();
-    CmdSamCardGenerateKey cmdSamCardGenerateKey =
-        controlSamTransactionManager.prepareCardGenerateKey(issuerKif, issuerKvc, newKif, newKvc);
-    controlSamTransactionManager.processCommands();
-    return cmdSamCardGenerateKey.getCipheredData();
   }
 
   /**
@@ -1400,193 +1449,33 @@ final class CardTransactionManagerAdapter
       return;
     }
 
-    byte[] svComplementaryData;
+    SvCommandSecurityData svCommandSecurityData = new SvCommandSecurityDataAdapter();
+    svCommandSecurityData.setSvGetRequest(card.getSvGetHeader());
+    svCommandSecurityData.setSvGetResponse(card.getSvGetData());
 
     if (svLastModifyingCommand.getCommandRef() == CalypsoCardCommand.SV_RELOAD) {
 
       // SV RELOAD: get the security data from the SAM
       CmdCardSvReload svCommand = (CmdCardSvReload) svLastModifyingCommand;
 
-      svComplementaryData =
-          processSamSvPrepareLoad(card.getSvGetHeader(), card.getSvGetData(), svCommand);
+      svCommandSecurityData.setSvCommandRequest(svCommand.getApduRequest().getApdu());
+
+      symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
 
       // finalize the SV command with the data provided by the SAM
-      svCommand.finalizeCommand(svComplementaryData);
+      svCommand.finalizeCommand(svCommandSecurityData);
 
     } else {
 
       // SV DEBIT/UNDEBIT: get the security data from the SAM
       CmdCardSvDebitOrUndebit svCommand = (CmdCardSvDebitOrUndebit) svLastModifyingCommand;
 
-      svComplementaryData =
-          processSamSvPrepareDebitOrUndebit(
-              svCommand.getCommandRef() == CalypsoCardCommand.SV_DEBIT,
-              card.getSvGetHeader(),
-              card.getSvGetData(),
-              svCommand);
+      svCommandSecurityData.setSvCommandRequest(svCommand.getApduRequest().getApdu());
+
+      symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
 
       // finalize the SV command with the data provided by the SAM
-      svCommand.finalizeCommand(svComplementaryData);
-    }
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "SV Prepare Load" command on the control SAM.
-   *
-   * <p>Computes the cryptographic data required for the SvReload command.
-   *
-   * <p>Use the data from the SvGet command and the partial data from the SvReload command for this
-   * purpose.
-   *
-   * <p>The returned data will be used to finalize the card SvReload command.
-   *
-   * @param svGetHeader the SV Get command header.
-   * @param svGetData the SV Get command response data.
-   * @param cmdCardSvReload the SvDebit command providing the SvReload partial data.
-   * @return The complementary security data to finalize the SvReload card command (sam ID + SV
-   *     prepare load output)
-   */
-  private byte[] processSamSvPrepareLoad(
-      byte[] svGetHeader, byte[] svGetData, CmdCardSvReload cmdCardSvReload) {
-    CmdSamSvPrepareLoad cmdSamSvPrepareLoad =
-        controlSamTransactionManager.prepareSvPrepareLoad(svGetHeader, svGetData, cmdCardSvReload);
-    controlSamTransactionManager.processCommands();
-    byte[] prepareOperationData = cmdSamSvPrepareLoad.getApduResponse().getDataOut();
-    return computeOperationComplementaryData(prepareOperationData);
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "SV Prepare Debit/Undebit" command on the control SAM.
-   *
-   * <p>Computes the cryptographic data required for the SvDebit or SvUndebit command.
-   *
-   * <p>Use the data from the SvGet command and the partial data from the SvDebit command for this
-   * purpose.
-   *
-   * <p>The returned data will be used to finalize the card SvDebit command.
-   *
-   * @param isDebitCommand True if the command is a DEBIT, false for UNDEBIT.
-   * @param svGetHeader the SV Get command header.
-   * @param svGetData the SV Get command response data.
-   * @param cmdCardSvDebitOrUndebit The SvDebit or SvUndebit command providing the partial data.
-   * @return The complementary security data to finalize the SvDebit/SvUndebit card command (sam ID
-   *     + SV prepare debit/debit output)
-   */
-  private byte[] processSamSvPrepareDebitOrUndebit(
-      boolean isDebitCommand,
-      byte[] svGetHeader,
-      byte[] svGetData,
-      CmdCardSvDebitOrUndebit cmdCardSvDebitOrUndebit) {
-    CmdSamSvPrepareDebitOrUndebit cmdSamSvPrepareDebitOrUndebit =
-        controlSamTransactionManager.prepareSvPrepareDebitOrUndebit(
-            isDebitCommand, svGetHeader, svGetData, cmdCardSvDebitOrUndebit);
-    controlSamTransactionManager.processCommands();
-    byte[] prepareOperationData = cmdSamSvPrepareDebitOrUndebit.getApduResponse().getDataOut();
-    return computeOperationComplementaryData(prepareOperationData);
-  }
-
-  /**
-   * (private)<br>
-   * Generic method to get the complementary data from SvPrepareLoad/Debit/Undebit commands
-   *
-   * <p>This data comprises:
-   *
-   * <ul>
-   *   <li>The SAM identifier (4 bytes)
-   *   <li>The SAM challenge (3 bytes)
-   *   <li>The SAM transaction number (3 bytes)
-   *   <li>The SAM part of the SV signature (5 or 10 bytes depending on card mode)
-   * </ul>
-   *
-   * @param prepareOperationData the prepare operation output data.
-   * @return a byte array containing the complementary data
-   */
-  private byte[] computeOperationComplementaryData(byte[] prepareOperationData) {
-
-    byte[] samSerialNumber = securitySetting.getControlSam().getSerialNumber();
-    byte[] operationComplementaryData =
-        new byte[samSerialNumber.length + prepareOperationData.length];
-
-    System.arraycopy(samSerialNumber, 0, operationComplementaryData, 0, samSerialNumber.length);
-    System.arraycopy(
-        prepareOperationData,
-        0,
-        operationComplementaryData,
-        samSerialNumber.length,
-        prepareOperationData.length);
-
-    return operationComplementaryData;
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "SV Prepare Debit/Undebit" command on the control SAM.
-   *
-   * <p>Checks the status of the last SV operation.
-   *
-   * <p>The card signature is compared by the SAM with the one it has computed on its side.
-   *
-   * @param svOperationData The data of the SV operation performed.
-   */
-  private void processSamSvCheck(byte[] svOperationData) {
-    controlSamTransactionManager.prepareSvCheck(svOperationData);
-    try {
-      controlSamTransactionManager.processCommands();
-    } catch (ReaderIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
-    } catch (SamIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
-    }
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "Get Challenge" command on the control SAM.
-   *
-   * @return The SAM challenge.
-   */
-  private byte[] processSamGetChallenge() {
-    CmdSamGetChallenge cmdSamGetChallenge = controlSamTransactionManager.prepareGetChallenge();
-    controlSamTransactionManager.processCommands();
-    byte[] samChallenge = cmdSamGetChallenge.getChallenge();
-    if (logger.isDebugEnabled()) {
-      logger.debug("SAM_CHALLENGE={}", HexUtil.toHex(samChallenge));
-    }
-    return samChallenge;
-  }
-
-  /**
-   * (private)<br>
-   * Processes the pending session command including the "Digest Close" command on the control SAM.
-   *
-   * @return The terminal signature from the SAM
-   */
-  private byte[] processSamSessionClosing() {
-    CmdSamDigestClose cmdSamDigestClose = controlSamTransactionManager.prepareSessionClosing();
-    controlSamTransactionManager.processCommands();
-    byte[] terminalSignature = cmdSamDigestClose.getSignature();
-    if (logger.isDebugEnabled()) {
-      logger.debug("SAM_SIGNATURE={}", HexUtil.toHex(terminalSignature));
-    }
-    return terminalSignature;
-  }
-
-  /**
-   * (private)<br>
-   * Processes the "Digest Authenticate" command on the control SAM.
-   *
-   * @param cardSignature The card signature to check.
-   */
-  private void processSamDigestAuthenticate(byte[] cardSignature) {
-    controlSamTransactionManager.prepareDigestAuthenticate(cardSignature);
-    try {
-      controlSamTransactionManager.processCommands();
-    } catch (ReaderIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
-    } catch (SamIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
+      svCommand.finalizeCommand(svCommandSecurityData);
     }
   }
 

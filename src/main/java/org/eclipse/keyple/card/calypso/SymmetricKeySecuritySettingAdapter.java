@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.spi.SamRevocationServiceSpi;
 import org.eclipse.keyple.core.util.Assert;
 
 class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting {
@@ -48,6 +49,7 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
   private Byte pinVerificationCipheringKvc;
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
+  private SamRevocationServiceSpi samRevocationServiceSpi;
 
   @Override
   public SymmetricKeySecuritySetting enableMultipleSession() {
@@ -148,6 +150,10 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
     this.pinModificationCipheringKif = kif;
     this.pinModificationCipheringKvc = kvc;
     return this;
+  }
+
+  void setSamRevocationServiceSpi(SamRevocationServiceSpi samRevocationServiceSpi) {
+    this.samRevocationServiceSpi = samRevocationServiceSpi;
   }
 
   /**
@@ -343,5 +349,16 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
 
   boolean isRegularModeRequired() {
     return isRegularModeRequired;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the SAM revocation service.
+   *
+   * @return Null if no SAM revocation service is set.
+   * @since 2.2.0
+   */
+  final SamRevocationServiceSpi getSamRevocationServiceSpi() {
+    return samRevocationServiceSpi;
   }
 }
