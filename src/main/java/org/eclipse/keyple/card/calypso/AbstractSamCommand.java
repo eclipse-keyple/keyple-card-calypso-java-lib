@@ -23,7 +23,6 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 abstract class AbstractSamCommand {
 
-
   /**
    * (package-private)<br>
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
@@ -36,11 +35,11 @@ abstract class AbstractSamCommand {
   static {
     HashMap<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>();
     m.put(
-            0x6D00,
-            new StatusProperties("Instruction unknown.", CalypsoSamIllegalParameterException.class));
+        0x6D00,
+        new StatusProperties("Instruction unknown.", CalypsoSamIllegalParameterException.class));
     m.put(
-            0x6E00,
-            new StatusProperties("Class not supported.", CalypsoSamIllegalParameterException.class));
+        0x6E00,
+        new StatusProperties("Class not supported.", CalypsoSamIllegalParameterException.class));
     m.put(0x9000, new StatusProperties("Success"));
     STATUS_TABLE = m;
   }
@@ -91,7 +90,7 @@ abstract class AbstractSamCommand {
    * @return A not null reference.
    * @since 2.0.1
    */
-  CardCommand getCommandRef() {
+  CalypsoSamCommand getCommandRef() {
     return commandRef;
   }
 
@@ -145,8 +144,8 @@ abstract class AbstractSamCommand {
    * Parses the response {@link ApduResponseApi} and checks the status word.
    *
    * @param apduResponse The APDU response.
-   * @throws CalypsoSamCommandException if status is not successful or if the length of the
-   *     response is not equal to the LE field in the request.
+   * @throws CalypsoSamCommandException if status is not successful or if the length of the response
+   *     is not equal to the LE field in the request.
    * @since 2.0.1
    */
   void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
@@ -161,7 +160,7 @@ abstract class AbstractSamCommand {
    * @since 2.2.3
    */
   void parseApduResponse(ApduResponseApi apduResponse, CalypsoSamAdapter calypsoSam)
-          throws CalypsoSamCommandException {
+      throws CalypsoSamCommandException {
     this.calypsoSam = calypsoSam;
     parseApduResponse(apduResponse);
   }
@@ -198,8 +197,7 @@ abstract class AbstractSamCommand {
    * @since 2.0.1
    */
   CalypsoSamCommandException buildCommandException(
-          Class<? extends CalypsoSamCommandException> exceptionClass, String message) {
-
+      Class<? extends CalypsoSamCommandException> exceptionClass, String message) {
     CalypsoSamCommandException e;
     CalypsoSamCommand command = commandRef;
     Integer statusWord = getApduResponse().getStatusWord();
@@ -231,9 +229,9 @@ abstract class AbstractSamCommand {
    * @return A not null reference.
    * @since 2.1.1
    */
-  CalypsoSamCommandException buildUnexpectedResponseLengthException(String message){
+  CalypsoSamCommandException buildUnexpectedResponseLengthException(String message) {
     return new CalypsoSamUnexpectedResponseLengthException(
-            message, commandRef, getApduResponse().getStatusWord());
+        message, commandRef, getApduResponse().getStatusWord());
   }
 
   /**
@@ -257,8 +255,8 @@ abstract class AbstractSamCommand {
   final boolean isSuccessful() {
     StatusProperties props = getStatusWordProperties();
     return props != null
-            && props.isSuccessful()
-            && (le == 0 || apduResponse.getDataOut().length == le); // CL-CSS-RESPLE.1
+        && props.isSuccessful()
+        && (le == 0 || apduResponse.getDataOut().length == le); // CL-CSS-RESPLE.1
   }
 
   /**
@@ -267,8 +265,8 @@ abstract class AbstractSamCommand {
    * the request.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
-   * @throws CalypsoSamCommandException if status is not successful or if the length of the
-   *     response is not equal to the LE field in the request.
+   * @throws CalypsoSamCommandException if status is not successful or if the length of the response
+   *     is not equal to the LE field in the request.
    */
   private void checkStatus() throws CalypsoSamCommandException {
 
@@ -277,9 +275,9 @@ abstract class AbstractSamCommand {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
       if (le != 0 && apduResponse.getDataOut().length != le) {
         throw buildUnexpectedResponseLengthException(
-                String.format(
-                        "Incorrect APDU response length (expected: %d, actual: %d)",
-                        le, apduResponse.getDataOut().length));
+            String.format(
+                "Incorrect APDU response length (expected: %d, actual: %d)",
+                le, apduResponse.getDataOut().length));
       }
       // SW and response length are correct.
       return;
@@ -288,7 +286,7 @@ abstract class AbstractSamCommand {
 
     // exception class
     Class<? extends CalypsoSamCommandException> exceptionClass =
-            props != null ? props.getExceptionClass() : null;
+        props != null ? props.getExceptionClass() : null;
 
     // message
     String message = props != null ? props.getInformation() : "Unknown status";
@@ -346,7 +344,7 @@ abstract class AbstractSamCommand {
      * @since 2.0.1
      */
     StatusProperties(
-            String information, Class<? extends CalypsoSamCommandException> exceptionClass) {
+        String information, Class<? extends CalypsoSamCommandException> exceptionClass) {
       this.information = information;
       this.successful = exceptionClass == null;
       this.exceptionClass = exceptionClass;
@@ -385,11 +383,4 @@ abstract class AbstractSamCommand {
       return exceptionClass;
     }
   }
-
-
-
-
-
-
-
 }

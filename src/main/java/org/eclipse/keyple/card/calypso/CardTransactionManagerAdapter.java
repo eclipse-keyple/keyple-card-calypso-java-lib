@@ -101,6 +101,7 @@ final class CardTransactionManagerAdapter
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting;
   private final CardControlSamTransactionManagerAdapter controlSamTransactionManager;
+  private final SymmetricCryptoServiceAdapter symmetricCryptoService;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
   private final int cardPayloadCapacity;
 
@@ -157,9 +158,20 @@ final class CardTransactionManagerAdapter
       this.controlSamTransactionManager =
           new CardControlSamTransactionManagerAdapter(
               card, securitySetting, samCapacity, getTransactionAuditData());
+      SymmetricKeySecuritySettingAdapter symmetricKeySecuritySetting =
+          new SymmetricKeySecuritySettingAdapter();
+      // TODO transférer le securitySetting dans le symmetric
+      this.symmetricCryptoService =
+          new SymmetricCryptoServiceAdapter(
+              securitySetting.getControlSamReader(),
+              securitySetting.getControlSam(),
+              symmetricKeySecuritySetting,
+              card.isExtendedModeSupported(),
+              getTransactionAuditData());
     } else {
       // Non-secure operations mode
       this.controlSamTransactionManager = null;
+      this.symmetricCryptoService = null;
     }
 
     this.modificationsCounter = card.getModificationsCounter();
@@ -2616,6 +2628,24 @@ final class CardTransactionManagerAdapter
     boolean flag = isSvOperationComplete;
     isSvOperationComplete = false;
     return flag;
+  }
+
+  /**
+   * (private)<br>
+   * Creates a list of {@link ApduRequestSpi} from a list of {@link AbstractCardCommand}.
+   *
+   * @param commands The list of commands.
+   * @return An empty list if there is no command.
+   * @since 2.2.0
+   */
+  private List<ApduRequestSpi> getApduRequests(List<AbstractCardCommand> commands) {
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+    if (commands != null) {
+      for (AbstractCardCommand command : commands) {
+        apduRequests.add(command.getApduRequest());
+      }
+    }
+    return apduRequests;
   }
 
   /**

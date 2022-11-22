@@ -319,6 +319,24 @@ abstract class CommonSamTransactionManagerAdapter
   }
 
   /**
+   * (private)<br>
+   * Creates a list of {@link ApduRequestSpi} from a list of {@link AbstractSamCommand}.
+   *
+   * @param commands The list of commands.
+   * @return An empty list if there is no command.
+   * @since 2.2.0
+   */
+  private List<ApduRequestSpi> getApduRequests(List<AbstractSamCommand> commands) {
+    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+    if (commands != null) {
+      for (AbstractSamCommand command : commands) {
+        apduRequests.add(command.getApduRequest());
+      }
+    }
+    return apduRequests;
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.2.0

@@ -11,10 +11,40 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.calypsonet.terminal.card.ProxyReaderApi;
+
 class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, SymmetricCryptoServiceSpi {
 
+  /* Final fields */
+  private final ProxyReaderApi samReader;
+  private final CalypsoSamAdapter sam;
+  private final SymmetricKeySecuritySettingAdapter securitySetting;
+  private final boolean isCardSupportingExtendedMode;
+  private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
+
+  /* Dynamic fields */
+  private byte[] currentKeyDiversifier;
+  private final List<byte[]> transactionAuditData;
+
+  SymmetricCryptoServiceAdapter(
+      ProxyReaderApi samReader,
+      CalypsoSamAdapter sam,
+      SymmetricKeySecuritySettingAdapter symmetricKeySecuritySetting,
+      boolean isCardSupportingExtendedMode,
+      List<byte[]> transactionAuditData) {
+    this.samReader = samReader;
+    this.sam = sam;
+    this.securitySetting = symmetricKeySecuritySetting;
+    this.isCardSupportingExtendedMode = isCardSupportingExtendedMode;
+    this.transactionAuditData = transactionAuditData;
+  }
+
   @Override
-  public void setKeyDiversifier(byte[] keyDiversifier) {}
+  public void setKeyDiversifier(byte[] keyDiversifier) {
+    currentKeyDiversifier = keyDiversifier;
+  }
 
   @Override
   public byte[] initTerminalSecureSessionContext() {
