@@ -14,10 +14,14 @@ package org.eclipse.keyple.card.calypso;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.SamRevokedException;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.ProxyReaderApi;
+import org.calypsonet.terminal.card.spi.ApduRequestSpi;
+import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
@@ -36,9 +40,10 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
 
   /* Dynamic fields */
-  private byte[] keyDiversifier;
+  private byte[] defaultKeyDiversifier;
   private byte[] currentKeyDiversifier;
   private final List<byte[]> transactionAuditData;
+  private DigestManager digestManager;
 
   SymmetricCryptoServiceAdapter(
       ProxyReaderApi samReader,
@@ -54,12 +59,13 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   }
 
   @Override
-  public void setKeyDiversifier(byte[] keyDiversifier) {
-    this.keyDiversifier = keyDiversifier;
+  public void setDefaultKeyDiversifier(byte[] keyDiversifier) {
+    this.defaultKeyDiversifier = keyDiversifier;
   }
 
   @Override
   public byte[] initTerminalSecureSessionContext() {
+    prepareSelectDiversifierIfNeeded();
     return new byte[0];
   }
 
@@ -160,8 +166,8 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
    * @since 2.2.0
    */
   final void prepareSelectDiversifierIfNeeded() {
-    if (!Arrays.equals(currentKeyDiversifier, keyDiversifier)) {
-      currentKeyDiversifier = keyDiversifier;
+    if (!Arrays.equals(currentKeyDiversifier, defaultKeyDiversifier)) {
+      currentKeyDiversifier = defaultKeyDiversifier;
       prepareSelectDiversifier();
     }
   }
@@ -323,6 +329,158 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
     } else {
       throw new IllegalArgumentException(
           "The provided data must be an instance of 'CommonSignatureVerificationDataAdapter'");
+    }
+  }
+
+  /**
+   * (private)<br>
+   * The manager of the digest session.
+   */
+  private class DigestManager {
+
+    private final byte[] openSecureSessionDataOut;
+    private final byte sessionKif;
+    private final byte sessionKvc;
+    private final boolean isSessionEncrypted;
+    private final boolean isVerificationMode;
+    private final List<byte[]> cardApdus = new ArrayList<byte[]>();
+    private boolean isDigestInitDone;
+
+    /**
+     * (private)<br>
+     * Creates a new digest manager.
+     *
+     * @param openSecureSessionDataOut The data out of the "Open Secure Session" card command.
+     * @param kif The KIF to use.
+     * @param kvc The KVC to use.
+     * @param isSessionEncrypted True if the session is encrypted.
+     * @param isVerificationMode True if the verification mode is enabled.
+     */
+    private DigestManager(
+        byte[] openSecureSessionDataOut,
+        byte kif,
+        byte kvc,
+        boolean isSessionEncrypted,
+        boolean isVerificationMode) {
+      this.openSecureSessionDataOut = openSecureSessionDataOut;
+      this.sessionKif = kif;
+      this.sessionKvc = kvc;
+      this.isSessionEncrypted = isSessionEncrypted;
+      this.isVerificationMode = isVerificationMode;
+    }
+
+    /**
+     * (private)<br>
+     * Add one or more exchanged card APDUs to the buffer.
+     *
+     * @param requests The requests.
+     * @param responses The associated responses.
+     * @param startIndex The index of the request from which to start.
+     */
+    private void updateSession(
+        List<ApduRequestSpi> requests, List<ApduResponseApi> responses, int startIndex) {
+      for (int i = startIndex; i < requests.size(); i++) {
+        // If the request is of case4 type, LE must be excluded from the digest computation. In this
+        // case, we remove here the last byte of the command buffer.
+        // CL-C4-MAC.1
+        ApduRequestSpi request = requests.get(i);
+        cardApdus.add(
+            ApduUtil.isCase4(request.getApdu())
+                ? Arrays.copyOfRange(request.getApdu(), 0, request.getApdu().length - 1)
+                : request.getApdu());
+        ApduResponseApi response = responses.get(i);
+        cardApdus.add(response.getApdu());
+      }
+    }
+
+    /**
+     * (private)<br>
+     * Prepares all pending digest commands.
+     */
+    private void prepareCommands() {
+      // Prepare the "Digest Init" command if not already done.
+      if (!isDigestInitDone) {
+        prepareDigestInit();
+      }
+      // Prepare the "Digest Update" commands and flush the buffer.
+      prepareDigestUpdate();
+      cardApdus.clear();
+      // Prepare the "Digest Close" command.
+      prepareDigestClose();
+    }
+
+    /**
+     * (private)<br>
+     * Prepares the "Digest Init" SAM command.
+     */
+    private void prepareDigestInit() {
+      // CL-SAM-DINIT.1
+      samCommands.add(
+          new CmdSamDigestInit(
+              sam,
+              isVerificationMode,
+              isCardSupportingExtendedMode && !securitySetting.isRegularModeRequired(),
+              sessionKif,
+              sessionKvc,
+              openSecureSessionDataOut));
+      isDigestInitDone = true;
+    }
+
+    /**
+     * (private)<br>
+     * Prepares the "Digest Update" SAM command.
+     */
+    private void prepareDigestUpdate() {
+      if (cardApdus.isEmpty()) {
+        return;
+      }
+      // CL-SAM-DUPDATE.1
+      if (sam.getProductType() == CalypsoSam.ProductType.SAM_C1) {
+        // Digest Update Multiple
+        // Construct list of DataIn
+        List<byte[]> digestDataList = new ArrayList<byte[]>(1);
+        byte[] buffer = new byte[255];
+        int i = 0;
+        for (byte[] cardApdu : cardApdus) {
+          /*
+           * The maximum buffer length of the "Digest Update Multiple" SAM command is set to 230
+           * bytes instead of the 254 theoretically allowed by the SAM in order to be compatible
+           * with certain unpredictable applications (e.g. 237 for the Hoplink application).
+           */
+          if (i + cardApdu.length > 230) {
+            // Copy buffer to digestDataList and reset buffer
+            digestDataList.add(Arrays.copyOf(buffer, i));
+            i = 0;
+          }
+          // Add [length][apdu] to current buffer
+          buffer[i++] = (byte) cardApdu.length;
+          System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
+          i += cardApdu.length;
+        }
+        // Copy buffer to digestDataList
+        digestDataList.add(Arrays.copyOf(buffer, i));
+        // Add commands
+        for (byte[] dataIn : digestDataList) {
+          samCommands.add(new CmdSamDigestUpdateMultiple(sam, dataIn));
+        }
+      } else {
+        // Digest Update (simple)
+        for (byte[] cardApdu : cardApdus) {
+          samCommands.add(new CmdSamDigestUpdate(sam, isSessionEncrypted, cardApdu));
+        }
+      }
+    }
+
+    /**
+     * (private)<br>
+     * Prepares the "Digest Close" SAM command.
+     */
+    private void prepareDigestClose() {
+      // CL-SAM-DCLOSE.1
+      samCommands.add(
+          new CmdSamDigestClose(
+              sam,
+              isCardSupportingExtendedMode && !securitySetting.isRegularModeRequired() ? 8 : 4));
     }
   }
 }

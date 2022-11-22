@@ -12,7 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 interface SymmetricCryptoServiceSpi {
-  void setKeyDiversifier(byte[] keyDiversifier);
+  void setDefaultKeyDiversifier(byte[] keyDiversifier);
 
   byte[] initTerminalSecureSessionContext();
 

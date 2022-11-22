@@ -160,16 +160,17 @@ final class CardTransactionManagerAdapter
       SymmetricKeySecuritySettingAdapter symmetricKeySecuritySetting =
           new SymmetricKeySecuritySettingAdapter();
       // TODO transférer le securitySetting dans le symmetric
-      this.symmetricCryptoService =
+      symmetricCryptoService =
           new SymmetricCryptoServiceAdapter(
               securitySetting.getControlSamReader(),
               securitySetting.getControlSam(),
               symmetricKeySecuritySetting,
               card.isExtendedModeSupported(),
               getTransactionAuditData());
+      symmetricCryptoService.setDefaultKeyDiversifier(card.getCalypsoSerialNumberFull());
     } else {
       // Non-secure operations mode
-      this.symmetricCryptoService = null;
+      symmetricCryptoService = null;
     }
 
     this.modificationsCounter = card.getModificationsCounter();
