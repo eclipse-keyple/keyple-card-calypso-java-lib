@@ -11,19 +11,70 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+/**
+ * Contains the input/output data of the SV command operations (LOAD/DEBIT/UNDEBIT).
+ *
+ * @since x.y.z
+ */
 interface SvCommandSecurityData {
 
+  /**
+   * Sets the "SV Get" ingoing command data.
+   *
+   * @param svGetRequest A not empty byte array containing the "SV Get" apdu request data.
+   * @return The object instance.
+   * @since x.y.z
+   */
   SvCommandSecurityData setSvGetRequest(byte[] svGetRequest);
 
+  /**
+   * Sets the "SV Get" outgoing command data.
+   *
+   * @param svGetResponse A not empty byte array containing the "SV Get" apdu response data.
+   * @return The object instance.
+   * @since x.y.z
+   */
   SvCommandSecurityData setSvGetResponse(byte[] svGetResponse);
 
+  /**
+   * Sets the "SV Load/Debit/Undebit" outgoing command data.
+   *
+   * @param svCommandRequest A not empty byte array containing the "SV Load/Debit/Undebit" apdu
+   *     request data.
+   * @return The object instance.
+   * @since x.y.z
+   */
   SvCommandSecurityData setSvCommandRequest(byte[] svCommandRequest);
 
+  /**
+   * Gets the serial number to be placed in the "SV Load/Debit/Undebit" command request.
+   *
+   * @return A not byte array containing the serial number.
+   * @since x.y.z
+   */
   byte[] getSerialNumber();
 
+  /**
+   * Gets the transaction number to be placed in the "SV Load/Debit/Undebit" command request.
+   *
+   * @return A not byte array containing the transaction number.
+   * @since x.y.z
+   */
   byte[] getTransactionNumber();
 
+  /**
+   * Gets the terminal challenge to be placed in the SV Load/Debit/Undebit command request.
+   *
+   * @return A not byte array containing the terminal challenge.
+   * @since x.y.z
+   */
   byte[] getTerminalChallenge();
 
+  /**
+   * Gets the terminal SV MAC to be placed in the "SV Load/Debit/Undebit" command request.
+   *
+   * @return A not byte array containing the terminal SV MAC.
+   * @since x.y.z
+   */
   byte[] getTerminalSvMac();
 }
