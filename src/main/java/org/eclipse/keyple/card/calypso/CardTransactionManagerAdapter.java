@@ -164,10 +164,12 @@ final class CardTransactionManagerAdapter
           new SymmetricCryptoServiceAdapter(
               securitySetting.getControlSamReader(),
               securitySetting.getControlSam(),
-              symmetricKeySecuritySetting,
-              card.isExtendedModeSupported(),
-              getTransactionAuditData());
+              securitySetting);
       symmetricCryptoService.setDefaultKeyDiversifier(card.getCalypsoSerialNumberFull());
+      symmetricCryptoService.setTransactionAuditData(getTransactionAuditData());
+      if (card.isExtendedModeSupported() && !symmetricKeySecuritySetting.isRegularModeRequired()) {
+        symmetricCryptoService.enableCardExtendedMode();
+      }
     } else {
       // Non-secure operations mode
       symmetricCryptoService = null;

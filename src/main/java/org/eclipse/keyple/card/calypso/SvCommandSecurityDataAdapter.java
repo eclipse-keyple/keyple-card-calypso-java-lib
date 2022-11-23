@@ -13,38 +13,81 @@ package org.eclipse.keyple.card.calypso;
 
 class SvCommandSecurityDataAdapter implements SvCommandSecurityData {
 
+  private byte[] svGetRequest;
+  private byte[] svGetResponse;
+  private byte[] svCommandRequest;
+  private byte[] serialNumber;
+  private byte[] transactionNumber;
+  private byte[] terminalChallenge;
+  private byte[] terminalSvMac;
+
   @Override
   public SvCommandSecurityData setSvGetRequest(byte[] svGetRequest) {
-    return null;
+    this.svGetRequest = svGetRequest;
+    return this;
   }
 
   @Override
   public SvCommandSecurityData setSvGetResponse(byte[] svGetResponse) {
-    return null;
+    this.svGetResponse = svGetResponse;
+    return this;
   }
 
   @Override
   public SvCommandSecurityData setSvCommandRequest(byte[] svCommandRequest) {
-    return null;
+    this.svCommandRequest = svCommandRequest;
+    return this;
   }
 
   @Override
   public byte[] getSerialNumber() {
-    return new byte[0];
+    return serialNumber;
   }
 
   @Override
   public byte[] getTransactionNumber() {
-    return new byte[0];
+    return transactionNumber;
   }
 
   @Override
   public byte[] getTerminalChallenge() {
-    return new byte[0];
+    return terminalChallenge;
   }
 
   @Override
   public byte[] getTerminalSvMac() {
-    return new byte[0];
+    return terminalSvMac;
+  }
+
+  public SvCommandSecurityDataAdapter setSerialNumber(byte[] serialNumber) {
+    this.serialNumber = serialNumber;
+    return this;
+  }
+
+  public SvCommandSecurityDataAdapter setTransactionNumber(byte[] transactionNumber) {
+    this.transactionNumber = transactionNumber;
+    return this;
+  }
+
+  public SvCommandSecurityDataAdapter setTerminalChallenge(byte[] terminalChallenge) {
+    this.terminalChallenge = terminalChallenge;
+    return this;
+  }
+
+  public SvCommandSecurityDataAdapter setTerminalSvMac(byte[] terminalSvMac) {
+    this.terminalSvMac = terminalSvMac;
+    return this;
+  }
+
+  byte[] getSvGetRequest() {
+    return svGetRequest;
+  }
+
+  byte[] getSvGetResponse() {
+    return svGetResponse;
+  }
+
+  byte[] getSvCommandRequest() {
+    return svCommandRequest;
   }
 }

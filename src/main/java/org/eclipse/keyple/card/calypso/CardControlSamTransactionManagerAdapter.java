@@ -212,65 +212,6 @@ final class CardControlSamTransactionManagerAdapter
 
   /**
    * (package-private)<br>
-   * Prepares a "SV Prepare Load" SAM command.
-   *
-   * @param svGetHeader The SV Get command header.
-   * @param svGetData The SV Get command response data.
-   * @param cmdCardSvReload The SvDebit command providing the SvReload partial data.
-   * @return The reference to the prepared command.
-   * @since 2.2.0
-   */
-  CmdSamSvPrepareLoad prepareSvPrepareLoad(
-      byte[] svGetHeader, byte[] svGetData, CmdCardSvReload cmdCardSvReload) {
-    prepareSelectDiversifierIfNeeded();
-    CmdSamSvPrepareLoad cmd =
-        new CmdSamSvPrepareLoad(
-            controlSam, svGetHeader, svGetData, cmdCardSvReload.getSvReloadData());
-    getSamCommands().add(cmd);
-    return cmd;
-  }
-
-  /**
-   * (package-private)<br>
-   * Prepares a "SV Prepare Debit/Undebit" SAM command.
-   *
-   * @param isDebitCommand True if the command is a DEBIT, false for UNDEBIT.
-   * @param svGetHeader the SV Get command header.
-   * @param svGetData the SV Get command response data.
-   * @param cmdCardSvDebitOrUndebit The SvDebit or SvUndebit command providing the partial data.
-   * @return The reference to the prepared command.
-   * @since 2.2.0
-   */
-  CmdSamSvPrepareDebitOrUndebit prepareSvPrepareDebitOrUndebit(
-      boolean isDebitCommand,
-      byte[] svGetHeader,
-      byte[] svGetData,
-      CmdCardSvDebitOrUndebit cmdCardSvDebitOrUndebit) {
-    prepareSelectDiversifierIfNeeded();
-    CmdSamSvPrepareDebitOrUndebit cmd =
-        new CmdSamSvPrepareDebitOrUndebit(
-            isDebitCommand,
-            controlSam,
-            svGetHeader,
-            svGetData,
-            cmdCardSvDebitOrUndebit.getSvDebitOrUndebitData());
-    getSamCommands().add(cmd);
-    return cmd;
-  }
-
-  /**
-   * (package-private)<br>
-   * Prepares a "SV Check" SAM command.
-   *
-   * @param svOperationData The data of the SV operation performed.
-   * @since 2.2.0
-   */
-  void prepareSvCheck(byte[] svOperationData) {
-    getSamCommands().add(new CmdSamSvCheck(controlSam, svOperationData));
-  }
-
-  /**
-   * (package-private)<br>
    * Opens a new session by initializing the digest manager. It will store all digest operations
    * (Digest Init, Digest Update) until the session closing. At this moment, all SAM Apdu will be
    * processed at once.

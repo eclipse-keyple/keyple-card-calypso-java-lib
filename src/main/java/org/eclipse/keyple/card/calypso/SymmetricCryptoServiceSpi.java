@@ -11,8 +11,15 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.List;
+
 interface SymmetricCryptoServiceSpi {
+
   void setDefaultKeyDiversifier(byte[] keyDiversifier);
+
+  void enableCardExtendedMode();
+
+  void setTransactionAuditData(List<byte[]> transactionAuditData);
 
   byte[] initTerminalSecureSessionContext();
 
@@ -34,10 +41,10 @@ interface SymmetricCryptoServiceSpi {
 
   boolean verifyCardSvMac(byte[] cardSvMac);
 
-  byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, byte kif, byte kvc);
+  byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc);
 
   byte[] cipherPinForModification(
-      byte[] cardChallenge, byte[] currentPin, byte[] newPin, byte kif, byte kvc);
+      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc);
 
   byte[] generateCardKey(
       byte[] cardChallenge,
