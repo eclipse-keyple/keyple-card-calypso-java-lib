@@ -60,9 +60,10 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   private final ProxyReaderApi samReader;
   private final CalypsoSamAdapter sam;
   private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
+  private final boolean isExtendedModeSupported;
 
   // Temporary field for manage PSO signature
-  private CardSecuritySettingAdapter tmpCardSecuritySetting;
+  private final CardSecuritySettingAdapter tmpCardSecuritySetting;
 
   /* Dynamic fields */
   private byte[] defaultKeyDiversifier;
@@ -78,6 +79,9 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
     this.samReader = samReader;
     this.sam = sam;
     this.tmpCardSecuritySetting = tmpCardSecuritySetting;
+    this.isExtendedModeSupported =
+        sam.getProductType() == CalypsoSam.ProductType.SAM_C1
+            || sam.getProductType() == CalypsoSam.ProductType.HSM_C1;
   }
 
   @Override
@@ -93,6 +97,11 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   @Override
   public void setTransactionAuditData(List<byte[]> transactionAuditData) {
     this.transactionAuditData = transactionAuditData;
+  }
+
+  @Override
+  public boolean isExtendedModeSupported() {
+    return isExtendedModeSupported;
   }
 
   @Override
@@ -171,32 +180,16 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
 
   @Override
   public byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc) {
-    byte pinCipheringKif;
-    byte pinCipheringKvc;
-    if (digestManager != null && digestManager.sessionKif != 0) {
-      // the current work key has been set (a secure session is open)
-      pinCipheringKif = digestManager.sessionKif;
-      pinCipheringKvc = digestManager.sessionKvc;
-    } else {
-      // no current work key is available (outside secure session)
-      // PIN verification
-      if (kif == null || kvc == null) {
-        throw new IllegalStateException(
-            "No KIF or KVC defined for the PIN verification ciphering key");
-      }
-      pinCipheringKif = kif;
-      pinCipheringKvc = kvc;
-    }
-    prepareGiveRandom(cardChallenge);
-    CmdSamCardCipherPin cmd =
-        new CmdSamCardCipherPin(sam, pinCipheringKif, pinCipheringKvc, pin, null);
-    samCommands.add(cmd);
-    processCommands();
-    return cmd.getCipheredData();
+    return cipherPin(cardChallenge, pin, null, kif, kvc);
   }
 
   @Override
   public byte[] cipherPinForModification(
+      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc) {
+    return cipherPin(cardChallenge, currentPin, newPin, kif, kvc);
+  }
+
+  private byte[] cipherPin(
       byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc) {
     byte pinCipheringKif;
     byte pinCipheringKvc;
@@ -206,10 +199,10 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
       pinCipheringKvc = digestManager.sessionKvc;
     } else {
       // no current work key is available (outside secure session)
-      // PIN modification
       if (kif == null || kvc == null) {
+        String msg = newPin == null ? "verification" : "modification";
         throw new IllegalStateException(
-            "No KIF or KVC defined for the PIN modification ciphering key");
+            String.format("No KIF or KVC defined for the PIN %s ciphering key", msg));
       }
       pinCipheringKif = kif;
       pinCipheringKvc = kvc;
@@ -223,13 +216,17 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   }
 
   @Override
-  public byte[] generateCardKey(
+  public byte[] generateCipheredCardKey(
       byte[] cardChallenge,
       byte issuerKeyKif,
       byte issuerKeyKvc,
       byte targetKeyKif,
       byte targetKeyKvc) {
-    return new byte[0];
+    CmdSamCardGenerateKey cmd =
+        new CmdSamCardGenerateKey(sam, issuerKeyKif, issuerKeyKvc, targetKeyKif, targetKeyKvc);
+    samCommands.add(cmd);
+    processCommands();
+    return cmd.getCipheredData();
   }
 
   void processCommands() {
@@ -239,10 +236,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
     // between the session "Get Challenge" and the "Digest Init", there is no other command
     // inserted.
     if (!samCommands.isEmpty() && digestManager != null && !digestManager.isDigestInitDone) {
-      List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>(samCommands);
-      samCommands.clear();
       digestManager.prepareDigestInit();
-      samCommands.addAll(samCommands);
     }
     if (samCommands.isEmpty()) {
       return;
@@ -377,7 +371,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
    * @param cardResponse The associated card response.
    * @since 2.1.1
    */
-  void saveTransactionAuditData(CardRequestSpi cardRequest, CardResponseApi cardResponse) {
+  private void saveTransactionAuditData(CardRequestSpi cardRequest, CardResponseApi cardResponse) {
     if (cardResponse != null) {
       List<ApduRequestSpi> requests = cardRequest.getApduRequests();
       List<ApduResponseApi> responses = cardResponse.getApduResponses();
@@ -394,7 +388,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
    *
    * @return A not empty string.
    */
-  final String getTransactionAuditDataAsString() {
+  private String getTransactionAuditDataAsString() {
     StringBuilder sb = new StringBuilder();
     sb.append("\nTransaction audit JSON data: {");
     // sb.append("\"targetSmartCard\":").append(targetSmartCard.toString()).append(",");
@@ -422,7 +416,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
    * @param specificKeyDiversifier The specific key diversifier (optional).
    * @since 2.2.0
    */
-  final void prepareSelectDiversifierIfNeeded(byte[] specificKeyDiversifier) {
+  private void prepareSelectDiversifierIfNeeded(byte[] specificKeyDiversifier) {
     if (specificKeyDiversifier != null) {
       if (!Arrays.equals(specificKeyDiversifier, currentKeyDiversifier)) {
         currentKeyDiversifier = specificKeyDiversifier;
@@ -440,7 +434,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
    *
    * @since 2.2.0
    */
-  final void prepareSelectDiversifierIfNeeded() {
+  private void prepareSelectDiversifierIfNeeded() {
     if (!Arrays.equals(currentKeyDiversifier, defaultKeyDiversifier)) {
       currentKeyDiversifier = defaultKeyDiversifier;
       prepareSelectDiversifier();
@@ -618,7 +612,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
     private final byte sessionKvc;
     private final List<byte[]> cardApdus = new ArrayList<byte[]>();
     private boolean isDigestInitDone;
-    boolean isCommand = true;
+    boolean isRequest = true;
 
     /**
      * (private)<br>
@@ -644,8 +638,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
       // If the request is of case4 type, LE must be excluded from the digest computation. In this
       // case, we remove here the last byte of the command buffer.
       // CL-C4-MAC.1
-      if (isCommand) {
-
+      if (isRequest) {
         cardApdus.add(
             ApduUtil.isCase4(cardApdu)
                 ? Arrays.copyOfRange(cardApdu, 0, cardApdu.length - 1)
@@ -653,7 +646,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
       } else {
         cardApdus.add(cardApdu);
       }
-      isCommand = !isCommand;
+      isRequest = !isRequest;
     }
 
     /**
@@ -679,6 +672,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
     private void prepareDigestInit() {
       // CL-SAM-DINIT.1
       samCommands.add(
+          0,
           new CmdSamDigestInit(
               sam,
               false,

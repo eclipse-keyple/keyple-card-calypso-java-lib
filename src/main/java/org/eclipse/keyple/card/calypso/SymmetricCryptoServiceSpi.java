@@ -47,6 +47,8 @@ interface SymmetricCryptoServiceSpi {
    */
   void setTransactionAuditData(List<byte[]> transactionAuditData);
 
+  boolean isExtendedModeSupported();
+
   /**
    * Initializes the crypto service context for operating a Secure Session with a card et gets the
    * terminal challenge.
@@ -178,7 +180,7 @@ interface SymmetricCryptoServiceSpi {
    * @return A byte array containing the encrypted data block to sent to the card.
    * @since x.y.z
    */
-  byte[] generateCardKey(
+  byte[] generateCipheredCardKey(
       byte[] cardChallenge,
       byte issuerKeyKif,
       byte issuerKeyKvc,

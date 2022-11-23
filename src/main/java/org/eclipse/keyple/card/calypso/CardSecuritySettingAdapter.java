@@ -389,4 +389,24 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   Byte getPinModificationCipheringKvc() {
     return pinModificationCipheringKvc;
   }
+
+  Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {
+    return kifMap;
+  }
+
+  Map<WriteAccessLevel, Byte> getDefaultKifMap() {
+    return defaultKifMap;
+  }
+
+  Map<WriteAccessLevel, Byte> getDefaultKvcMap() {
+    return defaultKvcMap;
+  }
+
+  Set<Integer> getAuthorizedSessionKeys() {
+    return authorizedSessionKeys;
+  }
+
+  Set<Integer> getAuthorizedSvKeys() {
+    return authorizedSvKeys;
+  }
 }

@@ -17,14 +17,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.spi.SamRevocationServiceSpi;
 import org.eclipse.keyple.core.util.Assert;
 
 class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting {
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private SymmetricCryptoService cryptoService;
+  private SymmetricCryptoServiceAdapter cryptoService;
   private boolean isEarlyMutualAuthenticationEnabled;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
@@ -49,7 +48,6 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
   private Byte pinVerificationCipheringKvc;
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
-  private SamRevocationServiceSpi samRevocationServiceSpi;
 
   @Override
   public SymmetricKeySecuritySetting enableMultipleSession() {
@@ -59,7 +57,7 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
 
   @Override
   public SymmetricKeySecuritySetting setCryptoService(SymmetricCryptoService cryptoService) {
-    this.cryptoService = cryptoService;
+    this.cryptoService = (SymmetricCryptoServiceAdapter) cryptoService;
     return this;
   }
 
@@ -150,10 +148,6 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
     this.pinModificationCipheringKif = kif;
     this.pinModificationCipheringKvc = kvc;
     return this;
-  }
-
-  void setSamRevocationServiceSpi(SamRevocationServiceSpi samRevocationServiceSpi) {
-    this.samRevocationServiceSpi = samRevocationServiceSpi;
   }
 
   /**
@@ -339,7 +333,7 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
     return pinModificationCipheringKvc;
   }
 
-  SymmetricCryptoService getCryptoService() {
+  SymmetricCryptoServiceAdapter getCryptoService() {
     return cryptoService;
   }
 
@@ -351,14 +345,23 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
     return isRegularModeRequired;
   }
 
-  /**
-   * (package-private)<br>
-   * Gets the SAM revocation service.
-   *
-   * @return Null if no SAM revocation service is set.
-   * @since 2.2.0
-   */
-  final SamRevocationServiceSpi getSamRevocationServiceSpi() {
-    return samRevocationServiceSpi;
+  Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {
+    return kifMap;
+  }
+
+  Map<WriteAccessLevel, Byte> getDefaultKifMap() {
+    return defaultKifMap;
+  }
+
+  Map<WriteAccessLevel, Byte> getDefaultKvcMap() {
+    return defaultKvcMap;
+  }
+
+  Set<Integer> getAuthorizedSessionKeys() {
+    return authorizedSessionKeys;
+  }
+
+  Set<Integer> getAuthorizedSvKeys() {
+    return authorizedSvKeys;
   }
 }
