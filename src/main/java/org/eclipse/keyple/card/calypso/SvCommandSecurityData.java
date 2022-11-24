@@ -39,12 +39,12 @@ interface SvCommandSecurityData {
   /**
    * Sets the "SV Load/Debit/Undebit" outgoing command data.
    *
-   * @param svCommandRequest A not empty byte array containing the "SV Load/Debit/Undebit" apdu
-   *     request data.
+   * @param svCommandPartialRequest A not empty byte array containing the "SV Load/Debit/Undebit"
+   *     apdu request data.
    * @return The object instance.
    * @since x.y.z
    */
-  SvCommandSecurityData setSvCommandRequest(byte[] svCommandRequest);
+  SvCommandSecurityData setSvCommandPartialRequest(byte[] svCommandPartialRequest);
 
   /**
    * Gets the serial number to be placed in the "SV Load/Debit/Undebit" command request.

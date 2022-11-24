@@ -19,7 +19,7 @@ import java.util.Set;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.eclipse.keyple.core.util.Assert;
 
-class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting {
+class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySetting {
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
@@ -50,55 +50,55 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
   private Byte pinModificationCipheringKvc;
 
   @Override
-  public SymmetricKeySecuritySetting enableMultipleSession() {
+  public SymmetricCryptoSecuritySetting enableMultipleSession() {
     isMultipleSessionEnabled = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting setCryptoService(SymmetricCryptoService cryptoService) {
+  public SymmetricCryptoSecuritySetting setCryptoService(SymmetricCryptoService cryptoService) {
     this.cryptoService = (SymmetricCryptoServiceAdapter) cryptoService;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting enableEarlyMutualAuthentication() {
+  public SymmetricCryptoSecuritySetting enableEarlyMutualAuthentication() {
     isEarlyMutualAuthenticationEnabled = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting enableRatificationMechanism() {
+  public SymmetricCryptoSecuritySetting enableRatificationMechanism() {
     isRatificationMechanismEnabled = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting enablePinPlainTransmission() {
+  public SymmetricCryptoSecuritySetting enablePinPlainTransmission() {
     isPinPlainTransmissionEnabled = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting enableSvLoadAndDebitLog() {
+  public SymmetricCryptoSecuritySetting enableSvLoadAndDebitLog() {
     isSvLoadAndDebitLogEnabled = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting authorizeSvNegativeBalance() {
+  public SymmetricCryptoSecuritySetting authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting forceRegularMode() {
+  public SymmetricCryptoSecuritySetting forceRegularMode() {
     this.isRegularModeRequired = true;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting assignKif(
+  public SymmetricCryptoSecuritySetting assignKif(
       WriteAccessLevel writeAccessLevel, byte kvc, byte kif) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
@@ -111,40 +111,42 @@ class SymmetricKeySecuritySettingAdapter implements SymmetricKeySecuritySetting 
   }
 
   @Override
-  public SymmetricKeySecuritySetting assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif) {
+  public SymmetricCryptoSecuritySetting assignDefaultKif(
+      WriteAccessLevel writeAccessLevel, byte kif) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     defaultKifMap.put(writeAccessLevel, kif);
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc) {
+  public SymmetricCryptoSecuritySetting assignDefaultKvc(
+      WriteAccessLevel writeAccessLevel, byte kvc) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     defaultKvcMap.put(writeAccessLevel, kvc);
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting addAuthorizedSessionKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting addAuthorizedSessionKey(byte kif, byte kvc) {
     authorizedSessionKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting addAuthorizedSvKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting addAuthorizedSvKey(byte kif, byte kvc) {
     authorizedSvKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting setPinVerificationCipheringKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting setPinVerificationCipheringKey(byte kif, byte kvc) {
     this.pinVerificationCipheringKif = kif;
     this.pinVerificationCipheringKvc = kvc;
     return this;
   }
 
   @Override
-  public SymmetricKeySecuritySetting setPinModificationCipheringKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting setPinModificationCipheringKey(byte kif, byte kvc) {
     this.pinModificationCipheringKif = kif;
     this.pinModificationCipheringKvc = kvc;
     return this;

@@ -22,168 +22,19 @@ import java.util.List;
  * @since x.y.z
  */
 interface SymmetricCryptoServiceSpi {
-  /**
-   * Sets the default key diversifier to use for the coming cryptographic computations.
-   *
-   * <p>Usually, the key diversifier is the card serial number (8 bytes).
-   *
-   * @param keyDiversifier A not empty byte array containing the key diversifier.
-   * @since x.y.z
-   */
-  void setDefaultKeyDiversifier(byte[] keyDiversifier);
-
-  /**
-   * Indicates that the card uses its command set in extended mode.
-   *
-   * @since x.y.z
-   */
-  void enableCardExtendedMode();
-
-  /**
-   * Provides the reference of the list where the transaction audit data are recorded.
-   *
-   * @param transactionAuditData A not null reference to a list of byte arrays.
-   * @since x.y.z
-   */
-  void setTransactionAuditData(List<byte[]> transactionAuditData);
 
   boolean isExtendedModeSupported();
 
   /**
-   * Initializes the crypto service context for operating a Secure Session with a card et gets the
-   * terminal challenge.
-   *
-   * @return The terminal challenge.
+   * @param cardKeyDiversifier The card key diversifier to use for the coming cryptographic
+   *     computations.
+   * @param useExtendedMode Request the use of the extended mode if supported by the crypto service.
+   * @param transactionAuditData The reference of the list where the transaction audit data are
+   *     recorded.
+   * @return A new instance of {@link SymmetricCryptoTransactionManagerSpi}.
+   * @throws IllegalStateException If the extended mode is not supported.
    * @since x.y.z
    */
-  byte[] initTerminalSecureSessionContext();
-
-  /**
-   * Stores the data needed to initialize the digest computation for a Secure Session.
-   *
-   * @param openSecureSessionDataOut The data out from the card Open Secure Session command.
-   * @param kif The card KIF.
-   * @param kvc The card KVC.
-   * @since x.y.z
-   */
-  void initTerminalSessionMac(byte[] openSecureSessionDataOut, byte kif, byte kvc);
-
-  /**
-   * Updates the digest computation with data sent or received from the card.
-   *
-   * <p>Returns encrypted/decrypted data when the encryption is active.
-   *
-   * @param cardApdu A byte array containing either the input or output data of a card command APDU.
-   * @return null if the encryption is not activae, either the ciphered or deciphered command data
-   *     if the encryption is active.
-   * @since x.y.z
-   */
-  byte[] updateTerminalSessionMac(byte[] cardApdu);
-
-  /**
-   * Finalizes the digest computation and returns the terminal part of the session MAC.
-   *
-   * @return A byte array containing the terminal session MAC.
-   * @since x.y.z
-   */
-  byte[] finalizeTerminalSessionMac();
-
-  /**
-   * Generate the terminal part of the session MAC used for an early mutual authentication.
-   *
-   * @return A byte array containing the terminal session MAC.
-   * @since x.y.z
-   */
-  byte[] generateTerminalSessionMac();
-
-  /**
-   * Activate the encryption/decryption of the data sent/received during the secure session.
-   *
-   * @since x.y.z
-   */
-  void activateEncryption();
-
-  /**
-   * Deactivate the encryption/decryption of the data sent/received during the secure session.
-   *
-   * @since x.y.z
-   */
-  void deactivateEncryption();
-
-  /**
-   * Verifies the card part of the session MAC finalizing the mutual authentication process.
-   *
-   * @param cardSessionMac A byte array containing the card session MAC.
-   * @return true if the card session MAC is validated.
-   * @since x.y.z
-   */
-  boolean verifyCardSessionMac(byte[] cardSessionMac);
-
-  /**
-   * Computes the needed data to operate SV card commands.
-   *
-   * @param svCommandSecurityData The data involved in the preparation of an SV Reload/Debit/Undebit
-   *     command.
-   * @since x.y.z
-   */
-  void generateSvCommandSecurityData(SvCommandSecurityData svCommandSecurityData);
-
-  /**
-   * Verifies the SV card MAC.
-   *
-   * @param cardSvMac A byte array containing the card SV MAC.
-   * @return true if the card SV MAC is validated.
-   * @since x.y.z
-   */
-  boolean verifyCardSvMac(byte[] cardSvMac);
-
-  /**
-   * Computes a block of encrypted data to be sent to the card for an enciphered PIN presentation.
-   *
-   * <p>Note: the <code>kif</code> and <code>kvc</code> parameters are ignored when PIN verification
-   * is performed within a Secure Session.
-   *
-   * @param cardChallenge A byte array containing the card challenge.
-   * @param pin A byte array containing the 4-byte PIN value.
-   * @param kif The PIN encryption key KIF.
-   * @param kvc The PIN encryption key KVC.
-   * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
-   */
-  byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc);
-
-  /**
-   * Computes a block of encrypted data to be sent to the card for a PIN modification.
-   *
-   * <p>Note: the <code>kif</code> and <code>kvc</code> parameters are ignored when PIN modification
-   * is performed within a Secure Session.
-   *
-   * @param cardChallenge A byte array containing the card challenge.
-   * @param currentPin A byte array containing the 4-byte current PIN value.
-   * @param newPin A byte array containing the 4-byte new PIN value.
-   * @param kif The PIN encryption key KIF.
-   * @param kvc The PIN encryption key KVC.
-   * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
-   */
-  byte[] cipherPinForModification(
-      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc);
-
-  /**
-   * Generates an encrypted key data block for loading a key into a card.
-   *
-   * @param cardChallenge A byte array containing the card challenge.
-   * @param issuerKeyKif The issuer key KIF.
-   * @param issuerKeyKvc The issuer key KVC.
-   * @param targetKeyKif The target key KIF.
-   * @param targetKeyKvc The target key KVC.
-   * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
-   */
-  byte[] generateCipheredCardKey(
-      byte[] cardChallenge,
-      byte issuerKeyKif,
-      byte issuerKeyKvc,
-      byte targetKeyKif,
-      byte targetKeyKvc);
+  SymmetricCryptoTransactionManagerSpi createTransactionManager(
+      byte[] cardKeyDiversifier, boolean useExtendedMode, List<byte[]> transactionAuditData);
 }

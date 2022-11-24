@@ -79,11 +79,11 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
     System.arraycopy(data.getSvGetRequest(), 0, dataIn, 0, 4);
     System.arraycopy(data.getSvGetResponse(), 0, dataIn, 4, data.getSvGetResponse().length);
     System.arraycopy(
-        data.getSvCommandRequest(),
+        data.getSvCommandPartialRequest(),
         0,
         dataIn,
         4 + data.getSvGetResponse().length,
-        data.getSvCommandRequest().length);
+        data.getSvCommandPartialRequest().length);
 
     setApduRequest(
         new ApduRequestAdapter(

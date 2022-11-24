@@ -15,7 +15,7 @@ class SvCommandSecurityDataAdapter implements SvCommandSecurityData {
 
   private byte[] svGetRequest;
   private byte[] svGetResponse;
-  private byte[] svCommandRequest;
+  private byte[] svCommandPartialRequest;
   private byte[] serialNumber;
   private byte[] transactionNumber;
   private byte[] terminalChallenge;
@@ -34,8 +34,8 @@ class SvCommandSecurityDataAdapter implements SvCommandSecurityData {
   }
 
   @Override
-  public SvCommandSecurityData setSvCommandRequest(byte[] svCommandRequest) {
-    this.svCommandRequest = svCommandRequest;
+  public SvCommandSecurityData setSvCommandPartialRequest(byte[] svCommandPartialRequest) {
+    this.svCommandPartialRequest = svCommandPartialRequest;
     return this;
   }
 
@@ -87,7 +87,7 @@ class SvCommandSecurityDataAdapter implements SvCommandSecurityData {
     return svGetResponse;
   }
 
-  byte[] getSvCommandRequest() {
-    return svCommandRequest;
+  byte[] getSvCommandPartialRequest() {
+    return svCommandPartialRequest;
   }
 }

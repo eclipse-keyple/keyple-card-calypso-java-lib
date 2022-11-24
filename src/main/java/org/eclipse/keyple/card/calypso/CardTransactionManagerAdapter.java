@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
  *   <li>CL-CSS-6D006E00.1
  *   <li>CL-CSS-UNEXPERR.1
  *   <li>CL-CSS-INFOCSS.1
+ *   <li>CL-CSS-OSSMODE.1
+ *   <li>CL-SV-CMDMODE.1
  * </ul>
  *
  * @since 2.0.0
@@ -99,9 +101,10 @@ final class CardTransactionManagerAdapter
   private final ProxyReaderApi cardReader;
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting; // Do not use anymore
-  private final SymmetricKeySecuritySettingAdapter symmetricKeySecuritySetting;
-  private final SymmetricCryptoServiceAdapter symmetricCryptoService;
+  private final SymmetricCryptoSecuritySettingAdapter symmetricKeySecuritySetting;
+  private final SymmetricCryptoTransactionManagerAdapter symmetricCryptoTransactionManager;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
+  private final boolean isExtendedModeRequired;
   private final int cardPayloadCapacity;
 
   /* Dynamic fields */
@@ -155,24 +158,28 @@ final class CardTransactionManagerAdapter
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
       symmetricKeySecuritySetting = buildSymmetricKeySecuritySetting(securitySetting);
-      symmetricCryptoService = symmetricKeySecuritySetting.getCryptoService();
-      symmetricCryptoService.setDefaultKeyDiversifier(card.getCalypsoSerialNumberFull());
-      symmetricCryptoService.setTransactionAuditData(getTransactionAuditData());
-      if (card.isExtendedModeSupported() && !symmetricKeySecuritySetting.isRegularModeRequired()) {
-        symmetricCryptoService.enableCardExtendedMode();
-      }
+      SymmetricCryptoServiceAdapter symmetricCryptoService =
+          symmetricKeySecuritySetting.getCryptoService();
+      isExtendedModeRequired =
+          card.isExtendedModeSupported()
+              && !symmetricKeySecuritySetting.isRegularModeRequired()
+              && symmetricCryptoService.isExtendedModeSupported();
+      symmetricCryptoTransactionManager =
+          symmetricCryptoService.createTransactionManager(
+              card.getCalypsoSerialNumberFull(), isExtendedModeRequired, getTransactionAuditData());
     } else {
       // Non-secure operations mode
       symmetricKeySecuritySetting = null;
-      symmetricCryptoService = null;
+      isExtendedModeRequired = card.isExtendedModeSupported();
+      symmetricCryptoTransactionManager = null;
     }
 
     this.modificationsCounter = card.getModificationsCounter();
   }
 
-  private SymmetricKeySecuritySettingAdapter buildSymmetricKeySecuritySetting(
+  private SymmetricCryptoSecuritySettingAdapter buildSymmetricKeySecuritySetting(
       CardSecuritySettingAdapter src) {
-    SymmetricKeySecuritySettingAdapter dest = new SymmetricKeySecuritySettingAdapter();
+    SymmetricCryptoSecuritySettingAdapter dest = new SymmetricCryptoSecuritySettingAdapter();
     dest.setCryptoService(
         new SymmetricCryptoServiceAdapter(src.getControlSamReader(), src.getControlSam(), src));
     if (src.isMultipleSessionEnabled()) {
@@ -244,8 +251,8 @@ final class CardTransactionManagerAdapter
    *
    * @throws IllegalStateException If control SAM is not set.
    */
-  private void checkSymmetricCryptoService() {
-    if (symmetricCryptoService == null) {
+  private void checkSymmetricCryptoTransactionManager() {
+    if (symmetricCryptoTransactionManager == null) {
       throw new IllegalStateException("Crypto service is not set.");
     }
   }
@@ -301,8 +308,8 @@ final class CardTransactionManagerAdapter
   private void updateTerminalSessionMac(
       List<ApduRequestSpi> apduRequests, List<ApduResponseApi> apduResponses, int startIndex) {
     for (int i = startIndex; i < apduRequests.size(); i++) {
-      symmetricCryptoService.updateTerminalSessionMac(apduRequests.get(i).getApdu());
-      symmetricCryptoService.updateTerminalSessionMac(apduResponses.get(i).getApdu());
+      symmetricCryptoTransactionManager.updateTerminalSessionMac(apduRequests.get(i).getApdu());
+      symmetricCryptoTransactionManager.updateTerminalSessionMac(apduResponses.get(i).getApdu());
     }
   }
 
@@ -311,8 +318,8 @@ final class CardTransactionManagerAdapter
    * Process any prepared SAM commands if control SAM is set.
    */
   private void processSamPreparedCommands() {
-    if (symmetricCryptoService != null) {
-      symmetricCryptoService.processCommands();
+    if (symmetricCryptoTransactionManager != null) {
+      symmetricCryptoTransactionManager.processCommands();
     }
   }
 
@@ -356,7 +363,7 @@ final class CardTransactionManagerAdapter
     }
 
     // initialize the crypto service for a new secure session and retrieve the terminal challenge
-    byte[] samChallenge = symmetricCryptoService.initTerminalSecureSessionContext();
+    byte[] samChallenge = symmetricCryptoTransactionManager.initTerminalSecureSessionContext();
 
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
@@ -366,7 +373,7 @@ final class CardTransactionManagerAdapter
             samChallenge,
             sfi,
             recordNumber,
-            isExtendedModeAllowed());
+            isExtendedModeRequired);
 
     // Add the "Open Secure Session" card command in first position.
     cardCommands.add(0, cmdCardOpenSession);
@@ -428,7 +435,8 @@ final class CardTransactionManagerAdapter
     }
 
     // Initialize a new secure session.
-    symmetricCryptoService.initTerminalSessionMac(apduResponses.get(0).getDataOut(), kif, kvc);
+    symmetricCryptoTransactionManager.initTerminalSessionMac(
+        apduResponses.get(0).getDataOut(), kif, kvc);
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
@@ -657,7 +665,8 @@ final class CardTransactionManagerAdapter
 
     // All SAM digest operations will now run at once.
     // Get Terminal Signature from the latest response.
-    byte[] sessionTerminalSignature = symmetricCryptoService.finalizeTerminalSessionMac();
+    byte[] sessionTerminalSignature =
+        symmetricCryptoTransactionManager.finalizeTerminalSessionMac();
 
     // Build the last "Close Secure Session" card command.
     CmdCardCloseSession cmdCardCloseSession =
@@ -749,7 +758,7 @@ final class CardTransactionManagerAdapter
     // Check the card signature
     // CL-CSS-MACVERIF.1
     try {
-      symmetricCryptoService.verifyCardSessionMac(cmdCardCloseSession.getSignatureLo());
+      symmetricCryptoTransactionManager.verifyCardSessionMac(cmdCardCloseSession.getSignatureLo());
     } catch (ReaderIOException e) {
       throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
     } catch (SamIOException e) {
@@ -760,7 +769,7 @@ final class CardTransactionManagerAdapter
     // CL-SV-POSTPON.1
     if (isSvOperationCompleteOneTime()) {
       try {
-        symmetricCryptoService.verifyCardSvMac(
+        symmetricCryptoTransactionManager.verifyCardSvMac(
             cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex));
       } catch (ReaderIOException e) {
         throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
@@ -1030,7 +1039,7 @@ final class CardTransactionManagerAdapter
     // If an SV transaction was performed, we check the signature returned by the card here
     if (isSvOperationCompleteOneTime()) {
       try {
-        symmetricCryptoService.verifyCardSvMac(card.getSvOperationSignature());
+        symmetricCryptoTransactionManager.verifyCardSvMac(card.getSvOperationSignature());
       } catch (ReaderIOException e) {
         throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
       } catch (SamIOException e) {
@@ -1109,8 +1118,8 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
-    checkSymmetricCryptoService();
-    symmetricCryptoService.prepareComputeSignature(data);
+    checkSymmetricCryptoTransactionManager();
+    symmetricCryptoTransactionManager.prepareComputeSignature(data);
     return this;
   }
 
@@ -1121,8 +1130,8 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
-    checkSymmetricCryptoService();
-    symmetricCryptoService.prepareVerifySignature(data);
+    checkSymmetricCryptoTransactionManager();
+    symmetricCryptoTransactionManager.prepareVerifySignature(data);
     return this;
   }
 
@@ -1296,7 +1305,7 @@ final class CardTransactionManagerAdapter
 
         // Get the encrypted PIN with the help of the symmetric key crypto service
         byte[] cipheredPin =
-            symmetricCryptoService.cipherPinForPresentation(
+            symmetricCryptoTransactionManager.cipherPinForPresentation(
                 card.getCardChallenge(),
                 pin,
                 symmetricKeySecuritySetting.getPinVerificationCipheringKif(),
@@ -1364,7 +1373,7 @@ final class CardTransactionManagerAdapter
         byte[] currentPin = new byte[4]; // all zeros as required
         // Get the encrypted PIN with the help of the symmetric key crypto service
         byte[] newPinData =
-            symmetricCryptoService.cipherPinForModification(
+            symmetricCryptoTransactionManager.cipherPinForModification(
                 card.getCardChallenge(),
                 currentPin,
                 newPin,
@@ -1422,7 +1431,7 @@ final class CardTransactionManagerAdapter
 
     // Get the encrypted key with the help of the SAM
     byte[] cipheredKey =
-        symmetricCryptoService.generateCipheredCardKey(
+        symmetricCryptoTransactionManager.generateCipheredCardKey(
             card.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
 
     cardCommands.add(new CmdCardChangeKey(card, (byte) keyIndex, cipheredKey));
@@ -1492,9 +1501,9 @@ final class CardTransactionManagerAdapter
       // SV RELOAD: get the security data from the SAM
       CmdCardSvReload svCommand = (CmdCardSvReload) svLastModifyingCommand;
 
-      svCommandSecurityData.setSvCommandRequest(svCommand.getSvReloadData());
+      svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvReloadData());
 
-      symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
+      symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
 
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svCommandSecurityData);
@@ -1504,9 +1513,9 @@ final class CardTransactionManagerAdapter
       // SV DEBIT/UNDEBIT: get the security data from the SAM
       CmdCardSvDebitOrUndebit svCommand = (CmdCardSvDebitOrUndebit) svLastModifyingCommand;
 
-      svCommandSecurityData.setSvCommandRequest(svCommand.getSvDebitOrUndebitData());
+      svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvDebitOrUndebitData());
 
-      symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
+      symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
 
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svCommandSecurityData);
@@ -2290,12 +2299,7 @@ final class CardTransactionManagerAdapter
       throw new UnsupportedOperationException("Stored Value is not available for this card.");
     }
 
-    // CL-SV-CMDMODE.1
-    boolean useExtendedMode =
-        card.isExtendedModeSupported()
-            && (symmetricCryptoService == null || symmetricCryptoService.isExtendedModeSupported());
-
-    if (symmetricKeySecuritySetting.isSvLoadAndDebitLogEnabled() && (!useExtendedMode)) {
+    if (symmetricKeySecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedModeRequired)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
       // CL-SV-GETNUMBER.1
@@ -2303,7 +2307,7 @@ final class CardTransactionManagerAdapter
           SvOperation.RELOAD.equals(svOperation) ? SvOperation.DEBIT : SvOperation.RELOAD;
       addStoredValueCommand(new CmdCardSvGet(card, operation1, false), operation1);
     }
-    addStoredValueCommand(new CmdCardSvGet(card, svOperation, useExtendedMode), svOperation);
+    addStoredValueCommand(new CmdCardSvGet(card, svOperation, isExtendedModeRequired), svOperation);
     this.svAction = svAction;
 
     return this;
@@ -2321,7 +2325,7 @@ final class CardTransactionManagerAdapter
 
     // create the initial command with the application data
     CmdCardSvReload svReloadCmdBuild =
-        new CmdCardSvReload(card, amount, date, time, free, isExtendedModeAllowed());
+        new CmdCardSvReload(card, amount, date, time, free, isExtendedModeRequired);
 
     // create and keep the CalypsoCardCommand
     addStoredValueCommand(svReloadCmdBuild, SvOperation.RELOAD);
@@ -2344,17 +2348,6 @@ final class CardTransactionManagerAdapter
         throw new IllegalStateException("Only one SV operation is allowed per Secure Session.");
       }
     }
-  }
-
-  /**
-   * (private)<br>
-   * CL-CSS-OSSMODE.1<br>
-   * CL-SV-CMDMODE.1
-   *
-   * @return True if the card extended mode is allowed.
-   */
-  private boolean isExtendedModeAllowed() {
-    return card.isExtendedModeSupported() && symmetricCryptoService.isExtendedModeSupported();
   }
 
   /**
@@ -2389,7 +2382,7 @@ final class CardTransactionManagerAdapter
     // create the initial command with the application data
     CmdCardSvDebitOrUndebit command =
         new CmdCardSvDebitOrUndebit(
-            svAction == SvAction.DO, card, amount, date, time, isExtendedModeAllowed());
+            svAction == SvAction.DO, card, amount, date, time, isExtendedModeRequired);
 
     // create and keep the CalypsoCardCommand
     addStoredValueCommand(command, SvOperation.DEBIT);
