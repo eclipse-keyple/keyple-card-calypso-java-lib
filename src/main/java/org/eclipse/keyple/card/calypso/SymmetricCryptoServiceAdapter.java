@@ -128,8 +128,10 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   public byte[] finalizeTerminalSessionMac() {
     digestManager.prepareCommands();
     digestManager = null;
+    CmdSamDigestClose cmdSamDigestClose =
+        (CmdSamDigestClose) samCommands.get(samCommands.size() - 1);
     processCommands();
-    return ((CmdSamDigestClose) samCommands.get(samCommands.size() - 1)).getSignature();
+    return cmdSamDigestClose.getSignature();
   }
 
   @Override
@@ -222,6 +224,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
       byte issuerKeyKvc,
       byte targetKeyKif,
       byte targetKeyKvc) {
+    prepareGiveRandom(cardChallenge);
     CmdSamCardGenerateKey cmd =
         new CmdSamCardGenerateKey(sam, issuerKeyKif, issuerKeyKvc, targetKeyKif, targetKeyKvc);
     samCommands.add(cmd);

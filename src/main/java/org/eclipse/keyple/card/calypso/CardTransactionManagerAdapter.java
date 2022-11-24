@@ -195,10 +195,14 @@ final class CardTransactionManagerAdapter
     dest.getDefaultKvcMap().putAll(src.getDefaultKvcMap());
     dest.getAuthorizedSessionKeys().addAll(src.getAuthorizedSessionKeys());
     dest.getAuthorizedSvKeys().addAll(src.getAuthorizedSvKeys());
-    dest.setPinVerificationCipheringKey(
-        src.getPinVerificationCipheringKif(), src.getPinVerificationCipheringKvc());
-    dest.setPinModificationCipheringKey(
-        src.getPinModificationCipheringKif(), src.getPinModificationCipheringKvc());
+    if (src.getPinVerificationCipheringKif() != null) {
+      dest.setPinVerificationCipheringKey(
+          src.getPinVerificationCipheringKif(), src.getPinVerificationCipheringKvc());
+    }
+    if (src.getPinModificationCipheringKif() != null) {
+      dest.setPinModificationCipheringKey(
+          src.getPinModificationCipheringKif(), src.getPinModificationCipheringKvc());
+    }
     return dest;
   }
 
