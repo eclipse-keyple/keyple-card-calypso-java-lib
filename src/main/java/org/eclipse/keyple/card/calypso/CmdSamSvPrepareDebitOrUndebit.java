@@ -62,7 +62,7 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
   CmdSamSvPrepareDebitOrUndebit(CalypsoSamAdapter calypsoSam, SvCommandSecurityDataAdapter data) {
 
     super(
-        data.getSvCommandRequest()[1] == (byte) 0xBA
+        data.getSvCommandRequest()[0] == (byte) 0xBA
             ? CalypsoSamCommand.SV_PREPARE_DEBIT
             : CalypsoSamCommand.SV_PREPARE_UNDEBIT,
         0,

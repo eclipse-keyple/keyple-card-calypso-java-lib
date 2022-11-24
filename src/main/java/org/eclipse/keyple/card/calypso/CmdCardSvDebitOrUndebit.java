@@ -176,14 +176,14 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
-    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 11, 4);
-    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 7, dataIn, 15, 3);
+    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 8, 4);
+    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 0, dataIn, 12, 3);
     System.arraycopy(
         svCommandSecurityData.getTerminalSvMac(),
-        10,
+        0,
         dataIn,
-        18,
-        svCommandSecurityData.getTerminalSvMac().length - 10);
+        15,
+        svCommandSecurityData.getTerminalSvMac().length);
 
     setApduRequest(
         new ApduRequestAdapter(

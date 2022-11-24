@@ -160,7 +160,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   public void generateSvCommandSecurityData(SvCommandSecurityData svCommandSecurityData) {
     SvCommandSecurityDataAdapter data = (SvCommandSecurityDataAdapter) svCommandSecurityData;
     prepareSelectDiversifierIfNeeded();
-    if (data.getSvCommandRequest()[1] == (byte) 0xB8) {
+    if (data.getSvCommandRequest()[0] == (byte) 0xB8) {
       samCommands.add(new CmdSamSvPrepareLoad(sam, data));
     } else {
       samCommands.add(new CmdSamSvPrepareDebitOrUndebit(sam, data));

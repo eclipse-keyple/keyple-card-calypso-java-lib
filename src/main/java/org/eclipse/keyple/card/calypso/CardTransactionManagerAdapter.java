@@ -1492,7 +1492,7 @@ final class CardTransactionManagerAdapter
       // SV RELOAD: get the security data from the SAM
       CmdCardSvReload svCommand = (CmdCardSvReload) svLastModifyingCommand;
 
-      svCommandSecurityData.setSvCommandRequest(svCommand.getApduRequest().getApdu());
+      svCommandSecurityData.setSvCommandRequest(svCommand.getSvReloadData());
 
       symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
 
@@ -1504,7 +1504,7 @@ final class CardTransactionManagerAdapter
       // SV DEBIT/UNDEBIT: get the security data from the SAM
       CmdCardSvDebitOrUndebit svCommand = (CmdCardSvDebitOrUndebit) svLastModifyingCommand;
 
-      svCommandSecurityData.setSvCommandRequest(svCommand.getApduRequest().getApdu());
+      svCommandSecurityData.setSvCommandRequest(svCommand.getSvDebitOrUndebitData());
 
       symmetricCryptoService.generateSvCommandSecurityData(svCommandSecurityData);
 
