@@ -68,7 +68,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -80,11 +80,10 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
         0x6900,
         new StatusProperties(
             "Transaction counter is 0 or SV TNum is FFFEh or FFFFh.",
-            CalypsoSamCounterOverflowException.class));
+            CardTerminatedException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", CardAccessForbiddenException.class));
     m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
     m.put(
         SW_POSTPONED_DATA,
@@ -171,7 +170,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    * @param svCommandSecurityData the data out from the SvPrepareDebit SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(SvCommandSecurityData svCommandSecurityData) {
+  void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];

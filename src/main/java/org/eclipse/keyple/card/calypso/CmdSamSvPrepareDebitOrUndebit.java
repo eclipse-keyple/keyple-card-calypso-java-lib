@@ -49,7 +49,7 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
     STATUS_TABLE = m;
   }
 
-  private final SvCommandSecurityDataAdapter data;
+  private final SvCommandSecurityDataApiAdapter data;
 
   /**
    * (package-private)<br>
@@ -59,7 +59,8 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
    * @param data The SV input/output command data.
    * @since 2.0.1
    */
-  CmdSamSvPrepareDebitOrUndebit(CalypsoSamAdapter calypsoSam, SvCommandSecurityDataAdapter data) {
+  CmdSamSvPrepareDebitOrUndebit(
+      CalypsoSamAdapter calypsoSam, SvCommandSecurityDataApiAdapter data) {
 
     super(
         data.getSvCommandPartialRequest()[0] == (byte) 0xBA

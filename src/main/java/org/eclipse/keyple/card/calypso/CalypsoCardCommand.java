@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0.0
  */
-enum CalypsoCardCommand implements CardCommand {
+enum CalypsoCardCommand {
 
   /** get data. */
   GET_DATA("Get Data", (byte) 0xCA),

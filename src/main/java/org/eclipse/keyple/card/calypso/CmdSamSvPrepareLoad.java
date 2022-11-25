@@ -51,7 +51,7 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
     STATUS_TABLE = m;
   }
 
-  private final SvCommandSecurityDataAdapter data;
+  private final SvCommandSecurityDataApiAdapter data;
 
   /**
    * (package-private)<br>
@@ -64,7 +64,7 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
    * @param data The SV input/output command data.
    * @since 2.0.1
    */
-  CmdSamSvPrepareLoad(CalypsoSamAdapter calypsoSam, SvCommandSecurityDataAdapter data) {
+  CmdSamSvPrepareLoad(CalypsoSamAdapter calypsoSam, SvCommandSecurityDataApiAdapter data) {
 
     super(command, 0, calypsoSam);
 

@@ -17,7 +17,11 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0.0
  */
-abstract class CardCommandException extends CalypsoApduCommandException {
+abstract class CardCommandException extends Exception {
+
+  private final CalypsoCardCommand command;
+
+  private final Integer statusWord;
 
   /**
    * (package-private)<br>
@@ -28,6 +32,30 @@ abstract class CardCommandException extends CalypsoApduCommandException {
    * @since 2.0.0
    */
   CardCommandException(String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+    super(message);
+    this.command = command;
+    this.statusWord = statusWord;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the command
+   *
+   * @return A not null reference.
+   * @since 2.0.0
+   */
+  CalypsoCardCommand getCommand() {
+    return command;
+  }
+
+  /**
+   * (package-private)<br>
+   * Gets the status word
+   *
+   * @return A nullable reference
+   * @since 2.0.0
+   */
+  Integer getStatusWord() {
+    return statusWord;
   }
 }

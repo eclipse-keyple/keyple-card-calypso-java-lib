@@ -101,7 +101,7 @@ final class CardTransactionManagerAdapter
   private final ProxyReaderApi cardReader;
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting; // Do not use anymore
-  private final SymmetricCryptoSecuritySettingAdapter symmetricKeySecuritySetting;
+  private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
   private final SymmetricCryptoTransactionManagerAdapter symmetricCryptoTransactionManager;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
   private final boolean isExtendedModeRequired;
@@ -157,19 +157,20 @@ final class CardTransactionManagerAdapter
 
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
-      symmetricKeySecuritySetting = buildSymmetricKeySecuritySetting(securitySetting);
+      symmetricCryptoSecuritySetting = buildSymmetricCryptoSecuritySetting(securitySetting);
       SymmetricCryptoServiceAdapter symmetricCryptoService =
-          symmetricKeySecuritySetting.getCryptoService();
+          symmetricCryptoSecuritySetting.getCryptoService();
       isExtendedModeRequired =
           card.isExtendedModeSupported()
-              && !symmetricKeySecuritySetting.isRegularModeRequired()
+              && !symmetricCryptoSecuritySetting.isRegularModeRequired()
               && symmetricCryptoService.isExtendedModeSupported();
+      // CL-SAM-CSN.1
       symmetricCryptoTransactionManager =
           symmetricCryptoService.createTransactionManager(
               card.getCalypsoSerialNumberFull(), isExtendedModeRequired, getTransactionAuditData());
     } else {
       // Non-secure operations mode
-      symmetricKeySecuritySetting = null;
+      symmetricCryptoSecuritySetting = null;
       isExtendedModeRequired = card.isExtendedModeSupported();
       symmetricCryptoTransactionManager = null;
     }
@@ -177,7 +178,7 @@ final class CardTransactionManagerAdapter
     this.modificationsCounter = card.getModificationsCounter();
   }
 
-  private SymmetricCryptoSecuritySettingAdapter buildSymmetricKeySecuritySetting(
+  private SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
       CardSecuritySettingAdapter src) {
     SymmetricCryptoSecuritySettingAdapter dest = new SymmetricCryptoSecuritySettingAdapter();
     dest.setCryptoService(
@@ -264,13 +265,12 @@ final class CardTransactionManagerAdapter
    * @param writeAccessLevel The write access level.
    * @param kvc The card KVC value.
    * @return Null if the card did not provide a KVC value and if there's no default KVC value.
-   * @since 2.2.0
    */
   private Byte computeKvc(WriteAccessLevel writeAccessLevel, Byte kvc) {
     if (kvc != null) {
       return kvc;
     }
-    return symmetricKeySecuritySetting.getDefaultKvc(writeAccessLevel);
+    return symmetricCryptoSecuritySetting.getDefaultKvc(writeAccessLevel);
   }
 
   /**
@@ -281,7 +281,6 @@ final class CardTransactionManagerAdapter
    * @param kif The card KIF value.
    * @param kvc The previously computed KVC value.
    * @return Null if the card did not provide a KIF value and if there's no default KIF value.
-   * @since 2.2.0
    */
   private Byte computeKif(WriteAccessLevel writeAccessLevel, Byte kif, Byte kvc) {
     // CL-KEY-KIF.1
@@ -289,9 +288,9 @@ final class CardTransactionManagerAdapter
       return kif;
     }
     // CL-KEY-KIFUNK.1
-    Byte result = symmetricKeySecuritySetting.getKif(writeAccessLevel, kvc);
+    Byte result = symmetricCryptoSecuritySetting.getKif(writeAccessLevel, kvc);
     if (result == null) {
-      result = symmetricKeySecuritySetting.getDefaultKif(writeAccessLevel);
+      result = symmetricCryptoSecuritySetting.getDefaultKif(writeAccessLevel);
     }
     return result;
   }
@@ -332,7 +331,7 @@ final class CardTransactionManagerAdapter
    */
   private void processAtomicOpening(List<AbstractCardCommand> cardCommands) {
 
-    if (symmetricKeySecuritySetting == null) {
+    if (symmetricCryptoSecuritySetting == null) {
       throw new IllegalStateException("No security settings are available.");
     }
 
@@ -425,7 +424,7 @@ final class CardTransactionManagerAdapter
     Byte kvc = computeKvc(writeAccessLevel, cardKvc);
     Byte kif = computeKif(writeAccessLevel, cardKif, kvc);
 
-    if (!symmetricKeySecuritySetting.isSessionKeyAuthorized(kif, kvc)) {
+    if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(kif, kvc)) {
       throw new UnauthorizedKeyException(
           String.format(
               "Unauthorized key error: KIF=%s, KVC=%s %s",
@@ -1011,7 +1010,7 @@ final class CardTransactionManagerAdapter
     // CL-CSS-REQUEST.1
     // CL-CSS-SMEXCEED.1
     // CL-CSS-INFOCSS.1
-    if (!symmetricKeySecuritySetting.isMultipleSessionEnabled()) {
+    if (!symmetricCryptoSecuritySetting.isMultipleSessionEnabled()) {
       throw new SessionBufferOverflowException(
           "ATOMIC mode error! This command would overflow the card modifications buffer: "
               + command.getName()
@@ -1210,7 +1209,7 @@ final class CardTransactionManagerAdapter
 
       processAtomicClosing(
           cardAtomicCommands,
-          symmetricKeySecuritySetting.isRatificationMechanismEnabled(),
+          symmetricCryptoSecuritySetting.isRatificationMechanismEnabled(),
           channelControl);
 
       // sets the flag indicating that the commands have been executed
@@ -1291,8 +1290,8 @@ final class CardTransactionManagerAdapter
       finalizeSvCommandIfNeeded();
 
       // CL-PIN-PENCRYPT.1
-      if (symmetricKeySecuritySetting != null
-          && !symmetricKeySecuritySetting.isPinPlainTransmissionEnabled()) {
+      if (symmetricCryptoSecuritySetting != null
+          && !symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
 
         // CL-PIN-GETCHAL.1
         cardCommands.add(new CmdCardGetChallenge(card));
@@ -1308,8 +1307,8 @@ final class CardTransactionManagerAdapter
             symmetricCryptoTransactionManager.cipherPinForPresentation(
                 card.getCardChallenge(),
                 pin,
-                symmetricKeySecuritySetting.getPinVerificationCipheringKif(),
-                symmetricKeySecuritySetting.getPinVerificationCipheringKvc());
+                symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
+                symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc());
 
         cardCommands.add(new CmdCardVerifyPin(card, true, cipheredPin));
       } else {
@@ -1354,7 +1353,7 @@ final class CardTransactionManagerAdapter
       finalizeSvCommandIfNeeded();
 
       // CL-PIN-MENCRYPT.1
-      if (symmetricKeySecuritySetting.isPinPlainTransmissionEnabled()) {
+      if (symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
         // transmission in plain mode
         if (card.getPinAttemptRemaining() >= 0) {
           cardCommands.add(new CmdCardChangePin(card, newPin));
@@ -1377,8 +1376,8 @@ final class CardTransactionManagerAdapter
                 card.getCardChallenge(),
                 currentPin,
                 newPin,
-                symmetricKeySecuritySetting.getPinModificationCipheringKif(),
-                symmetricKeySecuritySetting.getPinModificationCipheringKvc());
+                symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
+                symmetricCryptoSecuritySetting.getPinModificationCipheringKvc());
 
         cardCommands.add(new CmdCardChangePin(card, newPinData));
       }
@@ -1492,7 +1491,7 @@ final class CardTransactionManagerAdapter
       return;
     }
 
-    SvCommandSecurityData svCommandSecurityData = new SvCommandSecurityDataAdapter();
+    SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
     svCommandSecurityData.setSvGetRequest(card.getSvGetHeader());
     svCommandSecurityData.setSvGetResponse(card.getSvGetData());
 
@@ -2299,7 +2298,7 @@ final class CardTransactionManagerAdapter
       throw new UnsupportedOperationException("Stored Value is not available for this card.");
     }
 
-    if (symmetricKeySecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedModeRequired)) {
+    if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedModeRequired)) {
       // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
       // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
       // CL-SV-GETNUMBER.1
@@ -2374,7 +2373,7 @@ final class CardTransactionManagerAdapter
     checkSvInsideSession();
 
     if (svAction == SvAction.DO
-        && !symmetricKeySecuritySetting.isSvNegativeBalanceAuthorized()
+        && !symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized()
         && (card.getSvBalance() - amount) < 0) {
       throw new IllegalStateException("Negative balances not allowed.");
     }

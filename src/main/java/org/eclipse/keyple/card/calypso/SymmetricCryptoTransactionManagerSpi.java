@@ -22,7 +22,7 @@ package org.eclipse.keyple.card.calypso;
 interface SymmetricCryptoTransactionManagerSpi {
 
   /**
-   * Initializes the crypto service context for operating a Secure Session with a card et gets the
+   * Initializes the crypto service context for operating a Secure Session with a card and gets the
    * terminal challenge.
    *
    * @return The terminal challenge.
@@ -31,7 +31,7 @@ interface SymmetricCryptoTransactionManagerSpi {
   byte[] initTerminalSecureSessionContext();
 
   /**
-   * Stores the data needed to initialize the digest computation for a Secure Session.
+   * Stores the data needed to initialize the session MAC computation for a Secure Session.
    *
    * @param openSecureSessionDataOut The data out from the card Open Secure Session command.
    * @param kif The card KIF.
@@ -98,7 +98,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    *     command.
    * @since x.y.z
    */
-  void generateSvCommandSecurityData(SvCommandSecurityData svCommandSecurityData);
+  void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData);
 
   /**
    * Verifies the SV card MAC.

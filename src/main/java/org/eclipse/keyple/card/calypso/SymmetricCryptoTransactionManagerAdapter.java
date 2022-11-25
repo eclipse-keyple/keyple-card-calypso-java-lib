@@ -145,8 +145,8 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public void generateSvCommandSecurityData(SvCommandSecurityData svCommandSecurityData) {
-    SvCommandSecurityDataAdapter data = (SvCommandSecurityDataAdapter) svCommandSecurityData;
+  public void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData) {
+    SvCommandSecurityDataApiAdapter data = (SvCommandSecurityDataApiAdapter) svCommandSecurityData;
     prepareSelectDiversifierIfNeeded();
     if (data.getSvCommandPartialRequest()[0] == (byte) 0xB8) {
       samCommands.add(new CmdSamSvPrepareLoad(sam, data));
@@ -163,6 +163,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     return true;
   }
 
+  /** Prepares a "Give Random" SAM command. */
   private void prepareGiveRandom(byte[] cardChallenge) {
     prepareSelectDiversifierIfNeeded();
     samCommands.add(new CmdSamGiveRandom(sam, cardChallenge));

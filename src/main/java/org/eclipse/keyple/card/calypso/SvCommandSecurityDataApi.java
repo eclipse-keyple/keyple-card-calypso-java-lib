@@ -16,7 +16,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since x.y.z
  */
-interface SvCommandSecurityData {
+interface SvCommandSecurityDataApi {
 
   /**
    * Sets the "SV Get" ingoing command data.
@@ -25,7 +25,7 @@ interface SvCommandSecurityData {
    * @return The object instance.
    * @since x.y.z
    */
-  SvCommandSecurityData setSvGetRequest(byte[] svGetRequest);
+  byte[] getSvGetRequest();
 
   /**
    * Sets the "SV Get" outgoing command data.
@@ -34,7 +34,7 @@ interface SvCommandSecurityData {
    * @return The object instance.
    * @since x.y.z
    */
-  SvCommandSecurityData setSvGetResponse(byte[] svGetResponse);
+  byte[] getSvGetResponse();
 
   /**
    * Sets the "SV Load/Debit/Undebit" outgoing command data.
@@ -44,7 +44,7 @@ interface SvCommandSecurityData {
    * @return The object instance.
    * @since x.y.z
    */
-  SvCommandSecurityData setSvCommandPartialRequest(byte[] svCommandPartialRequest);
+  byte[] getSvCommandPartialRequest();
 
   /**
    * Gets the serial number to be placed in the "SV Load/Debit/Undebit" command request.
@@ -52,7 +52,7 @@ interface SvCommandSecurityData {
    * @return A not byte array containing the serial number.
    * @since x.y.z
    */
-  byte[] getSerialNumber();
+  SvCommandSecurityDataApi setSerialNumber(byte[] serialNumber);
 
   /**
    * Gets the transaction number to be placed in the "SV Load/Debit/Undebit" command request.
@@ -60,7 +60,7 @@ interface SvCommandSecurityData {
    * @return A not byte array containing the transaction number.
    * @since x.y.z
    */
-  byte[] getTransactionNumber();
+  SvCommandSecurityDataApi setTransactionNumber(byte[] transactionNumber);
 
   /**
    * Gets the terminal challenge to be placed in the SV Load/Debit/Undebit command request.
@@ -68,7 +68,7 @@ interface SvCommandSecurityData {
    * @return A not byte array containing the terminal challenge.
    * @since x.y.z
    */
-  byte[] getTerminalChallenge();
+  SvCommandSecurityDataApi setTerminalChallenge(byte[] terminalChallenge);
 
   /**
    * Gets the terminal SV MAC to be placed in the "SV Load/Debit/Undebit" command request.
@@ -76,5 +76,5 @@ interface SvCommandSecurityData {
    * @return A not byte array containing the terminal SV MAC.
    * @since x.y.z
    */
-  byte[] getTerminalSvMac();
+  SvCommandSecurityDataApi setTerminalSvMac(byte[] terminalSvMac);
 }
