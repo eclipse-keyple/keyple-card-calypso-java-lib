@@ -18,7 +18,6 @@ import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureComputationData;
 import org.calypsonet.terminal.calypso.transaction.CommonSignatureVerificationData;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
-import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.calypso.transaction.InvalidSignatureException;
 import org.calypsonet.terminal.calypso.transaction.ReaderIOException;
 import org.calypsonet.terminal.calypso.transaction.SamIOException;
@@ -52,6 +51,9 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   private static final String MSG_SAM_COMMUNICATION_ERROR =
       "A communication error with the SAM occurred ";
   private static final String MSG_SAM_COMMAND_ERROR = "A SAM command error occurred ";
+  private static final String MSG_SAM_INCONSISTENT_DATA =
+      "The number of SAM commands/responses does not match: nb commands = ";
+  private static final String MSG_SAM_NB_RESPONSES = ", nb responses = ";
   private static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands.";
   private static final String MSG_INPUT_OUTPUT_DATA = "input/output data";
   private static final String MSG_SIGNATURE_SIZE = "signature size";
@@ -61,17 +63,16 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   /* Final fields */
   private final ProxyReaderApi samReader;
   private final CalypsoSamAdapter sam;
+  private final byte[] cardKeyDiversifier;
+  private final boolean isExtendedModeRequired;
+  private final List<byte[]> transactionAuditData;
   private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
-  private final boolean isExtendedModeSupported;
 
   // Temporary field for manage PSO signature
   private final CardSecuritySettingAdapter tmpCardSecuritySetting;
 
   /* Dynamic fields */
-  private byte[] cardKeyDiversifier;
   private byte[] currentKeyDiversifier;
-  private boolean isExtendedModeRequired;
-  private List<byte[]> transactionAuditData;
   private DigestManager digestManager;
 
   SymmetricCryptoTransactionManagerAdapter(
@@ -87,13 +88,11 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     this.isExtendedModeRequired = useExtendedMode;
     this.transactionAuditData = transactionAuditData;
     this.tmpCardSecuritySetting = tmpCardSecuritySetting;
-    this.isExtendedModeSupported =
-        sam.getProductType() == CalypsoSam.ProductType.SAM_C1
-            || sam.getProductType() == CalypsoSam.ProductType.HSM_C1;
   }
 
   @Override
-  public byte[] initTerminalSecureSessionContext() {
+  public byte[] initTerminalSecureSessionContext()
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     prepareSelectDiversifierIfNeeded();
     CmdSamGetChallenge cmd = new CmdSamGetChallenge(sam, isExtendedModeRequired ? 8 : 4);
     samCommands.add(cmd);
@@ -113,7 +112,8 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public byte[] finalizeTerminalSessionMac() {
+  public byte[] finalizeTerminalSessionMac()
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     digestManager.prepareCommands();
     digestManager = null;
     CmdSamDigestClose cmdSamDigestClose =
@@ -138,14 +138,20 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public boolean verifyCardSessionMac(byte[] cardSessionMac) {
+  public boolean verifyCardSessionMac(byte[] cardSessionMac)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     samCommands.add(new CmdSamDigestAuthenticate(sam, cardSessionMac));
-    processCommands();
-    return true;
+    try {
+      processCommands();
+      return true;
+    } catch (InvalidCardMacException e) {
+      return false;
+    }
   }
 
   @Override
-  public void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData) {
+  public void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     SvCommandSecurityDataApiAdapter data = (SvCommandSecurityDataApiAdapter) svCommandSecurityData;
     prepareSelectDiversifierIfNeeded();
     if (data.getSvCommandPartialRequest()[0] == (byte) 0xB8) {
@@ -157,10 +163,15 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public boolean verifyCardSvMac(byte[] cardSvMac) {
+  public boolean verifyCardSvMac(byte[] cardSvMac)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     samCommands.add(new CmdSamSvCheck(sam, cardSvMac));
-    processCommands();
-    return true;
+    try {
+      processCommands();
+      return true;
+    } catch (InvalidCardMacException e) {
+      return false;
+    }
   }
 
   /** Prepares a "Give Random" SAM command. */
@@ -170,18 +181,21 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc) {
+  public byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     return cipherPin(cardChallenge, pin, null, kif, kvc);
   }
 
   @Override
   public byte[] cipherPinForModification(
-      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc) {
+      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     return cipherPin(cardChallenge, currentPin, newPin, kif, kvc);
   }
 
   private byte[] cipherPin(
-      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc) {
+      byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     byte pinCipheringKif;
     byte pinCipheringKvc;
     if (digestManager != null && digestManager.sessionKif != 0) {
@@ -212,7 +226,8 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
       byte issuerKeyKif,
       byte issuerKeyKvc,
       byte targetKeyKif,
-      byte targetKeyKvc) {
+      byte targetKeyKvc)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     prepareGiveRandom(cardChallenge);
     CmdSamCardGenerateKey cmd =
         new CmdSamCardGenerateKey(sam, issuerKeyKif, issuerKeyKvc, targetKeyKif, targetKeyKvc);
@@ -221,7 +236,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     return cmd.getCipheredData();
   }
 
-  void processCommands() {
+  void processCommands() throws SymmetricCryptoException, SymmetricCryptoIOException {
     // If there are pending SAM commands and the secure session is open and the "Digest Init"
     // command is not already executed, then we need to flush the session pending commands by
     // executing the pending "digest" commands "BEFORE" the other SAM commands to make sure that
@@ -250,12 +265,17 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
       // this case we stop processing immediately because it may be a case of fraud, and we throw an
       // exception.
       if (apduResponses.size() > apduRequests.size()) {
-        throw new InconsistentDataException(
-            "The number of SAM commands/responses does not match: nb commands = "
+        throw new SymmetricCryptoException(
+            MSG_SAM_INCONSISTENT_DATA
                 + apduRequests.size()
-                + ", nb responses = "
-                + apduResponses.size()
-                + getTransactionAuditDataAsString());
+                + MSG_SAM_NB_RESPONSES
+                + apduResponses.size(),
+            new InconsistentDataException(
+                MSG_SAM_INCONSISTENT_DATA
+                    + apduRequests.size()
+                    + MSG_SAM_NB_RESPONSES
+                    + apduResponses.size()
+                    + getTransactionAuditDataAsString()));
       }
 
       // We go through all the responses (and not the requests) because there may be fewer in the
@@ -268,33 +288,49 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
           CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
           if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE
               && e instanceof CalypsoSamSecurityDataException) {
-            throw new InvalidCardSignatureException("Invalid card signature.", e);
+            throw new InvalidCardMacException("Invalid card signature.");
           } else if ((commandRef == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
                   || commandRef == CalypsoSamCommand.DATA_CIPHER)
               && e instanceof CalypsoSamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
           } else if (commandRef == CalypsoSamCommand.SV_CHECK
               && e instanceof CalypsoSamSecurityDataException) {
-            throw new InvalidCardSignatureException("Invalid SV card signature.", e);
+            throw new InvalidCardMacException("Invalid SV card signature.");
           }
-          throw new UnexpectedCommandStatusException(
+          String sw = e.getStatusWord() != null ? HexUtil.toHex(e.getStatusWord()) : "null";
+          throw new SymmetricCryptoException(
               MSG_SAM_COMMAND_ERROR
                   + "while processing responses to SAM commands: "
                   + e.getCommand()
-                  + getTransactionAuditDataAsString(),
-              e);
+                  + " ["
+                  + sw
+                  + "]",
+              new UnexpectedCommandStatusException(
+                  MSG_SAM_COMMAND_ERROR
+                      + "while processing responses to SAM commands: "
+                      + e.getCommand()
+                      + " ["
+                      + sw
+                      + "]"
+                      + getTransactionAuditDataAsString(),
+                  e));
         }
       }
 
       // Finally, if no error has occurred and there are fewer responses than requests, then we
       // throw an exception.
       if (apduResponses.size() < apduRequests.size()) {
-        throw new InconsistentDataException(
-            "The number of SAM commands/responses does not match: nb commands = "
+        throw new SymmetricCryptoException(
+            MSG_SAM_INCONSISTENT_DATA
                 + apduRequests.size()
-                + ", nb responses = "
-                + apduResponses.size()
-                + getTransactionAuditDataAsString());
+                + MSG_SAM_NB_RESPONSES
+                + apduResponses.size(),
+            new InconsistentDataException(
+                MSG_SAM_INCONSISTENT_DATA
+                    + apduRequests.size()
+                    + MSG_SAM_NB_RESPONSES
+                    + apduResponses.size()
+                    + getTransactionAuditDataAsString()));
       }
     } finally {
       // Reset the list of commands.
@@ -327,24 +363,29 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
    * @param cardRequest The card request to transmit.
    * @return The card response.
    */
-  private CardResponseApi transmitCardRequest(CardRequestSpi cardRequest) {
+  private CardResponseApi transmitCardRequest(CardRequestSpi cardRequest)
+      throws SymmetricCryptoIOException {
     CardResponseApi cardResponse;
     try {
       cardResponse = samReader.transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
     } catch (ReaderBrokenCommunicationException e) {
       saveTransactionAuditData(cardRequest, e.getCardResponse());
-      throw new ReaderIOException(
-          MSG_SAM_READER_COMMUNICATION_ERROR
-              + MSG_WHILE_TRANSMITTING_COMMANDS
-              + getTransactionAuditDataAsString(),
-          e);
+      throw new SymmetricCryptoIOException(
+          MSG_SAM_READER_COMMUNICATION_ERROR + MSG_WHILE_TRANSMITTING_COMMANDS,
+          new ReaderIOException(
+              MSG_SAM_READER_COMMUNICATION_ERROR
+                  + MSG_WHILE_TRANSMITTING_COMMANDS
+                  + getTransactionAuditDataAsString(),
+              e));
     } catch (CardBrokenCommunicationException e) {
       saveTransactionAuditData(cardRequest, e.getCardResponse());
-      throw new SamIOException(
-          MSG_SAM_COMMUNICATION_ERROR
-              + MSG_WHILE_TRANSMITTING_COMMANDS
-              + getTransactionAuditDataAsString(),
-          e);
+      throw new SymmetricCryptoIOException(
+          MSG_SAM_COMMUNICATION_ERROR + MSG_WHILE_TRANSMITTING_COMMANDS,
+          new SamIOException(
+              MSG_SAM_COMMUNICATION_ERROR
+                  + MSG_WHILE_TRANSMITTING_COMMANDS
+                  + getTransactionAuditDataAsString(),
+              e));
     } catch (UnexpectedStatusWordException e) {
       if (logger.isDebugEnabled()) {
         logger.debug("A SAM command has failed: {}", e.getMessage());
@@ -381,13 +422,12 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
    * @return A not empty string.
    */
   private String getTransactionAuditDataAsString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("\nTransaction audit JSON data: {");
-    // sb.append("\"targetSmartCard\":").append(targetSmartCard.toString()).append(",");
-    sb.append("\"sam\":").append(sam).append(",");
-    sb.append("\"apdus\":").append(JsonUtil.toJson(transactionAuditData));
-    sb.append("}");
-    return sb.toString();
+    return "\nTransaction audit JSON data: {"
+        + "\"sam\":"
+        + sam
+        + ",\"apdus\":"
+        + JsonUtil.toJson(transactionAuditData)
+        + "}";
   }
 
   /**
@@ -727,6 +767,12 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     private void prepareDigestClose() {
       // CL-SAM-DCLOSE.1
       samCommands.add(new CmdSamDigestClose(sam, isExtendedModeRequired ? 8 : 4));
+    }
+  }
+
+  private static class InvalidCardMacException extends RuntimeException {
+    private InvalidCardMacException(String message) {
+      super(message);
     }
   }
 }

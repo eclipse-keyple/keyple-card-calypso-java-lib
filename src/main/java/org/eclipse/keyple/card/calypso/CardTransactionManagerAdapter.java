@@ -318,7 +318,13 @@ final class CardTransactionManagerAdapter
    */
   private void processSamPreparedCommands() {
     if (symmetricCryptoTransactionManager != null) {
-      symmetricCryptoTransactionManager.processCommands();
+      try {
+        symmetricCryptoTransactionManager.processCommands();
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
     }
   }
 
@@ -362,7 +368,14 @@ final class CardTransactionManagerAdapter
     }
 
     // initialize the crypto service for a new secure session and retrieve the terminal challenge
-    byte[] samChallenge = symmetricCryptoTransactionManager.initTerminalSecureSessionContext();
+    byte[] samChallenge = new byte[0];
+    try {
+      samChallenge = symmetricCryptoTransactionManager.initTerminalSecureSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
 
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
@@ -664,8 +677,14 @@ final class CardTransactionManagerAdapter
 
     // All SAM digest operations will now run at once.
     // Get Terminal Signature from the latest response.
-    byte[] sessionTerminalSignature =
-        symmetricCryptoTransactionManager.finalizeTerminalSessionMac();
+    byte[] sessionTerminalSignature;
+    try {
+      sessionTerminalSignature = symmetricCryptoTransactionManager.finalizeTerminalSessionMac();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
 
     // Build the last "Close Secure Session" card command.
     CmdCardCloseSession cmdCardCloseSession =
@@ -757,23 +776,28 @@ final class CardTransactionManagerAdapter
     // Check the card signature
     // CL-CSS-MACVERIF.1
     try {
-      symmetricCryptoTransactionManager.verifyCardSessionMac(cmdCardCloseSession.getSignatureLo());
-    } catch (ReaderIOException e) {
+      if (!symmetricCryptoTransactionManager.verifyCardSessionMac(
+          cmdCardCloseSession.getSignatureLo())) {
+        throw new InvalidCardSignatureException("Invalid card signature");
+      }
+    } catch (SymmetricCryptoIOException e) {
       throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
-    } catch (SamIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
     }
     // If necessary, we check the status of the SV after the session has been successfully
     // closed.
     // CL-SV-POSTPON.1
     if (isSvOperationCompleteOneTime()) {
       try {
-        symmetricCryptoTransactionManager.verifyCardSvMac(
-            cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex));
-      } catch (ReaderIOException e) {
+        if (!symmetricCryptoTransactionManager.verifyCardSvMac(
+            cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex))) {
+          throw new InvalidCardSignatureException("Invalid card signature");
+        }
+      } catch (SymmetricCryptoIOException e) {
         throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
-      } catch (SamIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
       }
     }
   }
@@ -1038,11 +1062,13 @@ final class CardTransactionManagerAdapter
     // If an SV transaction was performed, we check the signature returned by the card here
     if (isSvOperationCompleteOneTime()) {
       try {
-        symmetricCryptoTransactionManager.verifyCardSvMac(card.getSvOperationSignature());
-      } catch (ReaderIOException e) {
+        if (!symmetricCryptoTransactionManager.verifyCardSvMac(card.getSvOperationSignature())) {
+          throw new InvalidCardSignatureException("Invalid card signature");
+        }
+      } catch (SymmetricCryptoIOException e) {
         throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
-      } catch (SamIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
       }
     } else {
       // Execute all prepared SAM commands.
@@ -1303,12 +1329,19 @@ final class CardTransactionManagerAdapter
         notifyCommandsProcessed();
 
         // Get the encrypted PIN with the help of the symmetric key crypto service
-        byte[] cipheredPin =
-            symmetricCryptoTransactionManager.cipherPinForPresentation(
-                card.getCardChallenge(),
-                pin,
-                symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
-                symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc());
+        byte[] cipheredPin;
+        try {
+          cipheredPin =
+              symmetricCryptoTransactionManager.cipherPinForPresentation(
+                  card.getCardChallenge(),
+                  pin,
+                  symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
+                  symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc());
+        } catch (SymmetricCryptoException e) {
+          throw (RuntimeException) e.getCause();
+        } catch (SymmetricCryptoIOException e) {
+          throw (RuntimeException) e.getCause();
+        }
 
         cardCommands.add(new CmdCardVerifyPin(card, true, cipheredPin));
       } else {
@@ -1371,13 +1404,20 @@ final class CardTransactionManagerAdapter
         // Get the encrypted PIN with the help of the SAM
         byte[] currentPin = new byte[4]; // all zeros as required
         // Get the encrypted PIN with the help of the symmetric key crypto service
-        byte[] newPinData =
-            symmetricCryptoTransactionManager.cipherPinForModification(
-                card.getCardChallenge(),
-                currentPin,
-                newPin,
-                symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
-                symmetricCryptoSecuritySetting.getPinModificationCipheringKvc());
+        byte[] newPinData;
+        try {
+          newPinData =
+              symmetricCryptoTransactionManager.cipherPinForModification(
+                  card.getCardChallenge(),
+                  currentPin,
+                  newPin,
+                  symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
+                  symmetricCryptoSecuritySetting.getPinModificationCipheringKvc());
+        } catch (SymmetricCryptoException e) {
+          throw (RuntimeException) e.getCause();
+        } catch (SymmetricCryptoIOException e) {
+          throw (RuntimeException) e.getCause();
+        }
 
         cardCommands.add(new CmdCardChangePin(card, newPinData));
       }
@@ -1429,9 +1469,16 @@ final class CardTransactionManagerAdapter
     notifyCommandsProcessed();
 
     // Get the encrypted key with the help of the SAM
-    byte[] cipheredKey =
-        symmetricCryptoTransactionManager.generateCipheredCardKey(
-            card.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
+    byte[] cipheredKey;
+    try {
+      cipheredKey =
+          symmetricCryptoTransactionManager.generateCipheredCardKey(
+              card.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
 
     cardCommands.add(new CmdCardChangeKey(card, (byte) keyIndex, cipheredKey));
 
@@ -1502,7 +1549,13 @@ final class CardTransactionManagerAdapter
 
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvReloadData());
 
-      symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+      try {
+        symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
 
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svCommandSecurityData);
@@ -1514,7 +1567,13 @@ final class CardTransactionManagerAdapter
 
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvDebitOrUndebitData());
 
-      symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+      try {
+        symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
 
       // finalize the SV command with the data provided by the SAM
       svCommand.finalizeCommand(svCommandSecurityData);
