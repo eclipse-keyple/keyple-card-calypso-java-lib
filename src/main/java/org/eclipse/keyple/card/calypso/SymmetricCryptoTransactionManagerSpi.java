@@ -98,11 +98,10 @@ interface SymmetricCryptoTransactionManagerSpi {
   /**
    * Computes the needed data to operate SV card commands.
    *
-   * @param svCommandSecurityData The data involved in the preparation of an SV Reload/Debit/Undebit
-   *     command.
+   * @param data The data involved in the preparation of an SV Reload/Debit/Undebit command.
    * @since x.y.z
    */
-  void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData)
+  void computeSvCommandSecurityData(SvCommandSecurityDataApi data)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
 
   /**

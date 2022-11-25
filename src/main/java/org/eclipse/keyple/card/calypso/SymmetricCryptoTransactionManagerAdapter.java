@@ -150,7 +150,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public void generateSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData)
+  public void computeSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     SvCommandSecurityDataApiAdapter data = (SvCommandSecurityDataApiAdapter) svCommandSecurityData;
     prepareSelectDiversifierIfNeeded();

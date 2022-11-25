@@ -1550,7 +1550,7 @@ final class CardTransactionManagerAdapter
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvReloadData());
 
       try {
-        symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+        symmetricCryptoTransactionManager.computeSvCommandSecurityData(svCommandSecurityData);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -1568,7 +1568,7 @@ final class CardTransactionManagerAdapter
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvDebitOrUndebitData());
 
       try {
-        symmetricCryptoTransactionManager.generateSvCommandSecurityData(svCommandSecurityData);
+        symmetricCryptoTransactionManager.computeSvCommandSecurityData(svCommandSecurityData);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
