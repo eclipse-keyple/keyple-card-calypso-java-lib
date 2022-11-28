@@ -436,25 +436,29 @@ final class CardControlSamTransactionManagerAdapter
         // Construct list of DataIn
         List<byte[]> digestDataList = new ArrayList<byte[]>(1);
         byte[] buffer = new byte[255];
-        int i = 0;
-        for (byte[] cardApdu : cardApdus) {
-          /*
-           * The maximum buffer length of the "Digest Update Multiple" SAM command is set to 230
-           * bytes instead of the 254 theoretically allowed by the SAM in order to be compatible
-           * with certain unpredictable applications (e.g. 237 for the Hoplink application).
-           */
-          if (i + cardApdu.length > 230) {
+        byte[] request;
+        byte[] response;
+        int index = 0;
+        for (int i = 0; i < cardApdus.size(); i += 2) {
+          request = cardApdus.get(i);
+          response = cardApdus.get(i + 1);
+          if (index + request.length + response.length + 2 > 254) {
             // Copy buffer to digestDataList and reset buffer
-            digestDataList.add(Arrays.copyOf(buffer, i));
-            i = 0;
+            digestDataList.add(Arrays.copyOf(buffer, index));
+            index = 0;
           }
           // Add [length][apdu] to current buffer
-          buffer[i++] = (byte) cardApdu.length;
-          System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
-          i += cardApdu.length;
+          // Request
+          buffer[index++] = (byte) request.length;
+          System.arraycopy(request, 0, buffer, index, request.length);
+          index += request.length;
+          // Response
+          buffer[index++] = (byte) response.length;
+          System.arraycopy(response, 0, buffer, index, response.length);
+          index += response.length;
         }
         // Copy buffer to digestDataList
-        digestDataList.add(Arrays.copyOf(buffer, i));
+        digestDataList.add(Arrays.copyOf(buffer, index));
         // Add commands
         for (byte[] dataIn : digestDataList) {
           getSamCommands().add(new CmdSamDigestUpdateMultiple(controlSam, dataIn));
