@@ -102,7 +102,8 @@ final class CardTransactionManagerAdapter
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting; // Do not use anymore
   private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
-  private final SymmetricCryptoTransactionManagerAdapter symmetricCryptoTransactionManager;
+  private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+  private final LegacySamCardTransactionCryptoExtension cryptoExtension;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
   private final boolean isExtendedModeRequired;
   private final int cardPayloadCapacity;
@@ -158,21 +159,24 @@ final class CardTransactionManagerAdapter
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
       symmetricCryptoSecuritySetting = buildSymmetricCryptoSecuritySetting(securitySetting);
-      SymmetricCryptoServiceAdapter symmetricCryptoService =
-          symmetricCryptoSecuritySetting.getCryptoService();
+      SymmetricCryptoTransactionManagerFactoryAdapter symmetricCryptoService =
+          symmetricCryptoSecuritySetting.getCryptoTransactionManagerFactory();
       isExtendedModeRequired =
           card.isExtendedModeSupported()
               && !symmetricCryptoSecuritySetting.isRegularModeRequired()
               && symmetricCryptoService.isExtendedModeSupported();
       // CL-SAM-CSN.1
-      symmetricCryptoTransactionManager =
+      symmetricCryptoTransactionManagerSpi =
           symmetricCryptoService.createTransactionManager(
               card.getCalypsoSerialNumberFull(), isExtendedModeRequired, getTransactionAuditData());
+      cryptoExtension =
+          (LegacySamCardTransactionCryptoExtension) symmetricCryptoTransactionManagerSpi;
     } else {
       // Non-secure operations mode
       symmetricCryptoSecuritySetting = null;
       isExtendedModeRequired = card.isExtendedModeSupported();
-      symmetricCryptoTransactionManager = null;
+      symmetricCryptoTransactionManagerSpi = null;
+      cryptoExtension = null;
     }
 
     this.modificationsCounter = card.getModificationsCounter();
@@ -181,8 +185,9 @@ final class CardTransactionManagerAdapter
   private SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
       CardSecuritySettingAdapter src) {
     SymmetricCryptoSecuritySettingAdapter dest = new SymmetricCryptoSecuritySettingAdapter();
-    dest.setCryptoService(
-        new SymmetricCryptoServiceAdapter(src.getControlSamReader(), src.getControlSam(), src));
+    dest.setCryptoTransactionManager(
+        new SymmetricCryptoTransactionManagerFactoryAdapter(
+            src.getControlSamReader(), src.getControlSam(), src));
     if (src.isMultipleSessionEnabled()) {
       dest.enableMultipleSession();
     }
@@ -253,7 +258,7 @@ final class CardTransactionManagerAdapter
    * @throws IllegalStateException If control SAM is not set.
    */
   private void checkSymmetricCryptoTransactionManager() {
-    if (symmetricCryptoTransactionManager == null) {
+    if (symmetricCryptoTransactionManagerSpi == null) {
       throw new IllegalStateException("Crypto service is not set.");
     }
   }
@@ -307,8 +312,16 @@ final class CardTransactionManagerAdapter
   private void updateTerminalSessionMac(
       List<ApduRequestSpi> apduRequests, List<ApduResponseApi> apduResponses, int startIndex) {
     for (int i = startIndex; i < apduRequests.size(); i++) {
-      symmetricCryptoTransactionManager.updateTerminalSessionMac(apduRequests.get(i).getApdu());
-      symmetricCryptoTransactionManager.updateTerminalSessionMac(apduResponses.get(i).getApdu());
+      try {
+        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
+            apduRequests.get(i).getApdu());
+        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
+            apduResponses.get(i).getApdu());
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
     }
   }
 
@@ -317,9 +330,9 @@ final class CardTransactionManagerAdapter
    * Process any prepared SAM commands if control SAM is set.
    */
   private void processSamPreparedCommands() {
-    if (symmetricCryptoTransactionManager != null) {
+    if (symmetricCryptoTransactionManagerSpi != null) {
       try {
-        symmetricCryptoTransactionManager.processCommands();
+        symmetricCryptoTransactionManagerSpi.synchronize();
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -368,9 +381,9 @@ final class CardTransactionManagerAdapter
     }
 
     // initialize the crypto service for a new secure session and retrieve the terminal challenge
-    byte[] samChallenge = new byte[0];
+    byte[] samChallenge;
     try {
-      samChallenge = symmetricCryptoTransactionManager.initTerminalSecureSessionContext();
+      samChallenge = symmetricCryptoTransactionManagerSpi.initTerminalSecureSessionContext();
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     } catch (SymmetricCryptoIOException e) {
@@ -447,8 +460,14 @@ final class CardTransactionManagerAdapter
     }
 
     // Initialize a new secure session.
-    symmetricCryptoTransactionManager.initTerminalSessionMac(
-        apduResponses.get(0).getDataOut(), kif, kvc);
+    try {
+      symmetricCryptoTransactionManagerSpi.initTerminalSessionMac(
+          apduResponses.get(0).getDataOut(), kif, kvc);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
 
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
@@ -679,7 +698,7 @@ final class CardTransactionManagerAdapter
     // Get Terminal Signature from the latest response.
     byte[] sessionTerminalSignature;
     try {
-      sessionTerminalSignature = symmetricCryptoTransactionManager.finalizeTerminalSessionMac();
+      sessionTerminalSignature = symmetricCryptoTransactionManagerSpi.finalizeTerminalSessionMac();
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     } catch (SymmetricCryptoIOException e) {
@@ -776,7 +795,7 @@ final class CardTransactionManagerAdapter
     // Check the card signature
     // CL-CSS-MACVERIF.1
     try {
-      if (!symmetricCryptoTransactionManager.verifyCardSessionMac(
+      if (!symmetricCryptoTransactionManagerSpi.isCardSessionMacValid(
           cmdCardCloseSession.getSignatureLo())) {
         throw new InvalidCardSignatureException("Invalid card signature");
       }
@@ -790,7 +809,7 @@ final class CardTransactionManagerAdapter
     // CL-SV-POSTPON.1
     if (isSvOperationCompleteOneTime()) {
       try {
-        if (!symmetricCryptoTransactionManager.verifyCardSvMac(
+        if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
             cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex))) {
           throw new InvalidCardSignatureException("Invalid card signature");
         }
@@ -1062,7 +1081,8 @@ final class CardTransactionManagerAdapter
     // If an SV transaction was performed, we check the signature returned by the card here
     if (isSvOperationCompleteOneTime()) {
       try {
-        if (!symmetricCryptoTransactionManager.verifyCardSvMac(card.getSvOperationSignature())) {
+        if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
+            card.getSvOperationSignature())) {
           throw new InvalidCardSignatureException("Invalid card signature");
         }
       } catch (SymmetricCryptoIOException e) {
@@ -1144,7 +1164,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
     checkSymmetricCryptoTransactionManager();
-    symmetricCryptoTransactionManager.prepareComputeSignature(data);
+    cryptoExtension.prepareComputeSignature(data);
     return this;
   }
 
@@ -1156,7 +1176,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
     checkSymmetricCryptoTransactionManager();
-    symmetricCryptoTransactionManager.prepareVerifySignature(data);
+    cryptoExtension.prepareVerifySignature(data);
     return this;
   }
 
@@ -1332,7 +1352,7 @@ final class CardTransactionManagerAdapter
         byte[] cipheredPin;
         try {
           cipheredPin =
-              symmetricCryptoTransactionManager.cipherPinForPresentation(
+              symmetricCryptoTransactionManagerSpi.cipherPinForPresentation(
                   card.getCardChallenge(),
                   pin,
                   symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
@@ -1407,7 +1427,7 @@ final class CardTransactionManagerAdapter
         byte[] newPinData;
         try {
           newPinData =
-              symmetricCryptoTransactionManager.cipherPinForModification(
+              symmetricCryptoTransactionManagerSpi.cipherPinForModification(
                   card.getCardChallenge(),
                   currentPin,
                   newPin,
@@ -1472,7 +1492,7 @@ final class CardTransactionManagerAdapter
     byte[] cipheredKey;
     try {
       cipheredKey =
-          symmetricCryptoTransactionManager.generateCipheredCardKey(
+          symmetricCryptoTransactionManagerSpi.generateCipheredCardKey(
               card.getCardChallenge(), issuerKif, issuerKvc, newKif, newKvc);
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
@@ -1550,7 +1570,7 @@ final class CardTransactionManagerAdapter
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvReloadData());
 
       try {
-        symmetricCryptoTransactionManager.computeSvCommandSecurityData(svCommandSecurityData);
+        symmetricCryptoTransactionManagerSpi.computeSvCommandSecurityData(svCommandSecurityData);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -1568,7 +1588,7 @@ final class CardTransactionManagerAdapter
       svCommandSecurityData.setSvCommandPartialRequest(svCommand.getSvDebitOrUndebitData());
 
       try {
-        symmetricCryptoTransactionManager.computeSvCommandSecurityData(svCommandSecurityData);
+        symmetricCryptoTransactionManagerSpi.computeSvCommandSecurityData(svCommandSecurityData);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {

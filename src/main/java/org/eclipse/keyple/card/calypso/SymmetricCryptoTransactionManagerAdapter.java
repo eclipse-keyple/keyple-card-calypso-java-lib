@@ -40,7 +40,8 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransactionManagerSpi {
+class SymmetricCryptoTransactionManagerAdapter
+    implements SymmetricCryptoTransactionManagerSpi, LegacySamCardTransactionCryptoExtension {
 
   private static final Logger logger =
       LoggerFactory.getLogger(SymmetricCryptoTransactionManagerAdapter.class);
@@ -138,7 +139,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public boolean verifyCardSessionMac(byte[] cardSessionMac)
+  public boolean isCardSessionMacValid(byte[] cardSessionMac)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     samCommands.add(new CmdSamDigestAuthenticate(sam, cardSessionMac));
     try {
@@ -163,7 +164,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
   }
 
   @Override
-  public boolean verifyCardSvMac(byte[] cardSvMac)
+  public boolean isCardSvMacValid(byte[] cardSvMac)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     samCommands.add(new CmdSamSvCheck(sam, cardSvMac));
     try {
@@ -236,7 +237,12 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     return cmd.getCipheredData();
   }
 
-  void processCommands() throws SymmetricCryptoException, SymmetricCryptoIOException {
+  @Override
+  public void synchronize() throws SymmetricCryptoIOException, SymmetricCryptoException {
+    processCommands();
+  }
+
+  private void processCommands() throws SymmetricCryptoException, SymmetricCryptoIOException {
     // If there are pending SAM commands and the secure session is open and the "Digest Init"
     // command is not already executed, then we need to flush the session pending commands by
     // executing the pending "digest" commands "BEFORE" the other SAM commands to make sure that
@@ -473,7 +479,9 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
     }
   }
 
-  void prepareComputeSignature(CommonSignatureComputationData data) {
+  @Override
+  public LegacySamCardTransactionCryptoExtension prepareComputeSignature(
+      CommonSignatureComputationData data) {
 
     if (data instanceof BasicSignatureComputationDataAdapter) {
       // Basic signature
@@ -533,9 +541,12 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
       throw new IllegalArgumentException(
           "The provided data must be an instance of 'BasicSignatureComputationDataAdapter' or 'TraceableSignatureComputationDataAdapter'");
     }
+    return this;
   }
 
-  void prepareVerifySignature(CommonSignatureVerificationData data) {
+  @Override
+  public LegacySamCardTransactionCryptoExtension prepareVerifySignature(
+      CommonSignatureVerificationData data) {
     if (data instanceof BasicSignatureVerificationDataAdapter) {
       // Basic signature
       BasicSignatureVerificationDataAdapter dataAdapter =
@@ -631,6 +642,7 @@ class SymmetricCryptoTransactionManagerAdapter implements SymmetricCryptoTransac
       throw new IllegalArgumentException(
           "The provided data must be an instance of 'CommonSignatureVerificationDataAdapter'");
     }
+    return this;
   }
 
   /**

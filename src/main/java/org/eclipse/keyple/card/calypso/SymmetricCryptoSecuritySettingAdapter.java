@@ -23,7 +23,7 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private SymmetricCryptoServiceAdapter cryptoService;
+  private SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory;
   private boolean isEarlyMutualAuthenticationEnabled;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
@@ -56,8 +56,10 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   @Override
-  public SymmetricCryptoSecuritySetting setCryptoService(SymmetricCryptoService cryptoService) {
-    this.cryptoService = (SymmetricCryptoServiceAdapter) cryptoService;
+  public SymmetricCryptoSecuritySetting setCryptoTransactionManager(
+      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
+    this.cryptoTransactionManagerFactory =
+        (SymmetricCryptoTransactionManagerFactoryAdapter) cryptoTransactionManagerFactory;
     return this;
   }
 
@@ -335,8 +337,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return pinModificationCipheringKvc;
   }
 
-  SymmetricCryptoServiceAdapter getCryptoService() {
-    return cryptoService;
+  SymmetricCryptoTransactionManagerFactoryAdapter getCryptoTransactionManagerFactory() {
+    return cryptoTransactionManagerFactory;
   }
 
   boolean isEarlyMutualAuthenticationEnabled() {

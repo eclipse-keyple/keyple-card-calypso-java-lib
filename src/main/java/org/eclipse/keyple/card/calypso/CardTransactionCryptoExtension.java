@@ -11,4 +11,4 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-interface SymmetricCryptoService {}
+interface CardTransactionCryptoExtension {}

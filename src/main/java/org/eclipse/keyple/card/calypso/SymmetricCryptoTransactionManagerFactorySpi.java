@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @since x.y.z
  */
-interface SymmetricCryptoServiceSpi {
+interface SymmetricCryptoTransactionManagerFactorySpi {
 
   boolean isExtendedModeSupported();
 

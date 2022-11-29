@@ -20,10 +20,12 @@ import org.calypsonet.terminal.calypso.WriteAccessLevel;
  */
 interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCryptoSecuritySetting> {
 
-  SymmetricCryptoSecuritySetting setCryptoService(SymmetricCryptoService cryptoService);
+  SymmetricCryptoSecuritySetting setCryptoTransactionManager(
+      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory);
 
   /**
-   * Add an mutual authentication step at the beginning of the Secure Session when the card supports the extended mode.
+   * Add an mutual authentication step at the beginning of the Secure Session when the card supports
+   * the extended mode.
    *
    * <p>The default value is disabled.
    *

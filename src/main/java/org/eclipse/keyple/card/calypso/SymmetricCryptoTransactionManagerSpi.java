@@ -92,7 +92,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @return true if the card session MAC is validated.
    * @since x.y.z
    */
-  boolean verifyCardSessionMac(byte[] cardSessionMac)
+  boolean isCardSessionMacValid(byte[] cardSessionMac)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
 
   /**
@@ -111,7 +111,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @return true if the card SV MAC is validated.
    * @since x.y.z
    */
-  boolean verifyCardSvMac(byte[] cardSvMac)
+  boolean isCardSvMacValid(byte[] cardSvMac)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
 
   /**
@@ -166,4 +166,11 @@ interface SymmetricCryptoTransactionManagerSpi {
       byte targetKeyKif,
       byte targetKeyKvc)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
+
+  /**
+   * Synchronizes data of the associated card transaction crypto extension if needed.
+   *
+   * @since x.y.z
+   */
+  void synchronize() throws SymmetricCryptoException, SymmetricCryptoIOException;
 }

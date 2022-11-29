@@ -15,7 +15,9 @@ import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ProxyReaderApi;
 
-class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, SymmetricCryptoServiceSpi {
+class SymmetricCryptoTransactionManagerFactoryAdapter
+    implements SymmetricCryptoTransactionManagerFactory,
+        SymmetricCryptoTransactionManagerFactorySpi {
 
   private final ProxyReaderApi samReader;
   private final CalypsoSamAdapter sam;
@@ -23,7 +25,7 @@ class SymmetricCryptoServiceAdapter implements SymmetricCryptoService, Symmetric
   // Temporary field for manage PSO signature
   private final CardSecuritySettingAdapter tmpCardSecuritySetting;
 
-  SymmetricCryptoServiceAdapter(
+  SymmetricCryptoTransactionManagerFactoryAdapter(
       ProxyReaderApi samReader,
       CalypsoSamAdapter sam,
       CardSecuritySettingAdapter tmpCardSecuritySetting) {
