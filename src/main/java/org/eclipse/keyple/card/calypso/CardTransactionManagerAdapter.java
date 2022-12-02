@@ -100,6 +100,10 @@ final class CardTransactionManagerAdapter
   private final ProxyReaderApi cardReader;
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting;
+
+  private int cardPayloadCapacity;
+  private int samReaderPayloadCapacity;
+
   private final CardControlSamTransactionManagerAdapter controlSamTransactionManager;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
 
@@ -131,7 +135,8 @@ final class CardTransactionManagerAdapter
   CardTransactionManagerAdapter(
       ProxyReaderApi cardReader,
       CalypsoCardAdapter card,
-      CardSecuritySettingAdapter securitySetting) {
+      CardSecuritySettingAdapter securitySetting,
+      TerminalLimitationSetting terminalLimitationSetting) {
 
     super(card, securitySetting, null);
 
@@ -139,11 +144,23 @@ final class CardTransactionManagerAdapter
     this.card = card;
     this.securitySetting = securitySetting;
 
+    this.cardPayloadCapacity = card.getPayloadCapacity();
+    this.samReaderPayloadCapacity = 255;
+
+    if (terminalLimitationSetting != null) {
+      Integer samMaxPayloadSize = terminalLimitationSetting.getContactReaderPayloadCapacity();
+      if (samMaxPayloadSize != null) {
+        this.samReaderPayloadCapacity = terminalLimitationSetting.getContactReaderPayloadCapacity();
+        this.cardPayloadCapacity =
+            Math.min(this.cardPayloadCapacity, this.samReaderPayloadCapacity - 5);
+      }
+    }
+
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
       this.controlSamTransactionManager =
           new CardControlSamTransactionManagerAdapter(
-              card, securitySetting, getTransactionAuditData());
+              card, securitySetting, this.samReaderPayloadCapacity, getTransactionAuditData());
     } else {
       // Non-secure operations mode
       this.controlSamTransactionManager = null;
@@ -1770,7 +1787,8 @@ final class CardTransactionManagerAdapter
             CalypsoCardConstant.NB_REC_MAX,
             "fromRecordNumber")
         .isInRange(
-            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber");
+            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
+        .isInRange(recordSize, 0, cardPayloadCapacity, "recordSize");
 
     if (toRecordNumber == fromRecordNumber
         || (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
@@ -1786,7 +1804,7 @@ final class CardTransactionManagerAdapter
       // of the card and the response format (2 extra bytes).
       // Multiple APDUs can be generated depending on record size and transmission capacity.
       final int nbBytesPerRecord = recordSize + 2;
-      final int nbRecordsPerApdu = card.getPayloadCapacity() / nbBytesPerRecord;
+      final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesPerRecord;
       final int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
 
       int currentRecordNumber = fromRecordNumber;
@@ -1854,10 +1872,10 @@ final class CardTransactionManagerAdapter
         .isInRange(
             nbBytesToRead,
             CalypsoCardConstant.DATA_LENGTH_MIN,
-            CalypsoCardConstant.DATA_LENGTH_MAX - offset,
+            cardPayloadCapacity - offset,
             "nbBytesToRead");
 
-    final int nbRecordsPerApdu = card.getPayloadCapacity() / nbBytesToRead;
+    final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
 
     int currentRecordNumber = fromRecordNumber;
 
@@ -1900,13 +1918,11 @@ final class CardTransactionManagerAdapter
       cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
     }
 
-    final int payloadCapacity = card.getPayloadCapacity();
-
     int currentLength;
     int currentOffset = offset;
     int nbBytesRemainingToRead = nbBytesToRead;
     do {
-      currentLength = Math.min(nbBytesRemainingToRead, payloadCapacity);
+      currentLength = Math.min(nbBytesRemainingToRead, cardPayloadCapacity);
 
       cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, currentLength));
 
@@ -1968,7 +1984,7 @@ final class CardTransactionManagerAdapter
         .isInRange(
             dataAdapter.getSearchData().length,
             CalypsoCardConstant.DATA_LENGTH_MIN,
-            CalypsoCardConstant.DATA_LENGTH_MAX - dataAdapter.getOffset(),
+            cardPayloadCapacity - dataAdapter.getOffset(),
             "searchData");
     if (dataAdapter.getMask() != null) {
       Assert.getInstance()
@@ -1993,7 +2009,8 @@ final class CardTransactionManagerAdapter
   public CardTransactionManager prepareAppendRecord(byte sfi, byte[] recordData) {
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .notNull(recordData, "recordData");
+        .notNull(recordData, "recordData")
+        .isInRange(recordData.length, 0, cardPayloadCapacity, "recordData.length");
 
     // create the command and add it to the list of commands
     cardCommands.add(new CmdCardAppendRecord(card, sfi, recordData));
@@ -2015,7 +2032,8 @@ final class CardTransactionManagerAdapter
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
             RECORD_NUMBER)
-        .notNull(recordData, "recordData");
+        .notNull(recordData, "recordData")
+        .isInRange(recordData.length, 0, cardPayloadCapacity, "recordData.length");
 
     // create the command and add it to the list of commands
     cardCommands.add(new CmdCardUpdateRecord(card, sfi, recordNumber, recordData));
@@ -2036,7 +2054,9 @@ final class CardTransactionManagerAdapter
             recordNumber,
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
-            RECORD_NUMBER);
+            RECORD_NUMBER)
+        .notNull(recordData, "recordData")
+        .isInRange(recordData.length, 0, cardPayloadCapacity, "recordData.length");
 
     // create the command and add it to the list of commands
     cardCommands.add(new CmdCardWriteRecord(card, sfi, recordNumber, recordData));
@@ -2100,13 +2120,12 @@ final class CardTransactionManagerAdapter
     }
 
     final int dataLength = data.length;
-    final int payloadCapacity = card.getPayloadCapacity();
 
     int currentLength;
     int currentOffset = offset;
     int currentIndex = 0;
     do {
-      currentLength = Math.min(dataLength - currentIndex, payloadCapacity);
+      currentLength = Math.min(dataLength - currentIndex, cardPayloadCapacity);
 
       cardCommands.add(
           new CmdCardUpdateOrWriteBinary(
@@ -2132,10 +2151,7 @@ final class CardTransactionManagerAdapter
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
-            counterNumber,
-            CalypsoCardConstant.NB_CNT_MIN,
-            CalypsoCardConstant.NB_CNT_MAX,
-            "counterNumber")
+            counterNumber, CalypsoCardConstant.NB_CNT_MIN, cardPayloadCapacity / 3, "counterNumber")
         .isInRange(
             incDecValue,
             CalypsoCardConstant.CNT_VALUE_MIN,
@@ -2181,7 +2197,7 @@ final class CardTransactionManagerAdapter
         .isInRange(
             counterNumberToIncDecValueMap.size(),
             CalypsoCardConstant.NB_CNT_MIN,
-            CalypsoCardConstant.NB_CNT_MAX,
+            cardPayloadCapacity / 3,
             "counterNumberToIncDecValueMap");
 
     for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
@@ -2189,7 +2205,7 @@ final class CardTransactionManagerAdapter
           .isInRange(
               entry.getKey(),
               CalypsoCardConstant.NB_CNT_MIN,
-              CalypsoCardConstant.NB_CNT_MAX,
+              cardPayloadCapacity / 3,
               "counterNumberToIncDecValueMapKey")
           .isInRange(
               entry.getValue(),
@@ -2208,7 +2224,7 @@ final class CardTransactionManagerAdapter
         }
       }
     } else {
-      final int nbCountersPerApdu = card.getPayloadCapacity() / 4;
+      final int nbCountersPerApdu = cardPayloadCapacity / 4;
       if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
         // create the command and add it to the list of commands
         cardCommands.add(

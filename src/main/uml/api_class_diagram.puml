@@ -65,6 +65,8 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         --
         +{static} CalypsoExtensionService getInstance ()
 
+        +void setTerminalLimitation (TerminalLimitationSetting setting)
+
         +<back:pink>SearchCommandData</back> createSearchCommandData ()
         +<back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
         +<back:pink>TraceableSignatureComputationData</back> createTraceableSignatureComputationData ()
@@ -97,9 +99,13 @@ package "org.eclipse.keyple.card.calypso" as calypso {
     '        +String getCalypsoLibVersion ()
     '    }
     '}
+    +class "**final** TerminalLimitation" as TerminalLimitation {
+        TerminalLimitation setContactReaderPayloadCapacity (int payloadCapacity)
+    }
 }
 
 ' Associations
+CalypsoExtensionService ..> TerminalLimitation #C_USE : use >
 
 'CalypsoExtensionService ..> CalypsoSamExtension #C_USE : use >
 

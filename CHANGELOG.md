@@ -5,9 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Setting to `CalypsoExtensionService` manage the limitations of some not fully compliant terminals.
 ### Fixed
-- The maximum buffer length of the "Digest Update Multiple" SAM command is set to 230 bytes instead of the 254 
-  theoretically allowed by the SAM in order to be compatible with certain unpredictable applications.
+- Maximum payload length management for card and SAM APDUs.
 
 ## [2.2.5] - 2022-10-17
 ### Fixed

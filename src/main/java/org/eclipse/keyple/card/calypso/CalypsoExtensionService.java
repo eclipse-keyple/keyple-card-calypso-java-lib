@@ -53,6 +53,8 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
+  private TerminalLimitationSetting terminalLimitationSetting;
+
   static {
     // Register additional JSON adapters.
     JsonUtil.registerTypeAdapter(DirectoryHeader.class, new DirectoryHeaderJsonAdapter(), false);
@@ -76,6 +78,16 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    */
   public static CalypsoExtensionService getInstance() {
     return INSTANCE;
+  }
+
+  /**
+   * Sets terminal limitations settings.
+   *
+   * @param setting A not null {@link TerminalLimitationSetting} object.
+   * @since 2.3.0
+   */
+  public void setTerminalLimitationSetting(TerminalLimitationSetting setting) {
+    this.terminalLimitationSetting = setting;
   }
 
   /**
@@ -298,7 +310,8 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
     return new CardTransactionManagerAdapter(
         (ProxyReaderApi) cardReader,
         (CalypsoCardAdapter) calypsoCard,
-        (CardSecuritySettingAdapter) cardSecuritySetting);
+        (CardSecuritySettingAdapter) cardSecuritySetting,
+        terminalLimitationSetting);
   }
 
   /**
