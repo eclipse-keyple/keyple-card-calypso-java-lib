@@ -19,61 +19,57 @@ package org.eclipse.keyple.card.calypso;
 interface SvCommandSecurityDataApi {
 
   /**
-   * Sets the "SV Get" ingoing command data.
+   * Returns the "SV Get" ingoing command data.
    *
-   * @param svGetRequest A not empty byte array containing the "SV Get" apdu request data.
-   * @return The object instance.
+   * @return A not empty byte array containing the "SV Get" apdu request data.
    * @since x.y.z
    */
   byte[] getSvGetRequest();
 
   /**
-   * Sets the "SV Get" outgoing command data.
+   * Returns the "SV Get" outgoing command data.
    *
-   * @param svGetResponse A not empty byte array containing the "SV Get" apdu response data.
-   * @return The object instance.
+   * @return A not empty byte array containing the "SV Get" apdu response data.
    * @since x.y.z
    */
   byte[] getSvGetResponse();
 
   /**
-   * Sets the "SV Load/Debit/Undebit" outgoing command data.
+   * Returns the "SV Load/Debit/Undebit" ingoing partial command data.
    *
-   * @param svCommandPartialRequest A not empty byte array containing the "SV Load/Debit/Undebit"
-   *     apdu request data.
-   * @return The object instance.
+   * @return A not empty byte array containing the "SV Load/Debit/Undebit" apdu request data.
    * @since x.y.z
    */
   byte[] getSvCommandPartialRequest();
 
   /**
-   * Gets the serial number to be placed in the "SV Load/Debit/Undebit" command request.
+   * Sets the serial number to be placed in the "SV Load/Debit/Undebit" command request.
    *
-   * @return A not byte array containing the serial number.
+   * @return The current instance.
    * @since x.y.z
    */
   SvCommandSecurityDataApi setSerialNumber(byte[] serialNumber);
 
   /**
-   * Gets the transaction number to be placed in the "SV Load/Debit/Undebit" command request.
+   * Sets the transaction number to be placed in the "SV Load/Debit/Undebit" command request.
    *
-   * @return A not byte array containing the transaction number.
+   * @return The current instance.
    * @since x.y.z
    */
   SvCommandSecurityDataApi setTransactionNumber(byte[] transactionNumber);
 
   /**
-   * Gets the terminal challenge to be placed in the SV Load/Debit/Undebit command request.
+   * Sets the terminal challenge to be placed in the SV Load/Debit/Undebit command request.
    *
-   * @return A not byte array containing the terminal challenge.
+   * @return The current instance.
    * @since x.y.z
    */
   SvCommandSecurityDataApi setTerminalChallenge(byte[] terminalChallenge);
 
   /**
-   * Gets the terminal SV MAC to be placed in the "SV Load/Debit/Undebit" command request.
+   * Sets the terminal SV MAC to be placed in the "SV Load/Debit/Undebit" command request.
    *
-   * @return A not byte array containing the terminal SV MAC.
+   * @return The current instance.
    * @since x.y.z
    */
   SvCommandSecurityDataApi setTerminalSvMac(byte[] terminalSvMac);
