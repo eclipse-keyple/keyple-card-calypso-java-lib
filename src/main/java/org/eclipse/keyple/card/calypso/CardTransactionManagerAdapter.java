@@ -100,12 +100,9 @@ final class CardTransactionManagerAdapter
   private final ProxyReaderApi cardReader;
   private final CalypsoCardAdapter card;
   private final CardSecuritySettingAdapter securitySetting;
-
-  private int cardPayloadCapacity;
-  private int samReaderPayloadCapacity;
-
   private final CardControlSamTransactionManagerAdapter controlSamTransactionManager;
   private final List<AbstractCardCommand> cardCommands = new ArrayList<AbstractCardCommand>();
+  private final int cardPayloadCapacity;
 
   /* Dynamic fields */
   private boolean isSessionOpen;
@@ -137,30 +134,29 @@ final class CardTransactionManagerAdapter
       CalypsoCardAdapter card,
       CardSecuritySettingAdapter securitySetting,
       ContextSetting contextSetting) {
-
     super(card, securitySetting, null);
 
     this.cardReader = cardReader;
     this.card = card;
     this.securitySetting = securitySetting;
 
-    this.cardPayloadCapacity = card.getPayloadCapacity();
-    this.samReaderPayloadCapacity = 255;
+    int cardPayloadCapacity = card.getPayloadCapacity();
+    int samReaderPayloadCapacity = 255;
 
     if (contextSetting != null) {
       Integer samMaxPayloadSize = contextSetting.getContactReaderPayloadCapacity();
       if (samMaxPayloadSize != null) {
-        this.samReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
-        this.cardPayloadCapacity =
-            Math.min(this.cardPayloadCapacity, this.samReaderPayloadCapacity - 5);
+        samReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
+        cardPayloadCapacity = Math.min(cardPayloadCapacity, samReaderPayloadCapacity - 5);
       }
     }
+    this.cardPayloadCapacity = cardPayloadCapacity;
 
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
       this.controlSamTransactionManager =
           new CardControlSamTransactionManagerAdapter(
-              card, securitySetting, this.samReaderPayloadCapacity, getTransactionAuditData());
+              card, securitySetting, samReaderPayloadCapacity, getTransactionAuditData());
     } else {
       // Non-secure operations mode
       this.controlSamTransactionManager = null;
