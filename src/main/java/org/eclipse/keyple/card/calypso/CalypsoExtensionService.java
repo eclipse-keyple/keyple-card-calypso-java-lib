@@ -53,7 +53,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
-  private TerminalLimitationsSetting terminalLimitationsSetting;
+  private ContextSetting contextSetting;
 
   static {
     // Register additional JSON adapters.
@@ -81,13 +81,13 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Sets terminal limitations settings.
+   * Sets context settings.
    *
-   * @param setting A not null {@link TerminalLimitationsSetting} object.
+   * @param setting A not null {@link ContextSetting} object.
    * @since 2.3.0
    */
-  public void setTerminalLimitationsSetting(TerminalLimitationsSetting setting) {
-    this.terminalLimitationsSetting = setting;
+  public void setContextSetting(ContextSetting setting) {
+    this.contextSetting = setting;
   }
 
   /**
@@ -311,7 +311,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
         (ProxyReaderApi) cardReader,
         (CalypsoCardAdapter) calypsoCard,
         (CardSecuritySettingAdapter) cardSecuritySetting,
-        terminalLimitationsSetting);
+        contextSetting);
   }
 
   /**

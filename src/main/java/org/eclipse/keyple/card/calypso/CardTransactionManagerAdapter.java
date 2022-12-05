@@ -136,7 +136,7 @@ final class CardTransactionManagerAdapter
       ProxyReaderApi cardReader,
       CalypsoCardAdapter card,
       CardSecuritySettingAdapter securitySetting,
-      TerminalLimitationsSetting terminalLimitationsSetting) {
+      ContextSetting contextSetting) {
 
     super(card, securitySetting, null);
 
@@ -147,11 +147,10 @@ final class CardTransactionManagerAdapter
     this.cardPayloadCapacity = card.getPayloadCapacity();
     this.samReaderPayloadCapacity = 255;
 
-    if (terminalLimitationsSetting != null) {
-      Integer samMaxPayloadSize = terminalLimitationsSetting.getContactReaderPayloadCapacity();
+    if (contextSetting != null) {
+      Integer samMaxPayloadSize = contextSetting.getContactReaderPayloadCapacity();
       if (samMaxPayloadSize != null) {
-        this.samReaderPayloadCapacity =
-            terminalLimitationsSetting.getContactReaderPayloadCapacity();
+        this.samReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
         this.cardPayloadCapacity =
             Math.min(this.cardPayloadCapacity, this.samReaderPayloadCapacity - 5);
       }

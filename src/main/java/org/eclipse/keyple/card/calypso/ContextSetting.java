@@ -18,7 +18,7 @@ import org.eclipse.keyple.core.util.Assert;
  *
  * @since 2.3.0
  */
-public final class TerminalLimitationsSetting {
+public final class ContextSetting {
   private Integer contactReaderPayloadCapacity;
 
   /**
@@ -29,7 +29,7 @@ public final class TerminalLimitationsSetting {
    * @return The object instance.
    * @since 2.3.0
    */
-  public TerminalLimitationsSetting setContactReaderPayloadCapacity(int payloadCapacity) {
+  public ContextSetting setContactReaderPayloadCapacity(int payloadCapacity) {
     Assert.getInstance().isInRange(payloadCapacity, 0, 255, "payloadCapacity");
     this.contactReaderPayloadCapacity = payloadCapacity;
     return this;

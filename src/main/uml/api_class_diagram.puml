@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.2.+ (2022-10-26)
+    Keyple - keyple-card-calypso-java-lib - 2.3.+ (2022-12-05)
 end title
 
 ' == THEME ==
@@ -65,7 +65,7 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         --
         +{static} CalypsoExtensionService getInstance ()
 
-        +void setTerminalLimitationsSetting (TerminalLimitationsSetting setting)
+        +void setContextSetting (ContextSetting setting)
 
         +<back:pink>SearchCommandData</back> createSearchCommandData ()
         +<back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
@@ -99,13 +99,13 @@ package "org.eclipse.keyple.card.calypso" as calypso {
     '        +String getCalypsoLibVersion ()
     '    }
     '}
-    +class "**final** TerminalLimitationsSetting" as TerminalLimitationsSetting {
-        TerminalLimitationsSetting setContactReaderPayloadCapacity (int payloadCapacity)
+    +class "**final** ContextSetting" as ContextSetting {
+        ContextSetting setContactReaderPayloadCapacity (int payloadCapacity)
     }
 }
 
 ' Associations
-CalypsoExtensionService ..> TerminalLimitationsSetting #C_USE : use >
+CalypsoExtensionService ..> ContextSetting #C_USE : use >
 
 'CalypsoExtensionService ..> CalypsoSamExtension #C_USE : use >
 
