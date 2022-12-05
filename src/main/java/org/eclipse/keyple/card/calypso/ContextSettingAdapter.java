@@ -11,20 +11,35 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.eclipse.keyple.core.util.Assert;
+
 /**
- * Contains additional parameters for the management of context specific cases.
+ * Adapter of {@link ContextSetting}.
  *
  * @since 2.3.0
  */
-public interface ContextSetting {
+final class ContextSettingAdapter implements ContextSetting {
+  private Integer contactReaderPayloadCapacity;
 
   /**
-   * Defines the maximum size of APDUs that the library can generate when communicating with a
-   * contact card.
+   * {@inheritDoc}
    *
-   * @param payloadCapacity A positive integer lower than 255.
-   * @return The object instance.
    * @since 2.3.0
    */
-  ContextSetting setContactReaderPayloadCapacity(int payloadCapacity);
+  @Override
+  public ContextSetting setContactReaderPayloadCapacity(int payloadCapacity) {
+    Assert.getInstance().isInRange(payloadCapacity, 0, 255, "payloadCapacity");
+    this.contactReaderPayloadCapacity = payloadCapacity;
+    return this;
+  }
+
+  /**
+   * Returns the contact reader payload capacity.
+   *
+   * @return null if no payload capacity has been defined.
+   * @since 2.3.0
+   */
+  Integer getContactReaderPayloadCapacity() {
+    return contactReaderPayloadCapacity;
+  }
 }

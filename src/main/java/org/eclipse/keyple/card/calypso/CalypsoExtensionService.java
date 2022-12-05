@@ -53,7 +53,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
-  private ContextSetting contextSetting;
+  private final ContextSettingAdapter contextSetting;
 
   static {
     // Register additional JSON adapters.
@@ -68,7 +68,9 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /** Private constructor. */
-  private CalypsoExtensionService() {}
+  private CalypsoExtensionService() {
+    contextSetting = new ContextSettingAdapter();
+  }
 
   /**
    * Returns the service instance.
@@ -81,13 +83,13 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * Sets context settings.
+   * Returns the context setting.
    *
-   * @param setting A not null {@link ContextSetting} object.
+   * @return A not null {@link ContextSetting}.
    * @since 2.3.0
    */
-  public void setContextSetting(ContextSetting setting) {
-    this.contextSetting = setting;
+  public ContextSetting getContextSetting() {
+    return contextSetting;
   }
 
   /**

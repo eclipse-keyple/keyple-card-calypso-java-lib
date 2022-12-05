@@ -133,7 +133,7 @@ final class CardTransactionManagerAdapter
       ProxyReaderApi cardReader,
       CalypsoCardAdapter card,
       CardSecuritySettingAdapter securitySetting,
-      ContextSetting contextSetting) {
+      ContextSettingAdapter contextSetting) {
     super(card, securitySetting, null);
 
     this.cardReader = cardReader;

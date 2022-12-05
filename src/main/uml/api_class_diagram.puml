@@ -65,7 +65,7 @@ package "org.eclipse.keyple.card.calypso" as calypso {
         --
         +{static} CalypsoExtensionService getInstance ()
 
-        +void setContextSetting (ContextSetting setting)
+        +ContextSetting getContextSetting ()
 
         +<back:pink>SearchCommandData</back> createSearchCommandData ()
         +<back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
@@ -99,7 +99,7 @@ package "org.eclipse.keyple.card.calypso" as calypso {
     '        +String getCalypsoLibVersion ()
     '    }
     '}
-    +class "**final** ContextSetting" as ContextSetting {
+    +interface ContextSetting {
         ContextSetting setContactReaderPayloadCapacity (int payloadCapacity)
     }
 }
