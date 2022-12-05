@@ -140,23 +140,23 @@ final class CardTransactionManagerAdapter
     this.card = card;
     this.securitySetting = securitySetting;
 
-    int cardPayloadCapacity = card.getPayloadCapacity();
-    int samReaderPayloadCapacity = 255;
+    int cardCapacity = card.getPayloadCapacity();
+    int samCapacity = 255;
 
     if (contextSetting != null) {
       Integer contactReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
       if (contactReaderPayloadCapacity != null) {
-        samReaderPayloadCapacity = contactReaderPayloadCapacity;
-        cardPayloadCapacity = Math.min(cardPayloadCapacity, samReaderPayloadCapacity - 5);
+        samCapacity = contactReaderPayloadCapacity;
+        cardCapacity = Math.min(cardCapacity, samCapacity - 5);
       }
     }
-    this.cardPayloadCapacity = cardPayloadCapacity;
+    this.cardPayloadCapacity = cardCapacity;
 
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
       this.controlSamTransactionManager =
           new CardControlSamTransactionManagerAdapter(
-              card, securitySetting, samReaderPayloadCapacity, getTransactionAuditData());
+              card, securitySetting, samCapacity, getTransactionAuditData());
     } else {
       // Non-secure operations mode
       this.controlSamTransactionManager = null;
