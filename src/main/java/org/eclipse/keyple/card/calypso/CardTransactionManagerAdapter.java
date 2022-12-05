@@ -1985,7 +1985,7 @@ final class CardTransactionManagerAdapter
         .isInRange(
             dataAdapter.getSearchData().length,
             CalypsoCardConstant.DATA_LENGTH_MIN,
-            cardPayloadCapacity - dataAdapter.getOffset(),
+            cardPayloadCapacity,
             "searchData");
     if (dataAdapter.getMask() != null) {
       Assert.getInstance()
