@@ -38,7 +38,7 @@ public final class TerminalLimitationsSetting {
   /**
    * Returns the contact reader payload capacity.
    *
-   * @return null if no payload capacity max has been defined.
+   * @return null if no payload capacity has been defined.
    * @since 2.3.0
    */
   Integer getContactReaderPayloadCapacity() {
