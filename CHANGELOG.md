@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Setting to `CalypsoExtensionService` manage the limitations of some not fully compliant terminals.
 ### Fixed
 - Maximum payload length management for card and SAM APDUs.
+- Exception management within a secure session.
 
 ## [2.2.5] - 2022-10-17
 ### Fixed

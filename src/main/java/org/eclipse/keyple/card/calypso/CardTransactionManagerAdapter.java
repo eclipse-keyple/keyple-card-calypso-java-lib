@@ -394,12 +394,6 @@ final class CardTransactionManagerAdapter
     List<ApduResponseApi> apduResponses =
         cardResponse.getApduResponses(); // NOSONAR cardResponse is not null
 
-    // If this method is invoked within a secure session, then add all commands data to the digest
-    // computation.
-    if (isSessionOpen) {
-      controlSamTransactionManager.updateSession(apduRequests, apduResponses, 0);
-    }
-
     try {
       parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
@@ -411,6 +405,12 @@ final class CardTransactionManagerAdapter
           e);
     } catch (InconsistentDataException e) {
       throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
+    }
+
+    // If this method is invoked within a secure session, then add all commands data to the digest
+    // computation.
+    if (isSessionOpen) {
+      controlSamTransactionManager.updateSession(apduRequests, apduResponses, 0);
     }
   }
 
@@ -1872,7 +1872,7 @@ final class CardTransactionManagerAdapter
         .isInRange(
             nbBytesToRead,
             CalypsoCardConstant.DATA_LENGTH_MIN,
-            cardPayloadCapacity - offset,
+            cardPayloadCapacity,
             "nbBytesToRead");
 
     final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
