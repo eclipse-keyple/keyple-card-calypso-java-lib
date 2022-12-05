@@ -144,9 +144,9 @@ final class CardTransactionManagerAdapter
     int samReaderPayloadCapacity = 255;
 
     if (contextSetting != null) {
-      Integer samMaxPayloadSize = contextSetting.getContactReaderPayloadCapacity();
-      if (samMaxPayloadSize != null) {
-        samReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
+      Integer contactReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
+      if (contactReaderPayloadCapacity != null) {
+        samReaderPayloadCapacity = contactReaderPayloadCapacity;
         cardPayloadCapacity = Math.min(cardPayloadCapacity, samReaderPayloadCapacity - 5);
       }
     }
