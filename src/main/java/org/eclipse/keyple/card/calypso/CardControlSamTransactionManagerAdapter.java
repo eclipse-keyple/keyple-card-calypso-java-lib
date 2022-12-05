@@ -33,6 +33,7 @@ final class CardControlSamTransactionManagerAdapter
   private final CalypsoSamAdapter controlSam;
   private final CalypsoCardAdapter targetCard;
   private final CardSecuritySettingAdapter cardSecuritySetting;
+  private final int samReaderPayloadCapacity;
 
   private DigestManager digestManager;
 
@@ -42,12 +43,14 @@ final class CardControlSamTransactionManagerAdapter
    *
    * @param targetCard The target card to control provided by the selection process.
    * @param securitySetting The associated card security settings.
+   * @param samReaderPayloadCapacity The maximum data length supported by the reader.
    * @param transactionAuditData The original transaction data to fill.
    * @since 2.2.0
    */
   CardControlSamTransactionManagerAdapter(
       CalypsoCardAdapter targetCard,
       CardSecuritySettingAdapter securitySetting,
+      int samReaderPayloadCapacity,
       List<byte[]> transactionAuditData) {
     // CL-SAM-CSN.1
     super(
@@ -55,6 +58,7 @@ final class CardControlSamTransactionManagerAdapter
     this.controlSam = securitySetting.getControlSam();
     this.targetCard = targetCard;
     this.cardSecuritySetting = securitySetting;
+    this.samReaderPayloadCapacity = samReaderPayloadCapacity;
   }
 
   /**
@@ -433,35 +437,31 @@ final class CardControlSamTransactionManagerAdapter
       // CL-SAM-DUPDATE.1
       if (controlSam.getProductType() == CalypsoSam.ProductType.SAM_C1) {
         // Digest Update Multiple
-        // Construct list of DataIn
-        List<byte[]> digestDataList = new ArrayList<byte[]>(1);
         byte[] buffer = new byte[255];
-        byte[] request;
-        byte[] response;
-        int index = 0;
-        for (int i = 0; i < cardApdus.size(); i += 2) {
-          request = cardApdus.get(i);
-          response = cardApdus.get(i + 1);
-          if (index + request.length + response.length + 2 > 254) {
-            // Copy buffer to digestDataList and reset buffer
-            digestDataList.add(Arrays.copyOf(buffer, index));
-            index = 0;
+        int i = 0;
+        for (byte[] cardApdu : cardApdus) {
+          if (i + cardApdu.length + 1 > samReaderPayloadCapacity) {
+            // Add command and reset buffer
+            if (i != 0) {
+              getSamCommands()
+                  .add(new CmdSamDigestUpdateMultiple(controlSam, Arrays.copyOf(buffer, i)));
+            }
+            i = 0;
           }
-          // Add [length][apdu] to current buffer
-          // Request
-          buffer[index++] = (byte) request.length;
-          System.arraycopy(request, 0, buffer, index, request.length);
-          index += request.length;
-          // Response
-          buffer[index++] = (byte) response.length;
-          System.arraycopy(response, 0, buffer, index, response.length);
-          index += response.length;
+          if (cardApdu.length != samReaderPayloadCapacity) {
+            // Add [length][apdu] to current buffer
+            buffer[i++] = (byte) cardApdu.length;
+            System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
+            i += cardApdu.length;
+          } else {
+            // Create a Digest Update (simple) when the command fills entirely the SAM buffer
+            getSamCommands().add(new CmdSamDigestUpdate(controlSam, isSessionEncrypted, cardApdu));
+          }
         }
-        // Copy buffer to digestDataList
-        digestDataList.add(Arrays.copyOf(buffer, index));
-        // Add commands
-        for (byte[] dataIn : digestDataList) {
-          getSamCommands().add(new CmdSamDigestUpdateMultiple(controlSam, dataIn));
+        if (i != 0) {
+          // Add command
+          getSamCommands()
+              .add(new CmdSamDigestUpdateMultiple(controlSam, Arrays.copyOf(buffer, i)));
         }
       } else {
         // Digest Update (simple)

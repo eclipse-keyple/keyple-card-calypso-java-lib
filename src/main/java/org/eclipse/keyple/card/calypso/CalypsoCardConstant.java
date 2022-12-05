@@ -33,7 +33,6 @@ final class CalypsoCardConstant {
 
   // Counter number
   static final int NB_CNT_MIN = 1;
-  static final int NB_CNT_MAX = 83; // Equal to "250 / 3"
 
   // Counter value
   static final int CNT_VALUE_MIN = 0;
@@ -46,7 +45,6 @@ final class CalypsoCardConstant {
 
   // Data
   static final int DATA_LENGTH_MIN = 1;
-  static final int DATA_LENGTH_MAX = 250;
 
   // File Type Values
   static final int FILE_TYPE_MF = 1;
@@ -88,9 +86,6 @@ final class CalypsoCardConstant {
   static final byte SV_DEBIT_LOG_FILE_SFI = (byte) 0x15;
   static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
   static final int SV_LOG_FILE_REC_LENGTH = 29;
-
-  // Payload capacity
-  static final int PAYLOAD_CAPACITY_PRIME_REV3 = 250;
 
   /** (private) */
   private CalypsoCardConstant() {}

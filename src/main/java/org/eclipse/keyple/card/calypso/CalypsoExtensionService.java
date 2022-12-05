@@ -53,6 +53,8 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();
 
+  private final ContextSettingAdapter contextSetting;
+
   static {
     // Register additional JSON adapters.
     JsonUtil.registerTypeAdapter(DirectoryHeader.class, new DirectoryHeaderJsonAdapter(), false);
@@ -66,7 +68,9 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /** Private constructor. */
-  private CalypsoExtensionService() {}
+  private CalypsoExtensionService() {
+    contextSetting = new ContextSettingAdapter();
+  }
 
   /**
    * Returns the service instance.
@@ -76,6 +80,16 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    */
   public static CalypsoExtensionService getInstance() {
     return INSTANCE;
+  }
+
+  /**
+   * Returns the context setting.
+   *
+   * @return A not null {@link ContextSetting}.
+   * @since 2.3.0
+   */
+  public ContextSetting getContextSetting() {
+    return contextSetting;
   }
 
   /**
@@ -298,7 +312,8 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
     return new CardTransactionManagerAdapter(
         (ProxyReaderApi) cardReader,
         (CalypsoCardAdapter) calypsoCard,
-        (CardSecuritySettingAdapter) cardSecuritySetting);
+        (CardSecuritySettingAdapter) cardSecuritySetting,
+        contextSetting);
   }
 
   /**

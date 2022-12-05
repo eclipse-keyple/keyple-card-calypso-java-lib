@@ -1511,6 +1511,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(7);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareReadRecords((byte) 1, 1, 5, 1);
     cardTransactionManager.processCommands();
 
@@ -1995,6 +1999,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 5, 3, 1);
     cardTransactionManager.processCommands();
 
@@ -2221,6 +2229,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareUpdateBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands();
 
@@ -2334,6 +2346,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareWriteBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands();
@@ -2536,6 +2552,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(9);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(1, 1);
