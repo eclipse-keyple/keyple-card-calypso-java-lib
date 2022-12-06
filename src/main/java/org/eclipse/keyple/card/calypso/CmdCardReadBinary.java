@@ -31,7 +31,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Incorrect EF type: not a Binary EF.", CardDataAccessException.class));

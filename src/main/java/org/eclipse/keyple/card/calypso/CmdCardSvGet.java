@@ -39,7 +39,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6982,
         new StatusProperties(
@@ -48,7 +48,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
         0x6985,
         new StatusProperties(
             "Preconditions not satisfied (a store value operation was already done in the current session).",
-            CalypsoSamAccessForbiddenException.class));
+            CardAccessForbiddenException.class));
     m.put(0x6A81, new StatusProperties("Incorrect P1 or P2.", CardIllegalParameterException.class));
     m.put(
         0x6A86,

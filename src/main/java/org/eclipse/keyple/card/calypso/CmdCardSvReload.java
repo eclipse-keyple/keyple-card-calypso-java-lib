@@ -58,7 +58,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -70,11 +70,10 @@ final class CmdCardSvReload extends AbstractCardCommand {
         0x6900,
         new StatusProperties(
             "Transaction counter is 0 or SV TNum is FFFEh or FFFFh.",
-            CalypsoSamCounterOverflowException.class));
+            CardTerminatedException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", CardAccessForbiddenException.class));
     m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
     m.put(
         SW_POSTPONED_DATA,
@@ -156,23 +155,22 @@ final class CmdCardSvReload extends AbstractCardCommand {
    *
    * <p>5 or 10 byte signature (hi part)
    *
-   * @param reloadComplementaryData the sam id and the data out from the SvPrepareReload SAM
-   *     command.
+   * @param svCommandSecurityData the sam id and the data out from the SvPrepareReload SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(byte[] reloadComplementaryData) {
-    if ((isExtendedModeAllowed && reloadComplementaryData.length != 20)
-        || (!isExtendedModeAllowed && reloadComplementaryData.length != 15)) {
-      throw new IllegalArgumentException("Bad SV prepare load data length.");
-    }
+  void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
-    byte p1 = reloadComplementaryData[4];
-    byte p2 = reloadComplementaryData[5];
-
-    dataIn[0] = reloadComplementaryData[6];
-    System.arraycopy(reloadComplementaryData, 0, dataIn, 11, 4);
-    System.arraycopy(reloadComplementaryData, 7, dataIn, 15, 3);
-    System.arraycopy(reloadComplementaryData, 10, dataIn, 18, reloadComplementaryData.length - 10);
+    byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
+    byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
+    dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
+    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 11, 4);
+    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 0, dataIn, 15, 3);
+    System.arraycopy(
+        svCommandSecurityData.getTerminalSvMac(),
+        0,
+        dataIn,
+        18,
+        svCommandSecurityData.getTerminalSvMac().length);
 
     setApduRequest(
         new ApduRequestAdapter(

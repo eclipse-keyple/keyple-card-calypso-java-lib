@@ -81,24 +81,6 @@ abstract class CommonTransactionManagerAdapter<
 
   /**
    * (package-private)<br>
-   * Creates a list of {@link ApduRequestSpi} from a list of {@link AbstractApduCommand}.
-   *
-   * @param commands The list of commands.
-   * @return An empty list if there is no command.
-   * @since 2.2.0
-   */
-  final <E extends AbstractApduCommand> List<ApduRequestSpi> getApduRequests(List<E> commands) {
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
-    if (commands != null) {
-      for (AbstractApduCommand command : commands) {
-        apduRequests.add(command.getApduRequest());
-      }
-    }
-    return apduRequests;
-  }
-
-  /**
-   * (package-private)<br>
    * Saves the provided exchanged APDU commands in the list of transaction audit data.
    *
    * @param cardRequest The card request.

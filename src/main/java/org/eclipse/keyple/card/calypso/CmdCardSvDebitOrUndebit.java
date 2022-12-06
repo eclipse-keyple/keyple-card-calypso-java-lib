@@ -68,7 +68,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -80,11 +80,10 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
         0x6900,
         new StatusProperties(
             "Transaction counter is 0 or SV TNum is FFFEh or FFFFh.",
-            CalypsoSamCounterOverflowException.class));
+            CardTerminatedException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", CardAccessForbiddenException.class));
     m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
     m.put(
         SW_POSTPONED_DATA,
@@ -168,27 +167,22 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
    *
    * <p>5 or 10 byte signature (hi part)
    *
-   * @param debitOrUndebitComplementaryData the data out from the SvPrepareDebit SAM command.
+   * @param svCommandSecurityData the data out from the SvPrepareDebit SAM command.
    * @since 2.0.1
    */
-  void finalizeCommand(byte[] debitOrUndebitComplementaryData) {
-    if ((isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 20)
-        || (!isExtendedModeAllowed && debitOrUndebitComplementaryData.length != 15)) {
-      throw new IllegalArgumentException("Bad SV prepare load data length.");
-    }
+  void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
-    byte p1 = debitOrUndebitComplementaryData[4];
-    byte p2 = debitOrUndebitComplementaryData[5];
-
-    dataIn[0] = debitOrUndebitComplementaryData[6];
-    System.arraycopy(debitOrUndebitComplementaryData, 0, dataIn, 8, 4);
-    System.arraycopy(debitOrUndebitComplementaryData, 7, dataIn, 12, 3);
+    byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
+    byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
+    dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
+    System.arraycopy(svCommandSecurityData.getSerialNumber(), 0, dataIn, 8, 4);
+    System.arraycopy(svCommandSecurityData.getTransactionNumber(), 0, dataIn, 12, 3);
     System.arraycopy(
-        debitOrUndebitComplementaryData,
-        10,
+        svCommandSecurityData.getTerminalSvMac(),
+        0,
         dataIn,
         15,
-        debitOrUndebitComplementaryData.length - 10);
+        svCommandSecurityData.getTerminalSvMac().length);
 
     setApduRequest(
         new ApduRequestAdapter(

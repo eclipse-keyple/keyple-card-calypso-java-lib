@@ -11,8 +11,10 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -49,6 +51,8 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
     STATUS_TABLE = m;
   }
 
+  private final SvCommandSecurityDataApiAdapter data;
+
   /**
    * (package-private)<br>
    * Instantiates a new CmdSamSvPrepareLoad to prepare a load transaction.
@@ -57,32 +61,43 @@ final class CmdSamSvPrepareLoad extends AbstractSamCommand {
    * command
    *
    * @param calypsoSam The Calypso SAM.
-   * @param svGetHeader the SV Get command header.
-   * @param svGetData a byte array containing the data from the SV get command and response.
-   * @param svReloadCmdBuildData the SV reload command data.
+   * @param data The SV input/output command data.
    * @since 2.0.1
    */
-  CmdSamSvPrepareLoad(
-      CalypsoSamAdapter calypsoSam,
-      byte[] svGetHeader,
-      byte[] svGetData,
-      byte[] svReloadCmdBuildData) {
+  CmdSamSvPrepareLoad(CalypsoSamAdapter calypsoSam, SvCommandSecurityDataApiAdapter data) {
 
     super(command, 0, calypsoSam);
+
+    this.data = data;
 
     byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
     byte p1 = (byte) 0x01;
     byte p2 = (byte) 0xFF;
-    byte[] data = new byte[19 + svGetData.length]; // header(4) + SvReload data (15) = 19 bytes
+    byte[] dataIn =
+        new byte[19 + data.getSvGetResponse().length]; // header(4) + SvReload data (15) = 19 bytes
 
-    System.arraycopy(svGetHeader, 0, data, 0, 4);
-    System.arraycopy(svGetData, 0, data, 4, svGetData.length);
+    System.arraycopy(data.getSvGetRequest(), 0, dataIn, 0, 4);
+    System.arraycopy(data.getSvGetResponse(), 0, dataIn, 4, data.getSvGetResponse().length);
     System.arraycopy(
-        svReloadCmdBuildData, 0, data, 4 + svGetData.length, svReloadCmdBuildData.length);
+        data.getSvCommandPartialRequest(),
+        0,
+        dataIn,
+        4 + data.getSvGetResponse().length,
+        data.getSvCommandPartialRequest().length);
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, dataIn, null)));
+  }
+
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+    super.parseApduResponse(apduResponse);
+    byte[] dataOut = apduResponse.getDataOut();
+    data.setSerialNumber(getCalypsoSam().getSerialNumber())
+        .setTerminalChallenge(Arrays.copyOfRange(dataOut, 0, 3))
+        .setTransactionNumber(Arrays.copyOfRange(dataOut, 3, 6))
+        .setTerminalSvMac(Arrays.copyOfRange(dataOut, 6, dataOut.length));
   }
 
   /**

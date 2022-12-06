@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,29 +11,26 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.sam.CalypsoSam;
-import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
-import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.core.util.Assert;
 
-/**
- * (package-private)<br>
- * Implementation of {@link CardSecuritySetting}.
- *
- * @since 2.0.0
- */
-final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<CardSecuritySetting>
-    implements CardSecuritySetting {
+class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySetting {
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
+  private SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory;
+  private boolean isEarlyMutualAuthenticationEnabled;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
+  private boolean isRegularModeRequired;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
       new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
@@ -52,80 +49,58 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   * @deprecated Use {@link #setControlSamResource(CardReader, CalypsoSam)} instead.
-   */
   @Override
-  @Deprecated
-  public CardSecuritySetting setSamResource(CardReader samReader, CalypsoSam calypsoSam) {
-    return setControlSamResource(samReader, calypsoSam);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
-  @Override
-  public CardSecuritySettingAdapter enableMultipleSession() {
+  public SymmetricCryptoSecuritySetting enableMultipleSession() {
     isMultipleSessionEnabled = true;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter enableRatificationMechanism() {
+  public SymmetricCryptoSecuritySetting setCryptoTransactionManager(
+      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
+    this.cryptoTransactionManagerFactory =
+        (SymmetricCryptoTransactionManagerFactoryAdapter) cryptoTransactionManagerFactory;
+    return this;
+  }
+
+  @Override
+  public SymmetricCryptoSecuritySetting enableEarlyMutualAuthentication() {
+    isEarlyMutualAuthenticationEnabled = true;
+    return this;
+  }
+
+  @Override
+  public SymmetricCryptoSecuritySetting enableRatificationMechanism() {
     isRatificationMechanismEnabled = true;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter enablePinPlainTransmission() {
+  public SymmetricCryptoSecuritySetting enablePinPlainTransmission() {
     isPinPlainTransmissionEnabled = true;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter enableSvLoadAndDebitLog() {
+  public SymmetricCryptoSecuritySetting enableSvLoadAndDebitLog() {
     isSvLoadAndDebitLogEnabled = true;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter authorizeSvNegativeBalance() {
+  public SymmetricCryptoSecuritySetting authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter assignKif(
+  public SymmetricCryptoSecuritySetting forceRegularMode() {
+    this.isRegularModeRequired = true;
+    return this;
+  }
+
+  @Override
+  public SymmetricCryptoSecuritySetting assignKif(
       WriteAccessLevel writeAccessLevel, byte kvc, byte kif) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
@@ -137,71 +112,43 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif) {
+  public SymmetricCryptoSecuritySetting assignDefaultKif(
+      WriteAccessLevel writeAccessLevel, byte kif) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     defaultKifMap.put(writeAccessLevel, kif);
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc) {
+  public SymmetricCryptoSecuritySetting assignDefaultKvc(
+      WriteAccessLevel writeAccessLevel, byte kvc) {
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     defaultKvcMap.put(writeAccessLevel, kvc);
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter addAuthorizedSessionKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting addAuthorizedSessionKey(byte kif, byte kvc) {
     authorizedSessionKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter addAuthorizedSvKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting addAuthorizedSvKey(byte kif, byte kvc) {
     authorizedSvKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter setPinVerificationCipheringKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting setPinVerificationCipheringKey(byte kif, byte kvc) {
     this.pinVerificationCipheringKif = kif;
     this.pinVerificationCipheringKvc = kvc;
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   */
   @Override
-  public CardSecuritySettingAdapter setPinModificationCipheringKey(byte kif, byte kvc) {
+  public SymmetricCryptoSecuritySetting setPinModificationCipheringKey(byte kif, byte kvc) {
     this.pinModificationCipheringKif = kif;
     this.pinModificationCipheringKvc = kvc;
     return this;
@@ -388,6 +335,18 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
    */
   Byte getPinModificationCipheringKvc() {
     return pinModificationCipheringKvc;
+  }
+
+  SymmetricCryptoTransactionManagerFactoryAdapter getCryptoTransactionManagerFactory() {
+    return cryptoTransactionManagerFactory;
+  }
+
+  boolean isEarlyMutualAuthenticationEnabled() {
+    return isEarlyMutualAuthenticationEnabled;
+  }
+
+  boolean isRegularModeRequired() {
+    return isRegularModeRequired;
   }
 
   Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {

@@ -35,7 +35,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractApduCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));

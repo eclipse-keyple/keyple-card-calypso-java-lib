@@ -18,7 +18,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.1.1
  */
-class CalypsoSamUnexpectedResponseLengthException extends CalypsoSamCommandException {
+final class CalypsoSamUnexpectedResponseLengthException extends CalypsoSamCommandException {
 
   /**
    * (package-private)<br>

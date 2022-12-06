@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  *
  * @since 2.0.0
  */
-enum CalypsoSamCommand implements CardCommand {
+enum CalypsoSamCommand {
   SELECT_DIVERSIFIER("Select Diversifier", (byte) 0x14),
   GET_CHALLENGE("Get Challenge", (byte) 0x84),
   DIGEST_INIT("Digest Init", (byte) 0x8A),
