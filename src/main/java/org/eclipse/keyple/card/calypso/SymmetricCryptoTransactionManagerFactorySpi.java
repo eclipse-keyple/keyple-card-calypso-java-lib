@@ -25,6 +25,8 @@ interface SymmetricCryptoTransactionManagerFactorySpi {
 
   boolean isExtendedModeSupported();
 
+  int getMaxCardApduLengthSupported();
+
   /**
    * @param cardKeyDiversifier The card key diversifier to use for the coming cryptographic
    *     computations.

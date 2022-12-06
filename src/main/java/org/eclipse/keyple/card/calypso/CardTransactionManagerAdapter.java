@@ -144,30 +144,25 @@ final class CardTransactionManagerAdapter
     this.card = card;
     this.securitySetting = securitySetting;
 
-    int cardCapacity = card.getPayloadCapacity();
-    int samCapacity = 255;
-
-    if (contextSetting != null) {
-      Integer contactReaderPayloadCapacity = contextSetting.getContactReaderPayloadCapacity();
-      if (contactReaderPayloadCapacity != null) {
-        samCapacity = contactReaderPayloadCapacity;
-        cardCapacity = Math.min(cardCapacity, samCapacity - 5);
-      }
-    }
-    this.cardPayloadCapacity = cardCapacity;
-
     if (securitySetting != null && securitySetting.getControlSam() != null) {
       // Secure operations mode
-      symmetricCryptoSecuritySetting = buildSymmetricCryptoSecuritySetting(securitySetting);
-      SymmetricCryptoTransactionManagerFactoryAdapter symmetricCryptoService =
+      symmetricCryptoSecuritySetting =
+          buildSymmetricCryptoSecuritySetting(securitySetting, contextSetting);
+      SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory =
           symmetricCryptoSecuritySetting.getCryptoTransactionManagerFactory();
+      // Extended mode flag
       isExtendedModeRequired =
           card.isExtendedModeSupported()
               && !symmetricCryptoSecuritySetting.isRegularModeRequired()
-              && symmetricCryptoService.isExtendedModeSupported();
+              && cryptoTransactionManagerFactory.isExtendedModeSupported();
+      // Adjust card & SAM payload capacities
+      cardPayloadCapacity =
+          Math.min(
+              card.getPayloadCapacity(),
+              cryptoTransactionManagerFactory.getMaxCardApduLengthSupported() - APDU_HEADER_LENGTH);
       // CL-SAM-CSN.1
       symmetricCryptoTransactionManagerSpi =
-          symmetricCryptoService.createTransactionManager(
+          cryptoTransactionManagerFactory.createTransactionManager(
               card.getCalypsoSerialNumberFull(), isExtendedModeRequired, getTransactionAuditData());
       cryptoExtension =
           (LegacySamCardTransactionCryptoExtension) symmetricCryptoTransactionManagerSpi;
@@ -175,6 +170,7 @@ final class CardTransactionManagerAdapter
       // Non-secure operations mode
       symmetricCryptoSecuritySetting = null;
       isExtendedModeRequired = card.isExtendedModeSupported();
+      cardPayloadCapacity = card.getPayloadCapacity();
       symmetricCryptoTransactionManagerSpi = null;
       cryptoExtension = null;
     }
@@ -183,11 +179,14 @@ final class CardTransactionManagerAdapter
   }
 
   private SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
-      CardSecuritySettingAdapter src) {
+      CardSecuritySettingAdapter src, ContextSettingAdapter contextSetting) {
     SymmetricCryptoSecuritySettingAdapter dest = new SymmetricCryptoSecuritySettingAdapter();
     dest.setCryptoTransactionManager(
         new SymmetricCryptoTransactionManagerFactoryAdapter(
-            src.getControlSamReader(), src.getControlSam(), src));
+            src.getControlSamReader(),
+            src.getControlSam(),
+            contextSetting != null ? contextSetting.getContactReaderPayloadCapacity() : null,
+            src));
     if (src.isMultipleSessionEnabled()) {
       dest.enableMultipleSession();
     }

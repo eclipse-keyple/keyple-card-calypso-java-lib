@@ -22,12 +22,14 @@ class SymmetricCryptoTransactionManagerFactoryAdapter
   private final ProxyReaderApi samReader;
   private final CalypsoSamAdapter sam;
   private final boolean isExtendedModeSupported;
+  private final int maxCardApduLengthSupported;
   // Temporary field for manage PSO signature
   private final CardSecuritySettingAdapter tmpCardSecuritySetting;
 
   SymmetricCryptoTransactionManagerFactoryAdapter(
       ProxyReaderApi samReader,
       CalypsoSamAdapter sam,
+      Integer contactReaderPayloadCapacity,
       CardSecuritySettingAdapter tmpCardSecuritySetting) {
     this.samReader = samReader;
     this.sam = sam;
@@ -35,11 +37,20 @@ class SymmetricCryptoTransactionManagerFactoryAdapter
     this.isExtendedModeSupported =
         sam.getProductType() == CalypsoSam.ProductType.SAM_C1
             || sam.getProductType() == CalypsoSam.ProductType.HSM_C1;
+    this.maxCardApduLengthSupported =
+        contactReaderPayloadCapacity != null
+            ? Math.min(sam.getMaxDigestDataLength(), contactReaderPayloadCapacity)
+            : sam.getMaxDigestDataLength();
   }
 
   @Override
   public boolean isExtendedModeSupported() {
     return isExtendedModeSupported;
+  }
+
+  @Override
+  public int getMaxCardApduLengthSupported() {
+    return maxCardApduLengthSupported;
   }
 
   @Override
@@ -53,6 +64,7 @@ class SymmetricCryptoTransactionManagerFactoryAdapter
         sam,
         cardKeyDiversifier,
         useExtendedMode,
+        maxCardApduLengthSupported,
         transactionAuditData,
         tmpCardSecuritySetting);
   }

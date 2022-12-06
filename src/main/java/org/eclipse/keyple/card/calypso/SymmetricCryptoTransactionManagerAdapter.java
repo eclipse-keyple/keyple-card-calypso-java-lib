@@ -66,6 +66,7 @@ class SymmetricCryptoTransactionManagerAdapter
   private final CalypsoSamAdapter sam;
   private final byte[] cardKeyDiversifier;
   private final boolean isExtendedModeRequired;
+  private final int maxCardApduLengthSupported;
   private final List<byte[]> transactionAuditData;
   private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
 
@@ -81,12 +82,14 @@ class SymmetricCryptoTransactionManagerAdapter
       CalypsoSamAdapter sam,
       byte[] cardKeyDiversifier,
       boolean useExtendedMode,
+      int maxCardApduLengthSupported,
       List<byte[]> transactionAuditData,
       CardSecuritySettingAdapter tmpCardSecuritySetting) {
     this.samReader = samReader;
     this.sam = sam;
     this.cardKeyDiversifier = cardKeyDiversifier;
     this.isExtendedModeRequired = useExtendedMode;
+    this.maxCardApduLengthSupported = maxCardApduLengthSupported;
     this.transactionAuditData = transactionAuditData;
     this.tmpCardSecuritySetting = tmpCardSecuritySetting;
   }
@@ -738,31 +741,29 @@ class SymmetricCryptoTransactionManagerAdapter
       // CL-SAM-DUPDATE.1
       if (sam.getProductType() == CalypsoSam.ProductType.SAM_C1) {
         // Digest Update Multiple
-        // Construct list of DataIn
-        List<byte[]> digestDataList = new ArrayList<byte[]>(1);
         byte[] buffer = new byte[255];
         int i = 0;
         for (byte[] cardApdu : cardApdus) {
-          /*
-           * The maximum buffer length of the "Digest Update Multiple" SAM command is set to 230
-           * bytes instead of the 254 theoretically allowed by the SAM in order to be compatible
-           * with certain unpredictable applications (e.g. 237 for the Hoplink application).
-           */
-          if (i + cardApdu.length > 230) {
-            // Copy buffer to digestDataList and reset buffer
-            digestDataList.add(Arrays.copyOf(buffer, i));
+          if (i + cardApdu.length + 1 > maxCardApduLengthSupported) {
+            // Add command and reset buffer
+            if (i != 0) {
+              samCommands.add(new CmdSamDigestUpdateMultiple(sam, Arrays.copyOf(buffer, i)));
+            }
             i = 0;
           }
-          // Add [length][apdu] to current buffer
-          buffer[i++] = (byte) cardApdu.length;
-          System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
-          i += cardApdu.length;
+          if (cardApdu.length != maxCardApduLengthSupported) {
+            // Add [length][apdu] to current buffer
+            buffer[i++] = (byte) cardApdu.length;
+            System.arraycopy(cardApdu, 0, buffer, i, cardApdu.length);
+            i += cardApdu.length;
+          } else {
+            // Create a Digest Update (simple) when the command fills entirely the SAM buffer
+            samCommands.add(new CmdSamDigestUpdate(sam, false, cardApdu));
+          }
         }
-        // Copy buffer to digestDataList
-        digestDataList.add(Arrays.copyOf(buffer, i));
-        // Add commands
-        for (byte[] dataIn : digestDataList) {
-          samCommands.add(new CmdSamDigestUpdateMultiple(sam, dataIn));
+        if (i != 0) {
+          // Add command
+          samCommands.add(new CmdSamDigestUpdateMultiple(sam, Arrays.copyOf(buffer, i)));
         }
       } else {
         // Digest Update (simple)
