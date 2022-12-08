@@ -310,6 +310,8 @@ abstract class AbstractSamCommand {
       e = new CalypsoSamIncorrectInputDataException(message, command, statusWord);
     } else if (exceptionClass == CalypsoSamSecurityDataException.class) {
       e = new CalypsoSamSecurityDataException(message, command, statusWord);
+    } else if (exceptionClass == CalypsoSamSecurityContextException.class) {
+      e = new CalypsoSamSecurityContextException(message, command, statusWord);
     } else {
       e = new CalypsoSamUnknownStatusException(message, command, statusWord);
     }
