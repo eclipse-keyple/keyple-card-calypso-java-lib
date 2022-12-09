@@ -11,34 +11,33 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the SAM Select Diversifier APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamSelectDiversifier extends AbstractSamCommand {
+final class CmdSamSelectDiversifier extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Preconditions not satisfied: the SAM is locked.",
-            CalypsoSamAccessForbiddenException.class));
+            "Preconditions not satisfied: the SAM is locked.", SamAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Creates a new instance.
    *
    * @param calypsoSam The Calypso SAM.
@@ -47,7 +46,7 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
    */
   CmdSamSelectDiversifier(CalypsoSamAdapter calypsoSam, byte[] diversifier) {
 
-    super(CalypsoSamCommand.SELECT_DIVERSIFIER, 0, calypsoSam);
+    super(SamCommandRef.SELECT_DIVERSIFIER, 0, calypsoSam);
 
     // Format the diversifier on 4 or 8 bytes if needed.
     if (diversifier.length != 4 && diversifier.length != 8) {
@@ -60,7 +59,7 @@ final class CmdSamSelectDiversifier extends AbstractSamCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                SamUtilAdapter.getClassByte(calypsoSam.getProductType()),
+                calypsoSam.getClassByte(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0,
                 (byte) 0,

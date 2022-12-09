@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Indicates that the input PIN provided is not valid. <br>
  * This can occur during the PIN verification.
  *
@@ -21,14 +20,11 @@ package org.eclipse.keyple.card.calypso;
 final class CardPinException extends CardCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CardPinException(String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  CardPinException(String message, CardCommandRef command) {
+    super(message, command);
   }
 }

@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -12,23 +12,17 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
- * Indicates that the security conditions are not fulfilled (e.g. busy status).
+ * Indicates that preconditions are not satisfied (e.g. session not active,...).
  *
- * @since 2.2.0
+ * @since 2.0.0
  */
-final class CalypsoSamSecurityContextException extends CalypsoSamCommandException {
+final class SamAccessForbiddenException extends SamCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
-   * @param command the Calypso SAM command.
-   * @param statusWord the status word.
-   * @since 2.2.0
+   * @since 2.0.0
    */
-  CalypsoSamSecurityContextException(
-      String message, CalypsoSamCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  SamAccessForbiddenException(String message) {
+    super(message);
   }
 }

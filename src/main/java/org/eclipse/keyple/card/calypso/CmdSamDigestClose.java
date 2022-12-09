@@ -11,35 +11,31 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Digest Close APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamDigestClose extends AbstractSamCommand {
-
-  /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_CLOSE;
+final class CmdSamDigestClose extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestClose .
    *
    * @param calypsoSam The Calypso SAM.
@@ -48,13 +44,13 @@ final class CmdSamDigestClose extends AbstractSamCommand {
    */
   CmdSamDigestClose(CalypsoSamAdapter calypsoSam, int expectedResponseLength) {
 
-    super(command, expectedResponseLength, calypsoSam);
+    super(SamCommandRef.DIGEST_CLOSE, expectedResponseLength, calypsoSam);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                SamUtilAdapter.getClassByte(calypsoSam.getProductType()),
-                command.getInstructionByte(),
+                calypsoSam.getClassByte(),
+                getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
@@ -62,7 +58,6 @@ final class CmdSamDigestClose extends AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the sam signature.
    *
    * @return The sam half session signature

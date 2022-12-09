@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Defines the two existing ISO7816 class bytes for a Calypso card command.: LEGACY for REV1 /
  * BPRIME type card, ISO for REV2/3 / B type
  *

@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
@@ -23,23 +25,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the SV Get command.
  *
  * @since 2.0.1
  */
-final class CmdCardSvGet extends AbstractCardCommand {
+final class CmdCardSvGet extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardSvGet.class);
-
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.SV_GET;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6982,
         new StatusProperties(
@@ -62,7 +60,6 @@ final class CmdCardSvGet extends AbstractCardCommand {
   private final byte[] header;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSvGet.
    *
    * @param calypsoCard The Calypso card.
@@ -73,7 +70,7 @@ final class CmdCardSvGet extends AbstractCardCommand {
    */
   CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.SV_GET, 0, calypsoCard);
 
     byte cla =
         calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
@@ -85,14 +82,14 @@ final class CmdCardSvGet extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, (byte) 0x00)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
     }
 
     header = new byte[4];
-    header[0] = command.getInstructionByte();
+    header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
     header[3] = (byte) 0x00;
@@ -126,13 +123,8 @@ final class CmdCardSvGet extends AbstractCardCommand {
     switch (cardResponse.length) {
       case 0x21: /* Compatibility mode, Reload */
       case 0x1E: /* Compatibility mode, Debit or Undebit */
-        byte[] challengeOut = new byte[2];
-        byte[] previousSignatureLo = new byte[3];
         currentKvc = cardResponse[0];
         transactionNumber = ByteArrayUtil.extractInt(cardResponse, 1, 2, false);
-        System.arraycopy(cardResponse, 3, previousSignatureLo, 0, 3);
-        challengeOut[0] = cardResponse[6];
-        challengeOut[1] = cardResponse[7];
         balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
         if (cardResponse.length == 0x21) {
           /* Reload */
@@ -145,12 +137,8 @@ final class CmdCardSvGet extends AbstractCardCommand {
         }
         break;
       case 0x3D: /* Revision 3.2 mode */
-        challengeOut = new byte[8];
-        previousSignatureLo = new byte[6];
-        System.arraycopy(cardResponse, 0, challengeOut, 0, 8);
         currentKvc = cardResponse[8];
         transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
-        System.arraycopy(cardResponse, 11, previousSignatureLo, 0, 6);
         balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
         loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
         debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);

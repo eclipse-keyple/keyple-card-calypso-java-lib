@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -19,23 +21,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Append Record" APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardAppendRecord extends AbstractCardCommand {
+final class CmdCardAppendRecord extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardAppendRecord.class);
-
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.APPEND_RECORD;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6B00,
         new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
@@ -70,7 +68,6 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
   private final byte[] data;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardUpdateRecord.
    *
    * @param calypsoCard The Calypso card.
@@ -81,7 +78,7 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
    */
   CmdCardAppendRecord(CalypsoCardAdapter calypsoCard, byte sfi, byte[] newRecordData) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.APPEND_RECORD, 0, calypsoCard);
 
     byte cla = calypsoCard.getCardClass().getValue();
 
@@ -93,7 +90,8 @@ final class CmdCardAppendRecord extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, newRecordData, null)));
+            ApduUtil.build(
+                cla, getCommandRef().getInstructionByte(), p1, p2, newRecordData, null)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI:%02Xh", sfi);

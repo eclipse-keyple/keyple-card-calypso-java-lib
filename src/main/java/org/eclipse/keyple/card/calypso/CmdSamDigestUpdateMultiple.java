@@ -11,42 +11,38 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the SAM Digest Update Multiple APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
-
-  /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE_MULTIPLE;
+final class CmdSamDigestUpdateMultiple extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Incorrect value in the incoming data: incorrect structure.",
-            CalypsoSamIncorrectInputDataException.class));
-    m.put(0x6B00, new StatusProperties("Incorrect P1.", CalypsoSamIllegalParameterException.class));
+            SamIncorrectInputDataException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdateMultiple.
    *
    * @param calypsoSam The Calypso SAM.
@@ -54,9 +50,9 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
    * @since 2.0.1
    */
   CmdSamDigestUpdateMultiple(CalypsoSamAdapter calypsoSam, byte[] digestData) {
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.DIGEST_UPDATE_MULTIPLE, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = (byte) 0x80;
     byte p2 = (byte) 0x00;
 
@@ -66,7 +62,7 @@ final class CmdSamDigestUpdateMultiple extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, digestData, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, digestData, null)));
   }
 
   /**

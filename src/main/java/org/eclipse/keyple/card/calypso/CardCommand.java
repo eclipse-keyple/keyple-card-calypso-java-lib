@@ -11,12 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
- * (package-private)<br>
  * Superclass for all card commands.
  *
  * <p>It provides the generic getters to retrieve:
@@ -30,10 +31,9 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-abstract class AbstractCardCommand {
+abstract class CardCommand {
 
   /**
-   * (package-private)<br>
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
    * (Success)
    *
@@ -47,7 +47,7 @@ abstract class AbstractCardCommand {
     STATUS_TABLE = m;
   }
 
-  private final CalypsoCardCommand commandRef;
+  private final CardCommandRef commandRef;
   private final int le;
   private String name;
   private ApduRequestAdapter apduRequest;
@@ -55,7 +55,6 @@ abstract class AbstractCardCommand {
   private CalypsoCardAdapter calypsoCard;
 
   /**
-   * (package-private)<br>
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef A command reference from the Calypso command table.
@@ -64,7 +63,7 @@ abstract class AbstractCardCommand {
    *     made).
    * @since 2.0.1
    */
-  AbstractCardCommand(CalypsoCardCommand commandRef, int le, CalypsoCardAdapter calypsoCard) {
+  CardCommand(CardCommandRef commandRef, int le, CalypsoCardAdapter calypsoCard) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
     this.le = le;
@@ -72,7 +71,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the session buffer is used when executing this command.
    *
    * <p>Allows the management of the overflow of this buffer.
@@ -83,7 +81,6 @@ abstract class AbstractCardCommand {
   abstract boolean isSessionBufferUsed();
 
   /**
-   * (package-private)<br>
    * Appends a string to the current name.
    *
    * <p>The sub name completes the name of the current command. This method must therefore only be
@@ -99,18 +96,16 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Returns the current command identification
    *
    * @return A not null reference.
    * @since 2.0.1
    */
-  final CalypsoCardCommand getCommandRef() {
+  final CardCommandRef getCommandRef() {
     return commandRef;
   }
 
   /**
-   * (package-private)<br>
    * Gets the name of this APDU command.
    *
    * @return A not empty string.
@@ -121,7 +116,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Sets the command {@link ApduRequestAdapter}.
    *
    * @param apduRequest The APDU request.
@@ -133,7 +127,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the {@link ApduRequestAdapter}.
    *
    * @return Null if the request is not set.
@@ -144,7 +137,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets {@link ApduResponseApi}
    *
    * @return Null if the response is not set.
@@ -155,7 +147,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Returns the Calypso card.
    *
    * @return Null if the card selection has not yet been made.
@@ -166,7 +157,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Parses the response {@link ApduResponseApi} and checks the status word.
    *
    * @param apduResponse The APDU response.
@@ -180,7 +170,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Sets the Calypso card and invoke the {@link #parseApduResponse(ApduResponseApi)} method.
    *
    * @since 2.2.3
@@ -192,20 +181,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   * Builds a specific APDU command exception for the case of an unexpected response length.
-   *
-   * @param message The message.
-   * @return A not null reference.
-   * @since 2.1.1
-   */
-  final CardCommandException buildUnexpectedResponseLengthException(String message) {
-    return new CardUnexpectedResponseLengthException(
-        message, commandRef, getApduResponse().getStatusWord());
-  }
-
-  /**
-   * (package-private)<br>
    * Returns the internal status table
    *
    * @return A not null reference
@@ -216,8 +191,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
-   *
    * @return The properties of the result.
    * @throws NullPointerException If the response is not set.
    */
@@ -226,7 +199,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets true if the status is successful from the statusTable according to the current status code
    * and if the length of the response is equal to the LE field in the request.
    *
@@ -241,7 +213,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * This method check the status word and if the length of the response is equal to the LE field in
    * the request.<br>
    * If status word is not referenced, then status is considered unsuccessful.
@@ -255,10 +226,11 @@ abstract class AbstractCardCommand {
     if (props != null && props.isSuccessful()) {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
       if (le != 0 && apduResponse.getDataOut().length != le) {
-        throw buildUnexpectedResponseLengthException(
+        throw new CardUnexpectedResponseLengthException(
             String.format(
                 "Incorrect APDU response length (expected: %d, actual: %d)",
-                le, apduResponse.getDataOut().length));
+                le, apduResponse.getDataOut().length),
+            commandRef);
       }
       // SW and response length are correct.
       return;
@@ -277,7 +249,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the ASCII message from the statusTable for the current status word.
    *
    * @return A nullable value
@@ -289,7 +260,6 @@ abstract class AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Builds a specific APDU command exception.
    *
    * @param exceptionClass the exception class.
@@ -301,36 +271,33 @@ abstract class AbstractCardCommand {
       Class<? extends CardCommandException> exceptionClass, String message) {
 
     CardCommandException e;
-    CalypsoCardCommand command = commandRef;
-    Integer statusWord = getApduResponse().getStatusWord();
     if (exceptionClass == CardAccessForbiddenException.class) {
-      e = new CardAccessForbiddenException(message, command, statusWord);
+      e = new CardAccessForbiddenException(message, commandRef);
     } else if (exceptionClass == CardDataAccessException.class) {
-      e = new CardDataAccessException(message, command, statusWord);
+      e = new CardDataAccessException(message, commandRef);
     } else if (exceptionClass == CardDataOutOfBoundsException.class) {
-      e = new CardDataOutOfBoundsException(message, command, statusWord);
+      e = new CardDataOutOfBoundsException(message, commandRef);
     } else if (exceptionClass == CardIllegalArgumentException.class) {
-      e = new CardIllegalArgumentException(message, command);
+      e = new CardIllegalArgumentException(message, commandRef);
     } else if (exceptionClass == CardIllegalParameterException.class) {
-      e = new CardIllegalParameterException(message, command, statusWord);
+      e = new CardIllegalParameterException(message, commandRef);
     } else if (exceptionClass == CardPinException.class) {
-      e = new CardPinException(message, command, statusWord);
+      e = new CardPinException(message, commandRef);
     } else if (exceptionClass == CardSecurityContextException.class) {
-      e = new CardSecurityContextException(message, command, statusWord);
+      e = new CardSecurityContextException(message, commandRef);
     } else if (exceptionClass == CardSecurityDataException.class) {
-      e = new CardSecurityDataException(message, command, statusWord);
+      e = new CardSecurityDataException(message, commandRef);
     } else if (exceptionClass == CardSessionBufferOverflowException.class) {
-      e = new CardSessionBufferOverflowException(message, command, statusWord);
+      e = new CardSessionBufferOverflowException(message, commandRef);
     } else if (exceptionClass == CardTerminatedException.class) {
-      e = new CardTerminatedException(message, command, statusWord);
+      e = new CardTerminatedException(message, commandRef);
     } else {
-      e = new CardUnknownStatusException(message, command, statusWord);
+      e = new CardUnknownStatusException(message, commandRef);
     }
     return e;
   }
 
   /**
-   * (package-private)<br>
    * This internal class provides status word properties
    *
    * @since 2.0.1
@@ -344,7 +311,6 @@ abstract class AbstractCardCommand {
     private final Class<? extends CardCommandException> exceptionClass;
 
     /**
-     * (package-private)<br>
      * Creates a successful status.
      *
      * @param information the status information.
@@ -357,7 +323,6 @@ abstract class AbstractCardCommand {
     }
 
     /**
-     * (package-private)<br>
      * Creates an error status.<br>
      * If {@code exceptionClass} is null, then a successful status is created.
      *
@@ -372,7 +337,6 @@ abstract class AbstractCardCommand {
     }
 
     /**
-     * (package-private)<br>
      * Gets information
      *
      * @return A nullable reference
@@ -383,7 +347,6 @@ abstract class AbstractCardCommand {
     }
 
     /**
-     * (package-private)<br>
      * Gets successful indicator
      *
      * @return The successful indicator
@@ -394,7 +357,6 @@ abstract class AbstractCardCommand {
     }
 
     /**
-     * (package-private)<br>
      * Gets Exception Class
      *
      * @return A nullable reference

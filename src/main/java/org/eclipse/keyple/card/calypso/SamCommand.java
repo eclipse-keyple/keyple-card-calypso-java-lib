@@ -11,12 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 
 /**
- * (package-private)<br>
  * Superclass for all SAM commands.
  *
  * <p>It provides the generic getters to retrieve:
@@ -30,10 +31,9 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-abstract class AbstractSamCommand {
+abstract class SamCommand {
 
   /**
-   * (package-private)<br>
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
    * (Success)
    *
@@ -43,17 +43,13 @@ abstract class AbstractSamCommand {
 
   static {
     HashMap<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>();
-    m.put(
-        0x6D00,
-        new StatusProperties("Instruction unknown.", CalypsoSamIllegalParameterException.class));
-    m.put(
-        0x6E00,
-        new StatusProperties("Class not supported.", CalypsoSamIllegalParameterException.class));
+    m.put(0x6D00, new StatusProperties("Instruction unknown.", SamIllegalParameterException.class));
+    m.put(0x6E00, new StatusProperties("Class not supported.", SamIllegalParameterException.class));
     m.put(0x9000, new StatusProperties("Success"));
     STATUS_TABLE = m;
   }
 
-  private final CalypsoSamCommand commandRef;
+  private final SamCommandRef commandRef;
   private final int le;
   private String name;
   private ApduRequestAdapter apduRequest;
@@ -61,7 +57,6 @@ abstract class AbstractSamCommand {
   private CalypsoSamAdapter calypsoSam;
 
   /**
-   * (package-private)<br>
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef A command reference from the Calypso command table.
@@ -69,7 +64,7 @@ abstract class AbstractSamCommand {
    * @param calypsoSam The Calypso SAM (it may be null if the SAM selection has not yet been made).
    * @since 2.0.1
    */
-  AbstractSamCommand(CalypsoSamCommand commandRef, int le, CalypsoSamAdapter calypsoSam) {
+  SamCommand(SamCommandRef commandRef, int le, CalypsoSamAdapter calypsoSam) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
     this.le = le;
@@ -77,7 +72,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Appends a string to the current name.
    *
    * <p>The sub name completes the name of the current command. This method must therefore only be
@@ -93,18 +87,16 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Returns the current command identification
    *
    * @return A not null reference.
    * @since 2.0.1
    */
-  final CalypsoSamCommand getCommandRef() {
+  final SamCommandRef getCommandRef() {
     return commandRef;
   }
 
   /**
-   * (package-private)<br>
    * Gets the name of this APDU command.
    *
    * @return A not empty string.
@@ -115,7 +107,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Sets the command {@link ApduRequestAdapter}.
    *
    * @param apduRequest The APDU request.
@@ -127,7 +118,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the {@link ApduRequestAdapter}.
    *
    * @return Null if the request is not set.
@@ -138,7 +128,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets {@link ApduResponseApi}
    *
    * @return Null if the response is not set.
@@ -149,7 +138,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Returns the Calypso card.
    *
    * @return Null if the SAM selection has not yet been made.
@@ -160,46 +148,30 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Parses the response {@link ApduResponseApi} and checks the status word.
    *
    * @param apduResponse The APDU response.
-   * @throws CalypsoSamCommandException if status is not successful or if the length of the response
-   *     is not equal to the LE field in the request.
+   * @throws SamCommandException if status is not successful or if the length of the response is not
+   *     equal to the LE field in the request.
    * @since 2.0.1
    */
-  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
     this.apduResponse = apduResponse;
     checkStatus();
   }
 
   /**
-   * (package-private)<br>
    * Sets the Calypso SAM and invoke the {@link #parseApduResponse(ApduResponseApi)} method.
    *
    * @since 2.2.3
    */
   void parseApduResponse(ApduResponseApi apduResponse, CalypsoSamAdapter calypsoSam)
-      throws CalypsoSamCommandException {
+      throws SamCommandException {
     this.calypsoSam = calypsoSam;
     parseApduResponse(apduResponse);
   }
 
   /**
-   * (package-private)<br>
-   * Builds a specific APDU command exception for the case of an unexpected response length.
-   *
-   * @param message The message.
-   * @return A not null reference.
-   * @since 2.1.1
-   */
-  CalypsoSamCommandException buildUnexpectedResponseLengthException(String message) {
-    return new CalypsoSamUnexpectedResponseLengthException(
-        message, commandRef, getApduResponse().getStatusWord());
-  }
-
-  /**
-   * (package-private)<br>
    * Returns the internal status table
    *
    * @return A not null reference
@@ -210,8 +182,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (private)<br>
-   *
    * @return The properties of the result.
    * @throws NullPointerException If the response is not set.
    */
@@ -220,7 +190,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets true if the status is successful from the statusTable according to the current status code
    * and if the length of the response is equal to the LE field in the request.
    *
@@ -235,21 +204,20 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (private)<br>
    * This method check the status word and if the length of the response is equal to the LE field in
    * the request.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
-   * @throws CalypsoSamCommandException if status is not successful or if the length of the response
-   *     is not equal to the LE field in the request.
+   * @throws SamCommandException if status is not successful or if the length of the response is not
+   *     equal to the LE field in the request.
    */
-  private void checkStatus() throws CalypsoSamCommandException {
+  private void checkStatus() throws SamCommandException {
 
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
       if (le != 0 && apduResponse.getDataOut().length != le) {
-        throw buildUnexpectedResponseLengthException(
+        throw new SamUnexpectedResponseLengthException(
             String.format(
                 "Incorrect APDU response length (expected: %d, actual: %d)",
                 le, apduResponse.getDataOut().length));
@@ -260,7 +228,7 @@ abstract class AbstractSamCommand {
     // status word is not referenced, or not successful.
 
     // exception class
-    Class<? extends CalypsoSamCommandException> exceptionClass =
+    Class<? extends SamCommandException> exceptionClass =
         props != null ? props.getExceptionClass() : null;
 
     // message
@@ -271,7 +239,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the ASCII message from the statusTable for the current status word.
    *
    * @return A nullable value
@@ -283,7 +250,6 @@ abstract class AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Builds a specific APDU command exception.
    *
    * @param exceptionClass the exception class.
@@ -291,35 +257,32 @@ abstract class AbstractSamCommand {
    * @return A not null reference.
    * @since 2.0.1
    */
-  CalypsoSamCommandException buildCommandException(
-      Class<? extends CalypsoSamCommandException> exceptionClass, String message) {
-    CalypsoSamCommandException e;
-    CalypsoSamCommand command = commandRef;
-    Integer statusWord = getApduResponse().getStatusWord();
-    if (exceptionClass == CalypsoSamAccessForbiddenException.class) {
-      e = new CalypsoSamAccessForbiddenException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamCounterOverflowException.class) {
-      e = new CalypsoSamCounterOverflowException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamDataAccessException.class) {
-      e = new CalypsoSamDataAccessException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamIllegalArgumentException.class) {
-      e = new CalypsoSamIllegalArgumentException(message, command);
-    } else if (exceptionClass == CalypsoSamIllegalParameterException.class) {
-      e = new CalypsoSamIllegalParameterException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamIncorrectInputDataException.class) {
-      e = new CalypsoSamIncorrectInputDataException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamSecurityDataException.class) {
-      e = new CalypsoSamSecurityDataException(message, command, statusWord);
-    } else if (exceptionClass == CalypsoSamSecurityContextException.class) {
-      e = new CalypsoSamSecurityContextException(message, command, statusWord);
+  SamCommandException buildCommandException(
+      Class<? extends SamCommandException> exceptionClass, String message) {
+    SamCommandException e;
+    if (exceptionClass == SamAccessForbiddenException.class) {
+      e = new SamAccessForbiddenException(message);
+    } else if (exceptionClass == SamCounterOverflowException.class) {
+      e = new SamCounterOverflowException(message);
+    } else if (exceptionClass == SamDataAccessException.class) {
+      e = new SamDataAccessException(message);
+    } else if (exceptionClass == SamIllegalArgumentException.class) {
+      e = new SamIllegalArgumentException(message);
+    } else if (exceptionClass == SamIllegalParameterException.class) {
+      e = new SamIllegalParameterException(message);
+    } else if (exceptionClass == SamIncorrectInputDataException.class) {
+      e = new SamIncorrectInputDataException(message);
+    } else if (exceptionClass == SamSecurityDataException.class) {
+      e = new SamSecurityDataException(message);
+    } else if (exceptionClass == SamSecurityContextException.class) {
+      e = new SamSecurityContextException(message);
     } else {
-      e = new CalypsoSamUnknownStatusException(message, command, statusWord);
+      e = new SamUnknownStatusException(message);
     }
     return e;
   }
 
   /**
-   * (package-private)<br>
    * This internal class provides status word properties
    *
    * @since 2.0.1
@@ -330,10 +293,9 @@ abstract class AbstractSamCommand {
 
     private final boolean successful;
 
-    private final Class<? extends CalypsoSamCommandException> exceptionClass;
+    private final Class<? extends SamCommandException> exceptionClass;
 
     /**
-     * (package-private)<br>
      * Creates a successful status.
      *
      * @param information the status information.
@@ -346,7 +308,6 @@ abstract class AbstractSamCommand {
     }
 
     /**
-     * (package-private)<br>
      * Creates an error status.<br>
      * If {@code exceptionClass} is null, then a successful status is created.
      *
@@ -354,15 +315,13 @@ abstract class AbstractSamCommand {
      * @param exceptionClass the associated exception class.
      * @since 2.0.1
      */
-    StatusProperties(
-        String information, Class<? extends CalypsoSamCommandException> exceptionClass) {
+    StatusProperties(String information, Class<? extends SamCommandException> exceptionClass) {
       this.information = information;
       this.successful = exceptionClass == null;
       this.exceptionClass = exceptionClass;
     }
 
     /**
-     * (package-private)<br>
      * Gets information
      *
      * @return A nullable reference
@@ -373,7 +332,6 @@ abstract class AbstractSamCommand {
     }
 
     /**
-     * (package-private)<br>
      * Gets successful indicator
      *
      * @return The successful indicator
@@ -384,13 +342,12 @@ abstract class AbstractSamCommand {
     }
 
     /**
-     * (package-private)<br>
      * Gets Exception Class
      *
      * @return A nullable reference
      * @since 2.0.1
      */
-    Class<? extends CalypsoSamCommandException> getExceptionClass() {
+    Class<? extends SamCommandException> getExceptionClass() {
       return exceptionClass;
     }
   }

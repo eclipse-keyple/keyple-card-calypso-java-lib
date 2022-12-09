@@ -15,6 +15,12 @@ import java.util.List;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.calypsonet.terminal.card.ProxyReaderApi;
 
+/**
+ * Adapter of {@link SymmetricCryptoTransactionManagerFactory} and {@link
+ * SymmetricCryptoTransactionManagerFactorySpi}.
+ *
+ * @since 2.3.1
+ */
 class SymmetricCryptoTransactionManagerFactoryAdapter
     implements SymmetricCryptoTransactionManagerFactory,
         SymmetricCryptoTransactionManagerFactorySpi {
@@ -43,16 +49,31 @@ class SymmetricCryptoTransactionManagerFactoryAdapter
             : sam.getMaxDigestDataLength();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public boolean isExtendedModeSupported() {
     return isExtendedModeSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public int getMaxCardApduLengthSupported() {
     return maxCardApduLengthSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoTransactionManagerAdapter createTransactionManager(
       byte[] cardKeyDiversifier, boolean useExtendedMode, List<byte[]> transactionAuditData) {

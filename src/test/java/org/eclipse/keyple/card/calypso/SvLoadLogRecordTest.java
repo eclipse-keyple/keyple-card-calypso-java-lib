@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import org.eclipse.keyple.core.util.HexUtil;
 import org.junit.Before;

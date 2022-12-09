@@ -1,4 +1,4 @@
-url: https://github.com/eclipse/keyple-card-calypso-lib
+url: https://github.com/eclipse/keyple-card-calypso-java-lib
 organization:
   name: Eclipse Keyple
   url: https://keyple.org/
@@ -10,9 +10,9 @@ developers:
   - name: Keyple Contributors
     email: keyple-dev@eclipse.org
 scm:
-  connection: scm:git:git://github.com/eclipse/keyple-card-calypso-lib.git
-  developerConnection: scm:git:https://github.com/eclipse/keyple-card-calypso-lib.git
-  url: https://github.com/eclipse/keyple-card-calypso-lib
+  connection: scm:git:git://github.com/eclipse/keyple-card-calypso-java-lib.git
+  developerConnection: scm:git:https://github.com/eclipse/keyple-card-calypso-java-lib.git
+  url: https://github.com/eclipse/keyple-card-calypso-java-lib
 ciManagement:
   system: Jenkins
-  url: https://ci.eclipse.org/keyple/job/Keyple/job/keyple-card-calypso-lib/
+  url: https://ci.eclipse.org/keyple/job/Keyple/job/keyple-card-calypso-java-lib/

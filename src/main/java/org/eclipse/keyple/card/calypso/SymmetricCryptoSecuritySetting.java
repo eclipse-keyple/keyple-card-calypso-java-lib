@@ -16,30 +16,28 @@ import org.calypsonet.terminal.calypso.WriteAccessLevel;
 /**
  * Data to manage the security operations of a Calypso card transaction.
  *
- * @since x.y.z
+ * @since 2.3.1
  */
-interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCryptoSecuritySetting> {
+interface SymmetricCryptoSecuritySetting {
 
   SymmetricCryptoSecuritySetting setCryptoTransactionManager(
       SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory);
 
   /**
-   * Add an mutual authentication step at the beginning of the Secure Session when the card supports
-   * the extended mode.
-   *
-   * <p>The default value is disabled.
+   * Enables multiple session mode to allow more changes to the card than the session buffer can
+   * handle.
    *
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
-  SymmetricCryptoSecuritySetting enableEarlyMutualAuthentication();
+  SymmetricCryptoSecuritySetting enableMultipleSession();
 
   /**
    * Enables the ratification mechanism to handle the early removal of the card preventing the
    * terminal from receiving the acknowledgement of the session closing.
    *
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting enableRatificationMechanism();
 
@@ -49,7 +47,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * <p>By default, the PIN is transmitted encrypted.
    *
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting enablePinPlainTransmission();
 
@@ -59,7 +57,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * <p>The default value is false.
    *
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting enableSvLoadAndDebitLog();
 
@@ -69,19 +67,9 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * <p>The default value is false.
    *
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting authorizeSvNegativeBalance();
-
-  /**
-   * Force the use of regular mode for Secure Session and Stored Value operations.
-   *
-   * <p>The default value is false.
-   *
-   * @return The current instance.
-   * @since x.y.z
-   */
-  SymmetricCryptoSecuritySetting forceRegularMode();
 
   /**
    * Defines for a given write access level the KIF value to use for cards that only provide KVC.
@@ -91,7 +79,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value to use.
    * @return The current instance.
    * @throws IllegalArgumentException If the provided writeAccessLevel is null.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting assignKif(WriteAccessLevel writeAccessLevel, byte kvc, byte kif);
 
@@ -103,7 +91,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value to use.
    * @return The current instance.
    * @throws IllegalArgumentException If the provided writeAccessLevel is null.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting assignDefaultKif(WriteAccessLevel writeAccessLevel, byte kif);
 
@@ -114,7 +102,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kvc The KVC to use.
    * @return The current instance.
    * @throws IllegalArgumentException If the provided writeAccessLevel is null.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting assignDefaultKvc(WriteAccessLevel writeAccessLevel, byte kvc);
 
@@ -127,7 +115,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting addAuthorizedSessionKey(byte kif, byte kvc);
 
@@ -140,7 +128,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting addAuthorizedSvKey(byte kif, byte kvc);
 
@@ -152,7 +140,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting setPinVerificationCipheringKey(byte kif, byte kvc);
 
@@ -164,7 +152,7 @@ interface SymmetricCryptoSecuritySetting extends SecuritySetting<SymmetricCrypto
    * @param kif The KIF value.
    * @param kvc The KVC value.
    * @return The current instance.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoSecuritySetting setPinModificationCipheringKey(byte kif, byte kvc);
 }

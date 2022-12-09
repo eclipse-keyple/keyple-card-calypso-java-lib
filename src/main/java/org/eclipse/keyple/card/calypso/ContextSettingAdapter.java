@@ -19,6 +19,7 @@ import org.eclipse.keyple.core.util.Assert;
  * @since 2.3.0
  */
 final class ContextSettingAdapter implements ContextSetting {
+
   private Integer contactReaderPayloadCapacity;
 
   /**

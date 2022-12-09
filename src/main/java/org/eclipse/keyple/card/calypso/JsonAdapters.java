@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -21,22 +23,20 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
 /**
- * (package-private)<br>
  * Contains all JSON adapters used for serialization and deserialization processes.<br>
  * These adapters are required for interfaces and abstract classes.
  *
  * @since 2.2.3
  */
-final class JsonAdapter {
+final class JsonAdapters {
 
   private static final String TYPE = "type";
   private static final String DATA = "data";
   private static final String UNKNOWN_TYPE_TEMPLATE = "Unknown type: %s";
 
-  private JsonAdapter() {}
+  private JsonAdapters() {}
 
   /**
-   * (package-private)<br>
    * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.DirectoryHeader}.
    *
    * @since 2.0.0
@@ -69,7 +69,6 @@ final class JsonAdapter {
   }
 
   /**
-   * (package-private)<br>
    * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.ElementaryFile}.
    *
    * @since 2.0.0
@@ -102,7 +101,6 @@ final class JsonAdapter {
   }
 
   /**
-   * (package-private)<br>
    * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.FileHeader}.
    *
    * @since 2.0.0
@@ -135,7 +133,6 @@ final class JsonAdapter {
   }
 
   /**
-   * (package-private)<br>
    * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.SvLoadLogRecord}.
    *
    * @since 2.0.0
@@ -168,7 +165,6 @@ final class JsonAdapter {
   }
 
   /**
-   * (package-private)<br>
    * JSON serializer/deserializer of a {@link
    * org.calypsonet.terminal.calypso.card.SvDebitLogRecord}.
    *
@@ -203,13 +199,12 @@ final class JsonAdapter {
   }
 
   /**
-   * (package-private)<br>
-   * JSON serializer/deserializer of a {@link AbstractCardCommand}.
+   * JSON serializer/deserializer of a {@link CardCommand}.
    *
    * @since 2.2.3
    */
   static final class AbstractCardCommandJsonAdapter
-      implements JsonSerializer<AbstractCardCommand>, JsonDeserializer<AbstractCardCommand> {
+      implements JsonSerializer<CardCommand>, JsonDeserializer<CardCommand> {
 
     /**
      * {@inheritDoc}
@@ -218,7 +213,7 @@ final class JsonAdapter {
      */
     @Override
     public JsonElement serialize(
-        AbstractCardCommand src, Type typeOfSrc, JsonSerializationContext context) {
+        CardCommand src, Type typeOfSrc, JsonSerializationContext context) {
       JsonObject jsonObject = new JsonObject();
       jsonObject.addProperty(TYPE, src.getClass().getName());
       jsonObject.add(DATA, context.serialize(src));
@@ -231,13 +226,13 @@ final class JsonAdapter {
      * @since 2.2.3
      */
     @Override
-    public AbstractCardCommand deserialize(
+    public CardCommand deserialize(
         JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
       JsonObject jsonObject = json.getAsJsonObject();
       String type = jsonObject.get(TYPE).getAsString();
       JsonObject data = jsonObject.get(DATA).getAsJsonObject();
-      AbstractCardCommand cardCommand;
+      CardCommand cardCommand;
       try {
         Class<?> classOfData = Class.forName(type);
         cardCommand = context.deserialize(data, classOfData);

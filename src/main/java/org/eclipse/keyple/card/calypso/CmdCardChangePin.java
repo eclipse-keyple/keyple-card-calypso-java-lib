@@ -11,25 +11,24 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Change PIN APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardChangePin extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.CHANGE_PIN;
+final class CmdCardChangePin extends CardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
@@ -60,7 +59,6 @@ final class CmdCardChangePin extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Builds a Calypso Change PIN command
    *
    * @param calypsoCard The Calypso card.
@@ -69,7 +67,7 @@ final class CmdCardChangePin extends AbstractCardCommand {
    */
   CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] newPinData) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard);
 
     if (newPinData == null || (newPinData.length != 0x04 && newPinData.length != 0x10)) {
       throw new IllegalArgumentException("Bad PIN data length.");
@@ -81,7 +79,7 @@ final class CmdCardChangePin extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, newPinData, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, newPinData, null)));
   }
 
   /**

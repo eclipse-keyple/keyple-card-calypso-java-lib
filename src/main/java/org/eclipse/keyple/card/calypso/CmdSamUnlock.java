@@ -11,40 +11,35 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the "Unlock" APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamUnlock extends AbstractSamCommand {
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.UNLOCK;
+final class CmdSamUnlock extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Preconditions not satisfied (SAM not locked?).",
-            CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect UnlockData.", CalypsoSamSecurityDataException.class));
+            "Preconditions not satisfied (SAM not locked?).", SamAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect UnlockData.", SamSecurityDataException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * CalypsoSamCardSelectorBuilder constructor
    *
    * @param productType the SAM product type.
@@ -53,9 +48,9 @@ final class CmdSamUnlock extends AbstractSamCommand {
    */
   CmdSamUnlock(CalypsoSam.ProductType productType, byte[] unlockData) {
 
-    super(command, 0, null);
+    super(SamCommandRef.UNLOCK, 0, null);
 
-    byte cla = SamUtilAdapter.getClassByte(productType);
+    byte cla = productType == CalypsoSam.ProductType.SAM_S1DX ? (byte) 0x94 : (byte) 0x80;
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -69,7 +64,7 @@ final class CmdSamUnlock extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, unlockData, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, unlockData, null)));
   }
 
   /**

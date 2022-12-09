@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -20,12 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Increase/Decrease" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
+final class CmdCardIncreaseOrDecrease extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardIncreaseOrDecrease.class);
 
@@ -35,7 +36,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -82,7 +83,6 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   private byte[] computedData;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
@@ -101,10 +101,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
       int counterNumber,
       int incDecValue) {
 
-    super(
-        isDecreaseCommand ? CalypsoCardCommand.DECREASE : CalypsoCardCommand.INCREASE,
-        0,
-        calypsoCard);
+    super(isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE, 0, calypsoCard);
 
     byte cla = calypsoCard.getCardClass().getValue();
     this.sfi = sfi;
@@ -153,8 +150,7 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
     super.parseApduResponse(apduResponse);
     if (apduResponse.getStatusWord() == SW_POSTPONED_DATA) {
       if (!getCalypsoCard().isCounterValuePostponed()) {
-        throw new CardUnknownStatusException(
-            "Unexpected status word: 6200h", getCommandRef(), SW_POSTPONED_DATA);
+        throw new CardUnknownStatusException("Unexpected status word: 6200h", getCommandRef());
       }
       // Set computed value
       getCalypsoCard().setCounter((byte) sfi, counterNumber, computedData);
@@ -176,8 +172,6 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The SFI of the accessed file
    * @since 2.0.1
    */
@@ -186,8 +180,6 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The counter number
    * @since 2.0.1
    */
@@ -196,8 +188,6 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The decrement/increment value
    * @since 2.0.1
    */
@@ -206,7 +196,6 @@ final class CmdCardIncreaseOrDecrease extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Sets the computed data.
    *
    * @param data A 3-byte array containing the computed data.

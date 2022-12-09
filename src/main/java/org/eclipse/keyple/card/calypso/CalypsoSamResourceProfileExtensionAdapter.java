@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CardResourceProfileExtension} dedicated to SAM identification.
  *
  * @since 2.0.0
@@ -32,8 +31,6 @@ class CalypsoSamResourceProfileExtensionAdapter implements CardResourceProfileEx
   private final CalypsoSamSelection calypsoSamSelection;
 
   /**
-   * (package-private)<br>
-   *
    * @param calypsoSamSelection The {@link CalypsoSamSelection}.
    * @since 2.0.0
    */

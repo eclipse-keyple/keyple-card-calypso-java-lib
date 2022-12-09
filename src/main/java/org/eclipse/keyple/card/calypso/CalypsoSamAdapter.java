@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CalypsoSam}.
  *
  * @since 2.0.0
@@ -42,6 +41,7 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareIssuer;
   private final byte softwareVersion;
   private final byte softwareRevision;
+  private final byte classByte;
   private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
   private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
 
@@ -120,36 +120,21 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
       softwareVersion = 0;
       softwareRevision = 0;
     }
-  }
-
-  /**
-   * (package-private)<br>
-   * Gets the class byte to use for the provided product type.
-   *
-   * @return A byte.
-   * @since 2.0.0
-   */
-  static byte getClassByte(CalypsoSam.ProductType type) {
     // CL-CLA-SAM.1
-    if (type == CalypsoSam.ProductType.SAM_S1DX || type == CalypsoSam.ProductType.CSAM_F) {
-      return (byte) 0x94;
-    }
-    return (byte) 0x80;
+    classByte = samProductType == ProductType.SAM_S1DX ? (byte) 0x94 : (byte) 0x80;
   }
 
   /**
-   * (package-private)<br>
    * Gets the class byte to use for the current product type.
    *
    * @return A byte.
    * @since 2.0.0
    */
   byte getClassByte() {
-    return getClassByte(samProductType);
+    return classByte;
   }
 
   /**
-   * (package-private)<br>
    * Gets the maximum length allowed for digest commands.
    *
    * @return An positive int.
@@ -283,7 +268,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Adds or replace an event counter.
    *
    * @param eventCounterNumber The number of the counter.
@@ -295,7 +279,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Adds or replace an event counter.
    *
    * @param eventCeilingNumber The number of the ceiling.

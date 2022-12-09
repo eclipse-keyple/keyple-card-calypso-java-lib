@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,22 +22,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the Read Records APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardReadRecords extends AbstractCardCommand {
+final class CmdCardReadRecords extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardReadRecords.class);
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.READ_RECORDS;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Command forbidden on binary files", CardDataAccessException.class));
@@ -64,7 +63,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Indicates if one or multiple records
    *
    * @since 2.0.1
@@ -82,7 +80,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   private ReadMode readMode;
 
   /**
-   * (package-private)<br>
    * Instantiates a new read records cmd build.
    *
    * @param calypsoCard The Calypso card.
@@ -99,12 +96,11 @@ final class CmdCardReadRecords extends AbstractCardCommand {
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength) {
-    super(command, expectedLength, calypsoCard);
+    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard);
     buildCommand(calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength);
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new read records cmd build.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
@@ -121,12 +117,11 @@ final class CmdCardReadRecords extends AbstractCardCommand {
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength) {
-    super(command, expectedLength, null);
+    super(CardCommandRef.READ_RECORDS, expectedLength, null);
     buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength);
   }
 
   /**
-   * (private)<br>
    * Builds the command.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
@@ -156,7 +151,12 @@ final class CmdCardReadRecords extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(), command.getInstructionByte(), p1, p2, null, le)));
+                calypsoCardClass.getValue(),
+                getCommandRef().getInstructionByte(),
+                p1,
+                p2,
+                null,
+                le)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
@@ -219,8 +219,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return the SFI of the accessed file
    * @since 2.0.1
    */
@@ -229,8 +227,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return the number of the first record to read
    * @since 2.0.1
    */
@@ -239,8 +235,6 @@ final class CmdCardReadRecords extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return the readJustOneRecord flag
    * @since 2.0.1
    */

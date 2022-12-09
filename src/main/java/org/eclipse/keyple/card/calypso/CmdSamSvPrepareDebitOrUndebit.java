@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,41 +20,35 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the SV Prepare Debit or Undebit APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
+final class CmdSamSvPrepareDebitOrUndebit extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6A00,
-        new StatusProperties("Incorrect P1 or P2", CalypsoSamIllegalParameterException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
+    m.put(0x6A00, new StatusProperties("Incorrect P1 or P2", SamIllegalParameterException.class));
     m.put(
         0x6A80,
-        new StatusProperties(
-            "Incorrect incoming data.", CalypsoSamIncorrectInputDataException.class));
+        new StatusProperties("Incorrect incoming data.", SamIncorrectInputDataException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found: ciphering key not found", CalypsoSamDataAccessException.class));
+            "Record not found: ciphering key not found", SamDataAccessException.class));
     STATUS_TABLE = m;
   }
 
   private final SvCommandSecurityDataApiAdapter data;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamSvPrepareDebit to prepare a debit or cancel transaction.
    *
    * @param calypsoSam The Calypso SAM.
@@ -64,14 +60,14 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
 
     super(
         data.getSvCommandPartialRequest()[0] == (byte) 0xBA
-            ? CalypsoSamCommand.SV_PREPARE_DEBIT
-            : CalypsoSamCommand.SV_PREPARE_UNDEBIT,
+            ? SamCommandRef.SV_PREPARE_DEBIT
+            : SamCommandRef.SV_PREPARE_UNDEBIT,
         0,
         calypsoSam);
 
     this.data = data;
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = (byte) 0x01;
     byte p2 = (byte) 0xFF;
     byte[] dataIn =
@@ -92,7 +88,7 @@ final class CmdSamSvPrepareDebitOrUndebit extends AbstractSamCommand {
   }
 
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
     super.parseApduResponse(apduResponse);
     byte[] dataOut = apduResponse.getDataOut();
     data.setSerialNumber(getCalypsoSam().getSerialNumber())

@@ -11,14 +11,18 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.transaction.BasicSignatureComputationData;
-
 /**
- * (package-private)<br>
- * Implementation of {@link BasicSignatureComputationData}.
+ * Indicates that the security conditions are not fulfilled (e.g. busy status).
  *
  * @since 2.2.0
  */
-class BasicSignatureComputationDataAdapter
-    extends CommonSignatureComputationDataAdapter<BasicSignatureComputationData>
-    implements BasicSignatureComputationData {}
+final class SamSecurityContextException extends SamCommandException {
+
+  /**
+   * @param message the message to identify the exception context.
+   * @since 2.2.0
+   */
+  SamSecurityContextException(String message) {
+    super(message);
+  }
+}

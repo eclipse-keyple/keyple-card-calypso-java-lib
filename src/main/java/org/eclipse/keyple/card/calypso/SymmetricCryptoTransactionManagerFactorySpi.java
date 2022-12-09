@@ -19,7 +19,7 @@ import java.util.List;
  * <p>This interface defines the API needed by a terminal to perform the cryptographic operations
  * required by a Calypso card when using symmetric keys.
  *
- * @since x.y.z
+ * @since 2.3.1
  */
 interface SymmetricCryptoTransactionManagerFactorySpi {
 
@@ -35,7 +35,7 @@ interface SymmetricCryptoTransactionManagerFactorySpi {
    *     recorded.
    * @return A new instance of {@link SymmetricCryptoTransactionManagerSpi}.
    * @throws IllegalStateException If the extended mode is not supported.
-   * @since x.y.z
+   * @since 2.3.1
    */
   SymmetricCryptoTransactionManagerSpi createTransactionManager(
       byte[] cardKeyDiversifier, boolean useExtendedMode, List<byte[]> transactionAuditData);

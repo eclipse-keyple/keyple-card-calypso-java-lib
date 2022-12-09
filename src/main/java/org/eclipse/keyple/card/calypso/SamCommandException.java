@@ -12,24 +12,17 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
- * Indicates that the security input data provided is not valid.<br>
- * This can occur, for example, during the digest authenticate operation when the card's signature
- * is incorrect.
+ * Parent abstract class of all Keyple SAM APDU commands exceptions.
  *
  * @since 2.0.0
  */
-final class CalypsoSamSecurityDataException extends CalypsoSamCommandException {
+abstract class SamCommandException extends Exception {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
-   * @param command the Calypso SAM command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CalypsoSamSecurityDataException(String message, CalypsoSamCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  SamCommandException(String message) {
+    super(message);
   }
 }

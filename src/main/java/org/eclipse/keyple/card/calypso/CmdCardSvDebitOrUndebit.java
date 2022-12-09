@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -18,7 +20,6 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
- * (package-private)<br>
  * Builds the SV Debit or SV Undebit command.
  *
  * <p>See specs: Calypso Stored Value balance (signed binaries' coding based on the two's complement
@@ -61,14 +62,14 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0.1
  */
-final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
+final class CmdCardSvDebitOrUndebit extends CardCommand {
 
   private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -97,7 +98,6 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
   private final byte[] dataIn;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSvDebitOrUndebit.
    *
    * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
@@ -118,10 +118,7 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
       byte[] time,
       boolean isExtendedModeAllowed) {
 
-    super(
-        isDebitCommand ? CalypsoCardCommand.SV_DEBIT : CalypsoCardCommand.SV_UNDEBIT,
-        0,
-        calypsoCard);
+    super(isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, calypsoCard);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -155,7 +152,6 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Complete the construction of the APDU to be sent to the card with the elements received from
    * the SAM:
    *
@@ -199,7 +195,6 @@ final class CmdCardSvDebitOrUndebit extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV Debit/Undebit part of the data to include in the SAM SV Prepare Debit command
    *
    * @return A byte array containing the SV debit/undebit data

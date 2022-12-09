@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Indicates that the input user data do not allow to build a syntactically correct command (e.g.
  * SFI too large, record number out of bounds,...).
  *
@@ -21,13 +20,11 @@ package org.eclipse.keyple.card.calypso;
 final class CardIllegalArgumentException extends CardCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
    * @since 2.0.0
    */
-  CardIllegalArgumentException(String message, CalypsoCardCommand command) {
-    super(message, command, null);
+  CardIllegalArgumentException(String message, CardCommandRef command) {
+    super(message, command);
   }
 }

@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link SamTransactionManager}.
  *
  * @since 2.2.0
@@ -62,14 +63,13 @@ final class SamTransactionManagerAdapter
   private final ProxyReaderApi samReader;
   private final CalypsoSamAdapter sam;
   private final SamSecuritySettingAdapter securitySetting;
-  private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
+  private final List<SamCommand> samCommands = new ArrayList<SamCommand>();
   private final byte[] defaultKeyDiversifier;
 
   /* Dynamic fields */
   private byte[] currentKeyDiversifier;
 
   /**
-   * (package-private)<br>
    * Creates a new instance.
    *
    * @param samReader The reader through which the SAM communicates.
@@ -292,17 +292,16 @@ final class SamTransactionManagerAdapter
   }
 
   /**
-   * (private)<br>
-   * Creates a list of {@link ApduRequestSpi} from a list of {@link AbstractSamCommand}.
+   * Creates a list of {@link ApduRequestSpi} from a list of {@link SamCommand}.
    *
    * @param commands The list of commands.
    * @return An empty list if there is no command.
    * @since 2.2.0
    */
-  private List<ApduRequestSpi> getApduRequests(List<AbstractSamCommand> commands) {
+  private List<ApduRequestSpi> getApduRequests(List<SamCommand> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
-      for (AbstractSamCommand command : commands) {
+      for (SamCommand command : commands) {
         apduRequests.add(command.getApduRequest());
       }
     }
@@ -350,23 +349,23 @@ final class SamTransactionManagerAdapter
       for (int i = 0; i < apduResponses.size(); i++) {
         try {
           samCommands.get(i).parseApduResponse(apduResponses.get(i));
-        } catch (CalypsoSamCommandException e) {
-          CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
-          if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE
-              && e instanceof CalypsoSamSecurityDataException) {
+        } catch (SamCommandException e) {
+          SamCommandRef commandRef = samCommands.get(i).getCommandRef();
+          if (commandRef == SamCommandRef.DIGEST_AUTHENTICATE
+              && e instanceof SamSecurityDataException) {
             throw new InvalidCardSignatureException("Invalid card signature.", e);
-          } else if ((commandRef == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
-                  || commandRef == CalypsoSamCommand.DATA_CIPHER)
-              && e instanceof CalypsoSamSecurityDataException) {
+          } else if ((commandRef == SamCommandRef.PSO_VERIFY_SIGNATURE
+                  || commandRef == SamCommandRef.DATA_CIPHER)
+              && e instanceof SamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
-          } else if (commandRef == CalypsoSamCommand.SV_CHECK
-              && e instanceof CalypsoSamSecurityDataException) {
+          } else if (commandRef == SamCommandRef.SV_CHECK
+              && e instanceof SamSecurityDataException) {
             throw new InvalidCardSignatureException("Invalid SV card signature.", e);
           }
           throw new UnexpectedCommandStatusException(
               MSG_SAM_COMMAND_ERROR
                   + "while processing responses to SAM commands: "
-                  + e.getCommand()
+                  + samCommands.get(i).getCommandRef()
                   + getTransactionAuditDataAsString(),
               e);
         }
@@ -390,7 +389,6 @@ final class SamTransactionManagerAdapter
   }
 
   /**
-   * (private)<br>
    * Transmits a card request, processes and converts any exceptions.
    *
    * @param cardRequest The card request to transmit.
@@ -474,7 +472,7 @@ final class SamTransactionManagerAdapter
   //  private static final int LAST_COUNTER_REC3 = 26;
   //
   //  /**
-  //   * (private)<br>
+  //   *
   //   * Overlapping interval test
   //   *
   //   * @param startA beginning of the A interval.

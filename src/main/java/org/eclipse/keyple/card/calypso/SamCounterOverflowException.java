@@ -12,23 +12,18 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
- * Indicates that input data content is incorrect.
+ * Indicates that an event counter number authorized by the SAM has reached its limit.<br>
+ * This may occur, for example, during the digest init operation.
  *
  * @since 2.0.0
  */
-final class CalypsoSamIncorrectInputDataException extends CalypsoSamCommandException {
+final class SamCounterOverflowException extends SamCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
-   * @param command the Calypso SAM command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CalypsoSamIncorrectInputDataException(
-      String message, CalypsoSamCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  SamCounterOverflowException(String message) {
+    super(message);
   }
 }

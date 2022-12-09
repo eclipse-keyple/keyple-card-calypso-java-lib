@@ -11,4 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+/**
+ * SPI to be implemented by a crypto extension component.
+ *
+ * @since 2.3.1
+ */
 interface CardTransactionCryptoExtension {}

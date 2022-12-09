@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,45 +21,40 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
- * (package-private)<br>
  * Builds the "PSO Compute Signature" SAM command.
  *
  * @since 2.2.0
  */
-final class CmdSamPsoComputeSignature extends AbstractSamCommand {
+final class CmdSamPsoComputeSignature extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6900,
         new StatusProperties(
-            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+            "An event counter cannot be incremented.", SamCounterOverflowException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect value in the incoming data.", CalypsoSamIncorrectInputDataException.class));
+            "Incorrect value in the incoming data.", SamIncorrectInputDataException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found: signing key not found.", CalypsoSamDataAccessException.class));
-    m.put(
-        0x6B00,
-        new StatusProperties("Incorrect P1 or P2.", CalypsoSamIllegalParameterException.class));
+            "Record not found: signing key not found.", SamDataAccessException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1 or P2.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   private final TraceableSignatureComputationDataAdapter data;
 
   /**
-   * (package-private)<br>
    * Builds a new instance based on the provided signature computation data.
    *
    * @param calypsoSam The Calypso SAM.
@@ -67,10 +64,10 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
   CmdSamPsoComputeSignature(
       CalypsoSamAdapter calypsoSam, TraceableSignatureComputationDataAdapter data) {
 
-    super(CalypsoSamCommand.PSO_COMPUTE_SIGNATURE, 0, calypsoSam);
+    super(SamCommandRef.PSO_COMPUTE_SIGNATURE, 0, calypsoSam);
     this.data = data;
 
-    final byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    final byte cla = calypsoSam.getClassByte();
     final byte inst = getCommandRef().getInstructionByte();
     final byte p1 = (byte) 0x9E;
     final byte p2 = (byte) 0x9A;
@@ -132,7 +129,7 @@ final class CmdSamPsoComputeSignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
     super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       if (data.isSamTraceabilityMode()) {

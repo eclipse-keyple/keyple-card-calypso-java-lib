@@ -12,12 +12,11 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Defines all supported Calypso card APDU commands.
  *
  * @since 2.0.0
  */
-enum CalypsoCardCommand {
+enum CardCommandRef {
 
   /** get data. */
   GET_DATA("Get Data", (byte) 0xCA),
@@ -113,7 +112,7 @@ enum CalypsoCardCommand {
    * @param instructionByte the instruction byte.
    * @since 2.0.0
    */
-  CalypsoCardCommand(String name, byte instructionByte) {
+  CardCommandRef(String name, byte instructionByte) {
     this.name = name;
     this.instructionByte = instructionByte;
   }

@@ -19,7 +19,6 @@ import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CardSecuritySetting}.
  *
  * @since 2.0.0
@@ -208,7 +207,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the multiple session mode is enabled.
    *
    * @return True if the multiple session mode is enabled.
@@ -219,7 +217,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the ratification mechanism is enabled.
    *
    * @return True if the ratification mechanism is enabled.
@@ -230,7 +227,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the transmission of the PIN in plain text is enabled.
    *
    * @return True if the transmission of the PIN in plain text is enabled.
@@ -241,7 +237,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the retrieval of both load and debit log is enabled.
    *
    * @return True if the retrieval of both load and debit log is enabled.
@@ -252,7 +247,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the SV balance is allowed to become negative.
    *
    * @return True if the retrieval of both load and debit log is enabled.
@@ -263,7 +257,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value to use for the provided write access level and KVC value.
    *
    * @param writeAccessLevel The write access level.
@@ -283,7 +276,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the default KIF value for the provided write access level.
    *
    * @param writeAccessLevel The write access level.
@@ -296,7 +288,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the default KVC value for the provided write access level.
    *
    * @param writeAccessLevel The write access level.
@@ -309,7 +300,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the KIF/KVC pair is authorized for a session.
    *
    * @param kif The KIF value.
@@ -328,7 +318,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the KIF/KVC pair is authorized for a SV operation.
    *
    * @param kif The KIF value.
@@ -347,7 +336,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value of the PIN verification ciphering key.
    *
    * @return Null if no KIF is available.
@@ -358,7 +346,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the KVC value of the PIN verification ciphering key.
    *
    * @return Null if no KVC is available.
@@ -369,7 +356,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value of the PIN modification ciphering key.
    *
    * @return Null if no KIF is available.
@@ -380,7 +366,6 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   }
 
   /**
-   * (package-private)<br>
    * Gets the KVC value of the PIN modification ciphering key.
    *
    * @return Null if no KVC is available.

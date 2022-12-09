@@ -11,12 +11,13 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Digest Update APDU command.
  *
  * <p>This command have to be sent twice for each command executed during a session. First time for
@@ -24,34 +25,27 @@ import org.eclipse.keyple.core.util.ApduUtil;
  *
  * @since 2.0.1
  */
-final class CmdSamDigestUpdate extends AbstractSamCommand {
-
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_UPDATE;
+final class CmdSamDigestUpdate extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Incorrect value in the incoming data: session in Rev.3.2 mode with encryption/decryption active and not enough data (less than 5 bytes for and odd occurrence or less than 2 bytes for an even occurrence).",
-            CalypsoSamIncorrectInputDataException.class));
-    m.put(
-        0x6B00,
-        new StatusProperties("Incorrect P1 or P2.", CalypsoSamIllegalParameterException.class));
+            SamIncorrectInputDataException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1 or P2.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate.
    *
    * @param calypsoSam The Calypso SAM.
@@ -62,9 +56,9 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
    */
   CmdSamDigestUpdate(CalypsoSamAdapter calypsoSam, boolean encryptedSession, byte[] digestData) {
 
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.DIGEST_UPDATE, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = (byte) 0x00;
     byte p2 = encryptedSession ? (byte) 0x80 : (byte) 0x00;
 
@@ -74,7 +68,7 @@ final class CmdSamDigestUpdate extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, digestData, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, digestData, null)));
   }
 
   /**

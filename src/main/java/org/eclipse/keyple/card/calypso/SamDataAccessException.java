@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,6 +11,19 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-interface SecuritySetting<T extends SecuritySetting<T>> {
-  T enableMultipleSession();
+/**
+ * Indicates that the content of the command is incompatible with the SAM's file system (e.g.
+ * signing key not found,...).
+ *
+ * @since 2.0.0
+ */
+final class SamDataAccessException extends SamCommandException {
+
+  /**
+   * @param message the message to identify the exception context.
+   * @since 2.0.0
+   */
+  SamDataAccessException(String message) {
+    super(message);
+  }
 }

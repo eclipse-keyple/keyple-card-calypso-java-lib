@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -11,14 +11,18 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.transaction.BasicSignatureVerificationData;
-
 /**
- * (package-private)<br>
- * Implementation of {@link BasicSignatureVerificationData}.
+ * Indicates that the input user data do not allow to build a syntactically correct command.
  *
- * @since 2.2.0
+ * @since 2.0.0
  */
-class BasicSignatureVerificationDataAdapter
-    extends CommonSignatureVerificationDataAdapter<BasicSignatureVerificationData>
-    implements BasicSignatureVerificationData {}
+final class SamIllegalArgumentException extends SamCommandException {
+
+  /**
+   * @param message the message to identify the exception context.
+   * @since 2.0.0
+   */
+  SamIllegalArgumentException(String message) {
+    super(message);
+  }
+}

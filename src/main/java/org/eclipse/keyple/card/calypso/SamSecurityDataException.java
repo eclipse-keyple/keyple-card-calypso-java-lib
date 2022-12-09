@@ -12,23 +12,19 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
- * Indicates that preconditions are not satisfied (e.g. session not active,...).
+ * Indicates that the security input data provided is not valid.<br>
+ * This can occur, for example, during the digest authenticate operation when the card's signature
+ * is incorrect.
  *
  * @since 2.0.0
  */
-final class CalypsoSamAccessForbiddenException extends CalypsoSamCommandException {
+final class SamSecurityDataException extends SamCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
-   * @param command the Calypso SAM command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CalypsoSamAccessForbiddenException(
-      String message, CalypsoSamCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  SamSecurityDataException(String message) {
+    super(message);
   }
 }

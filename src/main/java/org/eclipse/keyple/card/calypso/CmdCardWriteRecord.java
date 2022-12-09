@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -19,23 +21,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Write Record" APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardWriteRecord extends AbstractCardCommand {
+final class CmdCardWriteRecord extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardWriteRecord.class);
-
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.WRITE_RECORD;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -77,7 +75,6 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   private final byte[] data;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardWriteRecord.
    *
    * @param calypsoCard The Calypso card.
@@ -91,7 +88,7 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
   CmdCardWriteRecord(
       CalypsoCardAdapter calypsoCard, byte sfi, int recordNumber, byte[] newRecordData) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.WRITE_RECORD, 0, calypsoCard);
 
     byte cla = calypsoCard.getCardClass().getValue();
     this.sfi = sfi;
@@ -103,7 +100,12 @@ final class CmdCardWriteRecord extends AbstractCardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, command.getInstructionByte(), (byte) recordNumber, p2, newRecordData, null)));
+                cla,
+                getCommandRef().getInstructionByte(),
+                (byte) recordNumber,
+                p2,
+                newRecordData,
+                null)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format("SFI:%02Xh, REC:%d", sfi, recordNumber);

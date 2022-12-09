@@ -19,6 +19,11 @@ import org.calypsonet.terminal.calypso.transaction.SamRevokedException;
 import org.calypsonet.terminal.calypso.transaction.TraceableSignatureComputationData;
 import org.calypsonet.terminal.calypso.transaction.TraceableSignatureVerificationData;
 
+/**
+ * Specific {@link CardTransactionCryptoExtension} for legacy SAM.
+ *
+ * @since 2.3.1
+ */
 interface LegacySamCardTransactionCryptoExtension extends CardTransactionCryptoExtension {
 
   /**
@@ -47,7 +52,7 @@ interface LegacySamCardTransactionCryptoExtension extends CardTransactionCryptoE
    * @see CommonSignatureComputationData
    * @see BasicSignatureComputationData
    * @see TraceableSignatureComputationData
-   * @since x.y.z
+   * @since 2.3.1
    */
   LegacySamCardTransactionCryptoExtension prepareComputeSignature(
       CommonSignatureComputationData<?> data);
@@ -67,7 +72,7 @@ interface LegacySamCardTransactionCryptoExtension extends CardTransactionCryptoE
    * @see CommonSignatureVerificationData
    * @see BasicSignatureVerificationData
    * @see TraceableSignatureVerificationData
-   * @since x.y.z
+   * @since 2.3.1
    */
   LegacySamCardTransactionCryptoExtension prepareVerifySignature(
       CommonSignatureVerificationData<?> data);

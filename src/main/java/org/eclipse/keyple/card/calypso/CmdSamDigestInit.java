@@ -11,45 +11,41 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Digest Init APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamDigestInit extends AbstractSamCommand {
-
-  /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_INIT;
+final class CmdSamDigestInit extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6900,
         new StatusProperties(
-            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+            "An event counter cannot be incremented.", SamCounterOverflowException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(0x6A00, new StatusProperties("Incorrect P2.", CalypsoSamIllegalParameterException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
+    m.put(0x6A00, new StatusProperties("Incorrect P2.", SamIllegalParameterException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found: signing key not found.", CalypsoSamDataAccessException.class));
+            "Record not found: signing key not found.", SamDataAccessException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestInit.
    *
    * @param calypsoSam The Calypso SAM.
@@ -71,7 +67,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
       byte workKvc,
       byte[] digestData) {
 
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.DIGEST_INIT, 0, calypsoSam);
 
     if (workKif == 0x00 || workKvc == 0x00) {
       throw new IllegalArgumentException("Bad kif or kvc!");
@@ -79,7 +75,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
     if (digestData == null) {
       throw new IllegalArgumentException("Digest data is null!");
     }
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = 0x00;
     if (verificationMode) {
       p1 = (byte) (p1 + 1);
@@ -97,7 +93,7 @@ final class CmdSamDigestInit extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, dataIn, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, dataIn, null)));
   }
 
   /**

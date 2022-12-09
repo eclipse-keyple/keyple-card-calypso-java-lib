@@ -11,21 +11,19 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Get Challenge APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardGetChallenge extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.GET_CHALLENGE;
+final class CmdCardGetChallenge extends CardCommand {
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardGetChallenge.
    *
    * @param calypsoCard The Calypso card.
@@ -33,7 +31,7 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
    */
   CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0x08, calypsoCard);
+    super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -43,7 +41,7 @@ final class CmdCardGetChallenge extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCard.getCardClass().getValue(),
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 p1,
                 p2,
                 null,

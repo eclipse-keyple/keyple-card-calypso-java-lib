@@ -12,6 +12,8 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 

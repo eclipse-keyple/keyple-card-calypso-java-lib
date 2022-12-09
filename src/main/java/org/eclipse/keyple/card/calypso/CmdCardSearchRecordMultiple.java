@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,19 +23,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Search Record Multiple" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
+final class CmdCardSearchRecordMultiple extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardSearchRecordMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -80,7 +81,6 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
   private final SearchCommandDataAdapter data;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param calypsoCard The Calypso card.
@@ -89,7 +89,7 @@ final class CmdCardSearchRecordMultiple extends AbstractCardCommand {
    */
   CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
 
-    super(CalypsoCardCommand.SEARCH_RECORD_MULTIPLE, 0, calypsoCard);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard);
 
     this.data = data;
 

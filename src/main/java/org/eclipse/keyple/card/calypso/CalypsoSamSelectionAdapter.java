@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -26,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CalypsoSamSelection}.
  *
  * <p>If not specified, the SAM product type used for unlocking is {@link
@@ -44,7 +45,6 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
   private CmdSamUnlock unlockCommand;
 
   /**
-   * (package-private)<br>
    * Creates a {@link CalypsoSamSelection}.
    *
    * @since 2.0.0
@@ -93,9 +93,9 @@ class CalypsoSamSelectionAdapter implements CalypsoSamSelection, CardSelectionSp
           cardSelectionResponse.getCardResponse().getApduResponses().get(0);
       try {
         unlockCommand.parseApduResponse(apduResponse);
-      } catch (CalypsoSamAccessForbiddenException e) {
+      } catch (SamAccessForbiddenException e) {
         logger.warn("SAM not locked or already unlocked");
-      } catch (CalypsoSamCommandException e) {
+      } catch (SamCommandException e) {
         throw new ParseException("An exception occurred while parsing the SAM response.", e);
       }
     }

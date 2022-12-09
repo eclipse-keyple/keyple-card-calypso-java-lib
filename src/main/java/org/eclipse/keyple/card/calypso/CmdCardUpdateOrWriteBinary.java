@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -19,19 +21,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Update/Write Binary" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
+final class CmdCardUpdateOrWriteBinary extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardUpdateOrWriteBinary.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -74,7 +75,6 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   private final byte[] data;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
@@ -89,7 +89,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
       boolean isUpdateCommand, CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte[] data) {
 
     super(
-        isUpdateCommand ? CalypsoCardCommand.UPDATE_BINARY : CalypsoCardCommand.WRITE_BINARY,
+        isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
         0,
         calypsoCard);
 
@@ -128,7 +128,7 @@ final class CmdCardUpdateOrWriteBinary extends AbstractCardCommand {
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.parseApduResponse(apduResponse);
-    if (getCommandRef() == CalypsoCardCommand.UPDATE_BINARY) {
+    if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
       getCalypsoCard().setContent(sfi, 1, data, offset);
     } else {
       getCalypsoCard().fillContent(sfi, 1, data, offset);

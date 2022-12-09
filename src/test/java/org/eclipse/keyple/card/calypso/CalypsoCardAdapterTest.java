@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;

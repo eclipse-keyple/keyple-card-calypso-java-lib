@@ -13,6 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.shouldHaveThrown;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.inOrder;

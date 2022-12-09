@@ -12,15 +12,15 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * TODO
+ * Indicates that an error occurred when processing a command.
  *
- * @since x.y.z
+ * @since 2.3.1
  */
 class SymmetricCryptoException extends Exception {
 
   /**
    * @param message The message to identify the exception context.
-   * @since x.y.z
+   * @since 2.3.1
    */
   public SymmetricCryptoException(String message) {
     super(message);
@@ -31,7 +31,7 @@ class SymmetricCryptoException extends Exception {
    *
    * @param message Message to identify the exception context.
    * @param cause The cause.
-   * @since x.y.z
+   * @since 2.3.1
    */
   public SymmetricCryptoException(String message, Throwable cause) {
     super(message, cause);

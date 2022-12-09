@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -18,7 +20,6 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
- * (package-private)<br>
  * Builds the SV Reload command.
  *
  * <p>See specs: Calypso Stored Value balance (signed binaries' coding based on the two's complement
@@ -48,17 +49,14 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.0.1
  */
-final class CmdCardSvReload extends AbstractCardCommand {
-
-  /** The command. */
-  private static final CalypsoCardCommand command = CalypsoCardCommand.SV_RELOAD;
+final class CmdCardSvReload extends CardCommand {
 
   private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -87,7 +85,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
   private final byte[] dataIn;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSvReload.
    *
    * <p>The process is carried out in two steps: first to check and store the card and application
@@ -110,7 +107,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.SV_RELOAD, 0, calypsoCard);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(
@@ -143,7 +140,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Complete the construction of the APDU to be sent to the card with the elements received from
    * the SAM:
    *
@@ -178,7 +174,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
                     getCalypsoCard().getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
-                    command.getInstructionByte(),
+                    getCommandRef().getInstructionByte(),
                     p1,
                     p2,
                     dataIn,
@@ -187,7 +183,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV Reload part of the data to include in the SAM SV Prepare Load command
    *
    * @return a byte array containing the SV reload data
@@ -195,7 +190,7 @@ final class CmdCardSvReload extends AbstractCardCommand {
    */
   byte[] getSvReloadData() {
     byte[] svReloadData = new byte[15];
-    svReloadData[0] = command.getInstructionByte();
+    svReloadData[0] = getCommandRef().getInstructionByte();
     // svReloadData[1,2] / P1P2 not set because ignored
     // Lc is 5 bytes longer in revision 3.2
     svReloadData[3] = isExtendedModeAllowed ? (byte) 0x1C : (byte) 0x17;
@@ -235,7 +230,6 @@ final class CmdCardSvReload extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV signature. <br>
    * The signature can be empty here in the case of a secure session where the transmission of the
    * signature is postponed until the end of the session.

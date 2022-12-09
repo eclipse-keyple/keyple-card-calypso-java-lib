@@ -11,8 +11,9 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 /**
- * (package-private)<br>
  * Provides the ApduRequestAdapter dedicated to the ratification command.
  *
  * <p>i.e. the command sent after closing the secure session to handle the ratification mechanism.
@@ -24,15 +25,10 @@ package org.eclipse.keyple.card.calypso;
  */
 final class CmdCardRatificationBuilder {
 
-  /**
-   * (private)<br>
-   * Hidden constructor.
-   */
+  /** Hidden constructor. */
   private CmdCardRatificationBuilder() {}
 
   /**
-   * (package-private)<br>
-   *
    * @param calypsoCardClass the card class.
    * @return the ApduRequestAdapter ratification command according to the card class provided
    * @since 2.0.1

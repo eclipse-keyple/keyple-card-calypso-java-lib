@@ -34,6 +34,7 @@ import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_NUM_REC_OF
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_REC_SIZE_OFFSET;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_SFI_OFFSET;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SEL_TYPE_OFFSET;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the Select File APDU commands.
  *
  * <p>The value of the Proprietary Information tag is extracted from the Select File response and
@@ -61,17 +61,17 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardSelectFile extends AbstractCardCommand {
+final class CmdCardSelectFile extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardSelectFile.class);
 
-  private static final CalypsoCardCommand command = CalypsoCardCommand.SELECT_FILE;
+  private static final CardCommandRef commandRef = CardCommandRef.SELECT_FILE;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -83,7 +83,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   private static final int TAG_PROPRIETARY_INFORMATION = 0x85;
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
@@ -92,12 +91,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * @since 2.2.3
    */
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
-    super(command, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard);
     buildCommand(calypsoCard.getCardClass(), selectFileControl);
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
@@ -106,12 +104,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * @since 2.0.1
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    super(command, 0, null);
+    super(commandRef, 0, null);
     buildCommand(calypsoCardClass, selectFileControl);
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
@@ -120,12 +117,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    * @since 2.2.3
    */
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
-    super(command, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard);
     buildCommand(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid);
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
@@ -136,12 +132,11 @@ final class CmdCardSelectFile extends AbstractCardCommand {
    */
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-    super(command, 0, null);
+    super(commandRef, 0, null);
     buildCommand(calypsoCardClass, productType, lid);
   }
 
   /**
-   * (private)<br>
    * Builds the command.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
@@ -174,7 +169,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
+            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName("SELECTIONCONTROL" + selectFileControl);
@@ -182,7 +177,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Builds the command.
    *
    * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
@@ -210,7 +204,7 @@ final class CmdCardSelectFile extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
-                command.getInstructionByte(),
+                commandRef.getInstructionByte(),
                 p1,
                 (byte) 0x00,
                 dataIn,
@@ -254,7 +248,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Parses the proprietary information and updates the corresponding Calypso card.
    *
    * @param dataOut The dataOut block to parse.
@@ -282,8 +275,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
-   *
    * @return The content of the proprietary information tag present in the response to the Select
    *     File command
    */
@@ -299,7 +290,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Parses the proprietaryInformation field of a file identified as an DF and create a {@link
    * DirectoryHeader}
    *
@@ -340,7 +330,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Parses the proprietaryInformation field of a file identified as an EF and create a {@link
    * FileHeaderAdapter}
    *
@@ -394,7 +383,6 @@ final class CmdCardSelectFile extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Converts the EF type value from the card into a {@link ElementaryFile.Type} enum
    *
    * @param efType the value returned by the card.

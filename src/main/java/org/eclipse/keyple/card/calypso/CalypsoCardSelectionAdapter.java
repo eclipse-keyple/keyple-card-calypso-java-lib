@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,6 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CalypsoCardSelection}.
  *
  * @since 2.0.0
@@ -44,11 +45,10 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   private static final int SW_CARD_INVALIDATED = 0x6283;
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
-  private final List<AbstractCardCommand> commands;
+  private final List<CardCommand> commands;
   private final CardSelectorAdapter cardSelector;
 
   /**
-   * (package-private)<br>
    * Creates an instance of {@link CalypsoCardSelection}.
    *
    * @since 2.0.0
@@ -58,7 +58,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
     cardSelector = new CardSelectorAdapter();
 
-    this.commands = new ArrayList<AbstractCardCommand>();
+    this.commands = new ArrayList<CardCommand>();
   }
 
   /**
@@ -308,7 +308,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   public CardSelectionRequestSpi getCardSelectionRequest() {
     List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
     if (!commands.isEmpty()) {
-      for (AbstractCardCommand command : commands) {
+      for (CardCommand command : commands) {
         cardSelectionApduRequests.add(command.getApduRequest());
       }
       return new CardSelectionRequestAdapter(
@@ -358,7 +358,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   }
 
   /**
-   * (private)<br>
    * Parses the APDU responses and updates the Calypso card image.
    *
    * @param calypsoCard The Calypso card.
@@ -369,7 +368,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   private void parseApduResponses(
       CalypsoCardAdapter calypsoCard,
-      List<AbstractCardCommand> commands,
+      List<CardCommand> commands,
       List<ApduResponseApi> apduResponses)
       throws CardCommandException {
 
@@ -391,23 +390,21 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
       try {
         commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
-        CalypsoCardCommand commandRef = commands.get(i).getCommandRef();
+        CardCommandRef commandRef = commands.get(i).getCommandRef();
         if (e instanceof CardDataAccessException) {
-          if (commandRef == CalypsoCardCommand.READ_RECORDS) {
+          if (commandRef == CardCommandRef.READ_RECORDS) {
             // best effort mode, do not throw exception for "file not found" and "record not found"
             // errors.
             if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
                 && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
               throw e;
             }
-          } else if (commandRef == CalypsoCardCommand.SELECT_FILE) {
+          } else if (commandRef == CardCommandRef.SELECT_FILE) {
             throw new SelectFileException("File not found", e);
           }
         } else {
           throw new UnexpectedCommandStatusException(
-              MSG_CARD_COMMAND_ERROR
-                  + "while processing responses to card commands: "
-                  + e.getCommand(),
+              MSG_CARD_COMMAND_ERROR + "while processing responses to card commands: " + commandRef,
               e);
         }
       }

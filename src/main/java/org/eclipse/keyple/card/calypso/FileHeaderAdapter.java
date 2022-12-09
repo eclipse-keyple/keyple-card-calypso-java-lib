@@ -17,7 +17,6 @@ import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * (package-private)<br>
  * Implementation of {@link FileHeader}.
  *
  * @since 2.0.0
@@ -46,7 +45,6 @@ class FileHeaderAdapter implements FileHeader {
   }
 
   /**
-   * (package-private)<br>
    * CalypsoSamCardSelectorBuilder pattern
    *
    * @since 2.0.0
@@ -66,7 +64,6 @@ class FileHeaderAdapter implements FileHeader {
     private FileHeaderBuilder() {}
 
     /**
-     * (package-private)<br>
      * Sets the LID.
      *
      * @param lid the LID.
@@ -79,7 +76,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the number of records.
      *
      * @param recordsNumber the number of records (should be {@code >=} 1).
@@ -92,7 +88,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the size of a record.
      *
      * @param recordSize the size of a record (should be {@code >=} 1).
@@ -105,7 +100,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the file type.
      *
      * @param type the file type (should be not null).
@@ -118,7 +112,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets a reference to the provided access conditions byte array.
      *
      * @param accessConditions the access conditions (should be not null and 4 bytes length).
@@ -131,7 +124,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets a reference to the provided key indexes byte array.
      *
      * @param keyIndexes the key indexes (should be not null and 4 bytes length).
@@ -144,7 +136,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the DF status.
      *
      * @param dfStatus the DF status (byte).
@@ -157,7 +148,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the shared reference.
      *
      * @param sharedReference the shared reference.
@@ -170,7 +160,6 @@ class FileHeaderAdapter implements FileHeader {
     }
 
     /**
-     * (package-private)<br>
      * Build a new instance.
      *
      * @return A new instance
@@ -262,7 +251,6 @@ class FileHeaderAdapter implements FileHeader {
   }
 
   /**
-   * (package-private)<br>
    * Gets a new builder.
    *
    * @return A new builder instance
@@ -273,7 +261,6 @@ class FileHeaderAdapter implements FileHeader {
   }
 
   /**
-   * (package-private)<br>
    * Constructor used to create a clone of the provided file header.
    *
    * @param source the header to be cloned.
@@ -292,7 +279,6 @@ class FileHeaderAdapter implements FileHeader {
   }
 
   /**
-   * (package-private)<br>
    * Updates the missing information using the provided source.
    *
    * @param source The header to use.

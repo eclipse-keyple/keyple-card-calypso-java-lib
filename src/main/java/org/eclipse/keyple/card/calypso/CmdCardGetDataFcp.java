@@ -11,13 +11,14 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Get data APDU commands for the FCP tag.
  *
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
@@ -28,17 +29,13 @@ import org.eclipse.keyple.core.util.ApduUtil;
  *
  * @since 2.0.1
  */
-final class CmdCardGetDataFcp extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA;
-
-  private static final int TAG_PROPRIETARY_INFORMATION = 0x85;
+final class CmdCardGetDataFcp extends CardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
@@ -51,31 +48,28 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardGetDataFci.
    *
    * @param calypsoCard The Calypso card.
    * @since 2.2.3
    */
   CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardGetDataFci.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.0.1
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
-    super(command, 0, null);
+    super(CardCommandRef.GET_DATA, 0, null);
     buildCommand(calypsoCardClass);
   }
 
   /**
-   * (private)<br>
    * Builds the command.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
@@ -85,7 +79,7 @@ final class CmdCardGetDataFcp extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x62,
                 null,

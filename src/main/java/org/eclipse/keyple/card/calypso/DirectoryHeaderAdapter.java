@@ -18,7 +18,6 @@ import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * (package-private)<br>
  * Implementation of {@link DirectoryHeader}.
  *
  * @since 2.0.0
@@ -44,7 +43,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   /**
-   * (package-private)<br>
    * CalypsoSamCardSelectorBuilder pattern
    *
    * @since 2.0.0
@@ -64,7 +62,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     private DirectoryHeaderBuilder() {}
 
     /**
-     * (package-private)<br>
      * Sets the LID.
      *
      * @param lid the LID.
@@ -77,7 +74,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets a reference to the provided access conditions byte array.
      *
      * @param accessConditions the access conditions (should be not null and 4 bytes length).
@@ -90,7 +86,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets a reference to the provided key indexes byte array.
      *
      * @param keyIndexes the key indexes (should be not null and 4 bytes length).
@@ -103,7 +98,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Sets the DF status.
      *
      * @param dfStatus the DF status (byte).
@@ -116,7 +110,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Add a KIF.
      *
      * @param level the KIF session access level (should be not null).
@@ -130,7 +123,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Add a KVC.
      *
      * @param level the KVC session access level (should be not null).
@@ -144,7 +136,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     }
 
     /**
-     * (package-private)<br>
      * Build a new {@code DirectoryHeader}.
      *
      * @return a new instance
@@ -192,7 +183,6 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   /**
-   * (package-private)<br>
    * Gets a new builder.
    *
    * @return a new builder instance

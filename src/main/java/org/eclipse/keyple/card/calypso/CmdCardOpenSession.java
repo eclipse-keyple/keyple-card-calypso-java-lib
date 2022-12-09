@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,12 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the Open Secure Session APDU command.
  *
  * @since 2.0.1
  */
-final class CmdCardOpenSession extends AbstractCardCommand {
+final class CmdCardOpenSession extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSession.class);
   private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
@@ -35,7 +36,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -85,7 +86,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   private SecureSession secureSession;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param calypsoCard The Calypso card.
@@ -105,7 +105,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CalypsoCardCommand.OPEN_SESSION, 0, calypsoCard);
+    super(CardCommandRef.OPEN_SESSION, 0, calypsoCard);
 
     this.isExtendedModeAllowed = isExtendedModeAllowed;
     switch (getCalypsoCard().getProductType()) {
@@ -127,7 +127,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Create Rev 3
    *
    * @param keyIndex the key index.
@@ -162,7 +161,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.ISO.getValue(),
-                CalypsoCardCommand.OPEN_SESSION.getInstructionByte(),
+                CardCommandRef.OPEN_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 dataIn,
@@ -175,7 +174,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Create Rev 2.4
    *
    * @param keyIndex the key index.
@@ -200,7 +198,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Create Rev 1.0
    *
    * @param keyIndex the key index.
@@ -225,7 +222,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Build legacy apdu request.
    *
    * @param keyIndex the key index.
@@ -247,7 +243,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.LEGACY.getValue(),
-                CalypsoCardCommand.OPEN_SESSION.getInstructionByte(),
+                CardCommandRef.OPEN_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,
@@ -271,8 +267,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return the SFI of the file read while opening the secure session
    * @since 2.0.1
    */
@@ -281,8 +275,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return the record number to read
    * @since 2.0.1
    */
@@ -321,7 +313,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Parse Rev 3
    *
    * @param apduResponseData The response data.
@@ -361,7 +352,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Parse Rev 2.4
    *
    * <p>In rev 2.4 mode, the response to the Open Secure Session command is as follows:
@@ -431,7 +421,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (private)<br>
    * Parse Rev 1.0
    *
    * <p>In rev 1.0 mode, the response to the Open Secure Session command is as follows:
@@ -499,8 +488,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return A non empty value.
    * @since 2.0.1
    */
@@ -509,8 +496,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return True if the managed secure session is authorized.
    * @since 2.0.1
    */
@@ -519,8 +504,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The current KIF.
    * @since 2.0.1
    */
@@ -529,8 +512,6 @@ final class CmdCardOpenSession extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The current KVC.
    * @since 2.0.1
    */
@@ -548,10 +529,7 @@ final class CmdCardOpenSession extends AbstractCardCommand {
     return STATUS_TABLE;
   }
 
-  /**
-   * (private)<br>
-   * The Class SecureSession.
-   */
+  /** The Class SecureSession. */
   private static class SecureSession {
 
     /** Challenge transaction counter */

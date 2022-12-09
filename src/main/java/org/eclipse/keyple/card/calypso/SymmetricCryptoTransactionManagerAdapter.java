@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +42,12 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Adapter of {@link SymmetricCryptoTransactionManagerSpi} and {@link
+ * LegacySamCardTransactionCryptoExtension}.
+ *
+ * @since 2.3.1
+ */
 class SymmetricCryptoTransactionManagerAdapter
     implements SymmetricCryptoTransactionManagerSpi, LegacySamCardTransactionCryptoExtension {
 
@@ -68,7 +76,7 @@ class SymmetricCryptoTransactionManagerAdapter
   private final boolean isExtendedModeRequired;
   private final int maxCardApduLengthSupported;
   private final List<byte[]> transactionAuditData;
-  private final List<AbstractSamCommand> samCommands = new ArrayList<AbstractSamCommand>();
+  private final List<SamCommand> samCommands = new ArrayList<SamCommand>();
 
   // Temporary field for manage PSO signature
   private final CardSecuritySettingAdapter tmpCardSecuritySetting;
@@ -94,6 +102,11 @@ class SymmetricCryptoTransactionManagerAdapter
     this.tmpCardSecuritySetting = tmpCardSecuritySetting;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] initTerminalSecureSessionContext()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
@@ -104,6 +117,11 @@ class SymmetricCryptoTransactionManagerAdapter
     return cmd.getChallenge();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public void initTerminalSessionMac(byte[] openSecureSessionDataOut, byte kif, byte kvc) {
     digestManager = new DigestManager(openSecureSessionDataOut, kif, kvc);
@@ -115,6 +133,11 @@ class SymmetricCryptoTransactionManagerAdapter
     return cardApdu;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] finalizeTerminalSessionMac()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
@@ -126,21 +149,41 @@ class SymmetricCryptoTransactionManagerAdapter
     return cmdSamDigestClose.getSignature();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] generateTerminalSessionMac() {
     return new byte[0]; // TODO
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public void activateEncryption() {
     // TODO
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public void deactivateEncryption() {
     // TODO
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public boolean isCardSessionMacValid(byte[] cardSessionMac)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
@@ -153,6 +196,11 @@ class SymmetricCryptoTransactionManagerAdapter
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public void computeSvCommandSecurityData(SvCommandSecurityDataApi svCommandSecurityData)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
@@ -166,6 +214,11 @@ class SymmetricCryptoTransactionManagerAdapter
     processCommands();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public boolean isCardSvMacValid(byte[] cardSvMac)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
@@ -184,12 +237,22 @@ class SymmetricCryptoTransactionManagerAdapter
     samCommands.add(new CmdSamGiveRandom(sam, cardChallenge));
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     return cipherPin(cardChallenge, pin, null, kif, kvc);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] cipherPinForModification(
       byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc)
@@ -224,6 +287,11 @@ class SymmetricCryptoTransactionManagerAdapter
     return cmd.getCipheredData();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public byte[] generateCipheredCardKey(
       byte[] cardChallenge,
@@ -240,6 +308,11 @@ class SymmetricCryptoTransactionManagerAdapter
     return cmd.getCipheredData();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public void synchronize() throws SymmetricCryptoIOException, SymmetricCryptoException {
     processCommands();
@@ -293,31 +366,34 @@ class SymmetricCryptoTransactionManagerAdapter
       for (int i = 0; i < apduResponses.size(); i++) {
         try {
           samCommands.get(i).parseApduResponse(apduResponses.get(i));
-        } catch (CalypsoSamCommandException e) {
-          CalypsoSamCommand commandRef = samCommands.get(i).getCommandRef();
-          if (commandRef == CalypsoSamCommand.DIGEST_AUTHENTICATE
-              && e instanceof CalypsoSamSecurityDataException) {
+        } catch (SamCommandException e) {
+          SamCommandRef commandRef = samCommands.get(i).getCommandRef();
+          if (commandRef == SamCommandRef.DIGEST_AUTHENTICATE
+              && e instanceof SamSecurityDataException) {
             throw new InvalidCardMacException("Invalid card signature.");
-          } else if ((commandRef == CalypsoSamCommand.PSO_VERIFY_SIGNATURE
-                  || commandRef == CalypsoSamCommand.DATA_CIPHER)
-              && e instanceof CalypsoSamSecurityDataException) {
+          } else if ((commandRef == SamCommandRef.PSO_VERIFY_SIGNATURE
+                  || commandRef == SamCommandRef.DATA_CIPHER)
+              && e instanceof SamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
-          } else if (commandRef == CalypsoSamCommand.SV_CHECK
-              && e instanceof CalypsoSamSecurityDataException) {
+          } else if (commandRef == SamCommandRef.SV_CHECK
+              && e instanceof SamSecurityDataException) {
             throw new InvalidCardMacException("Invalid SV card signature.");
           }
-          String sw = e.getStatusWord() != null ? HexUtil.toHex(e.getStatusWord()) : "null";
+          String sw =
+              samCommands.get(i).getApduResponse() != null
+                  ? HexUtil.toHex(samCommands.get(i).getApduResponse().getStatusWord())
+                  : "null";
           throw new SymmetricCryptoException(
               MSG_SAM_COMMAND_ERROR
                   + "while processing responses to SAM commands: "
-                  + e.getCommand()
+                  + commandRef
                   + " ["
                   + sw
                   + "]",
               new UnexpectedCommandStatusException(
                   MSG_SAM_COMMAND_ERROR
                       + "while processing responses to SAM commands: "
-                      + e.getCommand()
+                      + commandRef
                       + " ["
                       + sw
                       + "]"
@@ -348,17 +424,16 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (private)<br>
-   * Creates a list of {@link ApduRequestSpi} from a list of {@link AbstractSamCommand}.
+   * Creates a list of {@link ApduRequestSpi} from a list of {@link SamCommand}.
    *
    * @param commands The list of commands.
    * @return An empty list if there is no command.
    * @since 2.2.0
    */
-  private List<ApduRequestSpi> getApduRequests(List<AbstractSamCommand> commands) {
+  private List<ApduRequestSpi> getApduRequests(List<SamCommand> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
-      for (AbstractSamCommand command : commands) {
+      for (SamCommand command : commands) {
         apduRequests.add(command.getApduRequest());
       }
     }
@@ -366,7 +441,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (private)<br>
    * Transmits a card request, processes and converts any exceptions.
    *
    * @param cardRequest The card request to transmit.
@@ -406,7 +480,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (package-private)<br>
    * Saves the provided exchanged APDU commands in the list of transaction audit data.
    *
    * @param cardRequest The card request.
@@ -425,7 +498,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (package-private)<br>
    * Returns a string representation of the transaction audit data.
    *
    * @return A not empty string.
@@ -440,7 +512,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (private)<br>
    * Prepares a "SelectDiversifier" command using the current key diversifier.
    *
    * @return The current instance.
@@ -450,7 +521,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (package-private)<br>
    * Prepares a "SelectDiversifier" command using a specific or the default key diversifier if it is
    * not already selected.
    *
@@ -469,7 +539,6 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /**
-   * (package-private)<br>
    * Prepares a "SelectDiversifier" command using the default key diversifier if it is not already
    * selected.
    *
@@ -484,7 +553,7 @@ class SymmetricCryptoTransactionManagerAdapter
 
   @Override
   public LegacySamCardTransactionCryptoExtension prepareComputeSignature(
-      CommonSignatureComputationData data) {
+      CommonSignatureComputationData<?> data) {
 
     if (data instanceof BasicSignatureComputationDataAdapter) {
       // Basic signature
@@ -549,7 +618,7 @@ class SymmetricCryptoTransactionManagerAdapter
 
   @Override
   public LegacySamCardTransactionCryptoExtension prepareVerifySignature(
-      CommonSignatureVerificationData data) {
+      CommonSignatureVerificationData<?> data) {
     if (data instanceof BasicSignatureVerificationDataAdapter) {
       // Basic signature
       BasicSignatureVerificationDataAdapter dataAdapter =
@@ -648,10 +717,7 @@ class SymmetricCryptoTransactionManagerAdapter
     return this;
   }
 
-  /**
-   * (private)<br>
-   * The manager of the digest session.
-   */
+  /** The manager of the digest session. */
   private class DigestManager {
 
     private final byte[] openSecureSessionDataOut;
@@ -662,7 +728,6 @@ class SymmetricCryptoTransactionManagerAdapter
     boolean isRequest = true;
 
     /**
-     * (private)<br>
      * Creates a new digest manager.
      *
      * @param openSecureSessionDataOut The data out of the "Open Secure Session" card command.
@@ -676,7 +741,6 @@ class SymmetricCryptoTransactionManagerAdapter
     }
 
     /**
-     * (private)<br>
      * Add one or more exchanged card APDUs to the buffer.
      *
      * @param cardApdu The APDU.
@@ -696,10 +760,7 @@ class SymmetricCryptoTransactionManagerAdapter
       isRequest = !isRequest;
     }
 
-    /**
-     * (private)<br>
-     * Prepares all pending digest commands.
-     */
+    /** Prepares all pending digest commands. */
     private void prepareCommands() {
       // Prepare the "Digest Init" command if not already done.
       if (!isDigestInitDone) {
@@ -712,10 +773,7 @@ class SymmetricCryptoTransactionManagerAdapter
       prepareDigestClose();
     }
 
-    /**
-     * (private)<br>
-     * Prepares the "Digest Init" SAM command.
-     */
+    /** Prepares the "Digest Init" SAM command. */
     private void prepareDigestInit() {
       // CL-SAM-DINIT.1
       samCommands.add(
@@ -730,10 +788,7 @@ class SymmetricCryptoTransactionManagerAdapter
       isDigestInitDone = true;
     }
 
-    /**
-     * (private)<br>
-     * Prepares the "Digest Update" SAM command.
-     */
+    /** Prepares the "Digest Update" SAM command. */
     private void prepareDigestUpdate() {
       if (cardApdus.isEmpty()) {
         return;
@@ -773,10 +828,7 @@ class SymmetricCryptoTransactionManagerAdapter
       }
     }
 
-    /**
-     * (private)<br>
-     * Prepares the "Digest Close" SAM command.
-     */
+    /** Prepares the "Digest Close" SAM command. */
     private void prepareDigestClose() {
       // CL-SAM-DCLOSE.1
       samCommands.add(new CmdSamDigestClose(sam, isExtendedModeRequired ? 8 : 4));

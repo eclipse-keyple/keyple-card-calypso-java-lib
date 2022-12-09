@@ -12,12 +12,11 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Defines all supported Calypso SAM APDU commands.
  *
  * @since 2.0.0
  */
-enum CalypsoSamCommand {
+enum SamCommandRef {
   SELECT_DIVERSIFIER("Select Diversifier", (byte) 0x14),
   GET_CHALLENGE("Get Challenge", (byte) 0x84),
   DIGEST_INIT("Digest Init", (byte) 0x8A),
@@ -55,7 +54,7 @@ enum CalypsoSamCommand {
    * @param instructionByte the instruction byte.
    * @since 2.0.0
    */
-  CalypsoSamCommand(String name, byte instructionByte) {
+  SamCommandRef(String name, byte instructionByte) {
     this.name = name;
     this.instructionByte = instructionByte;
   }

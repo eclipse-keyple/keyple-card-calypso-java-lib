@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,23 +20,22 @@ import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the "Data Cipher" SAM command.
  *
  * @since 2.2.0
  */
-final class CmdSamDataCipher extends AbstractSamCommand {
+final class CmdSamDataCipher extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6900,
         new StatusProperties(
-            "An event counter cannot be incremented.", CalypsoSamCounterOverflowException.class));
+            "An event counter cannot be incremented.", SamCounterOverflowException.class));
     m.put(
         0x6985,
         new StatusProperties(
@@ -44,12 +45,12 @@ final class CmdSamDataCipher extends AbstractSamCommand {
                 + "- Ciphering or signing mode, and ciphering forbidden (CipherEnableBit of PAR1 is 0).\n"
                 + "- Decipher mode, and deciphering forbidden (DecipherDataEnableBit of PAR1 is 0).\n"
                 + "- AES key.",
-            CalypsoSamAccessForbiddenException.class));
+            SamAccessForbiddenException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found: ciphering key not found.", CalypsoSamDataAccessException.class));
-    m.put(0x6B00, new StatusProperties("Incorrect P1.", CalypsoSamIllegalParameterException.class));
+            "Record not found: ciphering key not found.", SamDataAccessException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -57,7 +58,6 @@ final class CmdSamDataCipher extends AbstractSamCommand {
   private final BasicSignatureVerificationDataAdapter signatureVerificationData;
 
   /**
-   * (package-private)<br>
    * Builds a new instance based on the provided data.
    *
    * @param calypsoSam The Calypso SAM.
@@ -70,12 +70,12 @@ final class CmdSamDataCipher extends AbstractSamCommand {
       BasicSignatureComputationDataAdapter signatureComputationData,
       BasicSignatureVerificationDataAdapter signatureVerificationData) {
 
-    super(CalypsoSamCommand.DATA_CIPHER, 0, calypsoSam);
+    super(SamCommandRef.DATA_CIPHER, 0, calypsoSam);
 
     this.signatureComputationData = signatureComputationData;
     this.signatureVerificationData = signatureVerificationData;
 
-    final byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    final byte cla = calypsoSam.getClassByte();
     final byte inst = getCommandRef().getInstructionByte();
     final byte p1 = (byte) 0x40; // TODO implement the other modes (cipher, decipher)
     final byte p2 = (byte) 0x00;
@@ -124,7 +124,7 @@ final class CmdSamDataCipher extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
     super.parseApduResponse(apduResponse);
     if (apduResponse.getDataOut().length > 0) {
       if (signatureComputationData != null) {
@@ -139,7 +139,7 @@ final class CmdSamDataCipher extends AbstractSamCommand {
             Arrays.equals(computedSignature, signatureVerificationData.getSignature()));
       }
       if (signatureVerificationData != null && !signatureVerificationData.isSignatureValid()) {
-        throw new CalypsoSamSecurityDataException("Incorrect signature.", getCommandRef(), 0);
+        throw new SamSecurityDataException("Incorrect signature.");
       }
     }
   }

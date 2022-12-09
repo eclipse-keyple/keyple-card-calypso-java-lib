@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.calypsonet.terminal.calypso.card.*;
@@ -24,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CalypsoCard}.
  *
  * @since 2.0.0
@@ -139,7 +140,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (private)<br>
    * Initializes the object with the card power-on data.
    *
    * <p>This method should be invoked only when no response to select application is available.
@@ -180,7 +180,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (private)<br>
    * Initializes or post-initializes the object with the application FCI data.
    *
    * @param selectApplicationResponse The select application response.
@@ -205,7 +204,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Initializes or post-initializes the object with the application FCI data.
    *
    * @param cmdCardGetDataFci The command containing the parsed FCI data.
@@ -286,7 +284,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (private)<br>
    * Some cards have specific features that need to be taken into account. This method identifies
    * them and applies the necessary modifications.
    */
@@ -376,7 +373,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the full Calypso serial number including the possible validity date information in the two
    * MSB.
    *
@@ -414,7 +410,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the maximum length of data that an APDU in this card can carry.
    *
    * @return An int
@@ -425,7 +420,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Tells if the change counter allowed in session is established in number of operations or number
    * of bytes modified.
    *
@@ -439,7 +433,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Indicates the maximum number of changes allowed in session.
    *
    * <p>This number can be a number of operations or a number of commands (see
@@ -611,7 +604,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the Stored Value data from the SV Get command
    *
    * @param svKvc The KVC value.
@@ -726,7 +718,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the ratification status
    *
    * @param dfRatified true if the session was ratified.
@@ -737,7 +728,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the transaction counter.
    *
    * @param transactionCounter The counter value.
@@ -748,7 +738,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the current card class.
    *
    * @return A not null reference.
@@ -769,7 +758,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the DF metadata.<br>
    * Updates the invalidation flag.
    *
@@ -849,7 +837,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (private)<br>
    * Returns a reference to the currently selected EF.<br>
    * If the file having the provided non-zero SFI or LID does not exist, then a new EF is created.
    * <br>
@@ -910,7 +897,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the PIN attempts counter.<br>
    * The PIN attempt counter is interpreted to give the results of the methods {@link #isPinBlocked}
    * and {@link #getPinAttemptRemaining}.
@@ -923,7 +909,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the provided {@link FileHeaderAdapter} to the current selected file.<br>
    * If EF does not exist, then it is created.
    *
@@ -941,7 +926,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Set or replace the entire content of the specified record #numRecord of the current selected
    * file by the provided content.<br>
    * If EF does not exist, then it is created.
@@ -957,7 +941,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets a counter value in record #1 of the current selected file.<br>
    * If EF does not exist, then it is created.
    *
@@ -972,7 +955,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Set or replace the content at the specified offset of record #numRecord of the current selected
    * file by a copy of the provided content.<br>
    * If EF does not exist, then it is created.<br>
@@ -991,7 +973,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Fills the content at the specified offset of the specified record of the current selected file
    * using a binary OR operation with the provided content.<br>
    * If EF does not exist, then it is created.<br>
@@ -1009,7 +990,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Add cyclic content at record #1 by rolling previously all actual records contents (record #1 ->
    * record #2, record #2 -> record #3,...) of the current selected file.<br>
    * This is useful for cyclic files. Note that records are infinitely shifted.<br>
@@ -1026,7 +1006,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Make a backup of the Elementary Files.<br>
    * This method should be used before starting a card secure session.
    *
@@ -1037,7 +1016,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Restore the last backup of Elementary Files.<br>
    * This method should be used when SW of the card close secure session command is unsuccessful or
    * if secure session is aborted.
@@ -1049,7 +1027,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (private)<br>
    * Copy a set of ElementaryFile to another one by cloning each element.
    *
    * @param src the source (should be not null).
@@ -1086,7 +1063,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the challenge received in response to the GET CHALLENGE command.
    *
    * @param cardChallenge A not empty array.
@@ -1097,7 +1073,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the traceability information received in response to the GET DATA command for the tag
    * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
    *
@@ -1109,7 +1084,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Sets the SV signature.
    *
    * @param svOperationSignature A not empty array.
@@ -1120,7 +1094,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the challenge received from the card
    *
    * @return An array of bytes containing the challenge bytes (variable length according to the
@@ -1132,7 +1105,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV KVC from the card
    *
    * @return The SV KVC byte.
@@ -1143,7 +1115,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV Get command header
    *
    * @return A byte array containing the SV Get command header.
@@ -1158,7 +1129,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the SV Get command response data
    *
    * @return A byte array containing the SV Get command response data.
@@ -1173,7 +1143,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Gets the last SV Operation signature (SV Reload, Debit or Undebit)
    *
    * @return A byte array containing the SV Operation signature or null if not available.
@@ -1184,7 +1153,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the response of the Increase/Decrease counter command is postponed to the close
    * secure session (old revision 2 cards).
    *
@@ -1206,10 +1174,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     return JsonUtil.toJson(this);
   }
 
-  /**
-   * (private)<br>
-   * POJO containing card specificities to be applied according to startup info.
-   */
+  /** POJO containing card specificities to be applied according to startup info. */
   private abstract static class Patch {
 
     private final long startupInfo;
@@ -1234,10 +1199,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     abstract void apply(CalypsoCardAdapter calypsoCard);
   }
 
-  /**
-   * (private)<br>
-   * POJO containing card rev 3 specificities to be applied according to startup info.
-   */
+  /** POJO containing card rev 3 specificities to be applied according to startup info. */
   private static class PatchRev3 extends Patch {
 
     private Integer payloadCapacity;
@@ -1263,10 +1225,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
   }
 
-  /**
-   * (private)<br>
-   * POJO containing card rev 1 & 2 specificities to be applied according to startup info.
-   */
+  /** POJO containing card rev 1 & 2 specificities to be applied according to startup info. */
   private static class PatchRev12 extends Patch {
 
     private Boolean isCounterValuePostponed;

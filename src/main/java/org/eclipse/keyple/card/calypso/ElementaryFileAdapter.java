@@ -15,7 +15,6 @@ import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * (package-private)<br>
  * Implementation of {@link ElementaryFile}.
  *
  * @since 2.0.0
@@ -27,7 +26,6 @@ class ElementaryFileAdapter implements ElementaryFile {
   private final FileDataAdapter data;
 
   /**
-   * (package-private)<br>
    * Constructor
    *
    * @param sfi the associated SFI.
@@ -39,7 +37,6 @@ class ElementaryFileAdapter implements ElementaryFile {
   }
 
   /**
-   * (package-private)<br>
    * Constructor used to create a clone of the provided EF.
    *
    * @param source the EF to be cloned.
@@ -54,7 +51,6 @@ class ElementaryFileAdapter implements ElementaryFile {
   }
 
   /**
-   * (package-private)<br>
    * Sets the file header.
    *
    * @param header the file header (should be not null).

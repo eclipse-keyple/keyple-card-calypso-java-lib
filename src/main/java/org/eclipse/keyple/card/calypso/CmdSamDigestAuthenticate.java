@@ -11,39 +11,33 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Digest Authenticate APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamDigestAuthenticate extends AbstractSamCommand {
-
-  /** The command. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.DIGEST_AUTHENTICATE;
+final class CmdSamDigestAuthenticate extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect signature.", CalypsoSamSecurityDataException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect signature.", SamSecurityDataException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestAuthenticate .
    *
    * @param calypsoSam The Calypso SAM.
@@ -53,7 +47,7 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
    */
   CmdSamDigestAuthenticate(CalypsoSamAdapter calypsoSam, byte[] signature) {
 
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.DIGEST_AUTHENTICATE, 0, calypsoSam);
 
     if (signature == null) {
       throw new IllegalArgumentException("Signature can't be null");
@@ -62,13 +56,13 @@ final class CmdSamDigestAuthenticate extends AbstractSamCommand {
       throw new IllegalArgumentException(
           "Signature is not the right length : length is " + signature.length);
     }
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = 0x00;
     byte p2 = (byte) 0x00;
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, signature, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, signature, null)));
   }
 
   /**

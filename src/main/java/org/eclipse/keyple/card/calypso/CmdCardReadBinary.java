@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -19,19 +21,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Read Binary" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardReadBinary extends AbstractCardCommand {
+final class CmdCardReadBinary extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardReadBinary.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Incorrect EF type: not a Binary EF.", CardDataAccessException.class));
@@ -64,7 +65,6 @@ final class CmdCardReadBinary extends AbstractCardCommand {
   private final int offset;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param calypsoCard The Calypso card.
@@ -75,7 +75,7 @@ final class CmdCardReadBinary extends AbstractCardCommand {
    */
   CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, int length) {
 
-    super(CalypsoCardCommand.READ_BINARY, length, calypsoCard);
+    super(CardCommandRef.READ_BINARY, length, calypsoCard);
 
     this.sfi = sfi;
     this.offset = offset;

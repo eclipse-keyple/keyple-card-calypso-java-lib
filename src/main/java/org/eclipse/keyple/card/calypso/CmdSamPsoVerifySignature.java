@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -18,49 +20,42 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
- * (package-private)<br>
  * Builds the "PSO Verify Signature" SAM command.
  *
  * @since 2.2.0
  */
-final class CmdSamPsoVerifySignature extends AbstractSamCommand {
+final class CmdSamPsoVerifySignature extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Busy status: the command is temporarily unavailable.",
-            CalypsoSamSecurityContextException.class));
+            SamSecurityContextException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect signature.", CalypsoSamSecurityDataException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect signature.", SamSecurityDataException.class));
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect parameters in incoming data.", CalypsoSamIncorrectInputDataException.class));
+            "Incorrect parameters in incoming data.", SamIncorrectInputDataException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found: signing key not found.", CalypsoSamDataAccessException.class));
-    m.put(
-        0x6B00,
-        new StatusProperties("Incorrect P1 or P2.", CalypsoSamIllegalParameterException.class));
+            "Record not found: signing key not found.", SamDataAccessException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1 or P2.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   private final TraceableSignatureVerificationDataAdapter data;
 
   /**
-   * (package-private)<br>
    * Builds a new instance based on the provided signature verification data.
    *
    * @param calypsoSam The Calypso SAM.
@@ -70,10 +65,10 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
   CmdSamPsoVerifySignature(
       CalypsoSamAdapter calypsoSam, TraceableSignatureVerificationDataAdapter data) {
 
-    super(CalypsoSamCommand.PSO_VERIFY_SIGNATURE, 0, calypsoSam);
+    super(SamCommandRef.PSO_VERIFY_SIGNATURE, 0, calypsoSam);
     this.data = data;
 
-    final byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    final byte cla = calypsoSam.getClassByte();
     final byte inst = getCommandRef().getInstructionByte();
     final byte p1 = (byte) 0x00;
     final byte p2 = (byte) 0xA8;
@@ -139,11 +134,11 @@ final class CmdSamPsoVerifySignature extends AbstractSamCommand {
    * @since 2.2.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CalypsoSamCommandException {
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
     try {
       super.parseApduResponse(apduResponse);
       data.setSignatureValid(true);
-    } catch (CalypsoSamSecurityDataException e) {
+    } catch (SamSecurityDataException e) {
       data.setSignatureValid(false);
       throw e;
     }

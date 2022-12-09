@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.*;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.calypso.card.FileHeader;
@@ -19,7 +21,6 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 
 /**
- * (package-private)<br>
  * Builds the Get data APDU commands for the EF LIST tag.
  *
  * <p>In contact mode, this command can not be sent in a secure session because it would generate a
@@ -27,9 +28,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  *
  * @since 2.1.0
  */
-final class CmdCardGetDataEfList extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.GET_DATA;
+final class CmdCardGetDataEfList extends CardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
   private static final int DESCRIPTORS_OFFSET = 2;
@@ -40,7 +39,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
@@ -52,31 +51,28 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardGetDataEfList.
    *
    * @param calypsoCard The Calypso card.
    * @since 2.2.3
    */
   CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardGetDataEfList.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
-    super(command, 0, null);
+    super(CardCommandRef.GET_DATA, 0, null);
     buildCommand(calypsoCardClass);
   }
 
   /**
-   * (private)<br>
    * Builds the command.
    *
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
@@ -86,7 +82,7 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCardClass.getValue(),
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0xC0,
                 null,
@@ -129,7 +125,6 @@ final class CmdCardGetDataEfList extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets a reference to a map of all Elementary File headers and their associated SFI.
    *
    * @return A not empty map.

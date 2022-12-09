@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * This exception indicates that the length of the response is not equal to the value of the LE
  * field in the request.
  *
@@ -21,16 +20,13 @@ package org.eclipse.keyple.card.calypso;
 final class CardUnexpectedResponseLengthException extends CardCommandException {
 
   /**
-   * (package-private)<br>
    * Constructor allowing to set a message, the command and the status word.
    *
    * @param message the message to identify the exception context.
    * @param command the card command.
-   * @param statusWord the status word.
    * @since 2.1.1
    */
-  CardUnexpectedResponseLengthException(
-      String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  CardUnexpectedResponseLengthException(String message, CardCommandRef command) {
+    super(message, command);
   }
 }

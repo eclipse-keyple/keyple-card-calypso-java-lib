@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Implementation of {@link FileData}.
  *
  * @since 2.0.0
@@ -32,7 +31,6 @@ class FileDataAdapter implements FileData {
   private final TreeMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
 
   /**
-   * (package-private)<br>
    * Constructor
    *
    * @since 2.0.0
@@ -40,7 +38,6 @@ class FileDataAdapter implements FileData {
   FileDataAdapter() {}
 
   /**
-   * (package-private)<br>
    * Constructor used to create a clone of the provided file file data.
    *
    * @param source the header to be cloned.
@@ -178,7 +175,6 @@ class FileDataAdapter implements FileData {
   }
 
   /**
-   * (package-private)<br>
    * Sets or replaces the entire content of the specified record #numRecord by the provided content.
    *
    * @param numRecord the record number (should be {@code >=} 1).
@@ -190,7 +186,6 @@ class FileDataAdapter implements FileData {
   }
 
   /**
-   * (package-private)<br>
    * Sets a counter value in record #1.
    *
    * @param numCounter the counter number (should be {@code >=} 1).
@@ -202,7 +197,6 @@ class FileDataAdapter implements FileData {
   }
 
   /**
-   * (package-private)<br>
    * Sets or replaces the content at the specified offset of record #numRecord by a copy of the
    * provided content.<br>
    * If actual record content is not set or has a size {@code <} offset, then missing data will be
@@ -233,7 +227,6 @@ class FileDataAdapter implements FileData {
   }
 
   /**
-   * (package-private)<br>
    * Fills the content at the specified offset of the specified record using a binary OR operation
    * with the provided content.<br>
    * If actual record content is not set or has a size {@code <} offset + content size, then missing
@@ -266,7 +259,6 @@ class FileDataAdapter implements FileData {
   }
 
   /**
-   * (package-private)<br>
    * Adds cyclic content at record #1 by rolling previously all actual records contents (record #1
    * -> record #2, record #2 -> record #3,...).<br>
    * This is useful for cyclic files.<br>

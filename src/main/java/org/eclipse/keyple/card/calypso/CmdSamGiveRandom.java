@@ -11,44 +11,40 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Give Random APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamGiveRandom extends AbstractSamCommand {
-
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.GIVE_RANDOM;
+final class CmdSamGiveRandom extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate.
    *
    * @param calypsoSam The Calypso SAM.
    * @param random the random data.
-   * @throws IllegalArgumentException If the random data is null or has a length not equal to 8 TODO
-   *     implement specific settings for rev less than 3
+   * @throws IllegalArgumentException If the random data is null or has a length not equal to 8.
    * @since 2.0.1
    */
   CmdSamGiveRandom(CalypsoSamAdapter calypsoSam, byte[] random) {
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.GIVE_RANDOM, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -58,7 +54,7 @@ final class CmdSamGiveRandom extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, random, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, random, null)));
   }
 
   /**

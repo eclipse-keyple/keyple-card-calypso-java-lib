@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -19,12 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Increase/Decrease Multiple" APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
+final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
 
   private static final Logger logger =
       LoggerFactory.getLogger(CmdCardIncreaseOrDecreaseMultiple.class);
@@ -32,7 +33,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -75,7 +76,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
   private final Map<Integer, Integer> counterNumberToIncDecValueMap;
 
   /**
-   * (package-private)<br>
    * Constructor.
    *
    * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
@@ -93,9 +93,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
       SortedMap<Integer, Integer> counterNumberToIncDecValueMap) {
 
     super(
-        isDecreaseCommand
-            ? CalypsoCardCommand.DECREASE_MULTIPLE
-            : CalypsoCardCommand.INCREASE_MULTIPLE,
+        isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
         0,
         calypsoCard);
 
@@ -176,8 +174,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The SFI.
    * @since 2.1.0
    */
@@ -186,8 +182,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
-   *
    * @return The counters/values map.
    * @since 2.1.0
    */

@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Indicates that the security input data provided is not valid.<br>
  * This can occur, for example, during the closing of a secure session if the SAM's signature is
  * incorrect.
@@ -22,14 +21,11 @@ package org.eclipse.keyple.card.calypso;
 final class CardSecurityDataException extends CardCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CardSecurityDataException(String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  CardSecurityDataException(String message, CardCommandRef command) {
+    super(message, command);
   }
 }

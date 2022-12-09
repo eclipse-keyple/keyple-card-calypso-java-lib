@@ -11,32 +11,29 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Get Challenge APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamGetChallenge extends AbstractSamCommand {
-
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.GET_CHALLENGE;
+final class CmdSamGetChallenge extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Le.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Le.", SamIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamGetChallenge.
    *
    * @param calypsoSam The Calypso SAM.
@@ -45,13 +42,13 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
    */
   CmdSamGetChallenge(CalypsoSamAdapter calypsoSam, int expectedResponseLength) {
 
-    super(command, expectedResponseLength, calypsoSam);
+    super(SamCommandRef.GET_CHALLENGE, expectedResponseLength, calypsoSam);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                SamUtilAdapter.getClassByte(calypsoSam.getProductType()),
-                command.getInstructionByte(),
+                calypsoSam.getClassByte(),
+                getCommandRef().getInstructionByte(),
                 (byte) 0,
                 (byte) 0,
                 null,
@@ -59,7 +56,6 @@ final class CmdSamGetChallenge extends AbstractSamCommand {
   }
 
   /**
-   * (package-private)<br>
    * Gets the challenge.
    *
    * @return the challenge

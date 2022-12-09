@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
 
 /**
- * (package-private)<br>
  * Implementation of {@link SamSecuritySetting}.
  *
  * @since 2.2.0

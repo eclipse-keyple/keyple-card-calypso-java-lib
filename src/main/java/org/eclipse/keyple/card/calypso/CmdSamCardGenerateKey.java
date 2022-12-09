@@ -11,48 +11,43 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Give Random APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamCardGenerateKey extends AbstractSamCommand {
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.CARD_GENERATE_KEY;
+final class CmdSamCardGenerateKey extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "Preconditions not satisfied.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6A00,
-        new StatusProperties("Incorrect P1 or P2", CalypsoSamIllegalParameterException.class));
+        new StatusProperties("Preconditions not satisfied.", SamAccessForbiddenException.class));
+    m.put(0x6A00, new StatusProperties("Incorrect P1 or P2", SamIllegalParameterException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Incorrect incoming data: unknown or incorrect format",
-            CalypsoSamIncorrectInputDataException.class));
+            SamIncorrectInputDataException.class));
     m.put(
         0x6A83,
         new StatusProperties(
             "Record not found: ciphering key or key to cipher not found",
-            CalypsoSamDataAccessException.class));
+            SamDataAccessException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamDigestUpdate and generate the ciphered data for a key ciphered by
    * another.
    *
@@ -73,9 +68,9 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
       byte sourceKif,
       byte sourceKvc) {
 
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.CARD_GENERATE_KEY, 0, calypsoSam);
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
 
     byte p1;
     byte p2;
@@ -104,11 +99,10 @@ final class CmdSamCardGenerateKey extends AbstractSamCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, data, null)));
   }
 
   /**
-   * (package-private)<br>
    * Gets the 32 bytes of ciphered data.
    *
    * @return the ciphered data byte array or null if the operation failed

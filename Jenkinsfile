@@ -21,6 +21,7 @@ pipeline {
         deployRelease = env.GIT_URL == "https://github.com/eclipse/${env.PROJECT_NAME}.git" && (env.GIT_BRANCH == "main" || env.GIT_BRANCH == "release-${env.KEYPLE_VERSION}") && env.CHANGE_ID == null && env.GIT_COMMIT_MESSAGE.startsWith("Release ${env.KEYPLE_VERSION}")
         deploySnapshot = !deployRelease && env.GIT_URL == "https://github.com/eclipse/${env.PROJECT_NAME}.git" && (env.GIT_BRANCH == "main" || env.GIT_BRANCH == "release-${env.KEYPLE_VERSION}") && env.CHANGE_ID == null
       }
+      sh "chmod +x ./gradlew ./scripts/*.sh"
     } } }
     stage('Check version') {
       steps { container('java-builder') {

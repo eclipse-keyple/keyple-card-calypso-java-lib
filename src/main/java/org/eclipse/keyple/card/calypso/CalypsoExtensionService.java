@@ -11,7 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.card.calypso.JsonAdapter.*;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+import static org.eclipse.keyple.card.calypso.JsonAdapters.*;
 
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
@@ -62,8 +63,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
     JsonUtil.registerTypeAdapter(FileHeader.class, new FileHeaderJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvLoadLogRecord.class, new SvLoadLogRecordJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvDebitLogRecord.class, new SvDebitLogRecordJsonAdapter(), false);
-    JsonUtil.registerTypeAdapter(
-        AbstractCardCommand.class, new AbstractCardCommandJsonAdapter(), false);
+    JsonUtil.registerTypeAdapter(CardCommand.class, new AbstractCardCommandJsonAdapter(), false);
   }
 
   /** Private constructor. */
@@ -269,7 +269,6 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * (private)<br>
    * Returns a new card transaction manager adapter.
    *
    * @param cardReader The reader.
@@ -361,7 +360,6 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
   }
 
   /**
-   * (private)<br>
    * Returns a new SAM transaction manager adapter.
    *
    * @param samReader The reader.

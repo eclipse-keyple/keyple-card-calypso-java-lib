@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
@@ -19,22 +21,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * (package-private)<br>
  * Builds the "Verify PIN" command.
  *
  * @since 2.0.1
  */
-final class CmdCardVerifyPin extends AbstractCardCommand {
+final class CmdCardVerifyPin extends CardCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(CmdCardVerifyPin.class);
 
-  private static final CalypsoCardCommand command = CalypsoCardCommand.VERIFY_PIN;
+  private static final CardCommandRef commandRef = CardCommandRef.VERIFY_PIN;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
@@ -70,7 +71,6 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
   private final boolean readCounterOnly;
 
   /**
-   * (package-private)<br>
    * Verify the PIN
    *
    * @param calypsoCard The Calypso card.
@@ -81,7 +81,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    */
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard, boolean encryptPinTransmission, byte[] pin) {
 
-    super(command, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard);
 
     if (pin == null
         || (!encryptPinTransmission && pin.length != 4)
@@ -97,7 +97,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, pin, null)));
+            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, pin, null)));
 
     if (logger.isDebugEnabled()) {
       addSubName(encryptPinTransmission ? "ENCRYPTED" : "PLAIN");
@@ -107,7 +107,6 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Alternate command dedicated to the reading of the wrong presentation counter
    *
    * @param calypsoCard The Calypso card.
@@ -115,7 +114,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
    */
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard);
 
     cla = calypsoCard.getCardClass().getValue();
 
@@ -124,7 +123,7 @@ final class CmdCardVerifyPin extends AbstractCardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, p2, null, null)));
+            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, null, null)));
 
     if (logger.isDebugEnabled()) {
       addSubName("Read presentation counter");

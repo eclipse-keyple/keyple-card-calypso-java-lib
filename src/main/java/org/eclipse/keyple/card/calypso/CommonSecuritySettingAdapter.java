@@ -19,7 +19,6 @@ import org.calypsonet.terminal.reader.CardReader;
 import org.eclipse.keyple.core.util.Assert;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CommonSecuritySetting}.
  *
  * @param <S> The type of the lowest level child object.
@@ -75,7 +74,6 @@ abstract class CommonSecuritySettingAdapter<S extends CommonSecuritySetting<S>>
   }
 
   /**
-   * (package-private)<br>
    * Gets the associated control SAM reader to use for secured operations.
    *
    * @return Null if no control SAM reader is set.
@@ -86,7 +84,6 @@ abstract class CommonSecuritySettingAdapter<S extends CommonSecuritySetting<S>>
   }
 
   /**
-   * (package-private)<br>
    * Gets the control SAM used for secured operations.
    *
    * @return Null if no control SAM is set.
@@ -97,7 +94,6 @@ abstract class CommonSecuritySettingAdapter<S extends CommonSecuritySetting<S>>
   }
 
   /**
-   * (package-private)<br>
    * Gets the SAM revocation service.
    *
    * @return Null if no SAM revocation service is set.

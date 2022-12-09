@@ -31,27 +31,27 @@ SPDX-License-Identifier: EPL-2.0
    
 ## Third-party Content
 
-Calypsonet Terminal Reader API (1.0.0)
+Calypsonet Terminal Reader API
 
 * License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
 * Sources: https://github.com/calypsonet/calypsonet-terminal-reader-java-api
 
-Calypsonet Terminal Calypso API (1.0.2)
+Calypsonet Terminal Calypso API
 
 * License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
 * Sources: https://github.com/calypsonet/calypsonet-terminal-calypso-java-api
 
-Calypsonet Terminal Card API (1.0.0)
+Calypsonet Terminal Card API
 
 * License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
 * Sources: https://github.com/calypsonet/calypsonet-terminal-card-java-api
 
-SLF4J API (1.7.32)
+SLF4J API
 
 * License: [MIT](https://spdx.org/licenses/MIT.html)
 * Project: http://www.slf4j.org
 
-GSON (2.8.8)
+GSON
 
 * License: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
 * Project: https://github.com/google/gson/gson

@@ -23,7 +23,6 @@ import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
 /**
- * (package-private)<br>
  * Implementation of {@link CommonTransactionManager}.
  *
  * @param <T> The type of the lowest level child object.
@@ -44,13 +43,11 @@ abstract class CommonTransactionManagerAdapter<
   static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands.";
 
   /* Final fields */
-  private final T currentInstance = (T) this;
   private final SmartCard targetSmartCard; // Target card or SAM
   private final CommonSecuritySettingAdapter<?> securitySetting;
   private final List<byte[]> transactionAuditData;
 
   /**
-   * (package-private)<br>
    * Creates a new instance.
    *
    * @param targetSmartCard The target smartcard provided by the selection process.
@@ -80,7 +77,6 @@ abstract class CommonTransactionManagerAdapter<
   }
 
   /**
-   * (package-private)<br>
    * Saves the provided exchanged APDU commands in the list of transaction audit data.
    *
    * @param cardRequest The card request.
@@ -99,7 +95,6 @@ abstract class CommonTransactionManagerAdapter<
   }
 
   /**
-   * (package-private)<br>
    * Saves the provided exchanged APDU commands in the provided list of transaction audit data.
    *
    * @param cardRequest The card request.
@@ -120,7 +115,6 @@ abstract class CommonTransactionManagerAdapter<
   }
 
   /**
-   * (package-private)<br>
    * Returns a string representation of the transaction audit data.
    *
    * @return A not empty string.

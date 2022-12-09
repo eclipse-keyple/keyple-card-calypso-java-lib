@@ -19,18 +19,21 @@ import java.util.Set;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.eclipse.keyple.core.util.Assert;
 
+/**
+ * Adapter of {@link SymmetricCryptoSecuritySetting}.
+ *
+ * @since 2.3.1
+ */
 class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySetting {
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
   private SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory;
-  private boolean isEarlyMutualAuthenticationEnabled;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
-  private boolean isRegularModeRequired;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
       new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
@@ -49,12 +52,22 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting enableMultipleSession() {
     isMultipleSessionEnabled = true;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting setCryptoTransactionManager(
       SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
@@ -63,42 +76,55 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return this;
   }
 
-  @Override
-  public SymmetricCryptoSecuritySetting enableEarlyMutualAuthentication() {
-    isEarlyMutualAuthenticationEnabled = true;
-    return this;
-  }
-
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting enableRatificationMechanism() {
     isRatificationMechanismEnabled = true;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting enablePinPlainTransmission() {
     isPinPlainTransmissionEnabled = true;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting enableSvLoadAndDebitLog() {
     isSvLoadAndDebitLogEnabled = true;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
     return this;
   }
 
-  @Override
-  public SymmetricCryptoSecuritySetting forceRegularMode() {
-    this.isRegularModeRequired = true;
-    return this;
-  }
-
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting assignKif(
       WriteAccessLevel writeAccessLevel, byte kvc, byte kif) {
@@ -112,6 +138,11 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting assignDefaultKif(
       WriteAccessLevel writeAccessLevel, byte kif) {
@@ -120,6 +151,11 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting assignDefaultKvc(
       WriteAccessLevel writeAccessLevel, byte kvc) {
@@ -128,18 +164,33 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting addAuthorizedSessionKey(byte kif, byte kvc) {
     authorizedSessionKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting addAuthorizedSvKey(byte kif, byte kvc) {
     authorizedSvKeys.add(((kif << 8) & 0xff00) | (kvc & 0x00ff));
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting setPinVerificationCipheringKey(byte kif, byte kvc) {
     this.pinVerificationCipheringKif = kif;
@@ -147,6 +198,11 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
   public SymmetricCryptoSecuritySetting setPinModificationCipheringKey(byte kif, byte kvc) {
     this.pinModificationCipheringKif = kif;
@@ -155,7 +211,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the multiple session mode is enabled.
    *
    * @return True if the multiple session mode is enabled.
@@ -166,7 +221,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the ratification mechanism is enabled.
    *
    * @return True if the ratification mechanism is enabled.
@@ -177,7 +231,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the transmission of the PIN in plain text is enabled.
    *
    * @return True if the transmission of the PIN in plain text is enabled.
@@ -188,7 +241,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the retrieval of both load and debit log is enabled.
    *
    * @return True if the retrieval of both load and debit log is enabled.
@@ -199,7 +251,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the SV balance is allowed to become negative.
    *
    * @return True if the retrieval of both load and debit log is enabled.
@@ -210,7 +261,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value to use for the provided write access level and KVC value.
    *
    * @param writeAccessLevel The write access level.
@@ -230,7 +280,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the default KIF value for the provided write access level.
    *
    * @param writeAccessLevel The write access level.
@@ -243,7 +292,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the default KVC value for the provided write access level.
    *
    * @param writeAccessLevel The write access level.
@@ -256,7 +304,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the KIF/KVC pair is authorized for a session.
    *
    * @param kif The KIF value.
@@ -275,7 +322,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Indicates if the KIF/KVC pair is authorized for a SV operation.
    *
    * @param kif The KIF value.
@@ -294,7 +340,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value of the PIN verification ciphering key.
    *
    * @return Null if no KIF is available.
@@ -305,7 +350,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the KVC value of the PIN verification ciphering key.
    *
    * @return Null if no KVC is available.
@@ -316,7 +360,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the KIF value of the PIN modification ciphering key.
    *
    * @return Null if no KIF is available.
@@ -327,7 +370,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
-   * (package-private)<br>
    * Gets the KVC value of the PIN modification ciphering key.
    *
    * @return Null if no KVC is available.
@@ -339,14 +381,6 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   SymmetricCryptoTransactionManagerFactoryAdapter getCryptoTransactionManagerFactory() {
     return cryptoTransactionManagerFactory;
-  }
-
-  boolean isEarlyMutualAuthenticationEnabled() {
-    return isEarlyMutualAuthenticationEnabled;
-  }
-
-  boolean isRegularModeRequired() {
-    return isRegularModeRequired;
   }
 
   Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {

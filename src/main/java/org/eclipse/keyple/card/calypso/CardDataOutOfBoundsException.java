@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 /**
- * (package-private)<br>
  * Indicates that the data provided by the user induces a capacity overflow in the card.<br>
  * This can occur, for example, for commands that update a counter or the "Stored Value".
  *
@@ -21,14 +20,11 @@ package org.eclipse.keyple.card.calypso;
 final class CardDataOutOfBoundsException extends CardCommandException {
 
   /**
-   * (package-private)<br>
-   *
    * @param message the message to identify the exception context.
    * @param command the Calypso card command.
-   * @param statusWord the status word.
    * @since 2.0.0
    */
-  CardDataOutOfBoundsException(String message, CalypsoCardCommand command, Integer statusWord) {
-    super(message, command, statusWord);
+  CardDataOutOfBoundsException(String message, CardCommandRef command) {
+    super(message, command);
   }
 }

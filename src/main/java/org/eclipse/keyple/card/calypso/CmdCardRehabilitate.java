@@ -11,25 +11,24 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Rehabilitate command.
  *
  * @since 2.0.1
  */
-final class CmdCardRehabilitate extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.REHABILITATE;
+final class CmdCardRehabilitate extends CardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -48,7 +47,6 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdCardRehabilitate.
    *
    * @param calypsoCard The Calypso card.
@@ -56,7 +54,7 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
    */
   CmdCardRehabilitate(CalypsoCardAdapter calypsoCard) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.REHABILITATE, 0, calypsoCard);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -65,7 +63,7 @@ final class CmdCardRehabilitate extends AbstractCardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 calypsoCard.getCardClass().getValue(),
-                command.getInstructionByte(),
+                getCommandRef().getInstructionByte(),
                 p1,
                 p2,
                 null,

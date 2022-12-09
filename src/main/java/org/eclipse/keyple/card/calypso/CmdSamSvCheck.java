@@ -11,38 +11,33 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the SV Check APDU command.
  *
  * @since 2.0.1
  */
-final class CmdSamSvCheck extends AbstractSamCommand {
-  /** The command reference. */
-  private static final CalypsoSamCommand command = CalypsoSamCommand.SV_CHECK;
+final class CmdSamSvCheck extends SamCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractSamCommand.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Incorrect Lc.", CalypsoSamIllegalParameterException.class));
+        new HashMap<Integer, StatusProperties>(SamCommand.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Incorrect Lc.", SamIllegalParameterException.class));
     m.put(
         0x6985,
-        new StatusProperties(
-            "No active SV transaction.", CalypsoSamAccessForbiddenException.class));
-    m.put(
-        0x6988,
-        new StatusProperties("Incorrect SV signature.", CalypsoSamSecurityDataException.class));
+        new StatusProperties("No active SV transaction.", SamAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect SV signature.", SamSecurityDataException.class));
     STATUS_TABLE = m;
   }
 
   /**
-   * (package-private)<br>
    * Instantiates a new CmdSamSvCheck to authenticate a card SV transaction.
    *
    * @param calypsoSam The Calypso SAM.
@@ -52,13 +47,13 @@ final class CmdSamSvCheck extends AbstractSamCommand {
    */
   CmdSamSvCheck(CalypsoSamAdapter calypsoSam, byte[] svCardSignature) {
 
-    super(command, 0, calypsoSam);
+    super(SamCommandRef.SV_CHECK, 0, calypsoSam);
 
     if (svCardSignature != null && (svCardSignature.length != 3 && svCardSignature.length != 6)) {
       throw new IllegalArgumentException("Invalid svCardSignature.");
     }
 
-    byte cla = SamUtilAdapter.getClassByte(calypsoSam.getProductType());
+    byte cla = calypsoSam.getClassByte();
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
 
@@ -68,13 +63,13 @@ final class CmdSamSvCheck extends AbstractSamCommand {
       System.arraycopy(svCardSignature, 0, data, 0, svCardSignature.length);
       setApduRequest(
           new ApduRequestAdapter(
-              ApduUtil.build(cla, command.getInstructionByte(), p1, p2, data, null)));
+              ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, data, null)));
     } else {
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
                   cla,
-                  command.getInstructionByte(),
+                  getCommandRef().getInstructionByte(),
                   p1,
                   p2,
                   new byte[0],

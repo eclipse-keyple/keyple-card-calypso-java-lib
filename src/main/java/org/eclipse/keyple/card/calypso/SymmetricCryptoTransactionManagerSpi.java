@@ -17,7 +17,7 @@ package org.eclipse.keyple.card.calypso;
  * <p>This interface defines the API needed by a terminal to perform the cryptographic operations
  * required by a Calypso card when using symmetric keys.
  *
- * @since x.y.z
+ * @since 2.3.1
  */
 interface SymmetricCryptoTransactionManagerSpi {
 
@@ -26,7 +26,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * terminal challenge.
    *
    * @return The terminal challenge.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] initTerminalSecureSessionContext()
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -37,7 +37,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param openSecureSessionDataOut The data out from the card Open Secure Session command.
    * @param kif The card KIF.
    * @param kvc The card KVC.
-   * @since x.y.z
+   * @since 2.3.1
    */
   void initTerminalSessionMac(byte[] openSecureSessionDataOut, byte kif, byte kvc)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -50,7 +50,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param cardApdu A byte array containing either the input or output data of a card command APDU.
    * @return null if the encryption is not activate, either the ciphered or deciphered command data
    *     if the encryption is active.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] updateTerminalSessionMac(byte[] cardApdu)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -59,7 +59,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Finalizes the digest computation and returns the terminal part of the session MAC.
    *
    * @return A byte array containing the terminal session MAC.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] finalizeTerminalSessionMac() throws SymmetricCryptoException, SymmetricCryptoIOException;
 
@@ -67,21 +67,21 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Generate the terminal part of the session MAC used for an early mutual authentication.
    *
    * @return A byte array containing the terminal session MAC.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] generateTerminalSessionMac() throws SymmetricCryptoException, SymmetricCryptoIOException;
 
   /**
    * Activate the encryption/decryption of the data sent/received during the secure session.
    *
-   * @since x.y.z
+   * @since 2.3.1
    */
   void activateEncryption() throws SymmetricCryptoException, SymmetricCryptoIOException;
 
   /**
    * Deactivate the encryption/decryption of the data sent/received during the secure session.
    *
-   * @since x.y.z
+   * @since 2.3.1
    */
   void deactivateEncryption() throws SymmetricCryptoException, SymmetricCryptoIOException;
 
@@ -90,7 +90,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    *
    * @param cardSessionMac A byte array containing the card session MAC.
    * @return true if the card session MAC is validated.
-   * @since x.y.z
+   * @since 2.3.1
    */
   boolean isCardSessionMacValid(byte[] cardSessionMac)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -99,7 +99,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Computes the needed data to operate SV card commands.
    *
    * @param data The data involved in the preparation of an SV Reload/Debit/Undebit command.
-   * @since x.y.z
+   * @since 2.3.1
    */
   void computeSvCommandSecurityData(SvCommandSecurityDataApi data)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -109,7 +109,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    *
    * @param cardSvMac A byte array containing the card SV MAC.
    * @return true if the card SV MAC is validated.
-   * @since x.y.z
+   * @since 2.3.1
    */
   boolean isCardSvMacValid(byte[] cardSvMac)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -125,7 +125,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param kif The PIN encryption key KIF.
    * @param kvc The PIN encryption key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc)
       throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -142,7 +142,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param kif The PIN encryption key KIF.
    * @param kvc The PIN encryption key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] cipherPinForModification(
       byte[] cardChallenge, byte[] currentPin, byte[] newPin, Byte kif, Byte kvc)
@@ -157,7 +157,7 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param targetKeyKif The target key KIF.
    * @param targetKeyKvc The target key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
-   * @since x.y.z
+   * @since 2.3.1
    */
   byte[] generateCipheredCardKey(
       byte[] cardChallenge,
@@ -170,7 +170,7 @@ interface SymmetricCryptoTransactionManagerSpi {
   /**
    * Synchronizes data of the associated card transaction crypto extension if needed.
    *
-   * @since x.y.z
+   * @since 2.3.1
    */
   void synchronize() throws SymmetricCryptoException, SymmetricCryptoIOException;
 }

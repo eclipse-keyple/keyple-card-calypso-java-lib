@@ -11,25 +11,24 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * (package-private)<br>
  * Builds the Change key APDU command.
  *
  * @since 2.1.0
  */
-final class CmdCardChangeKey extends AbstractCardCommand {
-
-  private static final CalypsoCardCommand command = CalypsoCardCommand.CHANGE_KEY;
+final class CmdCardChangeKey extends CardCommand {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
     Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(AbstractCardCommand.STATUS_TABLE);
+        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
@@ -60,7 +59,6 @@ final class CmdCardChangeKey extends AbstractCardCommand {
   }
 
   /**
-   * (package-private)<br>
    * Change Key Calypso command
    *
    * @param calypsoCard The Calypso card.
@@ -70,14 +68,15 @@ final class CmdCardChangeKey extends AbstractCardCommand {
    */
   CmdCardChangeKey(CalypsoCardAdapter calypsoCard, byte keyIndex, byte[] cryptogram) {
 
-    super(command, 0, calypsoCard);
+    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard);
 
     byte cla = calypsoCard.getCardClass().getValue();
     byte p1 = (byte) 0x00;
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, command.getInstructionByte(), p1, keyIndex, cryptogram, null)));
+            ApduUtil.build(
+                cla, getCommandRef().getInstructionByte(), p1, keyIndex, cryptogram, null)));
   }
 
   /**
