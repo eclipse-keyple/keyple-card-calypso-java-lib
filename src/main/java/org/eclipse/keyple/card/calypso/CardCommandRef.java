@@ -21,11 +21,14 @@ enum CardCommandRef {
   /** get data. */
   GET_DATA("Get Data", (byte) 0xCA),
 
-  /** open session. */
-  OPEN_SESSION("Open Secure Session", (byte) 0x8A),
+  /** open secure session. */
+  OPEN_SECURE_SESSION("Open Secure Session", (byte) 0x8A),
 
-  /** close session. */
-  CLOSE_SESSION("Close Secure Session", (byte) 0x8E),
+  /** close secure session. */
+  CLOSE_SECURE_SESSION("Close Secure Session", (byte) 0x8E),
+
+  /** manage secure session. */
+  MANAGE_SECURE_SESSION("Manage Secure Session", (byte) 0x82),
 
   /** read records. */
   READ_RECORDS("Read Records", (byte) 0xB2),
