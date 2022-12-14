@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - SAM exception management for signature command.
+- Increase/Decrease commands postponed data management for legacy cards.
 
 ## [2.3.0] - 2022-12-06
 ### Added

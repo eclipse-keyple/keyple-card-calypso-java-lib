@@ -114,18 +114,29 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
 
     byte p2 = (byte) (sfi * 8);
 
-    /* this is a case4 command, we set Le = 0 */
-    ApduRequestAdapter apduRequest =
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                cla,
-                getCommandRef().getInstructionByte(),
-                (byte) counterNumber,
-                p2,
-                valueBuffer,
-                (byte) 0x00));
-
-    if (calypsoCard.isCounterValuePostponed()) {
+    ApduRequestAdapter apduRequest;
+    if (!calypsoCard.isCounterValuePostponed()) {
+      /* this is a case4 command, we set Le = 0 */
+      apduRequest =
+          new ApduRequestAdapter(
+              ApduUtil.build(
+                  cla,
+                  getCommandRef().getInstructionByte(),
+                  (byte) counterNumber,
+                  p2,
+                  valueBuffer,
+                  (byte) 0x00));
+    } else {
+      /* this command is considered as a case 3, we set Le = null */
+      apduRequest =
+          new ApduRequestAdapter(
+              ApduUtil.build(
+                  cla,
+                  getCommandRef().getInstructionByte(),
+                  (byte) counterNumber,
+                  p2,
+                  valueBuffer,
+                  null));
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 
