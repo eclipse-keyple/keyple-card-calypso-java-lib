@@ -20,7 +20,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
 /**
  * Builds the Manage Secure Session APDU command.
  *
- * @since 2.4.0
+ * @since 2.3.1
  */
 final class CmdCardManageSession extends CardCommand {
 
@@ -64,7 +64,7 @@ final class CmdCardManageSession extends CardCommand {
    * @param calypsoCard The Calypso card.
    * @param activateEncryption True if the activation of the encryption is required.
    * @param terminalSessionMac The terminal session MAC when the card authentication is required.
-   * @since 2.4.0
+   * @since 2.3.1
    */
   CmdCardManageSession(
       CalypsoCardAdapter calypsoCard, boolean activateEncryption, byte[] terminalSessionMac) {
@@ -100,7 +100,7 @@ final class CmdCardManageSession extends CardCommand {
    * {@inheritDoc}
    *
    * @return False
-   * @since 2.4.0
+   * @since 2.3.1
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -112,7 +112,7 @@ final class CmdCardManageSession extends CardCommand {
    *
    * <p>Checks the card response length; the admissible lengths are 0, 4 or 8 bytes.
    *
-   * @since 2.4.0
+   * @since 2.3.1
    */
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
@@ -124,7 +124,7 @@ final class CmdCardManageSession extends CardCommand {
    * Gets the low part of the session MAC.
    *
    * @return An empty or 8-byte array of bytes.
-   * @since 2.4.0
+   * @since 2.3.1
    */
   byte[] getCardSessionMac() {
     return cardSessionMac;
@@ -133,7 +133,7 @@ final class CmdCardManageSession extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.4.0
+   * @since 2.3.1
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

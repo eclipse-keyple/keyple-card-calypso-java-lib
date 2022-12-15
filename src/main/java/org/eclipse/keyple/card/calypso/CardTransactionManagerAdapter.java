@@ -1621,6 +1621,16 @@ final class CardTransactionManagerAdapter
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.1
+   */
+  @Override
+  public CardTransactionManager prepareEarlyMutualAuthentication() {
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    */
   @Override
