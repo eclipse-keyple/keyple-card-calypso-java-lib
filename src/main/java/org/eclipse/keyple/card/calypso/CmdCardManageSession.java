@@ -59,7 +59,8 @@ final class CmdCardManageSession extends CardCommand {
   private byte[] cardSessionMac;
 
   /**
-   * Instantiates a new CmdCardCloseSession depending on the product type of the card.
+   * Instantiates a new Manage Secure Session card command depending on the product type of the
+   * card.
    *
    * @param calypsoCard The Calypso card.
    * @param activateEncryption True if the activation of the encryption is required.
