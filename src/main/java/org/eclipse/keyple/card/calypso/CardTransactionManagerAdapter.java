@@ -317,8 +317,6 @@ final class CardTransactionManagerAdapter
       int fromIndex,
       int toIndex) {
     for (int i = fromIndex; i < toIndex; i++) {
-      logger.error("REQUEST={}", HexUtil.toHex(apduRequests.get(i).getApdu()));
-      logger.error("RESPONSE={}", HexUtil.toHex(apduResponses.get(i).getApdu()));
       try {
         symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
             apduRequests.get(i).getApdu());
@@ -1500,6 +1498,7 @@ final class CardTransactionManagerAdapter
       if (isAtLeastOneReadCommand) {
         processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
         cardAtomicCommands.clear();
+        manageSecureSessionMap.clear();
       }
 
       processAtomicClosing(
