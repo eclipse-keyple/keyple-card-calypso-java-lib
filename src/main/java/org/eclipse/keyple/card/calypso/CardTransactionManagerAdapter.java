@@ -311,8 +311,11 @@ final class CardTransactionManagerAdapter
       List<ApduRequestSpi> apduRequests, List<ApduResponseApi> apduResponses, int startIndex) {
     for (int i = startIndex; i < apduRequests.size(); i++) {
       try {
-        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
-            apduRequests.get(i).getApdu());
+        byte[] request = apduRequests.get(i).getApdu();
+        if (request[1] == CardCommandRef.MANAGE_SECURE_SESSION.getInstructionByte()) {
+          continue;
+        }
+        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(request);
         symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
             apduResponses.get(i).getApdu());
       } catch (SymmetricCryptoException e) {
@@ -1269,6 +1272,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager processCommands() {
     finalizeSvCommandIfNeeded();
+    prepareManageSecureSessionIfNeeded(isSessionOpen);
     if (isSessionOpen) {
       processCommandsInsideSession();
     } else {
@@ -1730,6 +1734,7 @@ final class CardTransactionManagerAdapter
 
   /**
    * Gets or creates a {@link ManageSecureSessionDto} at the current index.
+   *
    * @return A not null reference.
    */
   private ManageSecureSessionDto getOrCreateManageSecureSessionDto() {
@@ -1782,6 +1787,7 @@ final class CardTransactionManagerAdapter
 
   /**
    * Prepares all "Manage Secure Session" card commands, if any.
+   *
    * @param isInsideSession True if it is in the context of a secure session.
    */
   private void prepareManageSecureSessionIfNeeded(boolean isInsideSession) {

@@ -155,8 +155,13 @@ class SymmetricCryptoTransactionManagerAdapter
    * @since 2.3.1
    */
   @Override
-  public byte[] generateTerminalSessionMac() {
-    return new byte[0]; // TODO
+  public byte[] generateTerminalSessionMac()
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
+    CmdSamDigestInternalAuthenticate cmdSamDigestInternalAuthenticate =
+        new CmdSamDigestInternalAuthenticate(sam);
+    samCommands.add(cmdSamDigestInternalAuthenticate);
+    processCommands();
+    return cmdSamDigestInternalAuthenticate.getTerminalSignature();
   }
 
   /**

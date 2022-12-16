@@ -37,7 +37,7 @@ final class CmdSamDigestInternalAuthenticate extends SamCommand {
         0x6985,
         new StatusProperties(
             "Preconditions not satisfied:\n"
-                + "- Session not in “ongoing” state.\n"
+                + "- Session not in \"ongoing\" state.\n"
                 + "- Session not opened in Extended mode.\n"
                 + "- Session opened in Verification mode.\n"
                 + "- Authentication not allowed by the key (not an AES key).\n"
