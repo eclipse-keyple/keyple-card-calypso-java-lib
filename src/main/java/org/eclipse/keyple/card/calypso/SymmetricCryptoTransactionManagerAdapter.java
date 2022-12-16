@@ -134,12 +134,13 @@ class SymmetricCryptoTransactionManagerAdapter
    * @since 2.3.1
    */
   @Override
-  public byte[] updateTerminalSessionMac(byte[] cardApdu) throws SymmetricCryptoIOException, SymmetricCryptoException {
+  public byte[] updateTerminalSessionMac(byte[] cardApdu)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
     if (isEncryptionActive) {
       digestManager.prepareCommands();
       digestManager.prepareCommandForEncryption(cardApdu);
       processCommands();
-      return samCommands.get(samCommands.size()-1).getApduResponse().getApdu();
+      return samCommands.get(samCommands.size() - 1).getApduResponse().getApdu();
     } else {
       digestManager.updateSession(cardApdu);
       return null;
@@ -782,6 +783,7 @@ class SymmetricCryptoTransactionManagerAdapter
 
     /**
      * Prepares a digest update command for encryption mode.
+     *
      * @param cardApdu The card APDU.
      */
     public void prepareCommandForEncryption(byte[] cardApdu) {
