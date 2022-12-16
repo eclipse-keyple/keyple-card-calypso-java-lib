@@ -680,16 +680,22 @@ final class CardTransactionManagerAdapter
 
     if (isEncryptionActive) {
       for (int i = fromIndex; i < toIndex; i++) {
+        boolean isManageSecureSessionCommand =
+            cardCommands.get(i).getCommandRef() == CardCommandRef.MANAGE_SECURE_SESSION;
+
         // Encrypt APDU
         ApduRequestSpi apduRequest = apduRequests.get(i);
-        try {
-          byte[] encryptedApdu =
-              symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(apduRequest.getApdu());
-          System.arraycopy(encryptedApdu, 0, apduRequest.getApdu(), 0, encryptedApdu.length);
-        } catch (SymmetricCryptoException e) {
-          throw (RuntimeException) e.getCause();
-        } catch (SymmetricCryptoIOException e) {
-          throw (RuntimeException) e.getCause();
+        if (!isManageSecureSessionCommand) {
+          try {
+            byte[] encryptedApdu =
+                symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
+                    apduRequest.getApdu());
+            System.arraycopy(encryptedApdu, 0, apduRequest.getApdu(), 0, encryptedApdu.length);
+          } catch (SymmetricCryptoException e) {
+            throw (RuntimeException) e.getCause();
+          } catch (SymmetricCryptoIOException e) {
+            throw (RuntimeException) e.getCause();
+          }
         }
 
         // Wrap the list of C-APDUs into a card request
@@ -705,14 +711,17 @@ final class CardTransactionManagerAdapter
 
         // Decrypt APDU
         ApduResponseApi apduResponse = apduResponses.get(0);
-        try {
-          byte[] decryptedApdu =
-              symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(apduResponse.getApdu());
-          System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
-        } catch (SymmetricCryptoException e) {
-          throw (RuntimeException) e.getCause();
-        } catch (SymmetricCryptoIOException e) {
-          throw (RuntimeException) e.getCause();
+        if (!isManageSecureSessionCommand) {
+          try {
+            byte[] decryptedApdu =
+                symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
+                    apduResponse.getApdu());
+            System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
+          } catch (SymmetricCryptoException e) {
+            throw (RuntimeException) e.getCause();
+          } catch (SymmetricCryptoIOException e) {
+            throw (RuntimeException) e.getCause();
+          }
         }
 
         try {
@@ -732,7 +741,7 @@ final class CardTransactionManagerAdapter
       cardCommands = cardCommands.subList(fromIndex, toIndex);
       apduRequests = apduRequests.subList(fromIndex, toIndex);
 
-      if(apduRequests.size() == 0) {
+      if (apduRequests.size() == 0) {
         return;
       }
 
@@ -766,7 +775,8 @@ final class CardTransactionManagerAdapter
             apduRequests,
             apduResponses,
             0,
-            cardCommands.get(cardCommands.size() - 1).getCommandRef() == CardCommandRef.MANAGE_SECURE_SESSION
+            cardCommands.get(cardCommands.size() - 1).getCommandRef()
+                    == CardCommandRef.MANAGE_SECURE_SESSION
                 ? cardCommands.size() - 1
                 : cardCommands.size());
       }
