@@ -317,6 +317,8 @@ final class CardTransactionManagerAdapter
       int fromIndex,
       int toIndex) {
     for (int i = fromIndex; i < toIndex; i++) {
+      logger.error("REQUEST={}", HexUtil.toHex(apduRequests.get(i).getApdu()));
+      logger.error("RESPONSE={}", HexUtil.toHex(apduResponses.get(i).getApdu()));
       try {
         symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
             apduRequests.get(i).getApdu());
@@ -705,7 +707,7 @@ final class CardTransactionManagerAdapter
         ApduResponseApi apduResponse = apduResponses.get(0);
         try {
           byte[] decryptedApdu =
-              symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(apduRequest.getApdu());
+              symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(apduResponse.getApdu());
           System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
         } catch (SymmetricCryptoException e) {
           throw (RuntimeException) e.getCause();
@@ -729,6 +731,10 @@ final class CardTransactionManagerAdapter
     } else {
       cardCommands = cardCommands.subList(fromIndex, toIndex);
       apduRequests = apduRequests.subList(fromIndex, toIndex);
+
+      if(apduRequests.size() == 0) {
+        return;
+      }
 
       // Wrap the list of C-APDUs into a card request
       CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
@@ -760,9 +766,9 @@ final class CardTransactionManagerAdapter
             apduRequests,
             apduResponses,
             0,
-            cardCommands.get(toIndex - 1).getCommandRef() == CardCommandRef.MANAGE_SECURE_SESSION
-                ? toIndex - 1
-                : toIndex);
+            cardCommands.get(cardCommands.size() - 1).getCommandRef() == CardCommandRef.MANAGE_SECURE_SESSION
+                ? cardCommands.size() - 1
+                : cardCommands.size());
       }
     }
   }
