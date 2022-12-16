@@ -424,7 +424,8 @@ final class CardTransactionManagerAdapter
           finalizeManageSecureSessionCommand(
               apduRequests.get(manageSecureSessionDto.index + offset));
           executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-          checkCardSessionMac((CmdCardManageSession) cardCommands.get(toIndex));
+          checkCardSessionMac(
+              (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index + offset));
         } else {
           executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
         }
@@ -496,7 +497,8 @@ final class CardTransactionManagerAdapter
         if (manageSecureSessionDto.isEarlyMutualAuthenticationRequested) {
           finalizeManageSecureSessionCommand(apduRequests.get(manageSecureSessionDto.index));
           executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-          checkCardSessionMac((CmdCardManageSession) cardCommands.get(toIndex));
+          checkCardSessionMac(
+              (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index));
         } else {
           executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
         }
@@ -591,7 +593,7 @@ final class CardTransactionManagerAdapter
 
     // Parse all the responses and fills the CalypsoCard object with the command data.
     try {
-      parseApduResponses(cardCommands, apduResponses);
+      parseApduResponses(cardCommands.subList(0, toIndex), apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -725,7 +727,7 @@ final class CardTransactionManagerAdapter
           cardResponse.getApduResponses(); // NOSONAR cardResponse is not null
 
       try {
-        parseApduResponses(cardCommands, apduResponses);
+        parseApduResponses(cardCommands.subList(fromIndex, toIndex), apduResponses);
       } catch (CardCommandException e) {
         throw new UnexpectedCommandStatusException(
             MSG_CARD_COMMAND_ERROR

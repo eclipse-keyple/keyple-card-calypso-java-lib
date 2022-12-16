@@ -138,9 +138,9 @@ class SymmetricCryptoTransactionManagerAdapter
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     if (isEncryptionActive) {
       digestManager.prepareCommands();
-      digestManager.prepareCommandForEncryption(cardApdu);
+      SamCommand samCommand = digestManager.prepareCommandForEncryption(cardApdu);
       processCommands();
-      return samCommands.get(samCommands.size() - 1).getApduResponse().getApdu();
+      return samCommand.getApduResponse().getDataOut();
     } else {
       digestManager.updateSession(cardApdu);
       return null;
@@ -786,10 +786,12 @@ class SymmetricCryptoTransactionManagerAdapter
      *
      * @param cardApdu The card APDU.
      */
-    public void prepareCommandForEncryption(byte[] cardApdu) {
+    private CmdSamDigestUpdate prepareCommandForEncryption(byte[] cardApdu) {
       updateSession(cardApdu);
       // Prepare the "Digest Update" commands and flush the buffer.
-      samCommands.add(new CmdSamDigestUpdate(sam, false, cardApdus.remove(0)));
+      CmdSamDigestUpdate command = new CmdSamDigestUpdate(sam, true, cardApdus.remove(0));
+      samCommands.add(command);
+      return command;
     }
 
     /** Prepares all intermediate digest commands. */
