@@ -79,10 +79,13 @@ final class CardTransactionManagerAdapter
       "A communication error with the card occurred ";
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
   private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card.";
-  private static final String MSG_CARD_SIGNATURE_NOT_VERIFIABLE =
-      "Unable to verify the card signature associated to the successfully closed secure session.";
-  private static final String MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV =
-      "Unable to verify the card signature associated to the SV operation.";
+  private static final String MSG_CARD_SESSION_MAC_NOT_VERIFIABLE =
+      "Unable to verify the card session MAC associated to the successfully closed secure session.";
+  private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
+      "Unable to verify the card SV MAC associated to the SV operation.";
+  public static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
+  public static final String MSG_MANAGE_SECURE_SESSION_NOT_SUPPORTED =
+      "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).";
 
   private static final String RECORD_NUMBER = "record number";
   private static final String OFFSET = "offset";
@@ -305,17 +308,18 @@ final class CardTransactionManagerAdapter
    *
    * @param apduRequests A list of APDU commands.
    * @param apduResponses A list of APDU responses.
-   * @param startIndex The index from which to start in the provided lists.
+   * @param fromIndex (inclusive)
+   * @param toIndex (exclusive)
    */
   private void updateTerminalSessionMac(
-      List<ApduRequestSpi> apduRequests, List<ApduResponseApi> apduResponses, int startIndex) {
-    for (int i = startIndex; i < apduRequests.size(); i++) {
+      List<ApduRequestSpi> apduRequests,
+      List<ApduResponseApi> apduResponses,
+      int fromIndex,
+      int toIndex) {
+    for (int i = fromIndex; i < toIndex; i++) {
       try {
-        byte[] request = apduRequests.get(i).getApdu();
-        if (request[1] == CardCommandRef.MANAGE_SECURE_SESSION.getInstructionByte()) {
-          continue;
-        }
-        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(request);
+        symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
+            apduRequests.get(i).getApdu());
         symmetricCryptoTransactionManagerSpi.updateTerminalSessionMac(
             apduResponses.get(i).getApdu());
       } catch (SymmetricCryptoException e) {
@@ -416,40 +420,72 @@ final class CardTransactionManagerAdapter
       // Here we want to exclude the Manage Secure Session command.
       int toIndex = manageSecureSessionMap.get(manageSecureSessionMap.firstKey()).index + offset;
       executeCardCommandsForOpening(cardCommands, apduRequests, toIndex, cmdCardOpenSession);
-      int lastIndex = toIndex;
-      for (ManageSecureSessionDto manageSecureSessionDto : manageSecureSessionMap.values()) {
-        toIndex =
-            manageSecureSessionDto.index + offset + 1; // Include the Manage Secure Session command
-        if (manageSecureSessionDto.isEarlyMutualAuthenticationRequested) {
-          finalizeManageSecureSessionCommand(
-              apduRequests.get(manageSecureSessionDto.index + offset));
-          executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-          checkCardSessionMac(
-              (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index + offset));
-        } else {
-          executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-        }
-        if (manageSecureSessionDto.isEncryptionRequested) {
-          isEncryptionActive = true;
-          try {
-            symmetricCryptoTransactionManagerSpi.activateEncryption();
-          } catch (SymmetricCryptoException e) {
-            throw (RuntimeException) e.getCause();
-          } catch (SymmetricCryptoIOException e) {
-            throw (RuntimeException) e.getCause();
-          }
-        } else {
-          try {
-            symmetricCryptoTransactionManagerSpi.deactivateEncryption();
-          } catch (SymmetricCryptoException e) {
-            throw (RuntimeException) e.getCause();
-          } catch (SymmetricCryptoIOException e) {
-            throw (RuntimeException) e.getCause();
-          }
-        }
-        lastIndex = toIndex;
+      int lastIndex =
+          executeCardCommandsWithManageSecureSession(
+              cardCommands, apduRequests, toIndex, offset, ChannelControl.KEEP_OPEN);
+      if (lastIndex < apduRequests.size()) {
+        executeCardCommands(
+            cardCommands, apduRequests, lastIndex, apduRequests.size(), ChannelControl.KEEP_OPEN);
       }
     }
+  }
+
+  /**
+   * Executes commands containing at least one "Manage Secure Session" command.
+   *
+   * @param cardCommands The card commands.
+   * @param apduRequests The APDU requests.
+   * @param fromIndex Index of the first command to execute.
+   * @param indexOffset Offset of the index to use to retrieve "Manage Secure Session" commands in
+   *     the whole list.
+   * @param channelControl The channel control to use.
+   * @return The index of the next command to execute.
+   */
+  private int executeCardCommandsWithManageSecureSession(
+      List<CardCommand> cardCommands,
+      List<ApduRequestSpi> apduRequests,
+      int fromIndex,
+      int indexOffset,
+      ChannelControl channelControl) {
+    int lastIndex = fromIndex;
+    for (ManageSecureSessionDto manageSecureSessionDto : manageSecureSessionMap.values()) {
+      fromIndex =
+          manageSecureSessionDto.index
+              + indexOffset
+              + 1; // Include the Manage Secure Session command
+      if (manageSecureSessionDto.isEarlyMutualAuthenticationRequested) {
+        finalizeManageSecureSessionCommand(
+            apduRequests.get(manageSecureSessionDto.index + indexOffset));
+        executeCardCommands(
+            cardCommands, apduRequests, lastIndex, fromIndex, ChannelControl.KEEP_OPEN);
+        checkCardSessionMac(
+            (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index + indexOffset));
+      } else {
+        executeCardCommands(
+            cardCommands, apduRequests, lastIndex, fromIndex, ChannelControl.KEEP_OPEN);
+      }
+      if (manageSecureSessionDto.isEncryptionRequested) {
+        isEncryptionActive = true;
+        try {
+          symmetricCryptoTransactionManagerSpi.activateEncryption();
+        } catch (SymmetricCryptoException e) {
+          throw (RuntimeException) e.getCause();
+        } catch (SymmetricCryptoIOException e) {
+          throw (RuntimeException) e.getCause();
+        }
+      } else {
+        isEncryptionActive = false;
+        try {
+          symmetricCryptoTransactionManagerSpi.deactivateEncryption();
+        } catch (SymmetricCryptoException e) {
+          throw (RuntimeException) e.getCause();
+        } catch (SymmetricCryptoIOException e) {
+          throw (RuntimeException) e.getCause();
+        }
+      }
+      lastIndex = fromIndex;
+    }
+    return lastIndex;
   }
 
   /** Aborts the secure session without raising any exception. */
@@ -491,36 +527,12 @@ final class CardTransactionManagerAdapter
     if (manageSecureSessionMap.isEmpty()) {
       executeCardCommands(cardCommands, apduRequests, 0, apduRequests.size(), channelControl);
     } else {
-      int lastIndex = 0;
-      for (ManageSecureSessionDto manageSecureSessionDto : manageSecureSessionMap.values()) {
-        int toIndex = manageSecureSessionDto.index + 1; // Include the Manage Secure Session command
-        if (manageSecureSessionDto.isEarlyMutualAuthenticationRequested) {
-          finalizeManageSecureSessionCommand(apduRequests.get(manageSecureSessionDto.index));
-          executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-          checkCardSessionMac(
-              (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index));
-        } else {
-          executeCardCommands(cardCommands, apduRequests, lastIndex, toIndex, channelControl);
-        }
-        if (manageSecureSessionDto.isEncryptionRequested) {
-          isEncryptionActive = true;
-          try {
-            symmetricCryptoTransactionManagerSpi.activateEncryption();
-          } catch (SymmetricCryptoException e) {
-            throw (RuntimeException) e.getCause();
-          } catch (SymmetricCryptoIOException e) {
-            throw (RuntimeException) e.getCause();
-          }
-        } else {
-          try {
-            symmetricCryptoTransactionManagerSpi.deactivateEncryption();
-          } catch (SymmetricCryptoException e) {
-            throw (RuntimeException) e.getCause();
-          } catch (SymmetricCryptoIOException e) {
-            throw (RuntimeException) e.getCause();
-          }
-        }
-        lastIndex = toIndex;
+      int lastIndex =
+          executeCardCommandsWithManageSecureSession(
+              cardCommands, apduRequests, 0, 0, ChannelControl.KEEP_OPEN);
+      if (lastIndex < apduRequests.size()) {
+        executeCardCommands(
+            cardCommands, apduRequests, lastIndex, apduRequests.size(), ChannelControl.KEEP_OPEN);
       }
     }
   }
@@ -579,6 +591,7 @@ final class CardTransactionManagerAdapter
       int toIndex,
       CmdCardOpenSession cmdCardOpenSession) {
 
+    cardCommands = cardCommands.subList(0, toIndex);
     apduRequests = apduRequests.subList(0, toIndex);
 
     // Wrap the list of C-APDUs into a card request
@@ -593,7 +606,7 @@ final class CardTransactionManagerAdapter
 
     // Parse all the responses and fills the CalypsoCard object with the command data.
     try {
-      parseApduResponses(cardCommands.subList(0, toIndex), apduResponses);
+      parseApduResponses(cardCommands, apduResponses);
     } catch (CardCommandException e) {
       throw new UnexpectedCommandStatusException(
           MSG_CARD_COMMAND_ERROR
@@ -644,7 +657,7 @@ final class CardTransactionManagerAdapter
     // Add all commands data to the digest computation. The first command in the list is the
     // open secure session command. This command is not included in the digest computation, so
     // we skip it and start the loop at index 1.
-    updateTerminalSessionMac(apduRequests, apduResponses, 1);
+    updateTerminalSessionMac(apduRequests, apduResponses, 1, apduRequests.size());
   }
 
   /**
@@ -714,6 +727,7 @@ final class CardTransactionManagerAdapter
         }
       }
     } else {
+      cardCommands = cardCommands.subList(fromIndex, toIndex);
       apduRequests = apduRequests.subList(fromIndex, toIndex);
 
       // Wrap the list of C-APDUs into a card request
@@ -727,7 +741,7 @@ final class CardTransactionManagerAdapter
           cardResponse.getApduResponses(); // NOSONAR cardResponse is not null
 
       try {
-        parseApduResponses(cardCommands.subList(fromIndex, toIndex), apduResponses);
+        parseApduResponses(cardCommands, apduResponses);
       } catch (CardCommandException e) {
         throw new UnexpectedCommandStatusException(
             MSG_CARD_COMMAND_ERROR
@@ -742,7 +756,174 @@ final class CardTransactionManagerAdapter
       // If this method is invoked within a secure session, then add all commands data to the digest
       // computation.
       if (isSessionOpen) {
-        updateTerminalSessionMac(apduRequests, apduResponses, 0);
+        updateTerminalSessionMac(
+            apduRequests,
+            apduResponses,
+            0,
+            cardCommands.get(toIndex - 1).getCommandRef() == CardCommandRef.MANAGE_SECURE_SESSION
+                ? toIndex - 1
+                : toIndex);
+      }
+    }
+  }
+
+  /**
+   * Executes the APDU requests and updates the associated card commands.
+   *
+   * @param cardCommands The card commands.
+   * @param apduRequests The APDU requests.
+   * @param fromIndex From index (inclusive).
+   * @param toIndex To index (exclusive).
+   * @param channelControl The channel control.
+   * @param isRatificationMechanismEnabled true if the ratification is closed not ratified and a
+   *     ratification command must be sent.
+   */
+  private void executeCardCommandsForClosing(
+      List<CardCommand> cardCommands,
+      List<ApduRequestSpi> apduRequests,
+      int fromIndex,
+      int toIndex,
+      ChannelControl channelControl,
+      boolean isRatificationMechanismEnabled) {
+
+    if (isEncryptionActive) {
+      executeCardCommands(cardCommands, apduRequests, fromIndex, toIndex, ChannelControl.KEEP_OPEN);
+      fromIndex = cardCommands.size();
+      toIndex = cardCommands.size();
+    }
+
+    cardCommands = cardCommands.subList(fromIndex, toIndex);
+    apduRequests = apduRequests.subList(fromIndex, toIndex);
+
+    // Build the expected APDU responses of the card commands
+    List<ApduResponseApi> expectedApduResponses = buildAnticipatedResponses(cardCommands);
+
+    // Add all commands data to the digest computation.
+    updateTerminalSessionMac(apduRequests, expectedApduResponses, 0, apduRequests.size());
+
+    // All SAM digest operations will now run at once.
+    // Get Terminal Signature from the latest response.
+    byte[] terminalSessionMac;
+    try {
+      terminalSessionMac = symmetricCryptoTransactionManagerSpi.finalizeTerminalSessionMac();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+
+    // Build the last "Close Secure Session" card command.
+    CmdCardCloseSession cmdCardCloseSession =
+        new CmdCardCloseSession(card, !isRatificationMechanismEnabled, terminalSessionMac);
+
+    apduRequests.add(cmdCardCloseSession.getApduRequest());
+
+    // Add the card Ratification command if any
+    boolean isRatificationCommandAdded;
+    if (isRatificationMechanismEnabled && ((CardReader) cardReader).isContactless()) {
+      // CL-RAT-CMD.1
+      // CL-RAT-DELAY.1
+      // CL-RAT-NXTCLOSE.1
+      apduRequests.add(CmdCardRatificationBuilder.getApduRequest(card.getCardClass()));
+      isRatificationCommandAdded = true;
+    } else {
+      isRatificationCommandAdded = false;
+    }
+
+    // Transfer card commands
+    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
+
+    // Transmit the commands to the card
+    CardResponseApi cardResponse;
+    try {
+      cardResponse = transmitCardRequest(cardRequest, channelControl);
+    } catch (CardIOException e) {
+      AbstractApduException cause = (AbstractApduException) e.getCause();
+      cardResponse = cause.getCardResponse();
+      // The current exception may have been caused by a communication issue with the card
+      // during the ratification command.
+      // In this case, we do not stop the process and consider the Secure Session close. We'll
+      // check the signature.
+      // We should have one response less than requests.
+      if (!isRatificationCommandAdded
+          || cardResponse == null
+          || cardResponse.getApduResponses().size() != apduRequests.size() - 1) {
+        throw e;
+      }
+    }
+
+    // Retrieve the list of R-APDUs
+    List<ApduResponseApi> apduResponses =
+        cardResponse.getApduResponses(); // NOSONAR cardResponse is not null
+
+    // Remove response of ratification command if present.
+    if (isRatificationCommandAdded && apduResponses.size() == cardCommands.size() + 2) {
+      apduResponses.remove(apduResponses.size() - 1);
+    }
+
+    // Retrieve response of "Close Secure Session" command if present.
+    ApduResponseApi closeSecureSessionApduResponse = null;
+    if (apduResponses.size() == cardCommands.size() + 1) {
+      closeSecureSessionApduResponse = apduResponses.remove(apduResponses.size() - 1);
+    }
+
+    // Check the commands executed before closing the secure session (only responses to these
+    // commands will be taken into account)
+    try {
+      parseApduResponses(cardCommands, apduResponses);
+    } catch (CardCommandException e) {
+      throw new UnexpectedCommandStatusException(
+          MSG_CARD_COMMAND_ERROR
+              + "while processing of responses preceding the close of the session: "
+              + e.getCommandRef()
+              + getTransactionAuditDataAsString(),
+          e);
+    } catch (InconsistentDataException e) {
+      throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
+    }
+
+    isSessionOpen = false;
+
+    // Check the card's response to Close Secure Session
+    try {
+      cmdCardCloseSession.parseApduResponse(closeSecureSessionApduResponse);
+    } catch (CardSecurityDataException e) {
+      throw new UnexpectedCommandStatusException(
+          "Invalid card session" + getTransactionAuditDataAsString(), e);
+    } catch (CardCommandException e) {
+      throw new UnexpectedCommandStatusException(
+          MSG_CARD_COMMAND_ERROR
+              + "while processing the response to close session: "
+              + e.getCommandRef()
+              + getTransactionAuditDataAsString(),
+          e);
+    }
+
+    // Check the card signature
+    // CL-CSS-MACVERIF.1
+    try {
+      if (!symmetricCryptoTransactionManagerSpi.isCardSessionMacValid(
+          cmdCardCloseSession.getSignatureLo())) {
+        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+      }
+    } catch (SymmetricCryptoIOException e) {
+      throw new CardSignatureNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    }
+    // If necessary, we check the status of the SV after the session has been successfully
+    // closed.
+    // CL-SV-POSTPON.1
+    if (isSvOperationCompleteOneTime()) {
+      try {
+        if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
+            cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex))) {
+          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+        }
+      } catch (SymmetricCryptoIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
       }
     }
   }
@@ -900,136 +1081,25 @@ final class CardTransactionManagerAdapter
     // Get the list of C-APDU to transmit
     List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
 
-    // Build the expected APDU responses of the card commands
-    List<ApduResponseApi> expectedApduResponses = buildAnticipatedResponses(cardCommands);
-
-    // Add all commands data to the digest computation.
-    updateTerminalSessionMac(apduRequests, expectedApduResponses, 0);
-
-    // All SAM digest operations will now run at once.
-    // Get Terminal Signature from the latest response.
-    byte[] sessionTerminalSignature;
-    try {
-      sessionTerminalSignature = symmetricCryptoTransactionManagerSpi.finalizeTerminalSessionMac();
-    } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
-    } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
-    }
-
-    // Build the last "Close Secure Session" card command.
-    CmdCardCloseSession cmdCardCloseSession =
-        new CmdCardCloseSession(card, !isRatificationMechanismEnabled, sessionTerminalSignature);
-
-    apduRequests.add(cmdCardCloseSession.getApduRequest());
-
-    // Add the card Ratification command if any
-    boolean isRatificationCommandAdded;
-    if (isRatificationMechanismEnabled && ((CardReader) cardReader).isContactless()) {
-      // CL-RAT-CMD.1
-      // CL-RAT-DELAY.1
-      // CL-RAT-NXTCLOSE.1
-      apduRequests.add(CmdCardRatificationBuilder.getApduRequest(card.getCardClass()));
-      isRatificationCommandAdded = true;
+    if (manageSecureSessionMap.isEmpty()) {
+      executeCardCommandsForClosing(
+          cardCommands,
+          apduRequests,
+          0,
+          apduRequests.size(),
+          channelControl,
+          isRatificationMechanismEnabled);
     } else {
-      isRatificationCommandAdded = false;
-    }
-
-    // Transfer card commands
-    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
-
-    // Transmit the commands to the card
-    CardResponseApi cardResponse;
-    try {
-      cardResponse = transmitCardRequest(cardRequest, channelControl);
-    } catch (CardIOException e) {
-      AbstractApduException cause = (AbstractApduException) e.getCause();
-      cardResponse = cause.getCardResponse();
-      // The current exception may have been caused by a communication issue with the card
-      // during the ratification command.
-      // In this case, we do not stop the process and consider the Secure Session close. We'll
-      // check the signature.
-      // We should have one response less than requests.
-      if (!isRatificationCommandAdded
-          || cardResponse == null
-          || cardResponse.getApduResponses().size() != apduRequests.size() - 1) {
-        throw e;
-      }
-    }
-
-    // Retrieve the list of R-APDUs
-    List<ApduResponseApi> apduResponses =
-        cardResponse.getApduResponses(); // NOSONAR cardResponse is not null
-
-    // Remove response of ratification command if present.
-    if (isRatificationCommandAdded && apduResponses.size() == cardCommands.size() + 2) {
-      apduResponses.remove(apduResponses.size() - 1);
-    }
-
-    // Retrieve response of "Close Secure Session" command if present.
-    ApduResponseApi closeSecureSessionApduResponse = null;
-    if (apduResponses.size() == cardCommands.size() + 1) {
-      closeSecureSessionApduResponse = apduResponses.remove(apduResponses.size() - 1);
-    }
-
-    // Check the commands executed before closing the secure session (only responses to these
-    // commands will be taken into account)
-    try {
-      parseApduResponses(cardCommands, apduResponses);
-    } catch (CardCommandException e) {
-      throw new UnexpectedCommandStatusException(
-          MSG_CARD_COMMAND_ERROR
-              + "while processing of responses preceding the close of the session: "
-              + e.getCommandRef()
-              + getTransactionAuditDataAsString(),
-          e);
-    } catch (InconsistentDataException e) {
-      throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
-    }
-
-    isSessionOpen = false;
-
-    // Check the card's response to Close Secure Session
-    try {
-      cmdCardCloseSession.parseApduResponse(closeSecureSessionApduResponse);
-    } catch (CardSecurityDataException e) {
-      throw new UnexpectedCommandStatusException(
-          "Invalid card session" + getTransactionAuditDataAsString(), e);
-    } catch (CardCommandException e) {
-      throw new UnexpectedCommandStatusException(
-          MSG_CARD_COMMAND_ERROR
-              + "while processing the response to close session: "
-              + e.getCommandRef()
-              + getTransactionAuditDataAsString(),
-          e);
-    }
-
-    // Check the card signature
-    // CL-CSS-MACVERIF.1
-    try {
-      if (!symmetricCryptoTransactionManagerSpi.isCardSessionMacValid(
-          cmdCardCloseSession.getSignatureLo())) {
-        throw new InvalidCardSignatureException("Invalid card signature");
-      }
-    } catch (SymmetricCryptoIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE, e);
-    } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
-    }
-    // If necessary, we check the status of the SV after the session has been successfully
-    // closed.
-    // CL-SV-POSTPON.1
-    if (isSvOperationCompleteOneTime()) {
-      try {
-        if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
-            cmdCardCloseSession.getPostponedData().get(svPostponedDataIndex))) {
-          throw new InvalidCardSignatureException("Invalid card signature");
-        }
-      } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
-      } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
-      }
+      int lastIndex =
+          executeCardCommandsWithManageSecureSession(
+              cardCommands, apduRequests, 0, 0, ChannelControl.KEEP_OPEN);
+      executeCardCommandsForClosing(
+          cardCommands,
+          apduRequests,
+          lastIndex,
+          apduRequests.size(),
+          channelControl,
+          isRatificationMechanismEnabled);
     }
   }
 
@@ -1230,11 +1300,8 @@ final class CardTransactionManagerAdapter
    *
    * <p>Note: commands prepared prior to the invocation of this method shall not require the use of
    * a SAM.
-   *
-   * @param channelControl indicates if the card channel of the card reader must be closed after the
-   *     last command.
    */
-  private void processCommandsOutsideSession(ChannelControl channelControl) {
+  private void processCommandsOutsideSession() {
 
     // card commands sent outside a Secure Session. No modifications buffer limitation.
     processAtomicCardCommands(cardCommands, channelControl);
@@ -1247,10 +1314,10 @@ final class CardTransactionManagerAdapter
       try {
         if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
             card.getSvOperationSignature())) {
-          throw new InvalidCardSignatureException("Invalid card signature");
+          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SIGNATURE_NOT_VERIFIABLE_SV, e);
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }
@@ -1355,7 +1422,7 @@ final class CardTransactionManagerAdapter
     if (isSessionOpen) {
       processCommandsInsideSession();
     } else {
-      processCommandsOutsideSession(channelControl);
+      processCommandsOutsideSession();
     }
     return this;
   }
@@ -1837,8 +1904,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareEarlyMutualAuthentication() {
     if (!isExtendedModeRequired) {
-      throw new UnsupportedOperationException(
-          "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).");
+      throw new UnsupportedOperationException(MSG_MANAGE_SECURE_SESSION_NOT_SUPPORTED);
     }
     ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
     dto.isEarlyMutualAuthenticationRequested = true;
@@ -1854,8 +1920,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareActivateEncryption() {
     if (!isExtendedModeRequired) {
-      throw new UnsupportedOperationException(
-          "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).");
+      throw new UnsupportedOperationException(MSG_MANAGE_SECURE_SESSION_NOT_SUPPORTED);
     }
     ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
     dto.isEncryptionRequested = true;
@@ -1871,8 +1936,7 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareDeactivateEncryption() {
     if (!isExtendedModeRequired) {
-      throw new UnsupportedOperationException(
-          "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).");
+      throw new UnsupportedOperationException(MSG_MANAGE_SECURE_SESSION_NOT_SUPPORTED);
     }
     ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
     dto.isEncryptionRequested = false;
