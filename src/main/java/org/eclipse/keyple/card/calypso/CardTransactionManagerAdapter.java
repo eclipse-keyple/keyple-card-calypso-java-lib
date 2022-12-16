@@ -449,20 +449,22 @@ final class CardTransactionManagerAdapter
       ChannelControl channelControl) {
     int lastIndex = fromIndex;
     for (ManageSecureSessionDto manageSecureSessionDto : manageSecureSessionMap.values()) {
-      fromIndex =
+      int toIndex =
           manageSecureSessionDto.index
               + indexOffset
               + 1; // Include the Manage Secure Session command
       if (manageSecureSessionDto.isEarlyMutualAuthenticationRequested) {
+        executeCardCommands(
+            cardCommands, apduRequests, lastIndex, toIndex - 1, ChannelControl.KEEP_OPEN);
         finalizeManageSecureSessionCommand(
             apduRequests.get(manageSecureSessionDto.index + indexOffset));
         executeCardCommands(
-            cardCommands, apduRequests, lastIndex, fromIndex, ChannelControl.KEEP_OPEN);
+            cardCommands, apduRequests, toIndex - 1, toIndex, ChannelControl.KEEP_OPEN);
         checkCardSessionMac(
             (CmdCardManageSession) cardCommands.get(manageSecureSessionDto.index + indexOffset));
       } else {
         executeCardCommands(
-            cardCommands, apduRequests, lastIndex, fromIndex, ChannelControl.KEEP_OPEN);
+            cardCommands, apduRequests, lastIndex, toIndex, ChannelControl.KEEP_OPEN);
       }
       if (manageSecureSessionDto.isEncryptionRequested) {
         isEncryptionActive = true;
@@ -483,7 +485,7 @@ final class CardTransactionManagerAdapter
           throw (RuntimeException) e.getCause();
         }
       }
-      lastIndex = fromIndex;
+      lastIndex = toIndex;
     }
     return lastIndex;
   }
