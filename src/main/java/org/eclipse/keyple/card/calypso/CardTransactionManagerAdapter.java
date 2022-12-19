@@ -807,31 +807,6 @@ final class CardTransactionManagerAdapter
   /**
    * (private)
    *
-   * <p>Gets the value of the designated counter
-   *
-   * @param sfi the SFI of the EF containing the counter.
-   * @param counter the number of the counter.
-   * @return The value of the counter
-   * @throws IllegalStateException If the counter is not found.
-   */
-  private int getCounterValue(int sfi, int counter) {
-    ElementaryFile ef = card.getFileBySfi((byte) sfi);
-    if (ef != null) {
-      Integer counterValue = ef.getData().getContentAsCounterValue(counter);
-      if (counterValue != null) {
-        return counterValue;
-      }
-    }
-    throw new IllegalStateException(
-        "Anticipated response. Unable to determine anticipated value of counter "
-            + counter
-            + " in EF sfi "
-            + sfi);
-  }
-
-  /**
-   * (private)
-   *
    * <p>Gets the value of the all counters of the designated file
    *
    * @param sfi The SFI of the EF containing the counter.
@@ -849,22 +824,6 @@ final class CardTransactionManagerAdapter
     }
     throw new IllegalStateException(
         "Anticipated response. Unable to determine anticipated value of counters in EF sfi " + sfi);
-  }
-
-  /**
-   * Builds the anticipated data of an Increase/Decrease command.
-   *
-   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
-   *     command.
-   * @param currentCounterValue The current counter value.
-   * @param incDecValue The increment/decrement value.
-   * @return A 3-byte array containing the expected bytes.
-   */
-  private byte[] buildAnticipatedIncreaseDecreaseResponseData(
-      boolean isDecreaseCommand, int currentCounterValue, int incDecValue) {
-    int newValue =
-        isDecreaseCommand ? currentCounterValue - incDecValue : currentCounterValue + incDecValue;
-    return ByteArrayUtil.extractBytes(newValue, 3);
   }
 
   /**
@@ -931,29 +890,24 @@ final class CardTransactionManagerAdapter
         switch (command.getCommandRef()) {
           case INCREASE:
           case DECREASE:
-            CmdCardIncreaseOrDecrease cmdA = (CmdCardIncreaseOrDecrease) command;
-            byte[] anticipatedValue =
-                buildAnticipatedIncreaseDecreaseResponseData(
-                    cmdA.getCommandRef() == CardCommandRef.DECREASE,
-                    getCounterValue(cmdA.getSfi(), cmdA.getCounterNumber()),
-                    cmdA.getIncDecValue());
             if (card.isCounterValuePostponed()) {
-              cmdA.setComputedData(anticipatedValue);
               apduResponses.add(RESPONSE_OK_POSTPONED);
               nbPostponedData++;
             } else {
-              apduResponses.add(buildAnticipatedIncreaseDecreaseResponse(anticipatedValue));
+              apduResponses.add(
+                  buildAnticipatedIncreaseDecreaseResponse(
+                      ((CmdCardIncreaseOrDecrease) command).computeAnticipatedNewCounterValue()));
             }
             break;
           case INCREASE_MULTIPLE:
           case DECREASE_MULTIPLE:
-            CmdCardIncreaseOrDecreaseMultiple cmdB = (CmdCardIncreaseOrDecreaseMultiple) command;
+            CmdCardIncreaseOrDecreaseMultiple cmd = (CmdCardIncreaseOrDecreaseMultiple) command;
             Map<Integer, Integer> counterNumberToIncDecValueMap =
-                cmdB.getCounterNumberToIncDecValueMap();
+                cmd.getCounterNumberToIncDecValueMap();
             apduResponses.add(
                 buildAnticipatedIncreaseDecreaseMultipleResponse(
-                    cmdB.getCommandRef() == CardCommandRef.DECREASE_MULTIPLE,
-                    getCounterValues(cmdB.getSfi(), counterNumberToIncDecValueMap.keySet()),
+                    cmd.getCommandRef() == CardCommandRef.DECREASE_MULTIPLE,
+                    getCounterValues(cmd.getSfi(), counterNumberToIncDecValueMap.keySet()),
                     counterNumberToIncDecValueMap));
             break;
           case SV_RELOAD:

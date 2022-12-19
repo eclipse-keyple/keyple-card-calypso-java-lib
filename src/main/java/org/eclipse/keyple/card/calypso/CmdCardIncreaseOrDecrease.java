@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -80,7 +81,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
   private final int sfi;
   private final int counterNumber;
   private final int incDecValue;
-  private byte[] computedData;
 
   /**
    * Constructor.
@@ -163,12 +163,41 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
       if (!getCalypsoCard().isCounterValuePostponed()) {
         throw new CardUnknownStatusException("Unexpected status word: 6200h", getCommandRef());
       }
-      // Set computed value
-      getCalypsoCard().setCounter((byte) sfi, counterNumber, computedData);
+      getCalypsoCard().setCounter((byte) sfi, counterNumber, computeAnticipatedNewCounterValue());
     } else {
       // Set returned value
       getCalypsoCard().setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
     }
+  }
+
+  /**
+   * Returns a 3-byte byte array containing the computed value of the new counter's value.
+   *
+   * @return A 3-byte byte array.
+   * @throws IllegalStateException If the counter value has not been read first.
+   * @since 2.3.1
+   */
+  byte[] computeAnticipatedNewCounterValue() {
+    Integer oldValue = null;
+    ElementaryFile ef = getCalypsoCard().getFileBySfi((byte) sfi);
+    if (ef != null) {
+      Integer counterValue = ef.getData().getContentAsCounterValue(counterNumber);
+      if (counterValue != null) {
+        oldValue = counterValue;
+      }
+    }
+    if (oldValue == null) {
+      throw new IllegalStateException(
+          "Anticipated response. Unable to determine anticipated new value of counter "
+              + counterNumber
+              + " in EF sfi "
+              + sfi);
+    }
+    return ByteArrayUtil.extractBytes(
+        getCommandRef() == CardCommandRef.DECREASE
+            ? oldValue - incDecValue
+            : oldValue + incDecValue,
+        3);
   }
 
   /**
@@ -180,40 +209,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return true;
-  }
-
-  /**
-   * @return The SFI of the accessed file
-   * @since 2.0.1
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * @return The counter number
-   * @since 2.0.1
-   */
-  int getCounterNumber() {
-    return counterNumber;
-  }
-
-  /**
-   * @return The decrement/increment value
-   * @since 2.0.1
-   */
-  int getIncDecValue() {
-    return incDecValue;
-  }
-
-  /**
-   * Sets the computed data.
-   *
-   * @param data A 3-byte array containing the computed data.
-   * @since 2.2.4
-   */
-  void setComputedData(byte[] data) {
-    this.computedData = data;
   }
 
   /**
