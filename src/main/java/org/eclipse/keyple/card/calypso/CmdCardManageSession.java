@@ -117,7 +117,15 @@ final class CmdCardManageSession extends CardCommand {
    */
   @Override
   void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+    try {
+      super.parseApduResponse(apduResponse);
+    } catch (CardSecurityDataException e) {
+      if (apduResponse.getStatusWord() == 0x6985 && !getCalypsoCard().isExtendedModeSupported()) {
+        throw new UnsupportedOperationException(
+            "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).");
+      }
+      throw e;
+    }
     cardSessionMac = getApduResponse().getDataOut();
   }
 

@@ -328,10 +328,14 @@ final class CmdCardOpenSession extends CardCommand {
       offset = 4;
       previousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
       manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
+      if (!manageSecureSessionAuthorized) {
+        getCalypsoCard().disableExtendedMode();
+      }
     } else {
       offset = 0;
       previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
       manageSecureSessionAuthorized = false;
+      getCalypsoCard().disableExtendedMode();
     }
 
     byte kif = apduResponseData[5 + offset];

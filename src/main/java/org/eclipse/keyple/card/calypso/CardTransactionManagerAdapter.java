@@ -111,7 +111,6 @@ final class CardTransactionManagerAdapter
   private final List<CardCommand> cardCommands = new ArrayList<CardCommand>();
   private final SortedMap<Integer, ManageSecureSessionDto> manageSecureSessionMap =
       new TreeMap<Integer, ManageSecureSessionDto>();
-  private final boolean isExtendedModeRequired;
   private final int cardPayloadCapacity;
 
   /* Dynamic fields */
@@ -127,8 +126,9 @@ final class CardTransactionManagerAdapter
   private boolean isSvOperationComplete;
   private int svPostponedDataIndex;
   private int nbPostponedData;
-  private boolean isEncryptionActive;
+  private boolean isExtendedModeRequired;
   private boolean isEncryptionRequested;
+  private boolean isEncryptionActive;
 
   /**
    * Creates an instance of {@link CardTransactionManager}.
@@ -646,9 +646,14 @@ final class CardTransactionManagerAdapter
           e);
     } catch (InconsistentDataException e) {
       throw new InconsistentDataException(e.getMessage() + getTransactionAuditDataAsString());
+    } catch (UnsupportedOperationException e) {
+      isExtendedModeRequired = false;
+      throw e;
     }
 
-    // Build the "Digest Init" SAM command from card Open Session:
+    if (isExtendedModeRequired && !card.isExtendedModeSupported()) {
+      isExtendedModeRequired = false;
+    }
 
     // The card KIF/KVC (KVC may be null for card Rev 1.0)
     Byte cardKif = cmdCardOpenSession.getSelectedKif();
