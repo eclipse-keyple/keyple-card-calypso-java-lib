@@ -362,24 +362,38 @@ final class CardTransactionManagerAdapter
       cardCommands = new ArrayList<CardCommand>();
     }
 
-    // Let's check if we have a read record command at the top of the command list.
-    // If so, then the command is withdrawn in favour of its equivalent executed at the same
-    // time as the open secure session command.
-    // The sfi and record number to be read when the open secure session command is executed.
-    // The default value is 0 (no record to read) but we will optimize the exchanges if a read
-    // record command has been prepared.
-    int offset = 1; // Open Secure Session is inserted at index 0.
+    int indexOffset;
     int sfi = 0;
     int recordNumber = 0;
-    if (!cardCommands.isEmpty()) {
-      CardCommand cardCommand = cardCommands.get(0);
-      if (cardCommand.getCommandRef() == CardCommandRef.READ_RECORDS
-          && ((CmdCardReadRecords) cardCommand).getReadMode()
-              == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-        sfi = ((CmdCardReadRecords) cardCommand).getSfi();
-        recordNumber = ((CmdCardReadRecords) cardCommand).getFirstRecordNumber();
-        cardCommands.remove(0);
-        offset = 0;
+
+    if (isEncryptionActive) {
+      indexOffset = 2; // Open session + Manage session commands
+      // It is only possible in case of a "new" multiple session.
+      // We add a "Manage Secure Session" command first in order to activate the encryption.
+      // We use the key 0 because we are sure that there is no entry in the map for this case.
+      cardCommands.add(0, new CmdCardManageSession(card, true, null));
+      ManageSecureSessionDto dto = new ManageSecureSessionDto();
+      dto.index = -1; // Index is set to -1 in order to be correctly incremented by the offset.
+      dto.isEncryptionRequested = true;
+      manageSecureSessionMap.put(0, dto);
+    } else {
+      indexOffset = 1; // Open session command inserted at index 0.
+      // Let's check if we have a read record command at the top of the command list.
+      // If so, then the command is withdrawn in favour of its equivalent executed at the same
+      // time as the open secure session command.
+      // The sfi and record number to be read when the open secure session command is executed.
+      // The default value is 0 (no record to read) but we will optimize the exchanges if a read
+      // record command has been prepared.
+      if (!cardCommands.isEmpty()) {
+        CardCommand cardCommand = cardCommands.get(0);
+        if (cardCommand.getCommandRef() == CardCommandRef.READ_RECORDS
+            && ((CmdCardReadRecords) cardCommand).getReadMode()
+                == CmdCardReadRecords.ReadMode.ONE_RECORD) {
+          sfi = ((CmdCardReadRecords) cardCommand).getSfi();
+          recordNumber = ((CmdCardReadRecords) cardCommand).getFirstRecordNumber();
+          cardCommands.remove(0);
+          indexOffset = 0;
+        }
       }
     }
 
@@ -412,22 +426,36 @@ final class CardTransactionManagerAdapter
     List<ApduRequestSpi> apduRequests =
         new ArrayList<ApduRequestSpi>(getApduRequests(cardCommands));
 
-    if (manageSecureSessionMap.isEmpty()) {
+    if (containsNoManageSecureSessionCommand(apduRequests.size() - indexOffset)) {
       executeCardCommandsForOpening(
           cardCommands, apduRequests, apduRequests.size(), cmdCardOpenSession);
     } else {
       // Note: inserting the open session command shifted the indexes.
       // Here we want to exclude the Manage Secure Session command.
-      int toIndex = manageSecureSessionMap.get(manageSecureSessionMap.firstKey()).index + offset;
+      int toIndex =
+          manageSecureSessionMap.get(manageSecureSessionMap.firstKey()).index + indexOffset;
       executeCardCommandsForOpening(cardCommands, apduRequests, toIndex, cmdCardOpenSession);
       int lastIndex =
           executeCardCommandsWithManageSecureSession(
-              cardCommands, apduRequests, toIndex, offset, ChannelControl.KEEP_OPEN);
+              cardCommands, apduRequests, toIndex, indexOffset, ChannelControl.KEEP_OPEN);
       if (lastIndex < apduRequests.size()) {
         executeCardCommands(
             cardCommands, apduRequests, lastIndex, apduRequests.size(), ChannelControl.KEEP_OPEN);
       }
     }
+  }
+
+  /**
+   * Returns true if a "Manage Secure Session" command is not contained in index range
+   * [0..maxIndex[.
+   *
+   * @param maxIndex The max index value (exclusive).
+   * @return true if no one "Manage Secure Session" command is contained in index range
+   *     [0..maxIndex[.
+   */
+  private boolean containsNoManageSecureSessionCommand(int maxIndex) {
+    return manageSecureSessionMap.isEmpty()
+        || manageSecureSessionMap.get(manageSecureSessionMap.firstKey()).index >= maxIndex;
   }
 
   /**
@@ -526,7 +554,7 @@ final class CardTransactionManagerAdapter
     // Get the list of C-APDU to transmit
     List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
 
-    if (manageSecureSessionMap.isEmpty()) {
+    if (containsNoManageSecureSessionCommand(apduRequests.size())) {
       executeCardCommands(cardCommands, apduRequests, 0, apduRequests.size(), channelControl);
     } else {
       int lastIndex =
@@ -1097,7 +1125,7 @@ final class CardTransactionManagerAdapter
     // Get the list of C-APDU to transmit
     List<ApduRequestSpi> apduRequests = getApduRequests(cardCommands);
 
-    if (manageSecureSessionMap.isEmpty()) {
+    if (containsNoManageSecureSessionCommand(apduRequests.size())) {
       executeCardCommandsForClosing(
           cardCommands,
           apduRequests,
@@ -1271,7 +1299,7 @@ final class CardTransactionManagerAdapter
             modificationsCounter = card.getModificationsCounter();
             modificationsCounter -= computeCommandSessionBufferSize(command);
             // Clear the list.
-            cardAtomicCommands.clear();
+            resetCommandList(cardAtomicCommands);
           }
         }
         cardAtomicCommands.add(command);
@@ -1363,7 +1391,7 @@ final class CardTransactionManagerAdapter
             // Close the current secure session with the current commands and open a new one.
             if (isAtLeastOneReadCommand) {
               processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-              cardAtomicCommands.clear();
+              resetCommandList(cardAtomicCommands);
             }
             processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
             processAtomicOpening(null);
@@ -1372,7 +1400,7 @@ final class CardTransactionManagerAdapter
             modificationsCounter -= computeCommandSessionBufferSize(command);
             isAtLeastOneReadCommand = false;
             // Clear the list.
-            cardAtomicCommands.clear();
+            resetCommandList(cardAtomicCommands);
           }
         } else {
           isAtLeastOneReadCommand = true;
@@ -1480,7 +1508,7 @@ final class CardTransactionManagerAdapter
             // Close the current secure session with the current commands and open a new one.
             if (isAtLeastOneReadCommand) {
               processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-              cardAtomicCommands.clear();
+              resetCommandList(cardAtomicCommands);
             }
             processAtomicClosing(cardAtomicCommands, false, ChannelControl.KEEP_OPEN);
             processAtomicOpening(null);
@@ -1489,7 +1517,7 @@ final class CardTransactionManagerAdapter
             modificationsCounter -= computeCommandSessionBufferSize(command);
             isAtLeastOneReadCommand = false;
             // Clear the list.
-            cardAtomicCommands.clear();
+            resetCommandList(cardAtomicCommands);
           }
         } else {
           isAtLeastOneReadCommand = true;
@@ -1499,8 +1527,7 @@ final class CardTransactionManagerAdapter
 
       if (isAtLeastOneReadCommand) {
         processAtomicCardCommands(cardAtomicCommands, ChannelControl.KEEP_OPEN);
-        cardAtomicCommands.clear();
-        manageSecureSessionMap.clear();
+        resetCommandList(cardAtomicCommands);
       }
 
       processAtomicClosing(
@@ -1517,6 +1544,32 @@ final class CardTransactionManagerAdapter
       abortSecureSessionSilently();
       throw e;
     }
+  }
+
+  /**
+   * Clears the input commands list and refreshes the map containing the "Manage Secure Command"
+   * command info.<br>
+   * Removes all processed entries and update the index off all remaining commands.
+   *
+   * @param cardAtomicCommands The list to reset
+   */
+  private void resetCommandList(List<CardCommand> cardAtomicCommands) {
+    // Update the indexes of the "Manage Secure Session" commands.
+    int nbComputedCommands = cardAtomicCommands.size();
+    Set<Integer> keysToRemove = new HashSet<Integer>();
+    for (Map.Entry<Integer, ManageSecureSessionDto> entry : manageSecureSessionMap.entrySet()) {
+      if (entry.getValue().index >= nbComputedCommands) {
+        entry.getValue().index -= nbComputedCommands;
+      } else {
+        keysToRemove.add(entry.getKey());
+      }
+    }
+    // Remove the processed entries.
+    for (Integer key : keysToRemove) {
+      manageSecureSessionMap.remove(key);
+    }
+    // Clear the list.
+    cardAtomicCommands.clear();
   }
 
   /**
