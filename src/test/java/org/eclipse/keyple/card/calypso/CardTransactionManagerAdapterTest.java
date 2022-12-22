@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.shouldHaveThrown;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 import static org.mockito.Mockito.*;
@@ -39,6 +40,8 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3 =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C20051410019000";
+  private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED =
+      "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C28051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C21051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE =
@@ -83,8 +86,10 @@ public class CardTransactionManagerAdapterTest {
   private static final String SW1SW2_OK = "9000";
   private static final String SW1SW2_KO = "6700";
   private static final String SW1SW2_6200 = "6200";
+  private static final String SW1SW2_6985 = "6985";
   private static final String SW1SW2_INCORRECT_SIGNATURE = "6988";
   private static final String SAM_CHALLENGE = "C1C2C3C4";
+  private static final String SAM_CHALLENGE_EXTENDED = "C1C2C3C4C5C6C7C8";
   private static final String CARD_CHALLENGE = "C1C2C3C4C5C6C7C8";
   private static final String CARD_DIVERSIFIER = "0000000011223344";
   private static final String SAM_SIGNATURE = "12345678";
@@ -149,11 +154,21 @@ public class CardTransactionManagerAdapterTest {
       "030490980130791D" + FILE7_REC1_29B + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_CMD = "008A030104" + SAM_CHALLENGE + "00";
   private static final String CARD_OPEN_SECURE_SESSION_RSP = "0304909800307900" + SW1SW2_OK;
+  private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_CMD =
+      "008A030209" + "00" + SAM_CHALLENGE_EXTENDED + "00";
+  private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_RSP =
+      "C8C7C6C5C4C3C2C102AABB00" + SW1SW2_OK;
+  private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_NOT_SUPPORTED_RSP =
+      "C8C7C6C50000000000AABB00" + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_KVC_78_CMD = "0304909800307800" + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_2_4_CMD = "948A8B3804C1C2C3C400";
   private static final String CARD_OPEN_SECURE_SESSION_SFI7_REC1_2_4_RSP =
       "79030D307124B928480805CBABAE30001240800000000000000000000000000000009000";
   private static final String CARD_CLOSE_SECURE_SESSION_CMD = "008E800004" + SAM_SIGNATURE + "00";
+  private static final String CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD =
+      "008E800008" + "1122334455667788" + "00";
+  private static final String CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP =
+      "8877665544332211" + SW1SW2_OK;
   private static final String CARD_CLOSE_SECURE_SESSION_NOT_RATIFIED_CMD =
       "008E000004" + SAM_SIGNATURE + "00";
   private static final String CARD_CLOSE_SECURE_SESSION_RSP = CARD_SIGNATURE + SW1SW2_OK;
@@ -162,6 +177,12 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_RATIFICATION_CMD = "00B2000000";
   private static final String CARD_RATIFICATION_RSP = "6B00";
 
+  private static final String CARD_READ_REC_SFI1_REC2_CMD = "00B2020C00";
+  private static final String CARD_READ_REC_SFI1_REC2_RSP = "22" + SW1SW2_OK;
+  private static final String CARD_READ_REC_SFI1_REC4_CMD = "00B2040C00";
+  private static final String CARD_READ_REC_SFI1_REC4_RSP = "44" + SW1SW2_OK;
+  private static final String CARD_READ_REC_SFI1_REC5_CMD = "00B2050C00";
+  private static final String CARD_READ_REC_SFI1_REC5_RSP = "55" + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI7_REC1_CMD = "00B2013C00";
   private static final String CARD_READ_REC_SFI7_REC1_L29_CMD = "00B2013C1D";
   private static final String CARD_READ_REC_SFI7_REC1_RSP = FILE7_REC1_29B + SW1SW2_OK;
@@ -334,13 +355,25 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_SELECT_DIVERSIFIER_CMD = "8014000008" + CARD_DIVERSIFIER;
   private static final String SAM_GET_CHALLENGE_CMD = "8084000004";
   private static final String SAM_GET_CHALLENGE_RSP = SAM_CHALLENGE + SW1SW2_OK;
+  private static final String SAM_GET_CHALLENGE_EXTENDED_CMD = "8084000008";
+  private static final String SAM_GET_CHALLENGE_EXTENDED_RSP = SAM_CHALLENGE_EXTENDED + SW1SW2_OK;
   private static final String SAM_DIGEST_INIT_OPEN_SECURE_SESSION_SFI7_REC1_CMD =
       "808A00FF273079030490980030791D" + FILE7_REC1_29B;
   private static final String SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD =
       "808A00FF0A30790304909800307900";
+  private static final String SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD =
+      "808A02FF" + "0E" + "AABB" + "C8C7C6C5C4C3C2C102AABB00";
+  private static final String SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD =
+      "808A02FF" + "0E" + "AABB" + "C8C7C6C50000000000AABB00";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_CMD = "808C00000500B2013C00";
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD =
       "808C8000" + "26" + "05" + "00B2013C1D" + "1F" + FILE7_REC1_29B + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC2_CMD =
+      "808C8000" + "0A" + "05" + "00B2020C00" + "03" + "22" + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC4_CMD =
+      "808C8000" + "0A" + "05" + "00B2040C00" + "03" + "44" + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC5_CMD =
+      "808C8000" + "0A" + "05" + "00B2050C00" + "03" + "55" + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP_CMD =
       "808C00001F\" + FILE7_REC1_29B+ \"9000";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI8_REC1_RSP_CMD =
@@ -374,7 +407,11 @@ public class CardTransactionManagerAdapterTest {
       "808C00000900E2004804" + FILE9_REC1_4B;
   private static final String SAM_DIGEST_CLOSE_CMD = "808E000004";
   private static final String SAM_DIGEST_CLOSE_RSP = SAM_SIGNATURE + SW1SW2_OK;
+  private static final String SAM_DIGEST_CLOSE_EXTENDED_CMD = "808E000008";
+  private static final String SAM_DIGEST_CLOSE_EXTENDED_RSP = "1122334455667788" + SW1SW2_OK;
   private static final String SAM_DIGEST_AUTHENTICATE_CMD = "8082000004" + CARD_SIGNATURE;
+  private static final String SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD =
+      "8082000008" + "8877665544332211";
   private static final String SAM_DIGEST_AUTHENTICATE_FAILED = "6988";
 
   private static final String SAM_CARD_CIPHER_PIN_VERIFICATION_CMD =
@@ -405,6 +442,67 @@ public class CardTransactionManagerAdapterTest {
 
   private static final String SAM_CARD_GENERATE_KEY_CMD = "8012FFFF050405020390";
   private static final String SAM_CARD_GENERATE_KEY_RSP = CIPHERED_KEY + SW1SW2_OK;
+  private static final String SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD = "8088800008";
+  private static final String SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP = "1122334455667788" + SW1SW2_OK;
+  private static final String CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD =
+      "00820003" + "08" + "1122334455667788" + "00";
+  private static final String CARD_MSS_AUTHENTICATION_ENCRYPTION_RSP =
+      "8877665544332211" + SW1SW2_OK;
+  private static final String CARD_MSS_AUTHENTICATION_CMD =
+      "00820001" + "08" + "1122334455667788" + "00";
+  private static final String CARD_MSS_AUTHENTICATION_RSP = "8877665544332211" + SW1SW2_OK;
+  private static final String CARD_MSS_ENCRYPTION_CMD = "0082000200";
+  private static final String CARD_MSS_CMD = "0082000000";
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD = "00B2010C00";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_CMD =
+      "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_RSP =
+      CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD + SW1SW2_OK;
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP = "E1" + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_CMD =
+      "808C008003" + CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_RSP =
+      "119000" + SW1SW2_OK;
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD = "00B2030C00";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_CMD =
+      "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_RSP =
+      CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD + SW1SW2_OK;
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP = "E3" + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_CMD =
+      "808C008003" + CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_RSP =
+      "339000" + SW1SW2_OK;
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD = "00B2060C00";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_CMD =
+      "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_RSP =
+      CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD + SW1SW2_OK;
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP = "E6" + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_CMD =
+      "808C008003" + CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_RSP =
+      "669000" + SW1SW2_OK;
+  private static final String CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD = "00DC010C01" + "E1";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_CMD =
+      "808C008006" + "00DC010C01" + "AA";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_RSP =
+      CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD + SW1SW2_OK;
+  private static final String CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_RSP = SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_CMD =
+      "808C008002" + CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_RSP;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_RSP =
+      "9000" + SW1SW2_OK;
+  private static final String CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD = "00DC020C01" + "E2";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD =
+      "808C008006" + "00DC020C01" + "BB";
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP =
+      CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD + SW1SW2_OK;
+  private static final String CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP = SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_CMD =
+      "808C008002" + CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP;
+  private static final String SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_RSP =
+      "9000" + SW1SW2_OK;
 
   private CardTransactionManager cardTransactionManager;
   private CalypsoCardAdapter calypsoCard;
@@ -421,6 +519,19 @@ public class CardTransactionManagerAdapterTest {
             new CalypsoCardAdapter(
                 new CardSelectionResponseAdapter(
                     new ApduResponseAdapter(HexUtil.toByteArray(selectApplicationResponse)))));
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+  }
+
+  private void initCalypsoCard(String selectApplicationResponse, int modificationsCounter)
+      throws Exception {
+    calypsoCard =
+        spy(
+            new CalypsoCardAdapter(
+                new CardSelectionResponseAdapter(
+                    new ApduResponseAdapter(HexUtil.toByteArray(selectApplicationResponse)))));
+    when(calypsoCard.getModificationsCounter()).thenReturn(modificationsCounter);
     cardTransactionManager =
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
@@ -2828,5 +2939,646 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareEarlyMutualAuthentication_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareEarlyMutualAuthentication();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareActivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareActivateEncryption();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareDeactivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareDeactivateEncryption();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareEarlyMutualAuthentication_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareEarlyMutualAuthentication();
+    cardTransactionManager.processCommands();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareActivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareActivateEncryption();
+    cardTransactionManager.processCommands();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareDeactivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareDeactivateEncryption();
+    cardTransactionManager.processCommands();
+  }
+
+  @Test
+  public void
+      prepareEarlyMutualAuthenticationAndEncryption_whenExtendedModeIsNotSupportedAfterOpening_shouldThrowUOE()
+          throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    // Mock
+    CardRequestSpi samSelectDiversifierAndGetChallengeReq =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samSelectDiversifierAndGetChallengeResp =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+
+    CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardOssResp =
+        createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_NOT_SUPPORTED_RSP);
+
+    CardRequestSpi samDigestInitAndInternalAuthReq =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+    CardResponseApi samDigestInitAndInternalAuthResp =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+
+    CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
+    CardResponseApi cardMssAuthResp = createCardResponse(SW1SW2_6985);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
+            any(ChannelControl.class)))
+        .thenReturn(samSelectDiversifierAndGetChallengeResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestInitAndInternalAuthResp);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class)))
+        .thenReturn(cardOssResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class)))
+        .thenReturn(cardMssAuthResp);
+
+    // Scenario
+    assertThat(calypsoCard.isExtendedModeSupported()).isTrue();
+
+    cardTransactionManager
+        .prepareEarlyMutualAuthentication()
+        .prepareActivateEncryption()
+        .prepareDeactivateEncryption();
+    try {
+      cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
+      shouldHaveThrown(UnsupportedOperationException.class);
+    } catch (UnsupportedOperationException e) {
+    }
+
+    assertThat(calypsoCard.isExtendedModeSupported()).isFalse();
+
+    try {
+      cardTransactionManager.prepareEarlyMutualAuthentication();
+      shouldHaveThrown(UnsupportedOperationException.class);
+    } catch (UnsupportedOperationException e) {
+    }
+    try {
+      cardTransactionManager.prepareActivateEncryption();
+      shouldHaveThrown(UnsupportedOperationException.class);
+    } catch (UnsupportedOperationException e) {
+    }
+    try {
+      cardTransactionManager.prepareDeactivateEncryption();
+      shouldHaveThrown(UnsupportedOperationException.class);
+    } catch (UnsupportedOperationException e) {
+    }
+  }
+
+  @Test
+  public void
+      prepareEarlyMutualAuthenticationAndEncryption_whenExtendedAndSession_shouldBeSuccessful()
+          throws Exception {
+
+    cardSecuritySetting.enableMultipleSession();
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED, 7);
+
+    /** Process opening */
+    CardRequestSpi samSelectDiversifierAndGetChallengeReq =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samSelectDiversifierAndGetChallengeResp =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+
+    CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardOssResp = createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP);
+
+    // Digest Init + Mutual Authentication with encryption activation
+    CardRequestSpi samDigestInitAndInternalAuthReq =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+    CardResponseApi samDigestInitAndInternalAuthResp =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+
+    CardRequestSpi cardMssAuthEncryptReq =
+        createCardRequest(CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD);
+    CardResponseApi cardMssAuthEncryptResp =
+        createCardResponse(CARD_MSS_AUTHENTICATION_ENCRYPTION_RSP);
+
+    CardRequestSpi samDigestAuthReq = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
+    CardResponseApi samDigestAuthResp = createCardResponse(SW1SW2_OK_RSP);
+
+    // Encrypted read record
+    CardRequestSpi samDigestEncryptReqReq1 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_CMD);
+    CardResponseApi samDigestEncryptReqResp1 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_RSP);
+
+    CardRequestSpi cardEncryptReq1 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD);
+    CardResponseApi cardEncryptResp1 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP);
+
+    CardRequestSpi samDigestDecryptRespReq1 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_CMD);
+    CardResponseApi samDigestDecryptRespResp1 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_RSP);
+
+    // Mutual Authentication with encryption deactivation
+    CardRequestSpi samDigestInternalAuthReq =
+        createCardRequest(SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+    CardResponseApi samDigestInternalAuthResp =
+        createCardResponse(SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+
+    CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
+    CardResponseApi cardMssAuthResp = createCardResponse(CARD_MSS_AUTHENTICATION_RSP);
+
+    // Plain read + encryption activation
+    CardRequestSpi cardReadRec2AndMssEncryptReq =
+        createCardRequest(CARD_READ_REC_SFI1_REC2_CMD, CARD_MSS_ENCRYPTION_CMD);
+    CardResponseApi cardReadRec2AndMssEncryptResp =
+        createCardResponse(CARD_READ_REC_SFI1_REC2_RSP, SW1SW2_OK_RSP);
+
+    /** Process commands */
+
+    // Mutual Authentication with encryption activation
+    CardRequestSpi samDigestUpdateAndInternalAuthReq1 =
+        createCardRequest(
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC2_CMD,
+            SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+    CardResponseApi samDigestUpdateAndInternalAuthResp1 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+
+    // Encrypted read record
+    CardRequestSpi samDigestEncryptReqReq2 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_CMD);
+    CardResponseApi samDigestEncryptReqResp2 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_RSP);
+
+    CardRequestSpi cardEncryptReq2 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD);
+    CardResponseApi cardEncryptResp2 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP);
+
+    CardRequestSpi samDigestDecryptRespReq2 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_CMD);
+    CardResponseApi samDigestDecryptRespResp2 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_RSP);
+
+    // Encrypted update record
+    CardRequestSpi samDigestEncryptReqReq3 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_CMD);
+    CardResponseApi samDigestEncryptReqResp3 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_RSP);
+
+    CardRequestSpi cardEncryptReq3 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD);
+    CardResponseApi cardEncryptResp3 = createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_RSP);
+
+    CardRequestSpi samDigestDecryptRespReq3 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_CMD);
+    CardResponseApi samDigestDecryptRespResp3 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_RSP);
+
+    // Atomic closing
+    CardRequestSpi samDigestCloseReq = createCardRequest(SAM_DIGEST_CLOSE_EXTENDED_CMD);
+    CardResponseApi samDigestCloseResp = createCardResponse(SAM_DIGEST_CLOSE_EXTENDED_RSP);
+
+    CardRequestSpi cardCssReq = createCardRequest(CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardCssResp = createCardResponse(CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+
+    // Atomic opening
+    CardRequestSpi samGetChallengeReq = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samGetChallengeResp = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
+
+    CardRequestSpi cardMssEncryptReq = createCardRequest(CARD_MSS_ENCRYPTION_CMD);
+    CardResponseApi cardMssEncryptResp = createCardResponse(SW1SW2_OK_RSP);
+
+    // Encrypted update record
+    CardRequestSpi samDigestInitAndEncryptReqReq4 =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
+    CardResponseApi samDigestInitAndEncryptReqResp4 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
+
+    CardRequestSpi cardEncryptReq4 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD);
+    CardResponseApi cardEncryptResp4 = createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP);
+
+    CardRequestSpi samDigestDecryptRespReq4 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_CMD);
+    CardResponseApi samDigestDecryptRespResp4 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_RSP);
+
+    // MSS deactivate encryption
+    CardRequestSpi cardMssReq = createCardRequest(CARD_MSS_CMD);
+    CardResponseApi cardMssResp = createCardResponse(SW1SW2_OK_RSP);
+
+    /** Process closing */
+
+    // Plain read
+    CardRequestSpi cardReadRec4Req = createCardRequest(CARD_READ_REC_SFI1_REC4_CMD);
+    CardResponseApi cardReadRec4Resp = createCardResponse(CARD_READ_REC_SFI1_REC4_RSP);
+
+    // Mutual Authentication with not encryption
+    CardRequestSpi samDigestUpdateAndInternalAuthReq2 =
+        createCardRequest(
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC4_CMD,
+            SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+    CardResponseApi samDigestUpdateAndInternalAuthResp2 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+
+    // Plain read + encryption activation
+    CardRequestSpi cardReadRec5AndMssEncryptReq =
+        createCardRequest(CARD_READ_REC_SFI1_REC5_CMD, CARD_MSS_ENCRYPTION_CMD);
+    CardResponseApi cardReadRec5AndMssEncryptResp =
+        createCardResponse(CARD_READ_REC_SFI1_REC5_RSP, SW1SW2_OK_RSP);
+
+    // Encrypted read record
+    CardRequestSpi samDigestInitAndEncryptReqReq5 =
+        createCardRequest(
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC5_CMD,
+            SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_CMD);
+    CardResponseApi samDigestInitAndEncryptReqResp5 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_RSP);
+
+    CardRequestSpi cardEncryptReq5 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD);
+    CardResponseApi cardEncryptResp5 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP);
+
+    CardRequestSpi samDigestDecryptRespReq5 =
+        createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_CMD);
+    CardResponseApi samDigestDecryptRespResp5 =
+        createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_RSP);
+
+    // Atomic closing
+
+    /** Process opening + closing */
+
+    // Atomic opening
+
+    // Atomic closing
+    CardRequestSpi samDigestInitAndCloseReq =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_EXTENDED_CMD);
+    CardResponseApi samDigestInitAndCloseResp =
+        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+
+    /** Mock commands */
+    when(cardReader.isContactless()).thenReturn(true);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
+            any(ChannelControl.class)))
+        .thenReturn(samSelectDiversifierAndGetChallengeResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestInitAndInternalAuthResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class)))
+        .thenReturn(samDigestAuthResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), any(ChannelControl.class)))
+        .thenReturn(samDigestEncryptReqResp1);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)), any(ChannelControl.class)))
+        .thenReturn(samDigestDecryptRespResp1);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInternalAuthReq)), any(ChannelControl.class)))
+        .thenReturn(samDigestInternalAuthResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestUpdateAndInternalAuthResp1);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), any(ChannelControl.class)))
+        .thenReturn(samDigestEncryptReqResp2);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)), any(ChannelControl.class)))
+        .thenReturn(samDigestDecryptRespResp2);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), any(ChannelControl.class)))
+        .thenReturn(samDigestEncryptReqResp3);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)), any(ChannelControl.class)))
+        .thenReturn(samDigestDecryptRespResp3);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class)))
+        .thenReturn(samDigestCloseResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class)))
+        .thenReturn(samGetChallengeResp);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestInitAndEncryptReqResp4);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)), any(ChannelControl.class)))
+        .thenReturn(samDigestDecryptRespResp4);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestUpdateAndInternalAuthResp2);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
+            any(ChannelControl.class)))
+        .thenReturn(samDigestInitAndEncryptReqResp5);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)), any(ChannelControl.class)))
+        .thenReturn(samDigestDecryptRespResp5);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndCloseReq)), any(ChannelControl.class)))
+        .thenReturn(samDigestInitAndCloseResp);
+
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class)))
+        .thenReturn(cardOssResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class)))
+        .thenReturn(cardMssAuthEncryptResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq1)), any(ChannelControl.class)))
+        .thenReturn(cardEncryptResp1);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class)))
+        .thenReturn(cardMssAuthResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec2AndMssEncryptReq)),
+            any(ChannelControl.class)))
+        .thenReturn(cardReadRec2AndMssEncryptResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq2)), any(ChannelControl.class)))
+        .thenReturn(cardEncryptResp2);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq3)), any(ChannelControl.class)))
+        .thenReturn(cardEncryptResp3);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class)))
+        .thenReturn(cardCssResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssEncryptReq)), any(ChannelControl.class)))
+        .thenReturn(cardMssEncryptResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq4)), any(ChannelControl.class)))
+        .thenReturn(cardEncryptResp4);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssReq)), any(ChannelControl.class)))
+        .thenReturn(cardMssResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec4Req)), any(ChannelControl.class)))
+        .thenReturn(cardReadRec4Resp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec5AndMssEncryptReq)),
+            any(ChannelControl.class)))
+        .thenReturn(cardReadRec5AndMssEncryptResp);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq5)), any(ChannelControl.class)))
+        .thenReturn(cardEncryptResp5);
+
+    /** Scenario */
+    cardTransactionManager
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareActivateEncryption() // + encryption
+        .prepareReadRecord((byte) 1, 1)
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareDeactivateEncryption() // - encryption
+        .prepareReadRecord((byte) 1, 2)
+        .prepareActivateEncryption() // + encryption
+        .processOpening(WriteAccessLevel.DEBIT);
+    cardTransactionManager
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareEarlyMutualAuthentication() // Authentication (Twice consecutive call)
+        .prepareReadRecord((byte) 1, 3)
+        .prepareUpdateRecord((byte) 1, 1, new byte[] {(byte) 0xAA})
+        .prepareUpdateRecord((byte) 1, 2, new byte[] {(byte) 0xBB}) // 2nd session
+        .prepareDeactivateEncryption() // - encryption
+        .processCommands();
+    cardTransactionManager
+        .prepareReadRecord((byte) 1, 4)
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareReadRecord((byte) 1, 5)
+        .prepareActivateEncryption() // + encryption
+        .prepareReadRecord((byte) 1, 6)
+        .processClosing();
+    cardTransactionManager.processOpening(WriteAccessLevel.DEBIT).processClosing();
+
+    /** Check result */
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq1)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInternalAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec2AndMssEncryptReq)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq2)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq3)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssEncryptReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq4)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec4Req)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec5AndMssEncryptReq)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq5)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestInitAndCloseReq)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
   }
 }

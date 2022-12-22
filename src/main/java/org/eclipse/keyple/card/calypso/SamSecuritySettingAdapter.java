@@ -17,6 +17,8 @@ import org.calypsonet.terminal.calypso.transaction.SamSecuritySetting;
  * Implementation of {@link SamSecuritySetting}.
  *
  * @since 2.2.0
+ * @deprecated
  */
+@Deprecated
 final class SamSecuritySettingAdapter extends CommonSecuritySettingAdapter<SamSecuritySetting>
     implements SamSecuritySetting {}

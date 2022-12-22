@@ -137,11 +137,18 @@ class SymmetricCryptoTransactionManagerAdapter
   public byte[] updateTerminalSessionMac(byte[] cardApdu)
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     if (isEncryptionActive) {
+      // Encrypted mode.
+      // We first prepare any pending plain-text commands in order to optimize the possible
+      // groupings.
       digestManager.prepareCommands();
+      // We then prepare the command for encryption.
       SamCommand samCommand = digestManager.prepareCommandForEncryption(cardApdu);
+      // Process commands.
       processCommands();
+      // Return the encrypted/decrypted value.
       return samCommand.getApduResponse().getDataOut();
     } else {
+      // Plain mode.
       digestManager.updateSession(cardApdu);
       return null;
     }
@@ -157,7 +164,6 @@ class SymmetricCryptoTransactionManagerAdapter
       throws SymmetricCryptoIOException, SymmetricCryptoException {
     digestManager.prepareAllCommands();
     digestManager = null;
-    isEncryptionActive = false;
     CmdSamDigestClose cmdSamDigestClose =
         (CmdSamDigestClose) samCommands.get(samCommands.size() - 1);
     processCommands();
@@ -172,11 +178,15 @@ class SymmetricCryptoTransactionManagerAdapter
   @Override
   public byte[] generateTerminalSessionMac()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
+    // We first prepare any pending commands in order to optimize the possible groupings.
     digestManager.prepareCommands();
+    // Then we prepare the "Digest Internal Authenticate" command.
     CmdSamDigestInternalAuthenticate cmdSamDigestInternalAuthenticate =
         new CmdSamDigestInternalAuthenticate(sam);
     samCommands.add(cmdSamDigestInternalAuthenticate);
+    // Process commands.
     processCommands();
+    // Return the terminal session MAC.
     return cmdSamDigestInternalAuthenticate.getTerminalSignature();
   }
 
@@ -532,11 +542,7 @@ class SymmetricCryptoTransactionManagerAdapter
         + "}";
   }
 
-  /**
-   * Prepares a "SelectDiversifier" command using the current key diversifier.
-   *
-   * @return The current instance.
-   */
+  /** Prepares a "SelectDiversifier" command using the current key diversifier. */
   private void prepareSelectDiversifier() {
     samCommands.add(new CmdSamSelectDiversifier(sam, currentKeyDiversifier));
   }
