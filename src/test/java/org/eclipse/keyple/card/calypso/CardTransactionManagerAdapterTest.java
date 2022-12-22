@@ -3230,129 +3230,118 @@ public class CardTransactionManagerAdapterTest {
     CardResponseApi samDigestDecryptRespResp5 =
         createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_RSP);
 
-    // Atomic closing
-
-    /** Process opening + closing */
-
-    // Atomic opening
-
-    // Atomic closing
-    CardRequestSpi samDigestInitAndCloseReq =
-        createCardRequest(
-            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_EXTENDED_CMD);
-    CardResponseApi samDigestInitAndCloseResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
-
     /** Mock commands */
     when(cardReader.isContactless()).thenReturn(true);
 
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samSelectDiversifierAndGetChallengeResp);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestInitAndInternalAuthResp);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestAuthResp);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestEncryptReqResp1);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestDecryptRespResp1);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInternalAuthReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestInternalAuthReq)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestInternalAuthResp);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestUpdateAndInternalAuthResp1);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestEncryptReqResp2);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestDecryptRespResp2);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestEncryptReqResp3);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestDecryptRespResp3);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestCloseResp);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samGetChallengeReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samGetChallengeResp);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestInitAndEncryptReqResp4);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestDecryptRespResp4);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestUpdateAndInternalAuthResp2);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestInitAndEncryptReqResp5);
     when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)),
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(samDigestDecryptRespResp5);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndCloseReq)), any(ChannelControl.class)))
-        .thenReturn(samDigestInitAndCloseResp);
-
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardOssResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardMssAuthEncryptResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq1)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardEncryptReq1)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardEncryptResp1);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardMssAuthReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardMssAuthResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardReadRec2AndMssEncryptReq)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardReadRec2AndMssEncryptResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq2)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardEncryptReq2)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardEncryptResp2);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq3)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardEncryptReq3)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardEncryptResp3);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class)))
         .thenReturn(cardCssResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssEncryptReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardMssEncryptReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardMssEncryptResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq4)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardEncryptReq4)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardEncryptResp4);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssReq)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardMssReq)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardMssResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardReadRec4Req)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardReadRec4Req)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardReadRec4Resp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardReadRec5AndMssEncryptReq)),
-            any(ChannelControl.class)))
+            eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardReadRec5AndMssEncryptResp);
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq5)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardEncryptReq5)), eq(ChannelControl.KEEP_OPEN)))
         .thenReturn(cardEncryptResp5);
 
     /** Scenario */
@@ -3379,8 +3368,8 @@ public class CardTransactionManagerAdapterTest {
         .prepareReadRecord((byte) 1, 5)
         .prepareActivateEncryption() // + encryption
         .prepareReadRecord((byte) 1, 6)
+        .prepareReleaseCardChannel()
         .processClosing();
-    cardTransactionManager.processOpening(WriteAccessLevel.DEBIT).processClosing();
 
     /** Check result */
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -3388,197 +3377,183 @@ public class CardTransactionManagerAdapterTest {
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq1)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardEncryptReq1)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInternalAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestInternalAuthReq)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardReadRec2AndMssEncryptReq)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq2)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardEncryptReq2)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq3)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardEncryptReq3)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samGetChallengeReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssEncryptReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq4)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardEncryptReq4)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardReadRec4Req)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardReadRec4Req)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardMssAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardReadRec5AndMssEncryptReq)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
-            any(ChannelControl.class));
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardEncryptReq5)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardEncryptReq5)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestCloseReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.CLOSE_AFTER));
     inOrder
         .verify(samReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samGetChallengeReq)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndCloseReq)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
   }
 }
