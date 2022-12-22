@@ -84,6 +84,7 @@ class SymmetricCryptoTransactionManagerAdapter
   /* Dynamic fields */
   private byte[] currentKeyDiversifier;
   private DigestManager digestManager;
+  private boolean isEncryptionActive;
 
   SymmetricCryptoTransactionManagerAdapter(
       ProxyReaderApi samReader,
@@ -127,10 +128,30 @@ class SymmetricCryptoTransactionManagerAdapter
     digestManager = new DigestManager(openSecureSessionDataOut, kif, kvc);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.1
+   */
   @Override
-  public byte[] updateTerminalSessionMac(byte[] cardApdu) {
-    digestManager.updateSession(cardApdu);
-    return cardApdu;
+  public byte[] updateTerminalSessionMac(byte[] cardApdu)
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
+    if (isEncryptionActive) {
+      // Encrypted mode.
+      // We first prepare any pending plain-text commands in order to optimize the possible
+      // groupings.
+      digestManager.prepareCommands();
+      // We then prepare the command for encryption.
+      SamCommand samCommand = digestManager.prepareCommandForEncryption(cardApdu);
+      // Process commands.
+      processCommands();
+      // Return the encrypted/decrypted value.
+      return samCommand.getApduResponse().getDataOut();
+    } else {
+      // Plain mode.
+      digestManager.updateSession(cardApdu);
+      return null;
+    }
   }
 
   /**
@@ -141,7 +162,7 @@ class SymmetricCryptoTransactionManagerAdapter
   @Override
   public byte[] finalizeTerminalSessionMac()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
-    digestManager.prepareCommands();
+    digestManager.prepareAllCommands();
     digestManager = null;
     CmdSamDigestClose cmdSamDigestClose =
         (CmdSamDigestClose) samCommands.get(samCommands.size() - 1);
@@ -155,8 +176,18 @@ class SymmetricCryptoTransactionManagerAdapter
    * @since 2.3.1
    */
   @Override
-  public byte[] generateTerminalSessionMac() {
-    return new byte[0]; // TODO
+  public byte[] generateTerminalSessionMac()
+      throws SymmetricCryptoIOException, SymmetricCryptoException {
+    // We first prepare any pending commands in order to optimize the possible groupings.
+    digestManager.prepareCommands();
+    // Then we prepare the "Digest Internal Authenticate" command.
+    CmdSamDigestInternalAuthenticate cmdSamDigestInternalAuthenticate =
+        new CmdSamDigestInternalAuthenticate(sam);
+    samCommands.add(cmdSamDigestInternalAuthenticate);
+    // Process commands.
+    processCommands();
+    // Return the terminal session MAC.
+    return cmdSamDigestInternalAuthenticate.getTerminalSignature();
   }
 
   /**
@@ -166,7 +197,7 @@ class SymmetricCryptoTransactionManagerAdapter
    */
   @Override
   public void activateEncryption() {
-    // TODO
+    isEncryptionActive = true;
   }
 
   /**
@@ -176,7 +207,7 @@ class SymmetricCryptoTransactionManagerAdapter
    */
   @Override
   public void deactivateEncryption() {
-    // TODO
+    isEncryptionActive = false;
   }
 
   /**
@@ -511,11 +542,7 @@ class SymmetricCryptoTransactionManagerAdapter
         + "}";
   }
 
-  /**
-   * Prepares a "SelectDiversifier" command using the current key diversifier.
-   *
-   * @return The current instance.
-   */
+  /** Prepares a "SelectDiversifier" command using the current key diversifier. */
   private void prepareSelectDiversifier() {
     samCommands.add(new CmdSamSelectDiversifier(sam, currentKeyDiversifier));
   }
@@ -760,7 +787,20 @@ class SymmetricCryptoTransactionManagerAdapter
       isRequest = !isRequest;
     }
 
-    /** Prepares all pending digest commands. */
+    /**
+     * Prepares a digest update command for encryption mode.
+     *
+     * @param cardApdu The card APDU.
+     */
+    private CmdSamDigestUpdate prepareCommandForEncryption(byte[] cardApdu) {
+      updateSession(cardApdu);
+      // Prepare the "Digest Update" commands and flush the buffer.
+      CmdSamDigestUpdate command = new CmdSamDigestUpdate(sam, true, cardApdus.remove(0));
+      samCommands.add(command);
+      return command;
+    }
+
+    /** Prepares all intermediate digest commands. */
     private void prepareCommands() {
       // Prepare the "Digest Init" command if not already done.
       if (!isDigestInitDone) {
@@ -769,6 +809,11 @@ class SymmetricCryptoTransactionManagerAdapter
       // Prepare the "Digest Update" commands and flush the buffer.
       prepareDigestUpdate();
       cardApdus.clear();
+    }
+
+    /** Prepares all pending digest commands. */
+    private void prepareAllCommands() {
+      prepareCommands();
       // Prepare the "Digest Close" command.
       prepareDigestClose();
     }

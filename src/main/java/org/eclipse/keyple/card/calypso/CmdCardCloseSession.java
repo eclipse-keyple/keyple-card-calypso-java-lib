@@ -21,7 +21,6 @@ import java.util.Map;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keyple.core.util.HexUtil;
 
 /**
  * Builds the Close Secure Session APDU command.
@@ -30,7 +29,7 @@ import org.eclipse.keyple.core.util.HexUtil;
  */
 final class CmdCardCloseSession extends CardCommand {
 
-  private static final CardCommandRef commandRef = CardCommandRef.CLOSE_SESSION;
+  private static final CardCommandRef commandRef = CardCommandRef.CLOSE_SECURE_SESSION;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -64,23 +63,12 @@ final class CmdCardCloseSession extends CardCommand {
    * @param calypsoCard The {@link CalypsoCard}.
    * @param ratificationAsked the ratification asked.
    * @param terminalSessionSignature the sam half session signature.
-   * @throws IllegalArgumentException If the signature is null or has a wrong length
-   * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
    */
   CmdCardCloseSession(
       CalypsoCardAdapter calypsoCard, boolean ratificationAsked, byte[] terminalSessionSignature) {
 
     super(commandRef, 0, calypsoCard);
-
-    // The optional parameter terminalSessionSignature could contain 4 or 8
-    // bytes.
-    if (terminalSessionSignature != null
-        && terminalSessionSignature.length != 4
-        && terminalSessionSignature.length != 8) {
-      throw new IllegalArgumentException(
-          "Invalid terminal sessionSignature: " + HexUtil.toHex(terminalSessionSignature));
-    }
 
     byte p1 = ratificationAsked ? (byte) 0x80 : (byte) 0x00;
     /*

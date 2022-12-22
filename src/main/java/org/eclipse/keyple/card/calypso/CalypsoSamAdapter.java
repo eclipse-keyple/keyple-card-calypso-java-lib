@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.calypsonet.terminal.calypso.sam.CalypsoSam;
@@ -42,8 +40,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareVersion;
   private final byte softwareRevision;
   private final byte classByte;
-  private final SortedMap<Integer, Integer> eventCounters = new TreeMap<Integer, Integer>();
-  private final SortedMap<Integer, Integer> eventCeilings = new TreeMap<Integer, Integer>();
 
   /**
    * Constructor.
@@ -266,68 +262,6 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   public byte getSoftwareRevision() {
     return softwareRevision;
   }
-
-  /**
-   * Adds or replace an event counter.
-   *
-   * @param eventCounterNumber The number of the counter.
-   * @param eventCounterValue The counter value.
-   * @since 2.2.3
-   */
-  void putEventCounter(int eventCounterNumber, int eventCounterValue) {
-    this.eventCounters.put(eventCounterNumber, eventCounterValue);
-  }
-
-  /**
-   * Adds or replace an event counter.
-   *
-   * @param eventCeilingNumber The number of the ceiling.
-   * @param eventCeilingValue The ceiling value.
-   * @since 2.2.3
-   */
-  void putEventCeiling(int eventCeilingNumber, int eventCeilingValue) {
-    this.eventCeilings.put(eventCeilingNumber, eventCeilingValue);
-  }
-
-  //    /**
-  //     * {@inheritDoc}
-  //     *
-  //     * @since 2.2.3
-  //     */
-  //    @Override
-  //    public Integer getEventCounter(int eventCounterNumber) {
-  //      return eventCounters.get(eventCounterNumber);
-  //    }
-  //
-  //    /**
-  //     * {@inheritDoc}
-  //     *
-  //     * @since 2.2.3
-  //     */
-  //    @Override
-  //    public SortedMap<Integer, Integer> getEventCounters() {
-  //      return eventCounters;
-  //    }
-  //
-  //    /**
-  //     * {@inheritDoc}
-  //     *
-  //     * @since 2.2.3
-  //     */
-  //    @Override
-  //    public Integer getEventCeiling(int eventCeilingNumber) {
-  //      return eventCeilings.get(eventCeilingNumber);
-  //    }
-  //
-  //    /**
-  //     * {@inheritDoc}
-  //     *
-  //     * @since 2.2.3
-  //     */
-  //    @Override
-  //    public SortedMap<Integer, Integer> getEventCeilings() {
-  //      return eventCeilings;
-  //    }
 
   /**
    * Gets the object content as a Json string.

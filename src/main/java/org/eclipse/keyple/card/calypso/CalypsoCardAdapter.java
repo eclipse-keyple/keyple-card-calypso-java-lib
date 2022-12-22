@@ -1164,6 +1164,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
+   * Disables extended mode. Although the card is in revision 3.2, it has indicated in response to
+   * the "Open Secure Session" command that it does not use AES keys.
+   *
+   * @since 2.3.1
+   */
+  void disableExtendedMode() {
+    isExtendedModeSupported = false;
+  }
+
+  /**
    * Gets the object content as a Json string.
    *
    * @return A not empty string.

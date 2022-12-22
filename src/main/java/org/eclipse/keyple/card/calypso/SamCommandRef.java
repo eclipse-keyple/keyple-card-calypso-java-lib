@@ -24,6 +24,7 @@ enum SamCommandRef {
   DIGEST_UPDATE_MULTIPLE("Digest Update Multiple", (byte) 0x8C),
   DIGEST_CLOSE("Digest Close", (byte) 0x8E),
   DIGEST_AUTHENTICATE("Digest Authenticate", (byte) 0x82),
+  DIGEST_INTERNAL_AUTHENTICATE("Digest Internal Authenticate", (byte) 0x88),
   GIVE_RANDOM("Give Random", (byte) 0x86),
   CARD_GENERATE_KEY("Card Generate Key", (byte) 0x12),
   CARD_CIPHER_PIN("Card Cipher PIN", (byte) 0x12),

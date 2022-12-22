@@ -105,7 +105,7 @@ final class CmdCardOpenSession extends CardCommand {
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.OPEN_SESSION, 0, calypsoCard);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard);
 
     this.isExtendedModeAllowed = isExtendedModeAllowed;
     switch (getCalypsoCard().getProductType()) {
@@ -161,7 +161,7 @@ final class CmdCardOpenSession extends CardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.ISO.getValue(),
-                CardCommandRef.OPEN_SESSION.getInstructionByte(),
+                CardCommandRef.OPEN_SECURE_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 dataIn,
@@ -243,7 +243,7 @@ final class CmdCardOpenSession extends CardCommand {
         new ApduRequestAdapter(
             ApduUtil.build(
                 CalypsoCardClass.LEGACY.getValue(),
-                CardCommandRef.OPEN_SESSION.getInstructionByte(),
+                CardCommandRef.OPEN_SECURE_SESSION.getInstructionByte(),
                 p1,
                 p2,
                 samChallenge,
@@ -328,10 +328,14 @@ final class CmdCardOpenSession extends CardCommand {
       offset = 4;
       previousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
       manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
+      if (!manageSecureSessionAuthorized) {
+        getCalypsoCard().disableExtendedMode();
+      }
     } else {
       offset = 0;
       previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
       manageSecureSessionAuthorized = false;
+      getCalypsoCard().disableExtendedMode();
     }
 
     byte kif = apduResponseData[5 + offset];

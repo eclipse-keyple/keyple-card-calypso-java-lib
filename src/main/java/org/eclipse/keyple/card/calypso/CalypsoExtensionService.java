@@ -319,7 +319,10 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    *
    * @return A not null reference.
    * @since 2.2.0
+   * @deprecated Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+   *     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).
    */
+  @Deprecated
   public SamSecuritySetting createSamSecuritySetting() {
     return new SamSecuritySettingAdapter();
   }
@@ -338,7 +341,10 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
    *     a null or unknown product type.
    * @since 2.2.0
+   * @deprecated Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+   *     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).
    */
+  @Deprecated
   public SamTransactionManager createSamTransaction(
       CardReader samReader, CalypsoSam calypsoSam, SamSecuritySetting samSecuritySetting) {
     return createSamTransactionManagerAdapter(samReader, calypsoSam, samSecuritySetting, true);
@@ -353,7 +359,10 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
    *     a null or unknown product type.
    * @since 2.2.0
+   * @deprecated Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+   *     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).
    */
+  @Deprecated
   public SamTransactionManager createSamTransactionWithoutSecurity(
       CardReader samReader, CalypsoSam calypsoSam) {
     return createSamTransactionManagerAdapter(samReader, calypsoSam, null, false);
@@ -369,7 +378,9 @@ public final class CalypsoExtensionService implements KeypleCardExtension {
    * @return A not null reference.
    * @throws IllegalArgumentException If one of the provided argument is null or if "calypsoSam" has
    *     a null or unknown product type.
+   * @deprecated
    */
+  @Deprecated
   private SamTransactionManagerAdapter createSamTransactionManagerAdapter(
       CardReader samReader,
       CalypsoSam calypsoSam,

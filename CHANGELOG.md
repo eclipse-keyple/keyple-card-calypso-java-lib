@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - SAM exception management for signature command.
 - Increase/Decrease commands postponed data management for legacy cards.
+### Deprecated
+- `CalypsoExtensionService.createSamSecuritySetting` method.
+- `CalypsoExtensionService.createSamTransaction` method.
+- `CalypsoExtensionService.createSamTransactionWithoutSecurity` method.
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.5.0` (extended mode management).
 
 ## [2.3.0] - 2022-12-06
 ### Added
