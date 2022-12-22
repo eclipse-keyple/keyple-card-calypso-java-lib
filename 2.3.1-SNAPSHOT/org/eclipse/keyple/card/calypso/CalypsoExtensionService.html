@@ -26,8 +26,8 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":9,"i18":10};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":42,"i8":10,"i9":42,"i10":42,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":9,"i18":10};
+var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -158,7 +158,7 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colSecond" scope="col">Method</th>
@@ -224,7 +224,9 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <td class="colFirst"><code>org.calypsonet.terminal.calypso.transaction.SamSecuritySetting</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamSecuritySetting()">createSamSecuritySetting</a></span>()</code></th>
 <td class="colLast">
-<div class="block">Returns a new instance of <code>SamSecuritySetting</code> to use for secure SAM operations.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g.</div>
+</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -240,7 +242,9 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
                     org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam,
                     org.calypsonet.terminal.calypso.transaction.SamSecuritySetting&nbsp;samSecuritySetting)</code></th>
 <td class="colLast">
-<div class="block">Returns a new SAM transaction manager to handle operations secured with a control SAM.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g.</div>
+</div>
 </td>
 </tr>
 <tr id="i10" class="altColor">
@@ -248,7 +252,9 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSamTransactionWithoutSecurity(org.calypsonet.terminal.reader.CardReader,org.calypsonet.terminal.calypso.sam.CalypsoSam)">createSamTransactionWithoutSecurity</a></span>&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
                                    org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam)</code></th>
 <td class="colLast">
-<div class="block">Returns a new SAM transaction manager to handle non-secured operations.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g.</div>
+</div>
 </td>
 </tr>
 <tr id="i11" class="rowColor">
@@ -618,7 +624,12 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>createSamSecuritySetting</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SamSecuritySetting&nbsp;createSamSecuritySetting()</pre>
+<pre class="methodSignature">@Deprecated
+public&nbsp;org.calypsonet.terminal.calypso.transaction.SamSecuritySetting&nbsp;createSamSecuritySetting()</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).</div>
+</div>
 <div class="block">Returns a new instance of <code>SamSecuritySetting</code> to use for secure SAM operations.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -634,9 +645,14 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>createSamTransaction</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SamTransactionManager&nbsp;createSamTransaction&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
+<pre class="methodSignature">@Deprecated
+public&nbsp;org.calypsonet.terminal.calypso.transaction.SamTransactionManager&nbsp;createSamTransaction&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
                                                                                               org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam,
                                                                                               org.calypsonet.terminal.calypso.transaction.SamSecuritySetting&nbsp;samSecuritySetting)</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).</div>
+</div>
 <div class="block">Returns a new SAM transaction manager to handle operations secured with a control SAM.
 
  <p>The reader and the SAM's initial data are those from the selection.<br>
@@ -663,8 +679,13 @@ implements org.eclipse.keyple.core.common.KeypleCardExtension</pre>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>createSamTransactionWithoutSecurity</h4>
-<pre class="methodSignature">public&nbsp;org.calypsonet.terminal.calypso.transaction.SamTransactionManager&nbsp;createSamTransactionWithoutSecurity&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
+<pre class="methodSignature">@Deprecated
+public&nbsp;org.calypsonet.terminal.calypso.transaction.SamTransactionManager&nbsp;createSamTransactionWithoutSecurity&#8203;(org.calypsonet.terminal.reader.CardReader&nbsp;samReader,
                                                                                                              org.calypsonet.terminal.calypso.sam.CalypsoSam&nbsp;calypsoSam)</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Use dedicated crypto library instead (e.g. Keyple Card Calypso Crypto Legacy SAM
+     Lib, Keyple Card Calypso Crypto Open SAM Lib, etc...).</div>
+</div>
 <div class="block">Returns a new SAM transaction manager to handle non-secured operations.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
