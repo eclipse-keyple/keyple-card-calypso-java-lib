@@ -413,12 +413,7 @@ final class CardTransactionManagerAdapter
     // Build the "Open Secure Session" card command.
     CmdCardOpenSession cmdCardOpenSession =
         new CmdCardOpenSession(
-            card,
-            (byte) (writeAccessLevel.ordinal() + 1),
-            samChallenge,
-            sfi,
-            recordNumber,
-            isExtendedModeRequired);
+            card, writeAccessLevel, samChallenge, sfi, recordNumber, isExtendedModeRequired);
 
     // Add the "Open Secure Session" card command in first position.
     cardCommands.add(0, cmdCardOpenSession);
@@ -676,8 +671,8 @@ final class CardTransactionManagerAdapter
     }
 
     // The card KIF/KVC (KVC may be null for card Rev 1.0)
-    Byte cardKif = cmdCardOpenSession.getSelectedKif();
-    Byte cardKvc = cmdCardOpenSession.getSelectedKvc();
+    Byte cardKif = cmdCardOpenSession.getKif();
+    Byte cardKvc = cmdCardOpenSession.getKvc();
 
     if (logger.isDebugEnabled()) {
       logger.debug(
@@ -1641,6 +1636,82 @@ final class CardTransactionManagerAdapter
     // session command sent to the card.
     isSessionOpen = false;
 
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public CardTransactionManager processSingleStepSecureSession() {
+    if (symmetricCryptoSecuritySetting == null) {
+      throw new IllegalStateException("No security settings are available.");
+    }
+    if (card.getPreOpenDataOut() == null) {
+      throw new IllegalStateException("Pre-Open mode not prepared during selection.");
+    }
+    checkNoSession();
+    try {
+      if (card.getPreOpenDataOut().length > 0) {
+        // Pre-Open successful
+
+      } else {
+        // Pre-Open not successful
+
+        byte[] dataReadOutsideSession = null;
+        if (card.getPreOpenSfi() != 0) {
+          // Add the expected "Read Record" command in first position.
+          cardCommands.add(
+              0,
+              new CmdCardReadRecords(
+                  card,
+                  card.getPreOpenSfi(),
+                  card.getPreOpenRecordNumber(),
+                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  0));
+
+          // Get a copy of the value of the current record (if already read outside a session)
+          ElementaryFile ef = card.getFileBySfi(card.getPreOpenSfi());
+          if (ef != null) {
+            dataReadOutsideSession =
+                card.getFileBySfi(card.getPreOpenSfi())
+                    .getData()
+                    .getContent(card.getPreOpenRecordNumber());
+            dataReadOutsideSession =
+                Arrays.copyOf(dataReadOutsideSession, dataReadOutsideSession.length);
+          }
+        }
+
+        // Process opening
+        processOpening(card.getPreOpenWriteAccessLevel());
+
+        // Check the content of the record read inside the session
+        if (dataReadOutsideSession != null
+            && dataReadOutsideSession.length > 0
+            && !Arrays.equals(
+                card.getFileBySfi(card.getPreOpenSfi())
+                    .getData()
+                    .getContent(card.getPreOpenRecordNumber()),
+                dataReadOutsideSession)) {
+          throw new InconsistentDataException(
+              String.format(
+                  "The content of the file (SFI %02Xh, record %d) read in the session does not match the content previously read outside the session.",
+                  card.getPreOpenSfi(), card.getPreOpenRecordNumber()));
+        }
+
+        // Process closing
+        processClosing();
+      }
+    } finally {
+      // Reset pre-open info
+      card.setPreOpenWriteAccessLevel(null);
+      card.setPreOpenUseExtendedMode(false);
+      card.setPreOpenSfi((byte) 0);
+      card.setPreOpenRecordNumber(0);
+      card.setPreOpenDataOut(null);
+    }
     return this;
   }
 

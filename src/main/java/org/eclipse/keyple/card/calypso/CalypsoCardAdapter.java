@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -104,6 +105,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte sessionModification;
   private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
   private boolean isCounterValuePostponed;
+  private WriteAccessLevel preOpenWriteAccessLevel;
+  private boolean preOpenUseExtendedMode;
+  private byte preOpenSfi;
+  private int preOpenRecordNumber;
+  private byte[] preOpenDataOut;
 
   private static final List<PatchRev3> patchesRev3 = new ArrayList<PatchRev3>();
   private static final List<PatchRev12> patchesRev12 = new ArrayList<PatchRev12>();
@@ -1171,6 +1177,51 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void disableExtendedMode() {
     isExtendedModeSupported = false;
+  }
+
+  WriteAccessLevel getPreOpenWriteAccessLevel() {
+    return preOpenWriteAccessLevel;
+  }
+
+  CalypsoCardAdapter setPreOpenWriteAccessLevel(WriteAccessLevel preOpenWriteAccessLevel) {
+    this.preOpenWriteAccessLevel = preOpenWriteAccessLevel;
+    return this;
+  }
+
+  boolean isPreOpenUseExtendedMode() {
+    return preOpenUseExtendedMode;
+  }
+
+  CalypsoCardAdapter setPreOpenUseExtendedMode(boolean preOpenUseExtendedMode) {
+    this.preOpenUseExtendedMode = preOpenUseExtendedMode;
+    return this;
+  }
+
+  byte getPreOpenSfi() {
+    return preOpenSfi;
+  }
+
+  CalypsoCardAdapter setPreOpenSfi(byte preOpenSfi) {
+    this.preOpenSfi = preOpenSfi;
+    return this;
+  }
+
+  int getPreOpenRecordNumber() {
+    return preOpenRecordNumber;
+  }
+
+  CalypsoCardAdapter setPreOpenRecordNumber(int preOpenRecordNumber) {
+    this.preOpenRecordNumber = preOpenRecordNumber;
+    return this;
+  }
+
+  byte[] getPreOpenDataOut() {
+    return preOpenDataOut;
+  }
+
+  CalypsoCardAdapter setPreOpenDataOut(byte[] preOpenDataOut) {
+    this.preOpenDataOut = preOpenDataOut;
+    return this;
   }
 
   /**

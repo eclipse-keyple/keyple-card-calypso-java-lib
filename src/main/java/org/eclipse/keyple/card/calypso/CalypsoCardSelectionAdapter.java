@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
@@ -235,6 +236,39 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   */
+  @Override
+  public CalypsoCardSelection prepareSingleStepSecureSession(
+      WriteAccessLevel writeAccessLevel, boolean useExtendedMode) {
+    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    commands.add(new CmdCardOpenSession(writeAccessLevel, 0, 0, useExtendedMode));
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public CalypsoCardSelection prepareSingleStepSecureSession(
+      WriteAccessLevel writeAccessLevel, boolean useExtendedMode, byte sfi, int recordNumber) {
+    Assert.getInstance()
+        .notNull(writeAccessLevel, "writeAccessLevel")
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            recordNumber,
+            CalypsoCardConstant.NB_REC_MIN,
+            CalypsoCardConstant.NB_REC_MAX,
+            "recordNumber");
+    commands.add(new CmdCardOpenSession(writeAccessLevel, sfi, recordNumber, useExtendedMode));
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    */
   @Override
@@ -391,17 +425,12 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
-        if (e instanceof CardDataAccessException) {
-          if (commandRef == CardCommandRef.READ_RECORDS) {
-            // best effort mode, do not throw exception for "file not found" and "record not found"
-            // errors.
-            if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
-                && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
-              throw e;
-            }
-          } else if (commandRef == CardCommandRef.SELECT_FILE) {
-            throw new SelectFileException("File not found", e);
-          }
+        if (commandRef == CardCommandRef.READ_RECORDS
+            || commandRef == CardCommandRef.OPEN_SECURE_SESSION) {
+          continue;
+        }
+        if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {
+          throw new SelectFileException("File not found", e);
         } else {
           throw new UnexpectedCommandStatusException(
               MSG_CARD_COMMAND_ERROR + "while processing responses to card commands: " + commandRef,
