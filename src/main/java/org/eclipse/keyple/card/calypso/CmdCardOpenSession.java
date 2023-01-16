@@ -185,7 +185,7 @@ final class CmdCardOpenSession extends CardCommand {
       System.arraycopy(samChallenge, 0, dataIn, 1, samChallenge.length);
     } else {
       p2 = (byte) ((sfi * 8) + 1);
-      dataIn = samChallenge;
+      dataIn = samChallenge.length != 0 ? samChallenge : null;
     }
 
     /*
