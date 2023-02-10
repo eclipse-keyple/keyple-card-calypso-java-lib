@@ -86,10 +86,12 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
    * @param calypsoCard The Calypso card.
    * @param data The search command input/output data.
    * @since 2.1.0
+   * @deprecated
    */
+  @Deprecated
   CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard, null);
 
     this.data = data;
 
@@ -151,6 +153,76 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param context The context.
+   * @param data The search command input/output data.
+   * @since 2.3.2
+   */
+  CmdCardSearchRecordMultiple(CommandContextDto context, SearchCommandDataAdapter data) {
+
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, null, context);
+
+    this.data = data;
+
+    final int searchDataLength = data.getSearchData().length;
+
+    byte p2 = (byte) (data.getSfi() * 8 + 7);
+
+    byte[] dataIn = new byte[3 + (2 * searchDataLength)];
+    if (data.isEnableRepeatedOffset()) {
+      dataIn[0] = (byte) 0x80;
+    }
+    if (data.isFetchFirstMatchingResult()) {
+      dataIn[0] |= 1;
+    }
+    dataIn[1] = (byte) data.getOffset();
+    dataIn[2] = (byte) searchDataLength;
+
+    System.arraycopy(data.getSearchData(), 0, dataIn, 3, searchDataLength);
+
+    if (data.getMask() == null) {
+      // CL-CMD-SEARCH.1
+      Arrays.fill(dataIn, dataIn.length - searchDataLength, dataIn.length, (byte) 0xFF);
+    } else {
+      System.arraycopy(
+          data.getMask(), 0, dataIn, dataIn.length - searchDataLength, data.getMask().length);
+      if (data.getMask().length != searchDataLength) {
+        // CL-CMD-SEARCH.1
+        Arrays.fill(
+            dataIn,
+            dataIn.length - searchDataLength + data.getMask().length,
+            dataIn.length,
+            (byte) 0xFF);
+      }
+    }
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                context.getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                (byte) data.getRecordNumber(),
+                p2,
+                dataIn,
+                (byte) 0)));
+
+    if (logger.isDebugEnabled()) {
+      String extraInfo =
+          String.format(
+              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh, MASK:%sh",
+              data.getSfi(),
+              data.getRecordNumber(),
+              data.getOffset(),
+              data.isEnableRepeatedOffset(),
+              data.isFetchFirstMatchingResult(),
+              HexUtil.toHex(data.getSearchData()),
+              HexUtil.toHex(data.getMask()));
+      addSubName(extraInfo);
+    }
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @return false
@@ -159,6 +231,61 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    byte[] dataOut = apduResponse.getDataOut();
+    int nbRecords = dataOut[0];
+    for (int i = 1; i <= nbRecords; i++) {
+      data.getMatchingRecordNumbers().add((int) dataOut[i]);
+    }
+    if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
+      getContext()
+          .getCard()
+          .setContent(
+              data.getSfi(),
+              data.getMatchingRecordNumbers().get(0),
+              Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length));
+    }
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**
@@ -177,8 +304,8 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
    * @since 2.1.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     byte[] dataOut = apduResponse.getDataOut();
     int nbRecords = dataOut[0];
     for (int i = 1; i <= nbRecords; i++) {

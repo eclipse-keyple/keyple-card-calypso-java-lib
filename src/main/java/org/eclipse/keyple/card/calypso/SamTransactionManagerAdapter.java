@@ -314,7 +314,9 @@ final class SamTransactionManagerAdapter
    * {@inheritDoc}
    *
    * @since 2.2.0
+   * @deprecated
    */
+  @Deprecated
   @Override
   public SamTransactionManager processCommands() {
     if (samCommands.isEmpty()) {
@@ -388,6 +390,16 @@ final class SamTransactionManagerAdapter
       samCommands.clear();
     }
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public SamTransactionManager processCommands(boolean closePhysicalChannel) {
+    return processCommands();
   }
 
   /**

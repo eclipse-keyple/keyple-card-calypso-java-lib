@@ -11,54 +11,31 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
- * Builds the Get Challenge APDU command.
+ * Builds a "Ratification" command.
  *
- * @since 2.0.1
+ * <p>i.e. the command sent after closing the secure session to handle the ratification mechanism.
+ *
+ * <p>This particular command is not associated with any parsing since the response to this command
+ * is always an error and is never checked.
+ *
+ * @since 2.3.2
  */
-final class CmdCardGetChallenge extends CardCommand {
-
-  /**
-   * Instantiates a new CmdCardGetChallenge.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
-
-    super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard, null);
-
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
-    byte le = (byte) 0x08;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                null,
-                le)));
-  }
+final class CmdCardRatification extends CardCommand {
 
   /**
    * Constructor.
    *
-   * @param context The transaction context.
    * @since 2.3.2
    */
-  CmdCardGetChallenge(CommandContextDto context) {
-    super(CardCommandRef.GET_CHALLENGE, 0x08, null, context);
+  CmdCardRatification(CommandContextDto context) {
+    super(CardCommandRef.RATIFICATION, 0, null, context);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -67,25 +44,13 @@ final class CmdCardGetChallenge extends CardCommand {
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
-                (byte) 0x08)));
+                (byte) 0x00)));
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getCalypsoCard().setChallenge(getApduResponse().getDataOut());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.0.1
+   * @since 2.3.2
    */
   @Override
   boolean isSessionBufferUsed() {
@@ -99,7 +64,7 @@ final class CmdCardGetChallenge extends CardCommand {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -109,16 +74,6 @@ final class CmdCardGetChallenge extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
-  boolean synchronizeCryptoServiceBeforeCardProcessing() {
     return false;
   }
 
@@ -128,10 +83,21 @@ final class CmdCardGetChallenge extends CardCommand {
    * @since 2.3.2
    */
   @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getContext().getCard().setChallenge(getApduResponse().getDataOut());
-    updateTerminalSessionMacIfNeeded();
+    try {
+      super.setApduResponseAndCheckStatus(apduResponse);
+    } catch (CardCommandException e) {
+      // NOP: ratification nominal case
+    }
   }
 }

@@ -58,7 +58,7 @@ class DtoAdapters {
 
     private static final int DEFAULT_SUCCESSFUL_CODE = 0x9000;
 
-    private final byte[] apdu;
+    private byte[] apdu;
     private final Set<Integer> successfulStatusWords;
     private String info;
 
@@ -133,6 +133,16 @@ class DtoAdapters {
     @Override
     public byte[] getApdu() {
       return this.apdu;
+    }
+
+    /**
+     * Sets the APDU.
+     *
+     * @param apdu The APDU to set.
+     * @since 2.3.2
+     */
+    void setApdu(byte[] apdu) {
+      this.apdu = apdu;
     }
 
     /**
@@ -1502,6 +1512,71 @@ class DtoAdapters {
           + ", \"svSamTransactionNumber\":"
           + getSamTNum()
           + "}";
+    }
+  }
+
+  /**
+   * Contains the command context.
+   *
+   * @since 2.3.2
+   */
+  static class CommandContextDto {
+
+    private CalypsoCardAdapter card;
+    private SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+    private boolean isSecureSessionOpen;
+    private boolean isEncryptionActive;
+
+    /**
+     * Constructor.
+     *
+     * @param card The Calypso card.
+     * @param symmetricCryptoTransactionManagerSpi The symmetric crypto service SPI.
+     * @param isSecureSessionOpen Is secure session open?
+     * @param isEncryptionActive Is encryption active?
+     * @since 2.3.2
+     */
+    CommandContextDto(
+        CalypsoCardAdapter card,
+        SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi,
+        boolean isSecureSessionOpen,
+        boolean isEncryptionActive) {
+      this.card = card;
+      this.symmetricCryptoTransactionManagerSpi = symmetricCryptoTransactionManagerSpi;
+      this.isSecureSessionOpen = isSecureSessionOpen;
+      this.isEncryptionActive = isEncryptionActive;
+    }
+
+    /**
+     * @return The Calypso card.
+     * @since 2.3.2
+     */
+    CalypsoCardAdapter getCard() {
+      return card;
+    }
+
+    /**
+     * @return The symmetric crypto service or "null" if not set.
+     * @since 2.3.2
+     */
+    SymmetricCryptoTransactionManagerSpi getSymmetricCryptoTransactionManagerSpi() {
+      return symmetricCryptoTransactionManagerSpi;
+    }
+
+    /**
+     * @return "true" if the secure session is open.
+     * @since 2.3.2
+     */
+    boolean isSecureSessionOpen() {
+      return isSecureSessionOpen;
+    }
+
+    /**
+     * @return "true" if the encryption is active.
+     * @since 2.3.2
+     */
+    boolean isEncryptionActive() {
+      return isEncryptionActive;
     }
   }
 }

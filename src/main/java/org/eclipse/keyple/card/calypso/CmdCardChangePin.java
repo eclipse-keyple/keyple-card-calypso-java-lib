@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -58,18 +59,29 @@ final class CmdCardChangePin extends CardCommand {
     STATUS_TABLE = m;
   }
 
+  private byte[] pin;
+  private final boolean isPinEncryptedMode;
+  private final byte cipheringKif;
+  private final byte cipheringKvc;
+
   /**
    * Builds a Calypso Change PIN command
    *
    * @param calypsoCard The Calypso card.
-   * @param newPinData The new PIN data either plain or encrypted.
+   * @param pin The new PIN data either plain or encrypted.
    * @since 2.0.1
+   * @deprecated
    */
-  CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] newPinData) {
+  @Deprecated
+  CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] pin) {
 
-    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard);
+    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard, null);
+    this.pin = null;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
 
-    if (newPinData == null || (newPinData.length != 0x04 && newPinData.length != 0x10)) {
+    if (pin == null || (pin.length != 0x04 && pin.length != 0x10)) {
       throw new IllegalArgumentException("Bad PIN data length.");
     }
 
@@ -79,7 +91,39 @@ final class CmdCardChangePin extends CardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, newPinData, null)));
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, pin, null)));
+  }
+
+  /**
+   * Constructor for plain PIN.
+   *
+   * @param context The current transaction context.
+   * @param pin The new PIN plain value.
+   * @since 2.3.2
+   */
+  CmdCardChangePin(CommandContextDto context, byte[] pin) {
+    super(CardCommandRef.CHANGE_PIN, 0, null, context);
+    this.pin = pin;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
+  }
+
+  /**
+   * Constructor for encrypted PIN.
+   *
+   * @param context The current transaction context.
+   * @param pin The new PIN plain value.
+   * @param cipheringKif The ciphering KIF.
+   * @param cipheringKvc The ciphering KVC.
+   * @since 2.3.2
+   */
+  CmdCardChangePin(CommandContextDto context, byte[] pin, byte cipheringKif, byte cipheringKvc) {
+    super(CardCommandRef.CHANGE_PIN, 0, null, context);
+    this.pin = pin;
+    this.isPinEncryptedMode = true;
+    this.cipheringKif = cipheringKif;
+    this.cipheringKvc = cipheringKvc;
   }
 
   /**
@@ -91,6 +135,71 @@ final class CmdCardChangePin extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    if (isPinEncryptedMode) {
+      try {
+        pin =
+            getContext()
+                .getSymmetricCryptoTransactionManagerSpi()
+                .cipherPinForModification(
+                    getContext().getCard().getChallenge(),
+                    new byte[4],
+                    pin,
+                    cipheringKif,
+                    cipheringKvc);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+    }
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                getContext().getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                (byte) 0x00, // CL-PIN-MP1P2.1
+                (byte) 0xFF,
+                pin,
+                null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return isPinEncryptedMode;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
   }
 
   /**

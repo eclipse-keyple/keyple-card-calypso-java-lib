@@ -94,7 +94,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private SvLoadLogRecord svLoadLogRecord;
   private SvDebitLogRecord svDebitLogRecord;
   private boolean isHce;
-  private byte[] cardChallenge;
+  private byte[] challenge;
   private byte[] traceabilityInformation;
   private byte svKvc;
   private byte[] svGetHeader;
@@ -106,9 +106,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
   private boolean isCounterValuePostponed;
   private WriteAccessLevel preOpenWriteAccessLevel;
-  private boolean preOpenUseExtendedMode;
-  private byte preOpenSfi;
-  private int preOpenRecordNumber;
   private byte[] preOpenDataOut;
 
   private static final List<PatchRev3> patchesRev3 = new ArrayList<PatchRev3>();
@@ -202,7 +199,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
     CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci(CalypsoCardClass.ISO);
-    cmdCardGetDataFci.parseApduResponse(selectApplicationResponse, this);
+    cmdCardGetDataFci.setApduResponseAndCheckStatus(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");
@@ -1071,11 +1068,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * Sets the challenge received in response to the GET CHALLENGE command.
    *
-   * @param cardChallenge A not empty array.
+   * @param challenge A not empty array.
    * @since 2.0.0
    */
-  void setCardChallenge(byte[] cardChallenge) {
-    this.cardChallenge = cardChallenge;
+  void setChallenge(byte[] challenge) {
+    this.challenge = challenge;
   }
 
   /**
@@ -1106,8 +1103,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *     product type of the card). May be null if the challenge is not available.
    * @since 2.0.0
    */
-  byte[] getCardChallenge() {
-    return cardChallenge;
+  byte[] getChallenge() {
+    return challenge;
   }
 
   /**
@@ -1185,33 +1182,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   CalypsoCardAdapter setPreOpenWriteAccessLevel(WriteAccessLevel preOpenWriteAccessLevel) {
     this.preOpenWriteAccessLevel = preOpenWriteAccessLevel;
-    return this;
-  }
-
-  boolean isPreOpenUseExtendedMode() {
-    return preOpenUseExtendedMode;
-  }
-
-  CalypsoCardAdapter setPreOpenUseExtendedMode(boolean preOpenUseExtendedMode) {
-    this.preOpenUseExtendedMode = preOpenUseExtendedMode;
-    return this;
-  }
-
-  byte getPreOpenSfi() {
-    return preOpenSfi;
-  }
-
-  CalypsoCardAdapter setPreOpenSfi(byte preOpenSfi) {
-    this.preOpenSfi = preOpenSfi;
-    return this;
-  }
-
-  int getPreOpenRecordNumber() {
-    return preOpenRecordNumber;
-  }
-
-  CalypsoCardAdapter setPreOpenRecordNumber(int preOpenRecordNumber) {
-    this.preOpenRecordNumber = preOpenRecordNumber;
     return this;
   }
 

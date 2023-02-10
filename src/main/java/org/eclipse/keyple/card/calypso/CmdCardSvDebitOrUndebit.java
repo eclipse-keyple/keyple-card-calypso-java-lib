@@ -15,6 +15,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.transaction.CardSignatureNotVerifiableException;
+import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -64,6 +66,9 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
  */
 final class CmdCardSvDebitOrUndebit extends CardCommand {
 
+  private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
+      "Unable to verify the card SV MAC associated to the SV operation.";
+  public static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
   private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -109,7 +114,9 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardSvDebitOrUndebit(
       boolean isDebitCommand,
       CalypsoCardAdapter calypsoCard,
@@ -118,7 +125,8 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
       byte[] time,
       boolean isExtendedModeAllowed) {
 
-    super(isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, calypsoCard);
+    super(
+        isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, calypsoCard, null);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -148,6 +156,60 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     dataIn[5] = time[0];
     dataIn[6] = time[1];
     dataIn[7] = calypsoCard.getSvKvc();
+    // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
+  }
+
+  /**
+   * Instantiates a new CmdCardSvDebitOrUndebit.
+   *
+   * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
+   *     command.
+   * @param context The context.
+   * @param amount amount to debit or undebit (positive integer from 0 to 32767).
+   * @param date operation date (not checked by the card).
+   * @param time operation time (not checked by the card).
+   * @param isExtendedModeAllowed True if the extended mode is allowed.
+   * @throws IllegalArgumentException If the command is inconsistent
+   * @since 2.3.2
+   */
+  CmdCardSvDebitOrUndebit(
+      boolean isDebitCommand,
+      CommandContextDto context,
+      int amount,
+      byte[] date,
+      byte[] time,
+      boolean isExtendedModeAllowed) {
+
+    super(isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, null, context);
+
+    /* @see Calypso Layer ID 8.02 (200108) */
+    // CL-SV-DEBITVAL.1
+    if (amount < 0 || amount > 32767) {
+      throw new IllegalArgumentException(
+          "Amount is outside allowed boundaries (0 <= amount <= 32767)");
+    }
+    if (date == null || time == null) {
+      throw new IllegalArgumentException("date and time cannot be null");
+    }
+    if (date.length != 2 || time.length != 2) {
+      throw new IllegalArgumentException("date and time must be 2-byte arrays");
+    }
+
+    // keeps a copy of these fields until the command is finalized
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
+
+    // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
+    // 10-byte signature)
+    dataIn = new byte[15 + (isExtendedModeAllowed ? 10 : 5)];
+
+    // dataIn[0] will be filled in at the finalization phase.
+    short amountShort = isDebitCommand ? (short) -amount : (short) amount;
+    ByteArrayUtil.copyBytes(amountShort, dataIn, 1, 2);
+    dataIn[3] = date[0];
+    dataIn[4] = date[1];
+    dataIn[5] = time[0];
+    dataIn[6] = time[1];
+    dataIn[7] = context.getCard().getSvKvc();
     // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
   }
 
@@ -225,14 +287,87 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
+    svCommandSecurityData.setSvGetRequest(getContext().getCard().getSvGetHeader());
+    svCommandSecurityData.setSvGetResponse(getContext().getCard().getSvGetData());
+    svCommandSecurityData.setSvCommandPartialRequest(getSvDebitOrUndebitData());
+    try {
+      getContext()
+          .getSymmetricCryptoTransactionManagerSpi()
+          .computeSvCommandSecurityData(svCommandSecurityData);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+    finalizeCommand(svCommandSecurityData);
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    if (apduResponse.getDataOut().length != 0
+        && apduResponse.getDataOut().length != 3
+        && apduResponse.getDataOut().length != 6) {
+      throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
+    }
+    getContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
+    updateTerminalSessionMacIfNeeded();
+    try {
+      if (!getContext()
+          .getSymmetricCryptoTransactionManagerSpi()
+          .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
+        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+      }
+    } catch (SymmetricCryptoIOException e) {
+      throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>The permitted lengths are 0 (in session), 3 (not 3.2) or 6 (3.2)
    *
    * @throws IllegalStateException If the length is incorrect.
    * @since 2.0.1
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {

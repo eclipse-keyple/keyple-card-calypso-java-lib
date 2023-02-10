@@ -44,6 +44,7 @@ import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
+import org.calypsonet.terminal.calypso.transaction.SelectFileException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.Assert;
@@ -89,10 +90,25 @@ final class CmdCardSelectFile extends CardCommand {
    * @param calypsoCard The Calypso card.
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
-    super(commandRef, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard, null);
     buildCommand(calypsoCard.getCardClass(), selectFileControl);
+  }
+
+  /**
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
+   *
+   * @param context The context.
+   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
+   * @since 2.3.2
+   */
+  CmdCardSelectFile(CommandContextDto context, SelectFileControl selectFileControl) {
+    super(commandRef, 0, null, context);
+    buildCommand(context.getCard().getCardClass(), selectFileControl);
   }
 
   /**
@@ -104,7 +120,7 @@ final class CmdCardSelectFile extends CardCommand {
    * @since 2.0.1
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    super(commandRef, 0, null);
+    super(commandRef, 0, null, null);
     buildCommand(calypsoCardClass, selectFileControl);
   }
 
@@ -115,10 +131,25 @@ final class CmdCardSelectFile extends CardCommand {
    * @param calypsoCard The Calypso card.
    * @param lid The LID.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
-    super(commandRef, 0, calypsoCard);
+    super(commandRef, 0, calypsoCard, null);
     buildCommand(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid);
+  }
+
+  /**
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
+   *
+   * @param context The context.
+   * @param lid The LID.
+   * @since 2.3.2
+   */
+  CmdCardSelectFile(CommandContextDto context, short lid) {
+    super(commandRef, 0, null, context);
+    buildCommand(context.getCard().getCardClass(), context.getCard().getProductType(), lid);
   }
 
   /**
@@ -132,7 +163,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-    super(commandRef, 0, null);
+    super(commandRef, 0, null, null);
     buildCommand(calypsoCardClass, productType, lid);
   }
 
@@ -221,8 +252,8 @@ final class CmdCardSelectFile extends CardCommand {
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
   }
 
@@ -235,6 +266,53 @@ final class CmdCardSelectFile extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    try {
+      super.setApduResponseAndCheckStatus(apduResponse);
+    } catch (CardDataAccessException e) {
+      throw new SelectFileException("File not found", e);
+    }
+    parseProprietaryInformation(apduResponse.getDataOut(), getContext().getCard());
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

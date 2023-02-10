@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
+import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 
 /**
  * Superclass for all card commands.
@@ -33,6 +34,8 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  */
 abstract class CardCommand {
 
+  static final byte[] APDU_RESPONSE_9000 = new byte[] {(byte) 0x90, 0x00};
+
   /**
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
    * (Success)
@@ -48,11 +51,13 @@ abstract class CardCommand {
   }
 
   private final CardCommandRef commandRef;
-  private final int le;
+  private int le;
   private String name;
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
   private CalypsoCardAdapter calypsoCard;
+  private CommandContextDto context;
+  private boolean isCryptoServiceSynchronized;
 
   /**
    * Constructor dedicated for the building of referenced Calypso commands
@@ -61,13 +66,19 @@ abstract class CardCommand {
    * @param le The value of the LE field.
    * @param calypsoCard The Calypso card (it may be null if the card selection has not yet been
    *     made).
+   * @param context The transaction context
    * @since 2.0.1
    */
-  CardCommand(CardCommandRef commandRef, int le, CalypsoCardAdapter calypsoCard) {
+  CardCommand(
+      CardCommandRef commandRef,
+      int le,
+      CalypsoCardAdapter calypsoCard,
+      CommandContextDto context) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
     this.le = le;
     this.calypsoCard = calypsoCard;
+    this.context = context;
   }
 
   /**
@@ -157,6 +168,202 @@ abstract class CardCommand {
   }
 
   /**
+   * Returns the current context.
+   *
+   * @return Null if not defined (selection process) or for legacy use (deprecated methods).
+   * @since 2.3.2
+   */
+  final CommandContextDto getContext() {
+    return context;
+  }
+
+  /**
+   * @param le The value of the LE field.
+   * @since 2.3.2
+   */
+  final void setLe(int le) {
+    this.le = le;
+  }
+
+  /**
+   * Returns the value of the LE.
+   *
+   * @return 0 if LE is not set.
+   * @since 2.3.2
+   */
+  final int getLe() {
+    return le;
+  }
+
+  /**
+   * Notifies that the crypto service has been synchronized.
+   *
+   * @since 2.3.2
+   */
+  final void confirmCryptoServiceSuccessfullySynchronized() {
+    isCryptoServiceSynchronized = true;
+  }
+
+  /**
+   * @return "true" if the post-processing is already done.
+   * @since 2.3.2
+   */
+  final boolean isCryptoServiceSynchronized() {
+    return isCryptoServiceSynchronized;
+  }
+
+  /**
+   * Finalize the construction of the APDU request if needed.
+   *
+   * @since 2.3.2
+   */
+  abstract void finalizeRequest();
+
+  /**
+   * @return "true" if the crypto service is required to finalize the construction of the request.
+   * @since 2.3.2
+   */
+  abstract boolean isCryptoServiceRequiredToFinalizeRequest();
+
+  /**
+   * Attempts to synchronize the crypto service before executing the finalized command on the card
+   * and returns "true" in any of the following cases:
+   *
+   * <ul>
+   *   <li>the crypto service is not involved in the process
+   *   <li>the crypto service has been correctly synchronized
+   *   <li>the crypto service has already been synchronized
+   * </ul>
+   *
+   * @return "false" if the crypto service could not be synchronized before transmitting the
+   *     commands to the card.
+   * @since 2.3.2
+   */
+  abstract boolean synchronizeCryptoServiceBeforeCardProcessing();
+
+  /**
+   * Parses the APDU response, updates the card image and synchronize the crypto service if it is
+   * involved in the process.
+   *
+   * @param apduResponse The APDU response.
+   * @throws CardCommandException if status is not successful or if the length of the response is
+   *     not equal to the LE field in the request.
+   * @since 2.3.2
+   */
+  abstract void parseResponse(ApduResponseApi apduResponse) throws CardCommandException;
+
+  /**
+   * Parses the APDU response, updates the card image and synchronize the crypto service if it is
+   * involved in the process.
+   *
+   * @param apduResponse The APDU response.
+   * @throws CardCommandException if status is not successful or if the length of the response is
+   *     not equal to the LE field in the request.
+   * @since 2.3.2
+   */
+  final void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    try {
+      parseResponse(apduResponse);
+    } catch (RuntimeException e) {
+      restoreCardImageIfNeeded();
+      throw e;
+    }
+  }
+
+  /**
+   * Updates the terminal session MAC using the parsed APDU response if the encryption is not
+   * active. If encryption is enabled, then the session MAC has already been updated during
+   * decryption.
+   *
+   * @since 2.3.2
+   */
+  final void updateTerminalSessionMacIfNeeded() {
+    updateTerminalSessionMacIfNeeded(apduResponse.getApdu());
+  }
+
+  /**
+   * Updates the terminal session MAC using the provided APDU response.
+   *
+   * @param apduResponse The APDU response to use.
+   * @since 2.3.2
+   */
+  final void updateTerminalSessionMacIfNeeded(byte[] apduResponse) {
+    if (isCryptoServiceSynchronized) {
+      return;
+    }
+    if (context.isSecureSessionOpen()) {
+      try {
+        context
+            .getSymmetricCryptoTransactionManagerSpi()
+            .updateTerminalSessionMac(apduRequest.getApdu());
+        context.getSymmetricCryptoTransactionManagerSpi().updateTerminalSessionMac(apduResponse);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+    }
+    isCryptoServiceSynchronized = true;
+  }
+
+  /**
+   * Encrypts the APDU request using the crypto service and updates the terminal session MAC if the
+   * encryption is active.
+   *
+   * @since 2.3.2
+   */
+  final void encryptRequestAndUpdateTerminalSessionMacIfNeeded() {
+    if (context.isEncryptionActive()) {
+      try {
+        apduRequest.setApdu(
+            context
+                .getSymmetricCryptoTransactionManagerSpi()
+                .updateTerminalSessionMac(apduRequest.getApdu()));
+      } catch (SymmetricCryptoException e) {
+        restoreCardImageIfNeeded();
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        restoreCardImageIfNeeded();
+        throw (RuntimeException) e.getCause();
+      } catch (RuntimeException e) {
+        restoreCardImageIfNeeded();
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Decrypts the provided APDU response using the crypto service and updates the terminal session
+   * MAC if the encryption is active.
+   *
+   * @param apduResponse The APDU response to update.
+   * @since 2.3.2
+   */
+  final void decryptResponseAndUpdateTerminalSessionMacIfNeeded(ApduResponseApi apduResponse) {
+    if (context.isEncryptionActive()) {
+      try {
+        byte[] decryptedApdu =
+            context
+                .getSymmetricCryptoTransactionManagerSpi()
+                .updateTerminalSessionMac(apduResponse.getApdu());
+        System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+      isCryptoServiceSynchronized = true;
+    }
+  }
+
+  /** Restores the content of the card image if a secure session is opened */
+  private void restoreCardImageIfNeeded() {
+    if (context.isSecureSessionOpen()) {
+      context.getCard().restoreFiles();
+    }
+  }
+
+  /**
    * Parses the response {@link ApduResponseApi} and checks the status word.
    *
    * @param apduResponse The APDU response.
@@ -164,20 +371,21 @@ abstract class CardCommand {
    *     not equal to the LE field in the request.
    * @since 2.0.1
    */
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     this.apduResponse = apduResponse;
     checkStatus();
   }
 
   /**
-   * Sets the Calypso card and invoke the {@link #parseApduResponse(ApduResponseApi)} method.
+   * Sets the Calypso card and invoke the {@link #setApduResponseAndCheckStatus(ApduResponseApi)}
+   * method.
    *
    * @since 2.2.3
    */
-  void parseApduResponse(ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard)
-      throws CardCommandException {
+  final void setApduResponseAndCheckStatus(
+      ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard) throws CardCommandException {
     this.calypsoCard = calypsoCard;
-    parseApduResponse(apduResponse);
+    setApduResponseAndCheckStatus(apduResponse);
   }
 
   /**
@@ -249,17 +457,6 @@ abstract class CardCommand {
   }
 
   /**
-   * Gets the ASCII message from the statusTable for the current status word.
-   *
-   * @return A nullable value
-   * @since 2.0.1
-   */
-  final String getStatusInformation() {
-    StatusProperties props = getStatusWordProperties();
-    return props != null ? props.getInformation() : null;
-  }
-
-  /**
    * Builds a specific APDU command exception.
    *
    * @param exceptionClass the exception class.
@@ -267,9 +464,8 @@ abstract class CardCommand {
    * @return A not null reference.
    * @since 2.0.1
    */
-  final CardCommandException buildCommandException(
+  private CardCommandException buildCommandException(
       Class<? extends CardCommandException> exceptionClass, String message) {
-
     CardCommandException e;
     if (exceptionClass == CardAccessForbiddenException.class) {
       e = new CardAccessForbiddenException(message, commandRef);

@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.slf4j.Logger;
@@ -77,6 +78,7 @@ final class CmdCardReadRecords extends CardCommand {
   // Construction arguments used for parsing
   private int sfi;
   private int firstRecordNumber;
+  private int recordSize;
   private ReadMode readMode;
 
   /**
@@ -88,16 +90,50 @@ final class CmdCardReadRecords extends CardCommand {
    *     records)
    * @param readMode read mode, requests the reading of one or all the records.
    * @param expectedLength the expected length of the record(s).
+   * @param recordSize the size of one record.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardReadRecords(
       CalypsoCardAdapter calypsoCard,
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard);
-    buildCommand(calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength);
+      int expectedLength,
+      int recordSize) {
+    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard, null);
+    buildCommand(
+        calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength, recordSize);
+  }
+
+  /**
+   * Instantiates a new read records cmd build.
+   *
+   * @param context The context.
+   * @param sfi the sfi top select.
+   * @param firstRecordNumber the record number to read (or first record to read in case of several.
+   *     records)
+   * @param readMode read mode, requests the reading of one or all the records.
+   * @param expectedLength the expected length of the record(s).
+   * @param recordSize the size of one record.
+   * @since 2.3.2
+   */
+  CmdCardReadRecords(
+      CommandContextDto context,
+      int sfi,
+      int firstRecordNumber,
+      ReadMode readMode,
+      int expectedLength,
+      int recordSize) {
+    super(CardCommandRef.READ_RECORDS, expectedLength, null, context);
+    buildCommand(
+        context.getCard().getCardClass(),
+        sfi,
+        firstRecordNumber,
+        readMode,
+        expectedLength,
+        recordSize);
   }
 
   /**
@@ -117,8 +153,8 @@ final class CmdCardReadRecords extends CardCommand {
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, null);
-    buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength);
+    super(CardCommandRef.READ_RECORDS, expectedLength, null, null);
+    buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength, 0);
   }
 
   /**
@@ -130,16 +166,19 @@ final class CmdCardReadRecords extends CardCommand {
    *     records)
    * @param readMode read mode, requests the reading of one or all the records.
    * @param expectedLength the expected length of the record(s).
+   * @param recordSize the size of one record.
    */
   private void buildCommand(
       CalypsoCardClass calypsoCardClass,
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength) {
+      int expectedLength,
+      int recordSize) {
 
     this.sfi = sfi;
     this.firstRecordNumber = firstRecordNumber;
+    this.recordSize = recordSize;
     this.readMode = readMode;
 
     byte p1 = (byte) firstRecordNumber;
@@ -186,6 +225,64 @@ final class CmdCardReadRecords extends CardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
+      getContext().getCard().setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
+    } else {
+      byte[] apdu = apduResponse.getDataOut();
+      int apduLen = apdu.length;
+      int index = 0;
+      while (apduLen > 0) {
+        byte recordNb = apdu[index++];
+        byte len = apdu[index++];
+        getContext()
+            .getCard()
+            .setContent((byte) sfi, recordNb, Arrays.copyOfRange(apdu, index, index + len));
+        index = index + len;
+        apduLen = apduLen - 2 - len;
+      }
+    }
+    updateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.1
    */
   @Override
@@ -199,8 +296,8 @@ final class CmdCardReadRecords extends CardCommand {
    * @since 2.1.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
       getCalypsoCard().setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
     } else {
@@ -216,6 +313,63 @@ final class CmdCardReadRecords extends CardCommand {
         apduLen = apduLen - 2 - len;
       }
     }
+  }
+
+  /**
+   * Builds the anticipated APDU response with the SW.
+   *
+   * @return A not empty byte array.
+   * @throws IllegalStateException If the record or some records have not been read beforehand.
+   * @since 2.3.2
+   */
+  byte[] buildAnticipatedResponse() {
+    ElementaryFile ef = getCalypsoCard().getFileBySfi((byte) sfi);
+    if (ef != null) {
+      byte[] apdu =
+          readMode == CmdCardReadRecords.ReadMode.ONE_RECORD
+              ? buildAnticipatedResponseForOneRecordMode(ef)
+              : buildAnticipatedResponseForMultipleRecordsMode(ef);
+      if (apdu != null) {
+        return apdu;
+      }
+    }
+    throw new IllegalStateException(
+        String.format(
+            "Unable to determine the anticipated APDU response for the command '%s' (SFI %02Xh, record %d)"
+                + " because the record or some records have not been read beforehand.",
+            getName(), sfi, firstRecordNumber));
+  }
+
+  private byte[] buildAnticipatedResponseForOneRecordMode(ElementaryFile ef) {
+    byte[] content = ef.getData().getContent(firstRecordNumber);
+    if (content.length > 0 && content.length >= getLe()) {
+      int length = getLe() != 0 ? getLe() : content.length;
+      byte[] apdu = new byte[length + 2];
+      System.arraycopy(content, 0, apdu, 0, length); // Record content
+      apdu[length] = (byte) 0x90; // SW 9000
+      return apdu;
+    }
+    return null; // NOSONAR
+  }
+
+  private byte[] buildAnticipatedResponseForMultipleRecordsMode(ElementaryFile ef) {
+    byte[] apdu = new byte[getLe() + 2];
+    int nbRecords = getLe() / (recordSize + 2);
+    int lastRecordNumber = firstRecordNumber + nbRecords - 1;
+    int index = 0;
+    for (int i = firstRecordNumber; i <= lastRecordNumber; i++) {
+      byte[] content = ef.getData().getContent(i);
+      if (content.length >= recordSize) {
+        apdu[index++] = (byte) i; // Record number
+        apdu[index++] = (byte) recordSize; // Record size
+        System.arraycopy(content, 0, apdu, index, recordSize); // Record content
+        index += recordSize;
+      } else {
+        return null; // NOSONAR
+      }
+    }
+    apdu[index] = (byte) 0x90; // SW 9000
+    return apdu;
   }
 
   /**
@@ -235,7 +389,7 @@ final class CmdCardReadRecords extends CardCommand {
   }
 
   /**
-   * @return the readJustOneRecord flag
+   * @return the read mode
    * @since 2.0.1
    */
   ReadMode getReadMode() {

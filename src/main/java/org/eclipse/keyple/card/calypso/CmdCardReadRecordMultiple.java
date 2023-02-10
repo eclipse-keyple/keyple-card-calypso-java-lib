@@ -90,11 +90,13 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    * @param offset The offset from which to read in each record.
    * @param length The number of bytes to read in each record.
    * @since 2.1.0
+   * @deprecated
    */
+  @Deprecated
   CmdCardReadRecordMultiple(
       CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard, null);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -124,6 +126,48 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param context The context.
+   * @param sfi The SFI.
+   * @param recordNumber The number of the first record to read.
+   * @param offset The offset from which to read in each record.
+   * @param length The number of bytes to read in each record.
+   * @since 2.3.2
+   */
+  CmdCardReadRecordMultiple(
+      CommandContextDto context, byte sfi, byte recordNumber, byte offset, byte length) {
+
+    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, null, context);
+
+    this.sfi = sfi;
+    this.recordNumber = recordNumber;
+    this.offset = offset;
+    this.length = length;
+
+    byte p2 = (byte) (sfi * 8 + 5);
+    byte[] dataIn = new byte[] {0x54, 0x02, offset, length};
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                context.getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                recordNumber,
+                p2,
+                dataIn,
+                (byte) 0)));
+
+    if (logger.isDebugEnabled()) {
+      String extraInfo =
+          String.format(
+              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, LENGTH:%d",
+              sfi, recordNumber, offset, length);
+      addSubName(extraInfo);
+    }
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @return false
@@ -132,6 +176,59 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    byte[] dataOut = apduResponse.getDataOut();
+    int nbRecords = dataOut.length / length;
+    for (int i = 0; i < nbRecords; i++) {
+      getContext()
+          .getCard()
+          .setContent(
+              sfi,
+              recordNumber + i,
+              Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
+              offset);
+    }
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**
@@ -150,8 +247,8 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    * @since 2.1.0
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     byte[] dataOut = apduResponse.getDataOut();
     int nbRecords = dataOut.length / length;
     for (int i = 0; i < nbRecords; i++) {

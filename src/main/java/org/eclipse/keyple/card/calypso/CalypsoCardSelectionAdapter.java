@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
@@ -236,39 +235,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
-   */
-  @Override
-  public CalypsoCardSelection prepareSingleStepSecureSession(
-      WriteAccessLevel writeAccessLevel, boolean useExtendedMode) {
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
-    commands.add(new CmdCardOpenSession(writeAccessLevel, 0, 0, useExtendedMode));
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
-  public CalypsoCardSelection prepareSingleStepSecureSession(
-      WriteAccessLevel writeAccessLevel, boolean useExtendedMode, byte sfi, int recordNumber) {
-    Assert.getInstance()
-        .notNull(writeAccessLevel, "writeAccessLevel")
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "recordNumber");
-    commands.add(new CmdCardOpenSession(writeAccessLevel, sfi, recordNumber, useExtendedMode));
-    return this;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.0.0
    */
   @Override
@@ -422,7 +388,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     // exception.
     for (int i = 0; i < apduResponses.size(); i++) {
       try {
-        commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
+        commands.get(i).setApduResponseAndCheckStatus(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
         if (commandRef == CardCommandRef.READ_RECORDS

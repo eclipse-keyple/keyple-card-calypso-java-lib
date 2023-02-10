@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.transaction.UnauthorizedKeyException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -28,10 +29,11 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardOpenSession extends CardCommand {
+final class CmdCardOpenSecureSession extends CardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSession.class);
-  private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d, PREOPEN:%s";
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSecureSession.class);
+  private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
+  private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -83,10 +85,11 @@ final class CmdCardOpenSession extends CardCommand {
   }
 
   private final boolean isExtendedModeAllowed;
-  private final boolean isPreOpenMode;
   private final WriteAccessLevel writeAccessLevel;
-  private final int sfi;
-  private final int recordNumber;
+  private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private boolean isReadModeConfigured;
+  private int sfi;
+  private int recordNumber;
 
   private boolean isPreviousSessionRatified;
   private byte[] challengeTransactionCounter;
@@ -106,7 +109,7 @@ final class CmdCardOpenSession extends CardCommand {
    * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @since 2.0.1
    */
-  CmdCardOpenSession(
+  CmdCardOpenSecureSession(
       CalypsoCardAdapter calypsoCard,
       WriteAccessLevel writeAccessLevel,
       byte[] samChallenge,
@@ -114,10 +117,10 @@ final class CmdCardOpenSession extends CardCommand {
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null);
 
+    this.symmetricCryptoSecuritySetting = null;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.isPreOpenMode = false;
     this.writeAccessLevel = writeAccessLevel;
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -142,28 +145,23 @@ final class CmdCardOpenSession extends CardCommand {
   }
 
   /**
-   * Constructor.
+   * Partial constructor.
    *
+   * @param context The context.
+   * @param symmetricCryptoSecuritySetting The symmetric crypto security settings to use.
    * @param writeAccessLevel The write access level.
-   * @param sfi The optional SFI of the file to read.
-   * @param recordNumber The optional record number to read.
-   * @param isExtendedModeAllowed True if the extended mode is allowed.
-   * @throws IllegalArgumentException If the key index is 0 and rev is 2.4
+   * @param isExtendedModeAllowed Is the extended mode allowed?
    * @since 2.3.2
    */
-  CmdCardOpenSession(
-      WriteAccessLevel writeAccessLevel, int sfi, int recordNumber, boolean isExtendedModeAllowed) {
-
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null);
-
-    this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.isPreOpenMode = true;
+  CmdCardOpenSecureSession(
+      CommandContextDto context,
+      SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
+      WriteAccessLevel writeAccessLevel,
+      boolean isExtendedModeAllowed) {
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, context);
     this.writeAccessLevel = writeAccessLevel;
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-
-    byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
-    createRev3(keyIndex, new byte[0]);
+    this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
   }
 
   /**
@@ -185,7 +183,7 @@ final class CmdCardOpenSession extends CardCommand {
       System.arraycopy(samChallenge, 0, dataIn, 1, samChallenge.length);
     } else {
       p2 = (byte) ((sfi * 8) + 1);
-      dataIn = samChallenge.length != 0 ? samChallenge : null;
+      dataIn = samChallenge;
     }
 
     /*
@@ -203,8 +201,7 @@ final class CmdCardOpenSession extends CardCommand {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber, isPreOpenMode);
+      String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
       addSubName(extraInfo);
     }
   }
@@ -260,8 +257,7 @@ final class CmdCardOpenSession extends CardCommand {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber, isPreOpenMode);
+      String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
       addSubName(extraInfo);
     }
   }
@@ -278,21 +274,170 @@ final class CmdCardOpenSession extends CardCommand {
   }
 
   /**
+   * Configures the read mode.
+   *
+   * @param sfi The SFI to select.
+   * @param recordNumber The number of the record to read.
+   * @since 2.3.2
+   */
+  void configureReadMode(int sfi, int recordNumber) {
+    this.sfi = sfi;
+    this.recordNumber = recordNumber;
+    this.isReadModeConfigured = true;
+  }
+
+  /**
+   * @return "true" if the read mode is already configured.
+   * @since 2.3.2
+   */
+  boolean isReadModeConfigured() {
+    return isReadModeConfigured;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    byte[] samChallenge;
+    try {
+      samChallenge =
+          getContext().getSymmetricCryptoTransactionManagerSpi().initTerminalSecureSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+    byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
+    switch (getContext().getCard().getProductType()) {
+      case PRIME_REVISION_1:
+        createRev10(keyIndex, samChallenge);
+        break;
+      case PRIME_REVISION_2:
+        createRev24(keyIndex, samChallenge);
+        break;
+      case PRIME_REVISION_3:
+      case LIGHT:
+      case BASIC:
+        createRev3(keyIndex, samChallenge);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Product type " + getContext().getCard().getProductType() + " not supported");
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    getContext().getCard().backupFiles();
+    super.setApduResponseAndCheckStatus(apduResponse);
+    byte[] dataOut = getApduResponse().getDataOut();
+    switch (getContext().getCard().getProductType()) {
+      case PRIME_REVISION_1:
+        parseRev10(dataOut);
+        break;
+      case PRIME_REVISION_2:
+        parseRev24(dataOut);
+        break;
+      default:
+        parseRev3(dataOut);
+    }
+    // CL-CSS-INFORAT.1
+    getContext().getCard().setDfRatified(isPreviousSessionRatified);
+    // CL-CSS-INFOTCNT.1
+    getContext()
+        .getCard()
+        .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
+    if (recordData.length > 0) {
+      getContext().getCard().setContent((byte) sfi, recordNumber, recordData);
+    }
+    // Post-processing
+    Byte computedKvc = computeKvc();
+    Byte computedKif = computeKif(computedKvc);
+    if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
+      throw new UnauthorizedKeyException(
+          String.format(
+              "Unauthorized key error: KIF=%s, KVC=%s",
+              computedKif != null ? String.format(PATTERN_1_BYTE_HEX, computedKif) : null,
+              computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
+    }
+    try {
+      getContext()
+          .getSymmetricCryptoTransactionManagerSpi()
+          .initTerminalSessionMac(getApduResponse().getDataOut(), computedKif, computedKvc);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+  }
+
+  /**
+   * Returns the KVC to use according to the provided write access and the card's KVC.
+   *
+   * @return "null" if the card did not provide a KVC value and if there's no default KVC value.
+   */
+  private Byte computeKvc() {
+    if (kvc != null) {
+      return kvc;
+    }
+    return symmetricCryptoSecuritySetting.getDefaultKvc(writeAccessLevel);
+  }
+
+  /**
+   * Returns the KIF to use according to the provided write access level and KVC.
+   *
+   * @param kvc The previously computed KVC value.
+   * @return "null" if the card did not provide a KIF value and if there's no default KIF value.
+   */
+  private Byte computeKif(Byte kvc) {
+    // CL-KEY-KIF.1
+    if ((kif != null && kif != (byte) 0xFF) || (kvc == null)) {
+      return kif;
+    }
+    // CL-KEY-KIFUNK.1
+    Byte result = symmetricCryptoSecuritySetting.getKif(writeAccessLevel, kvc);
+    if (result == null) {
+      result = symmetricCryptoSecuritySetting.getDefaultKif(writeAccessLevel);
+    }
+    return result;
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.0.1
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    if (isPreOpenMode) {
-      getCalypsoCard()
-          .setPreOpenWriteAccessLevel(writeAccessLevel)
-          .setPreOpenUseExtendedMode(isExtendedModeAllowed)
-          .setPreOpenSfi((byte) sfi)
-          .setPreOpenRecordNumber(recordNumber)
-          .setPreOpenDataOut(apduResponse.getDataOut());
-    }
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     byte[] dataOut = getApduResponse().getDataOut();
     switch (getCalypsoCard().getProductType()) {
       case PRIME_REVISION_1:
@@ -320,6 +465,7 @@ final class CmdCardOpenSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev3(byte[] apduResponseData) {
+    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
     int offset;
     // CL-CSS-OSSRFU.1
     if (isExtendedModeAllowed) {
@@ -327,12 +473,12 @@ final class CmdCardOpenSession extends CardCommand {
       isPreviousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
       boolean manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
       if (!manageSecureSessionAuthorized) {
-        getCalypsoCard().disableExtendedMode();
+        card.disableExtendedMode();
       }
     } else {
       offset = 0;
       isPreviousSessionRatified = (apduResponseData[4] == (byte) 0x00);
-      getCalypsoCard().disableExtendedMode();
+      card.disableExtendedMode();
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
     challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4 + offset);

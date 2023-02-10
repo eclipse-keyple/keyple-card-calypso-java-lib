@@ -52,10 +52,23 @@ final class CmdCardGetDataFcp extends CardCommand {
    *
    * @param calypsoCard The Calypso card.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
     buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param context The context.
+   * @since 2.3.2
+   */
+  CmdCardGetDataFcp(CommandContextDto context) {
+    super(CardCommandRef.GET_DATA, 0, null, context);
+    buildCommand(context.getCard().getCardClass());
   }
 
   /**
@@ -65,7 +78,7 @@ final class CmdCardGetDataFcp extends CardCommand {
    * @since 2.0.1
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null);
+    super(CardCommandRef.GET_DATA, 0, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -92,8 +105,8 @@ final class CmdCardGetDataFcp extends CardCommand {
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     CmdCardSelectFile.parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
   }
 
@@ -106,6 +119,50 @@ final class CmdCardGetDataFcp extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    CmdCardSelectFile.parseProprietaryInformation(
+        apduResponse.getDataOut(), getContext().getCard());
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

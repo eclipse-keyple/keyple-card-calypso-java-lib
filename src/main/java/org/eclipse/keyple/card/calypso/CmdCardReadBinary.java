@@ -72,10 +72,12 @@ final class CmdCardReadBinary extends CardCommand {
    * @param offset The offset.
    * @param length The number of bytes to read.
    * @since 2.1.0
+   * @deprecated
    */
+  @Deprecated
   CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, int length) {
 
-    super(CardCommandRef.READ_BINARY, length, calypsoCard);
+    super(CardCommandRef.READ_BINARY, length, calypsoCard, null);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -104,13 +106,52 @@ final class CmdCardReadBinary extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param context The context.
+   * @param sfi The sfi to select.
+   * @param offset The offset.
+   * @param length The number of bytes to read.
+   * @since 2.3.2
+   */
+  CmdCardReadBinary(CommandContextDto context, byte sfi, int offset, int length) {
+
+    super(CardCommandRef.READ_BINARY, length, null, context);
+
+    this.sfi = sfi;
+    this.offset = offset;
+
+    byte msb = (byte) (offset >> Byte.SIZE);
+    byte lsb = (byte) (offset & 0xFF);
+
+    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
+    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
+    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                context.getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                p1,
+                lsb,
+                null,
+                (byte) length)));
+
+    if (logger.isDebugEnabled()) {
+      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d, LENGTH:%d", sfi, offset, length);
+      addSubName(extraInfo);
+    }
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
   }
 
@@ -123,6 +164,49 @@ final class CmdCardReadBinary extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    getContext().getCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

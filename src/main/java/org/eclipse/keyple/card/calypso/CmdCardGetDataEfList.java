@@ -55,10 +55,23 @@ final class CmdCardGetDataEfList extends CardCommand {
    *
    * @param calypsoCard The Calypso card.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
     buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param context The context.
+   * @since 2.3.2
+   */
+  CmdCardGetDataEfList(CommandContextDto context) {
+    super(CardCommandRef.GET_DATA, 0, null, context);
+    buildCommand(context.getCard().getCardClass());
   }
 
   /**
@@ -68,7 +81,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null);
+    super(CardCommandRef.GET_DATA, 0, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -95,8 +108,8 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = getEfHeaders();
     for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
       getCalypsoCard().setFileHeader(entry.getValue(), entry.getKey());
@@ -112,6 +125,52 @@ final class CmdCardGetDataEfList extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = getEfHeaders();
+    for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
+      getContext().getCard().setFileHeader(entry.getValue(), entry.getKey());
+    }
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

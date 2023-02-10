@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 
 import java.util.*;
+import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
@@ -55,7 +56,8 @@ final class CmdCardManageSession extends CardCommand {
     STATUS_TABLE = m;
   }
 
-  /** The card session MAC. */
+  private boolean isEncryptionRequested;
+  private boolean isMutualAuthenticationRequested;
   private byte[] cardSessionMac;
 
   /**
@@ -66,11 +68,13 @@ final class CmdCardManageSession extends CardCommand {
    * @param activateEncryption True if the activation of the encryption is required.
    * @param terminalSessionMac The terminal session MAC when the card authentication is required.
    * @since 2.3.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardManageSession(
       CalypsoCardAdapter calypsoCard, boolean activateEncryption, byte[] terminalSessionMac) {
 
-    super(commandRef, terminalSessionMac != null ? 8 : 0, calypsoCard);
+    super(commandRef, terminalSessionMac != null ? 8 : 0, calypsoCard, null);
 
     byte p2;
     Byte le;
@@ -98,6 +102,157 @@ final class CmdCardManageSession extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param context The transaction context.
+   * @since 2.3.2
+   */
+  CmdCardManageSession(DtoAdapters.CommandContextDto context) {
+    super(commandRef, 0, null, context);
+  }
+
+  /**
+   * @param isEncryptionRequested The flag value to set.
+   * @return The current instance.
+   * @since 2.3.2
+   */
+  CmdCardManageSession setEncryptionRequested(boolean isEncryptionRequested) {
+    this.isEncryptionRequested = isEncryptionRequested;
+    return this;
+  }
+
+  /**
+   * @param isMutualAuthenticationRequested The flag value to set.
+   * @return The current instance.
+   * @since 2.3.2
+   */
+  CmdCardManageSession setMutualAuthenticationRequested(boolean isMutualAuthenticationRequested) {
+    this.isMutualAuthenticationRequested = isMutualAuthenticationRequested;
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    byte p2;
+    Byte le;
+    byte[] terminalSessionMac;
+    if (isMutualAuthenticationRequested) {
+      // case 4: this command contains incoming and outgoing data. We define le = 0, the actual
+      // length will be processed by the lower layers.
+      setLe(8); // for auto check of response length
+      p2 = isEncryptionRequested ? (byte) 0x03 : (byte) 0x01;
+      try {
+        terminalSessionMac =
+            getContext().getSymmetricCryptoTransactionManagerSpi().generateTerminalSessionMac();
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+      le = 0;
+    } else {
+      // case 1: this command contains no data. We define le = null.
+      setLe(0);
+      p2 = isEncryptionRequested ? (byte) 0x02 : (byte) 0x00;
+      terminalSessionMac = null;
+      le = null;
+    }
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                getContext().getCard().getCardClass().getValue(),
+                commandRef.getInstructionByte(),
+                (byte) 0x00,
+                p2,
+                terminalSessionMac,
+                le)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return isMutualAuthenticationRequested;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    if (isMutualAuthenticationRequested) {
+      return false;
+    }
+    if (!isCryptoServiceSynchronized()) {
+      updateCryptoServiceEncryptionStateIfNeeded();
+      confirmCryptoServiceSuccessfullySynchronized();
+    }
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    try {
+      super.setApduResponseAndCheckStatus(apduResponse);
+    } catch (CardSecurityDataException e) {
+      if (apduResponse.getStatusWord() == 0x6985
+          && !getContext().getCard().isExtendedModeSupported()) {
+        throw new UnsupportedOperationException(
+            "'Manage Secure Session' command not available for this context"
+                + " (Card and/or SAM does not support extended mode)");
+      }
+      throw e;
+    }
+    cardSessionMac = getApduResponse().getDataOut();
+    if (isMutualAuthenticationRequested) {
+      try {
+        if (!getContext()
+            .getSymmetricCryptoTransactionManagerSpi()
+            .isCardSessionMacValid(cardSessionMac)) {
+          throw new InvalidCardSignatureException("Invalid card (authentication failed!)");
+        }
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+    }
+    if (!isCryptoServiceSynchronized()) {
+      updateCryptoServiceEncryptionStateIfNeeded();
+    }
+  }
+
+  /** Updates the crypto service "encryption" state if needed. */
+  private void updateCryptoServiceEncryptionStateIfNeeded() {
+    try {
+      if (!getContext().isEncryptionActive() && isEncryptionRequested) {
+        getContext().getSymmetricCryptoTransactionManagerSpi().activateEncryption();
+      } else if (getContext().isEncryptionActive() && !isEncryptionRequested) {
+        getContext().getSymmetricCryptoTransactionManagerSpi().deactivateEncryption();
+      }
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @return False
@@ -116,13 +271,14 @@ final class CmdCardManageSession extends CardCommand {
    * @since 2.3.1
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     try {
-      super.parseApduResponse(apduResponse);
+      super.setApduResponseAndCheckStatus(apduResponse);
     } catch (CardSecurityDataException e) {
       if (apduResponse.getStatusWord() == 0x6985 && !getCalypsoCard().isExtendedModeSupported()) {
         throw new UnsupportedOperationException(
-            "The 'Manage Secure Session' command is not available for this context (Card and/or SAM does not support the extended mode).");
+            "'Manage Secure Session' command not available for this context"
+                + " (Card and/or SAM does not support extended mode)");
       }
       throw e;
     }
