@@ -253,7 +253,8 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
    */
   byte[] buildAnticipatedResponse() {
     byte[] response;
-    if (getContext().getCard().isCounterValuePostponed()) {
+    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
+    if (card.isCounterValuePostponed()) {
       // Response = 6200
       response = new byte[2];
       response[0] = (byte) 0x62; // SW 6200

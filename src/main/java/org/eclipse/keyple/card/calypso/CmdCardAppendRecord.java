@@ -195,7 +195,7 @@ final class CmdCardAppendRecord extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getCalypsoCard().addCyclicContent((byte) sfi, data);
+    getContext().getCard().addCyclicContent((byte) sfi, data);
     updateTerminalSessionMacIfNeeded();
   }
 

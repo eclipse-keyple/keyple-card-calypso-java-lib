@@ -199,6 +199,10 @@ final class CmdCardSvReload extends CardCommand {
     dataIn[9] = time[0];
     dataIn[10] = time[1];
     // dataIn[11]..dataIn[11+7+sigLen] will be filled in at the finalization phase.
+    // add dummy apdu request to ensure it exists when checking the session buffer usage
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build((byte) 0, (byte) 0, (byte) 0, (byte) 0, dataIn, null)));
   }
 
   /**
@@ -218,6 +222,7 @@ final class CmdCardSvReload extends CardCommand {
    */
   void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
+    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
@@ -233,7 +238,7 @@ final class CmdCardSvReload extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
-                    getCalypsoCard().getCardClass() == CalypsoCardClass.LEGACY
+                    card.getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
                     getCommandRef().getInstructionByte(),
@@ -330,18 +335,20 @@ final class CmdCardSvReload extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
-    getCalypsoCard().setSvOperationSignature(apduResponse.getDataOut());
+    getContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
     updateTerminalSessionMacIfNeeded();
-    try {
-      if (!getContext()
-          .getSymmetricCryptoTransactionManagerSpi()
-          .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
-        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+    if (!getContext().isSecureSessionOpen()) {
+      try {
+        if (!getContext()
+            .getSymmetricCryptoTransactionManagerSpi()
+            .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
+          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+        }
+      } catch (SymmetricCryptoIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
       }
-    } catch (SymmetricCryptoIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
-    } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
     }
   }
 

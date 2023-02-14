@@ -2883,7 +2883,9 @@ final class CardTransactionManagerAdapter
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .notNull(recordData, MSG_RECORD_DATA)
         .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
-    _cardCommands.add(new CmdCardAppendRecord(getContext(), sfi, recordData));
+    CmdCardAppendRecord command = new CmdCardAppendRecord(getContext(), sfi, recordData);
+    prepareNewSecureSessionIfNeeded(command);
+    _cardCommands.add(command);
     // TODO legacy
     cardCommands.add(new CmdCardAppendRecord(card, sfi, recordData));
     return this;
@@ -3392,15 +3394,15 @@ final class CardTransactionManagerAdapter
 
     checkSvModifyingCommandPreconditions(SvOperation.DEBIT);
 
-    if (_svAction == SvAction.DO
-        && !symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized()
-        && (card.getSvBalance() - amount) < 0) {
-      throw new IllegalStateException("Negative balances not allowed");
-    }
-
     CmdCardSvDebitOrUndebit command =
         new CmdCardSvDebitOrUndebit(
-            svAction == SvAction.DO, getContext(), amount, date, time, isExtendedMode);
+            svAction == SvAction.DO,
+            getContext(),
+            amount,
+            date,
+            time,
+            isExtendedMode,
+            symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized());
     prepareNewSecureSessionIfNeeded(command);
     _cardCommands.add(command);
 

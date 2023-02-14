@@ -30,7 +30,7 @@ repositories {
     maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
-    implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.1.0")
+    implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.2.0")
     implementation("org.calypsonet.terminal:calypsonet-terminal-card-java-api:1.0.0")
     implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.6.0-SNAPSHOT") { isChanging = true }
     implementation("org.eclipse.keyple:keyple-common-java-api:2.0.0")

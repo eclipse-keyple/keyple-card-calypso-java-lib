@@ -98,7 +98,10 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     STATUS_TABLE = m;
   }
 
+  private final int amount;
+  private final boolean isDebitCommand;
   private final boolean isExtendedModeAllowed;
+  private final boolean isSvNegativeBalanceAuthorized;
   /** apdu data array */
   private final byte[] dataIn;
 
@@ -142,7 +145,10 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     }
 
     // keeps a copy of these fields until the command is finalized
+    this.amount = amount;
+    this.isDebitCommand = isDebitCommand;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.isSvNegativeBalanceAuthorized = true;
 
     // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
     // 10-byte signature)
@@ -169,6 +175,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    * @param date operation date (not checked by the card).
    * @param time operation time (not checked by the card).
    * @param isExtendedModeAllowed True if the extended mode is allowed.
+   * @param isSvNegativeBalanceAuthorized True if the negative balance is authorized.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.3.2
    */
@@ -178,7 +185,8 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
       int amount,
       byte[] date,
       byte[] time,
-      boolean isExtendedModeAllowed) {
+      boolean isExtendedModeAllowed,
+      boolean isSvNegativeBalanceAuthorized) {
 
     super(isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, null, context);
 
@@ -196,7 +204,10 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     }
 
     // keeps a copy of these fields until the command is finalized
+    this.amount = amount;
+    this.isDebitCommand = isDebitCommand;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.isSvNegativeBalanceAuthorized = isSvNegativeBalanceAuthorized;
 
     // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
     // 10-byte signature)
@@ -211,6 +222,10 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     dataIn[6] = time[1];
     dataIn[7] = context.getCard().getSvKvc();
     // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
+    // add dummy apdu request to ensure it exists when checking the session buffer usage
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build((byte) 0, (byte) 0, (byte) 0, (byte) 0, dataIn, null)));
   }
 
   /**
@@ -230,6 +245,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    */
   void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
+    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
@@ -245,7 +261,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
-                    getCalypsoCard().getCardClass() == CalypsoCardClass.LEGACY
+                    card.getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
                     getCommandRef().getInstructionByte(),
@@ -291,6 +307,11 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    */
   @Override
   void finalizeRequest() {
+    if (isDebitCommand
+        && !isSvNegativeBalanceAuthorized
+        && (getContext().getCard().getSvBalance() - amount) < 0) {
+      throw new IllegalStateException("Negative balances not allowed");
+    }
     SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
     svCommandSecurityData.setSvGetRequest(getContext().getCard().getSvGetHeader());
     svCommandSecurityData.setSvGetResponse(getContext().getCard().getSvGetData());
@@ -344,16 +365,18 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     }
     getContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
     updateTerminalSessionMacIfNeeded();
-    try {
-      if (!getContext()
-          .getSymmetricCryptoTransactionManagerSpi()
-          .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
-        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+    if (!getContext().isSecureSessionOpen()) {
+      try {
+        if (!getContext()
+            .getSymmetricCryptoTransactionManagerSpi()
+            .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
+          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+        }
+      } catch (SymmetricCryptoIOException e) {
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
       }
-    } catch (SymmetricCryptoIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
-    } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
     }
   }
 
