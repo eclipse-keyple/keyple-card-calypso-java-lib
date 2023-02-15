@@ -73,19 +73,20 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataFci(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataFci(CommandContextDto context) {
-    super(CardCommandRef.GET_DATA, 0, null, context);
-    buildCommand(context.getCard().getCardClass());
+  CmdCardGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    buildCommand(transactionContext.getCard().getCardClass());
   }
 
   /**
@@ -95,7 +96,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @since 2.0.1
    */
   CmdCardGetDataFci(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null);
+    super(CardCommandRef.GET_DATA, 0, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -144,7 +145,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -254,7 +255,7 @@ final class CmdCardGetDataFci extends CardCommand {
       logger.debug("Error while parsing the FCI BER-TLV data structure ({})", e.getMessage());
     }
 
-    getContext().getCard().initializeWithFci(this);
+    getTransactionContext().getCard().initializeWithFci(this);
     updateTerminalSessionMacIfNeeded();
   }
 

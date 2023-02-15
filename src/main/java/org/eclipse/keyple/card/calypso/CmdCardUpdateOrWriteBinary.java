@@ -94,6 +94,7 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
         isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
         0,
         calypsoCard,
+        null,
         null);
 
     this.sfi = sfi;
@@ -128,20 +129,27 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
    *
    * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
    *     Binary" command.
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param sfi the sfi to select.
    * @param offset the offset.
    * @param data the data to write.
    * @since 2.3.2
    */
   CmdCardUpdateOrWriteBinary(
-      boolean isUpdateCommand, CommandContextDto context, byte sfi, int offset, byte[] data) {
+      boolean isUpdateCommand,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte sfi,
+      int offset,
+      byte[] data) {
 
     super(
         isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
         0,
         null,
-        context);
+        transactionContext,
+        commandContext);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -157,7 +165,7 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                context.getCard().getCardClass().getValue(),
+                transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,
@@ -215,7 +223,7 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -225,7 +233,7 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getContext().isEncryptionActive()) {
+    if (getCommandContext().isEncryptionActive()) {
       return false;
     }
     updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
@@ -242,9 +250,9 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
-      getContext().getCard().setContent(sfi, 1, data, offset);
+      getTransactionContext().getCard().setContent(sfi, 1, data, offset);
     } else {
-      getContext().getCard().fillContent(sfi, 1, data, offset);
+      getTransactionContext().getCard().fillContent(sfi, 1, data, offset);
     }
     updateTerminalSessionMacIfNeeded();
   }

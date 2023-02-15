@@ -56,19 +56,20 @@ final class CmdCardGetDataFcp extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataFcp(CommandContextDto context) {
-    super(CardCommandRef.GET_DATA, 0, null, context);
-    buildCommand(context.getCard().getCardClass());
+  CmdCardGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    buildCommand(transactionContext.getCard().getCardClass());
   }
 
   /**
@@ -78,7 +79,7 @@ final class CmdCardGetDataFcp extends CardCommand {
    * @since 2.0.1
    */
   CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null);
+    super(CardCommandRef.GET_DATA, 0, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -138,7 +139,7 @@ final class CmdCardGetDataFcp extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -161,7 +162,7 @@ final class CmdCardGetDataFcp extends CardCommand {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     CmdCardSelectFile.parseProprietaryInformation(
-        apduResponse.getDataOut(), getContext().getCard());
+        apduResponse.getDataOut(), getTransactionContext().getCard());
     updateTerminalSessionMacIfNeeded();
   }
 

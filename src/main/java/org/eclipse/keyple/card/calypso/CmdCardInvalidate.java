@@ -57,7 +57,7 @@ final class CmdCardInvalidate extends CardCommand {
   @Deprecated
   CmdCardInvalidate(CalypsoCardAdapter calypsoCard) {
 
-    super(CardCommandRef.INVALIDATE, 0, calypsoCard, null);
+    super(CardCommandRef.INVALIDATE, 0, calypsoCard, null, null);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -76,15 +76,16 @@ final class CmdCardInvalidate extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardInvalidate(CommandContextDto context) {
-    super(CardCommandRef.INVALIDATE, 0, null, context);
+  CmdCardInvalidate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.INVALIDATE, 0, null, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
@@ -120,7 +121,7 @@ final class CmdCardInvalidate extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -130,7 +131,7 @@ final class CmdCardInvalidate extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getContext().isEncryptionActive()) {
+    if (getCommandContext().isEncryptionActive()) {
       return false;
     }
     updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);

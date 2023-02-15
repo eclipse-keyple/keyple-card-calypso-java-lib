@@ -114,7 +114,7 @@ final class CmdCardSvReload extends CardCommand {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, calypsoCard, null);
+    super(CardCommandRef.SV_RELOAD, 0, calypsoCard, null, null);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(
@@ -152,7 +152,8 @@ final class CmdCardSvReload extends CardCommand {
    * <p>The process is carried out in two steps: first to check and store the card and application
    * data, then to create the final APDU with the data from the SAM (see finalizeCommand).
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param amount amount to debit (signed integer from -8388608 to 8388607).
    * @param date debit date (not checked by the card).
    * @param time debit time (not checked by the card).
@@ -162,14 +163,15 @@ final class CmdCardSvReload extends CardCommand {
    * @since 2.3.2
    */
   CmdCardSvReload(
-      CommandContextDto context,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
       int amount,
       byte[] date,
       byte[] time,
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, null, context);
+    super(CardCommandRef.SV_RELOAD, 0, null, transactionContext, commandContext);
 
     if (amount < -8388608 || amount > 8388607) {
       throw new IllegalArgumentException(
@@ -193,7 +195,7 @@ final class CmdCardSvReload extends CardCommand {
     dataIn[1] = date[0];
     dataIn[2] = date[1];
     dataIn[3] = free[0];
-    dataIn[4] = context.getCard().getSvKvc();
+    dataIn[4] = transactionContext.getCard().getSvKvc();
     dataIn[5] = free[1];
     ByteArrayUtil.copyBytes(amount, dataIn, 6, 3);
     dataIn[9] = time[0];
@@ -222,7 +224,8 @@ final class CmdCardSvReload extends CardCommand {
    */
   void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
-    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
+    CalypsoCardAdapter card =
+        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
@@ -285,11 +288,11 @@ final class CmdCardSvReload extends CardCommand {
   @Override
   void finalizeRequest() {
     SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
-    svCommandSecurityData.setSvGetRequest(getContext().getCard().getSvGetHeader());
-    svCommandSecurityData.setSvGetResponse(getContext().getCard().getSvGetData());
+    svCommandSecurityData.setSvGetRequest(getTransactionContext().getCard().getSvGetHeader());
+    svCommandSecurityData.setSvGetResponse(getTransactionContext().getCard().getSvGetData());
     svCommandSecurityData.setSvCommandPartialRequest(getSvReloadData());
     try {
-      getContext()
+      getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
           .computeSvCommandSecurityData(svCommandSecurityData);
     } catch (SymmetricCryptoException e) {
@@ -335,13 +338,13 @@ final class CmdCardSvReload extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
-    getContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
+    getTransactionContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
     updateTerminalSessionMacIfNeeded();
-    if (!getContext().isSecureSessionOpen()) {
+    if (!getCommandContext().isSecureSessionOpen()) {
       try {
-        if (!getContext()
+        if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
-            .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
+            .isCardSvMacValid(getTransactionContext().getCard().getSvOperationSignature())) {
           throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {

@@ -129,7 +129,11 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
       boolean isExtendedModeAllowed) {
 
     super(
-        isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, calypsoCard, null);
+        isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT,
+        0,
+        calypsoCard,
+        null,
+        null);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -170,7 +174,8 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    *
    * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
    *     command.
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param amount amount to debit or undebit (positive integer from 0 to 32767).
    * @param date operation date (not checked by the card).
    * @param time operation time (not checked by the card).
@@ -181,14 +186,20 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    */
   CmdCardSvDebitOrUndebit(
       boolean isDebitCommand,
-      CommandContextDto context,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
       int amount,
       byte[] date,
       byte[] time,
       boolean isExtendedModeAllowed,
       boolean isSvNegativeBalanceAuthorized) {
 
-    super(isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT, 0, null, context);
+    super(
+        isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT,
+        0,
+        null,
+        transactionContext,
+        commandContext);
 
     /* @see Calypso Layer ID 8.02 (200108) */
     // CL-SV-DEBITVAL.1
@@ -220,7 +231,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     dataIn[4] = date[1];
     dataIn[5] = time[0];
     dataIn[6] = time[1];
-    dataIn[7] = context.getCard().getSvKvc();
+    dataIn[7] = transactionContext.getCard().getSvKvc();
     // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
     // add dummy apdu request to ensure it exists when checking the session buffer usage
     setApduRequest(
@@ -245,7 +256,8 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    */
   void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
-    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
+    CalypsoCardAdapter card =
+        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
@@ -309,15 +321,15 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   void finalizeRequest() {
     if (isDebitCommand
         && !isSvNegativeBalanceAuthorized
-        && (getContext().getCard().getSvBalance() - amount) < 0) {
+        && (getTransactionContext().getCard().getSvBalance() - amount) < 0) {
       throw new IllegalStateException("Negative balances not allowed");
     }
     SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
-    svCommandSecurityData.setSvGetRequest(getContext().getCard().getSvGetHeader());
-    svCommandSecurityData.setSvGetResponse(getContext().getCard().getSvGetData());
+    svCommandSecurityData.setSvGetRequest(getTransactionContext().getCard().getSvGetHeader());
+    svCommandSecurityData.setSvGetResponse(getTransactionContext().getCard().getSvGetData());
     svCommandSecurityData.setSvCommandPartialRequest(getSvDebitOrUndebitData());
     try {
-      getContext()
+      getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
           .computeSvCommandSecurityData(svCommandSecurityData);
     } catch (SymmetricCryptoException e) {
@@ -363,13 +375,13 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
     }
-    getContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
+    getTransactionContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
     updateTerminalSessionMacIfNeeded();
-    if (!getContext().isSecureSessionOpen()) {
+    if (!getCommandContext().isSecureSessionOpen()) {
       try {
-        if (!getContext()
+        if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
-            .isCardSvMacValid(getContext().getCard().getSvOperationSignature())) {
+            .isCardSvMacValid(getTransactionContext().getCard().getSvOperationSignature())) {
           throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {

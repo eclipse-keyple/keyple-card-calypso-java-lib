@@ -85,7 +85,7 @@ final class CmdCardVerifyPin extends CardCommand {
    */
   @Deprecated
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard, boolean encryptPinTransmission, byte[] pin) {
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     this.isReadCounterMode = false;
     this.pin = pin;
     this.isPinEncryptedMode = false;
@@ -113,15 +113,21 @@ final class CmdCardVerifyPin extends CardCommand {
   /**
    * Verify the PIN in encrypted mode.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
    *     transmission (@see setCipheredPinData).
    * @param cipheringKif The ciphering KIF.
    * @param cipheringKvc The ciphering KVC.
    * @since 2.3.2
    */
-  CmdCardVerifyPin(CommandContextDto context, byte[] pin, byte cipheringKif, byte cipheringKvc) {
-    super(commandRef, 0, null, context);
+  CmdCardVerifyPin(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte[] pin,
+      byte cipheringKif,
+      byte cipheringKvc) {
+    super(commandRef, 0, null, transactionContext, commandContext);
     this.isReadCounterMode = false;
     this.pin = pin;
     this.isPinEncryptedMode = true;
@@ -132,13 +138,15 @@ final class CmdCardVerifyPin extends CardCommand {
   /**
    * Verify the PIN in plain mode.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
    *     transmission (@see setCipheredPinData).
    * @since 2.3.2
    */
-  CmdCardVerifyPin(CommandContextDto context, byte[] pin) {
-    super(commandRef, 0, null, context);
+  CmdCardVerifyPin(
+      TransactionContextDto transactionContext, CommandContextDto commandContext, byte[] pin) {
+    super(commandRef, 0, null, transactionContext, commandContext);
     this.isReadCounterMode = false;
     this.pin = pin;
     this.isPinEncryptedMode = false;
@@ -155,7 +163,7 @@ final class CmdCardVerifyPin extends CardCommand {
    */
   @Deprecated
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard) {
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     this.isReadCounterMode = true;
     this.pin = null;
     this.isPinEncryptedMode = false;
@@ -178,11 +186,12 @@ final class CmdCardVerifyPin extends CardCommand {
   /**
    * Alternate command dedicated to the reading of the wrong presentation counter
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardVerifyPin(CommandContextDto context) {
-    super(commandRef, 0, null, context);
+  CmdCardVerifyPin(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(commandRef, 0, null, transactionContext, commandContext);
     this.isReadCounterMode = true;
     this.pin = null;
     this.isPinEncryptedMode = false;
@@ -242,10 +251,13 @@ final class CmdCardVerifyPin extends CardCommand {
     if (isPinEncryptedMode) {
       try {
         pin =
-            getContext()
+            getTransactionContext()
                 .getSymmetricCryptoTransactionManagerSpi()
                 .cipherPinForPresentation(
-                    getContext().getCard().getChallenge(), pin, cipheringKif, cipheringKvc);
+                    getTransactionContext().getCard().getChallenge(),
+                    pin,
+                    cipheringKif,
+                    cipheringKvc);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -255,7 +267,7 @@ final class CmdCardVerifyPin extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 commandRef.getInstructionByte(),
                 (byte) 0x00, // CL-PIN-PP1P2.1
                 (byte) 0x00,
@@ -277,7 +289,7 @@ final class CmdCardVerifyPin extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return isPinEncryptedMode || getContext().isEncryptionActive();
+    return isPinEncryptedMode || getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -287,7 +299,7 @@ final class CmdCardVerifyPin extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getContext().isEncryptionActive()) {
+    if (getCommandContext().isEncryptionActive()) {
       return false;
     }
     updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
@@ -304,17 +316,17 @@ final class CmdCardVerifyPin extends CardCommand {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     try {
       super.setApduResponseAndCheckStatus(apduResponse);
-      getContext().getCard().setPinAttemptRemaining(3);
+      getTransactionContext().getCard().setPinAttemptRemaining(3);
     } catch (CardPinException e) {
       switch (apduResponse.getStatusWord()) {
         case 0x63C2:
-          getContext().getCard().setPinAttemptRemaining(2);
+          getTransactionContext().getCard().setPinAttemptRemaining(2);
           break;
         case 0x63C1:
-          getContext().getCard().setPinAttemptRemaining(1);
+          getTransactionContext().getCard().setPinAttemptRemaining(1);
           break;
         case 0x6983:
-          getContext().getCard().setPinAttemptRemaining(0);
+          getTransactionContext().getCard().setPinAttemptRemaining(0);
           break;
         default: // NOP
       }

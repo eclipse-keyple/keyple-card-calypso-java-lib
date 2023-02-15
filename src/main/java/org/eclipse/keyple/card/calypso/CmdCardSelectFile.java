@@ -94,7 +94,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass(), selectFileControl);
   }
 
@@ -102,13 +102,17 @@ final class CmdCardSelectFile extends CardCommand {
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
    * @since 2.3.2
    */
-  CmdCardSelectFile(CommandContextDto context, SelectFileControl selectFileControl) {
-    super(commandRef, 0, null, context);
-    buildCommand(context.getCard().getCardClass(), selectFileControl);
+  CmdCardSelectFile(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      SelectFileControl selectFileControl) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+    buildCommand(transactionContext.getCard().getCardClass(), selectFileControl);
   }
 
   /**
@@ -120,7 +124,7 @@ final class CmdCardSelectFile extends CardCommand {
    * @since 2.0.1
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    super(commandRef, 0, null, null);
+    super(commandRef, 0, null, null, null);
     buildCommand(calypsoCardClass, selectFileControl);
   }
 
@@ -135,7 +139,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid);
   }
 
@@ -143,13 +147,18 @@ final class CmdCardSelectFile extends CardCommand {
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param lid The LID.
    * @since 2.3.2
    */
-  CmdCardSelectFile(CommandContextDto context, short lid) {
-    super(commandRef, 0, null, context);
-    buildCommand(context.getCard().getCardClass(), context.getCard().getProductType(), lid);
+  CmdCardSelectFile(
+      TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+    buildCommand(
+        transactionContext.getCard().getCardClass(),
+        transactionContext.getCard().getProductType(),
+        lid);
   }
 
   /**
@@ -163,7 +172,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-    super(commandRef, 0, null, null);
+    super(commandRef, 0, null, null, null);
     buildCommand(calypsoCardClass, productType, lid);
   }
 
@@ -285,7 +294,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -311,7 +320,7 @@ final class CmdCardSelectFile extends CardCommand {
     } catch (CardDataAccessException e) {
       throw new SelectFileException("File not found", e);
     }
-    parseProprietaryInformation(apduResponse.getDataOut(), getContext().getCard());
+    parseProprietaryInformation(apduResponse.getDataOut(), getTransactionContext().getCard());
     updateTerminalSessionMacIfNeeded();
   }
 

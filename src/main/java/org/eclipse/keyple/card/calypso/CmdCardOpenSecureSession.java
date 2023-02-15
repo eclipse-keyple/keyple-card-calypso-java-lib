@@ -117,7 +117,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null, null);
 
     this.symmetricCryptoSecuritySetting = null;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -147,18 +147,20 @@ final class CmdCardOpenSecureSession extends CardCommand {
   /**
    * Partial constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param symmetricCryptoSecuritySetting The symmetric crypto security settings to use.
    * @param writeAccessLevel The write access level.
    * @param isExtendedModeAllowed Is the extended mode allowed?
    * @since 2.3.2
    */
   CmdCardOpenSecureSession(
-      CommandContextDto context,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
       SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
       WriteAccessLevel writeAccessLevel,
       boolean isExtendedModeAllowed) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, context);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
     this.writeAccessLevel = writeAccessLevel;
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -304,14 +306,16 @@ final class CmdCardOpenSecureSession extends CardCommand {
     byte[] samChallenge;
     try {
       samChallenge =
-          getContext().getSymmetricCryptoTransactionManagerSpi().initTerminalSecureSessionContext();
+          getTransactionContext()
+              .getSymmetricCryptoTransactionManagerSpi()
+              .initTerminalSecureSessionContext();
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     } catch (SymmetricCryptoIOException e) {
       throw (RuntimeException) e.getCause();
     }
     byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
-    switch (getContext().getCard().getProductType()) {
+    switch (getTransactionContext().getCard().getProductType()) {
       case PRIME_REVISION_1:
         createRev10(keyIndex, samChallenge);
         break;
@@ -325,7 +329,9 @@ final class CmdCardOpenSecureSession extends CardCommand {
         break;
       default:
         throw new IllegalArgumentException(
-            "Product type " + getContext().getCard().getProductType() + " not supported");
+            "Product type "
+                + getTransactionContext().getCard().getProductType()
+                + " not supported");
     }
   }
 
@@ -356,10 +362,11 @@ final class CmdCardOpenSecureSession extends CardCommand {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    getContext().getCard().backupFiles();
     super.setApduResponseAndCheckStatus(apduResponse);
+    getTransactionContext().getCard().backupFiles();
+    getTransactionContext().setSecureSessionOpen(true);
     byte[] dataOut = getApduResponse().getDataOut();
-    switch (getContext().getCard().getProductType()) {
+    switch (getTransactionContext().getCard().getProductType()) {
       case PRIME_REVISION_1:
         parseRev10(dataOut);
         break;
@@ -370,13 +377,13 @@ final class CmdCardOpenSecureSession extends CardCommand {
         parseRev3(dataOut);
     }
     // CL-CSS-INFORAT.1
-    getContext().getCard().setDfRatified(isPreviousSessionRatified);
+    getTransactionContext().getCard().setDfRatified(isPreviousSessionRatified);
     // CL-CSS-INFOTCNT.1
-    getContext()
+    getTransactionContext()
         .getCard()
         .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
     if (recordData.length > 0) {
-      getContext().getCard().setContent((byte) sfi, recordNumber, recordData);
+      getTransactionContext().getCard().setContent((byte) sfi, recordNumber, recordData);
     }
     // Post-processing
     Byte computedKvc = computeKvc();
@@ -389,7 +396,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
               computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
     }
     try {
-      getContext()
+      getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
           .initTerminalSessionMac(getApduResponse().getDataOut(), computedKif, computedKvc);
     } catch (SymmetricCryptoException e) {
@@ -465,7 +472,8 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev3(byte[] apduResponseData) {
-    CalypsoCardAdapter card = getContext() != null ? getContext().getCard() : getCalypsoCard();
+    CalypsoCardAdapter card =
+        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     int offset;
     // CL-CSS-OSSRFU.1
     if (isExtendedModeAllowed) {

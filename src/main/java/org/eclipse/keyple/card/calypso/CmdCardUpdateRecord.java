@@ -90,7 +90,7 @@ final class CmdCardUpdateRecord extends CardCommand {
   CmdCardUpdateRecord(
       CalypsoCardAdapter calypsoCard, byte sfi, int recordNumber, byte[] newRecordData) {
 
-    super(CardCommandRef.UPDATE_RECORD, 0, calypsoCard, null);
+    super(CardCommandRef.UPDATE_RECORD, 0, calypsoCard, null, null);
 
     byte cla = calypsoCard.getCardClass().getValue();
     this.sfi = sfi;
@@ -118,7 +118,8 @@ final class CmdCardUpdateRecord extends CardCommand {
   /**
    * Instantiates a new CmdCardUpdateRecord.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param sfi the sfi to select.
    * @param recordNumber the record number to update.
    * @param newRecordData the new record data to write.
@@ -126,9 +127,14 @@ final class CmdCardUpdateRecord extends CardCommand {
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.3.2
    */
-  CmdCardUpdateRecord(CommandContextDto context, byte sfi, int recordNumber, byte[] newRecordData) {
+  CmdCardUpdateRecord(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte sfi,
+      int recordNumber,
+      byte[] newRecordData) {
 
-    super(CardCommandRef.UPDATE_RECORD, 0, null, context);
+    super(CardCommandRef.UPDATE_RECORD, 0, null, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -139,7 +145,7 @@ final class CmdCardUpdateRecord extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                context.getCard().getCardClass().getValue(),
+                transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) recordNumber,
                 p2,
@@ -193,7 +199,7 @@ final class CmdCardUpdateRecord extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -203,7 +209,7 @@ final class CmdCardUpdateRecord extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getContext().isEncryptionActive()) {
+    if (getCommandContext().isEncryptionActive()) {
       return false;
     }
     updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
@@ -219,7 +225,7 @@ final class CmdCardUpdateRecord extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getContext().getCard().setContent((byte) sfi, recordNumber, data);
+    getTransactionContext().getCard().setContent((byte) sfi, recordNumber, data);
     updateTerminalSessionMacIfNeeded();
   }
 

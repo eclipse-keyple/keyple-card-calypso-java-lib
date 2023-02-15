@@ -22,8 +22,9 @@ import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.transaction.CardSignatureNotVerifiableException;
 import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds the Close Secure Session APDU command.
@@ -31,6 +32,7 @@ import org.eclipse.keyple.core.util.ApduUtil;
  * @since 2.0.1
  */
 final class CmdCardCloseSecureSession extends CardCommand {
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardCloseSecureSession.class);
 
   private static final String MSG_CARD_SESSION_MAC_NOT_VERIFIABLE =
       "Unable to verify the card session MAC associated to the successfully closed secure session.";
@@ -85,7 +87,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       boolean isAutoRatificationAsked,
       byte[] terminalSessionSignature) {
 
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = -1;
@@ -117,7 +119,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
   @Deprecated
   CmdCardCloseSecureSession(CalypsoCardAdapter calypsoCard) {
 
-    super(commandRef, 0, calypsoCard, null);
+    super(commandRef, 0, calypsoCard, null, null);
     this.isAutoRatificationAsked = true;
     this.isAbortSecureSession = true;
     this.svPostponedDataIndex = -1;
@@ -137,15 +139,19 @@ final class CmdCardCloseSecureSession extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param isAutoRatificationAsked "true" if the auto ratification is asked.
    * @param svPostponedDataIndex The index of the SV postponed data or -1 if there is no SV
    *     postponed data.
    * @since 2.3.2
    */
   CmdCardCloseSecureSession(
-      CommandContextDto context, boolean isAutoRatificationAsked, int svPostponedDataIndex) {
-    super(commandRef, 0, null, context);
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      boolean isAutoRatificationAsked,
+      int svPostponedDataIndex) {
+    super(commandRef, 0, null, transactionContext, commandContext);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = svPostponedDataIndex;
@@ -155,11 +161,12 @@ final class CmdCardCloseSecureSession extends CardCommand {
    * Instantiates a new command based on the product type of the card to generate an abort session
    * command (Close Secure Session with p1 = p2 = lc = 0).
    *
-   * @param context The transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param context The command context.
    * @since 2.3.2
    */
-  CmdCardCloseSecureSession(CommandContextDto context) {
-    super(commandRef, 0, null, context);
+  CmdCardCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
+    super(commandRef, 0, null, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.isAbortSecureSession = true;
     this.svPostponedDataIndex = -1;
@@ -189,7 +196,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
-                  getContext().getCard().getCardClass().getValue(),
+                  getTransactionContext().getCard().getCardClass().getValue(),
                   commandRef.getInstructionByte(),
                   (byte) 0x00,
                   (byte) 0x00,
@@ -200,7 +207,9 @@ final class CmdCardCloseSecureSession extends CardCommand {
       byte[] terminalSessionMac;
       try {
         terminalSessionMac =
-            getContext().getSymmetricCryptoTransactionManagerSpi().finalizeTerminalSessionMac();
+            getTransactionContext()
+                .getSymmetricCryptoTransactionManagerSpi()
+                .finalizeTerminalSessionMac();
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -209,7 +218,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
-                  getContext().getCard().getCardClass().getValue(),
+                  getTransactionContext().getCard().getCardClass().getValue(),
                   commandRef.getInstructionByte(),
                   isAutoRatificationAsked ? (byte) 0x80 : (byte) 0x00,
                   (byte) 0x00,
@@ -245,14 +254,22 @@ final class CmdCardCloseSecureSession extends CardCommand {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
     if (isAbortSecureSession) {
-      getContext().getCard().restoreFiles();
+      getTransactionContext().setSecureSessionOpen(false);
+      try {
+        super.setApduResponseAndCheckStatus(apduResponse);
+        logger.info("Secure session successfully aborted");
+        getTransactionContext().getCard().restoreFiles();
+      } catch (CardCommandException e) {
+        logger.debug("Secure session abortion error: {}", e.getMessage());
+      }
       return;
     }
+    super.setApduResponseAndCheckStatus(apduResponse);
+    getTransactionContext().setSecureSessionOpen(false);
     byte[] responseData = getApduResponse().getDataOut();
     // Retrieve the postponed data
-    int cardSessionMacLength = getContext().getCard().isExtendedModeSupported() ? 8 : 4;
+    int cardSessionMacLength = getTransactionContext().getCard().isExtendedModeSupported() ? 8 : 4;
     int i = 0;
     while (i < responseData.length - cardSessionMacLength) {
       byte[] data = Arrays.copyOfRange(responseData, i + 1, i + responseData[i]);
@@ -262,7 +279,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
     // Check the card session MAC (CL-CSS-MACVERIF.1)
     byte[] cardSessionMac = Arrays.copyOfRange(responseData, i, responseData.length);
     try {
-      if (!getContext()
+      if (!getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
           .isCardSessionMacValid(cardSessionMac)) {
         throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
@@ -275,7 +292,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
     if (svPostponedDataIndex != -1) {
       // CL-SV-POSTPON.1
       try {
-        if (!getContext()
+        if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
             .isCardSvMacValid(postponedData.get(svPostponedDataIndex))) {
           throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);

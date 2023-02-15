@@ -72,7 +72,7 @@ final class CmdCardSvGet extends CardCommand {
   @Deprecated
   CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, calypsoCard, null);
+    super(CardCommandRef.SV_GET, 0, calypsoCard, null, null);
 
     byte cla =
         calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
@@ -100,18 +100,23 @@ final class CmdCardSvGet extends CardCommand {
   /**
    * Instantiates a new CmdCardSvGet.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param svOperation the desired SV operation.
    * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.3.2
    */
-  CmdCardSvGet(CommandContextDto context, SvOperation svOperation, boolean useExtendedMode) {
+  CmdCardSvGet(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      SvOperation svOperation,
+      boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, null, context);
+    super(CardCommandRef.SV_GET, 0, null, transactionContext, commandContext);
 
     byte cla =
-        context.getCard().getCardClass() == CalypsoCardClass.LEGACY
+        transactionContext.getCard().getCardClass() == CalypsoCardClass.LEGACY
             ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
             : CalypsoCardClass.ISO.getValue();
 
@@ -161,7 +166,7 @@ final class CmdCardSvGet extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -215,7 +220,7 @@ final class CmdCardSvGet extends CardCommand {
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");
     }
-    getContext()
+    getTransactionContext()
         .getCard()
         .setSvData(
             currentKvc,

@@ -14,7 +14,6 @@ package org.eclipse.keyple.card.calypso;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -34,7 +33,7 @@ final class CmdCardGetChallenge extends CardCommand {
   @Deprecated
   CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
 
-    super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard, null);
+    super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard, null, null);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -54,15 +53,16 @@ final class CmdCardGetChallenge extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetChallenge(CommandContextDto context) {
-    super(CardCommandRef.GET_CHALLENGE, 0x08, null, context);
+  CmdCardGetChallenge(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_CHALLENGE, 0x08, null, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
@@ -109,7 +109,7 @@ final class CmdCardGetChallenge extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -131,7 +131,7 @@ final class CmdCardGetChallenge extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getContext().getCard().setChallenge(getApduResponse().getDataOut());
+    getTransactionContext().getCard().setChallenge(getApduResponse().getDataOut());
     updateTerminalSessionMacIfNeeded();
   }
 }

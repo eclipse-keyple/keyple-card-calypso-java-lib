@@ -16,7 +16,6 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 
 /**
  * Superclass for all card commands.
@@ -56,7 +55,8 @@ abstract class CardCommand {
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
   private CalypsoCardAdapter calypsoCard;
-  private CommandContextDto context;
+  private final TransactionContextDto transactionContext;
+  private final CommandContextDto commandContext;
   private boolean isCryptoServiceSynchronized;
 
   /**
@@ -66,19 +66,22 @@ abstract class CardCommand {
    * @param le The value of the LE field.
    * @param calypsoCard The Calypso card (it may be null if the card selection has not yet been
    *     made).
-   * @param context The transaction context
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command
    * @since 2.0.1
    */
   CardCommand(
       CardCommandRef commandRef,
       int le,
       CalypsoCardAdapter calypsoCard,
-      CommandContextDto context) {
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
     this.le = le;
     this.calypsoCard = calypsoCard;
-    this.context = context;
+    this.transactionContext = transactionContext;
+    this.commandContext = commandContext;
   }
 
   /**
@@ -168,13 +171,23 @@ abstract class CardCommand {
   }
 
   /**
-   * Returns the current context.
+   * Returns the transaction context.
    *
    * @return Null if not defined (selection process) or for legacy use (deprecated methods).
    * @since 2.3.2
    */
-  final CommandContextDto getContext() {
-    return context;
+  final TransactionContextDto getTransactionContext() {
+    return transactionContext;
+  }
+
+  /**
+   * Returns the command context.
+   *
+   * @return Null if not defined (selection process) or for legacy use (deprecated methods).
+   * @since 2.3.2
+   */
+  final CommandContextDto getCommandContext() {
+    return commandContext;
   }
 
   /**
@@ -253,24 +266,6 @@ abstract class CardCommand {
   abstract void parseResponse(ApduResponseApi apduResponse) throws CardCommandException;
 
   /**
-   * Parses the APDU response, updates the card image and synchronize the crypto service if it is
-   * involved in the process.
-   *
-   * @param apduResponse The APDU response.
-   * @throws CardCommandException if status is not successful or if the length of the response is
-   *     not equal to the LE field in the request.
-   * @since 2.3.2
-   */
-  final void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    try {
-      parseResponse(apduResponse);
-    } catch (RuntimeException e) {
-      restoreCardImageIfNeeded();
-      throw e;
-    }
-  }
-
-  /**
    * Updates the terminal session MAC using the parsed APDU response if the encryption is not
    * active. If encryption is enabled, then the session MAC has already been updated during
    * decryption.
@@ -291,12 +286,14 @@ abstract class CardCommand {
     if (isCryptoServiceSynchronized) {
       return;
     }
-    if (context.isSecureSessionOpen()) {
+    if (commandContext.isSecureSessionOpen()) {
       try {
-        context
+        transactionContext
             .getSymmetricCryptoTransactionManagerSpi()
             .updateTerminalSessionMac(apduRequest.getApdu());
-        context.getSymmetricCryptoTransactionManagerSpi().updateTerminalSessionMac(apduResponse);
+        transactionContext
+            .getSymmetricCryptoTransactionManagerSpi()
+            .updateTerminalSessionMac(apduResponse);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -313,21 +310,16 @@ abstract class CardCommand {
    * @since 2.3.2
    */
   final void encryptRequestAndUpdateTerminalSessionMacIfNeeded() {
-    if (context.isEncryptionActive()) {
+    if (commandContext.isEncryptionActive()) {
       try {
         apduRequest.setApdu(
-            context
+            transactionContext
                 .getSymmetricCryptoTransactionManagerSpi()
                 .updateTerminalSessionMac(apduRequest.getApdu()));
       } catch (SymmetricCryptoException e) {
-        restoreCardImageIfNeeded();
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
-        restoreCardImageIfNeeded();
         throw (RuntimeException) e.getCause();
-      } catch (RuntimeException e) {
-        restoreCardImageIfNeeded();
-        throw e;
       }
     }
   }
@@ -340,10 +332,10 @@ abstract class CardCommand {
    * @since 2.3.2
    */
   final void decryptResponseAndUpdateTerminalSessionMacIfNeeded(ApduResponseApi apduResponse) {
-    if (context.isEncryptionActive()) {
+    if (commandContext.isEncryptionActive()) {
       try {
         byte[] decryptedApdu =
-            context
+            transactionContext
                 .getSymmetricCryptoTransactionManagerSpi()
                 .updateTerminalSessionMac(apduResponse.getApdu());
         System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
@@ -353,13 +345,6 @@ abstract class CardCommand {
         throw (RuntimeException) e.getCause();
       }
       isCryptoServiceSynchronized = true;
-    }
-  }
-
-  /** Restores the content of the card image if a secure session is opened */
-  private void restoreCardImageIfNeeded() {
-    if (context.isSecureSessionOpen()) {
-      context.getCard().restoreFiles();
     }
   }
 

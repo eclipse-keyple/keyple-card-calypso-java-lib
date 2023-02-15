@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
+import org.eclipse.keyple.card.calypso.DtoAdapters.TransactionContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -34,12 +35,12 @@ final class CmdCardRatification extends CardCommand {
    *
    * @since 2.3.2
    */
-  CmdCardRatification(CommandContextDto context) {
-    super(CardCommandRef.RATIFICATION, 0, null, context);
+  CmdCardRatification(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.RATIFICATION, 0, null, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,

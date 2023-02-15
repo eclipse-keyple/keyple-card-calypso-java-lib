@@ -1516,35 +1516,68 @@ class DtoAdapters {
   }
 
   /**
-   * Contains the command context.
+   * The local command context specific to each command.
    *
    * @since 2.3.2
    */
   static class CommandContextDto {
 
-    private CalypsoCardAdapter card;
-    private SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+    private final boolean isSecureSessionOpen;
+    private final boolean isEncryptionActive;
+
+    /**
+     * Constructor.
+     *
+     * @param isSecureSessionOpen Is secure session open?
+     * @param isEncryptionActive Is encryption active?
+     * @since 2.3.2
+     */
+    CommandContextDto(boolean isSecureSessionOpen, boolean isEncryptionActive) {
+      this.isSecureSessionOpen = isSecureSessionOpen;
+      this.isEncryptionActive = isEncryptionActive;
+    }
+
+    /**
+     * @return "true" if the secure session is open.
+     * @since 2.3.2
+     */
+    boolean isSecureSessionOpen() {
+      return isSecureSessionOpen;
+    }
+
+    /**
+     * @return "true" if the encryption is active.
+     * @since 2.3.2
+     */
+    boolean isEncryptionActive() {
+      return isEncryptionActive;
+    }
+  }
+
+  /**
+   * The global transaction context common to all commands.
+   *
+   * @since 2.3.2
+   */
+  static class TransactionContextDto {
+
+    private final CalypsoCardAdapter card;
+    private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
     private boolean isSecureSessionOpen;
-    private boolean isEncryptionActive;
 
     /**
      * Constructor.
      *
      * @param card The Calypso card.
      * @param symmetricCryptoTransactionManagerSpi The symmetric crypto service SPI.
-     * @param isSecureSessionOpen Is secure session open?
-     * @param isEncryptionActive Is encryption active?
      * @since 2.3.2
      */
-    CommandContextDto(
+    public TransactionContextDto(
         CalypsoCardAdapter card,
-        SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi,
-        boolean isSecureSessionOpen,
-        boolean isEncryptionActive) {
+        SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi) {
       this.card = card;
       this.symmetricCryptoTransactionManagerSpi = symmetricCryptoTransactionManagerSpi;
-      this.isSecureSessionOpen = isSecureSessionOpen;
-      this.isEncryptionActive = isEncryptionActive;
+      this.isSecureSessionOpen = false;
     }
 
     /**
@@ -1572,11 +1605,11 @@ class DtoAdapters {
     }
 
     /**
-     * @return "true" if the encryption is active.
+     * @param isSecureSessionOpen Is secure session open?
      * @since 2.3.2
      */
-    boolean isEncryptionActive() {
-      return isEncryptionActive;
+    void setSecureSessionOpen(boolean isSecureSessionOpen) {
+      this.isSecureSessionOpen = isSecureSessionOpen;
     }
   }
 }

@@ -52,19 +52,21 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataTraceabilityInformation(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataTraceabilityInformation(CommandContextDto context) {
-    super(CardCommandRef.GET_DATA, 0, null, context);
-    buildCommand(getContext().getCard().getCardClass());
+  CmdCardGetDataTraceabilityInformation(
+      TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    buildCommand(getTransactionContext().getCard().getCardClass());
   }
 
   /**
@@ -74,7 +76,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    * @since 2.1.0
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null);
+    super(CardCommandRef.GET_DATA, 0, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -134,7 +136,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -156,7 +158,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
+    getTransactionContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
     updateTerminalSessionMacIfNeeded();
   }
 

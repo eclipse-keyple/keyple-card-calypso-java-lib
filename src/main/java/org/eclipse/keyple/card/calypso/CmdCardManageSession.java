@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 import java.util.*;
 import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
 import org.calypsonet.terminal.card.ApduResponseApi;
+import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -74,7 +75,7 @@ final class CmdCardManageSession extends CardCommand {
   CmdCardManageSession(
       CalypsoCardAdapter calypsoCard, boolean activateEncryption, byte[] terminalSessionMac) {
 
-    super(commandRef, terminalSessionMac != null ? 8 : 0, calypsoCard, null);
+    super(commandRef, terminalSessionMac != null ? 8 : 0, calypsoCard, null, null);
 
     byte p2;
     Byte le;
@@ -104,11 +105,13 @@ final class CmdCardManageSession extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardManageSession(DtoAdapters.CommandContextDto context) {
-    super(commandRef, 0, null, context);
+  CmdCardManageSession(
+      DtoAdapters.TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(commandRef, 0, null, transactionContext, commandContext);
   }
 
   /**
@@ -148,7 +151,9 @@ final class CmdCardManageSession extends CardCommand {
       p2 = isEncryptionRequested ? (byte) 0x03 : (byte) 0x01;
       try {
         terminalSessionMac =
-            getContext().getSymmetricCryptoTransactionManagerSpi().generateTerminalSessionMac();
+            getTransactionContext()
+                .getSymmetricCryptoTransactionManagerSpi()
+                .generateTerminalSessionMac();
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       } catch (SymmetricCryptoIOException e) {
@@ -165,7 +170,7 @@ final class CmdCardManageSession extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 commandRef.getInstructionByte(),
                 (byte) 0x00,
                 p2,
@@ -211,7 +216,7 @@ final class CmdCardManageSession extends CardCommand {
       super.setApduResponseAndCheckStatus(apduResponse);
     } catch (CardSecurityDataException e) {
       if (apduResponse.getStatusWord() == 0x6985
-          && !getContext().getCard().isExtendedModeSupported()) {
+          && !getTransactionContext().getCard().isExtendedModeSupported()) {
         throw new UnsupportedOperationException(
             "'Manage Secure Session' command not available for this context"
                 + " (Card and/or SAM does not support extended mode)");
@@ -221,7 +226,7 @@ final class CmdCardManageSession extends CardCommand {
     cardSessionMac = getApduResponse().getDataOut();
     if (isMutualAuthenticationRequested) {
       try {
-        if (!getContext()
+        if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
             .isCardSessionMacValid(cardSessionMac)) {
           throw new InvalidCardSignatureException("Invalid card (authentication failed!)");
@@ -240,10 +245,10 @@ final class CmdCardManageSession extends CardCommand {
   /** Updates the crypto service "encryption" state if needed. */
   private void updateCryptoServiceEncryptionStateIfNeeded() {
     try {
-      if (!getContext().isEncryptionActive() && isEncryptionRequested) {
-        getContext().getSymmetricCryptoTransactionManagerSpi().activateEncryption();
-      } else if (getContext().isEncryptionActive() && !isEncryptionRequested) {
-        getContext().getSymmetricCryptoTransactionManagerSpi().deactivateEncryption();
+      if (!getCommandContext().isEncryptionActive() && isEncryptionRequested) {
+        getTransactionContext().getSymmetricCryptoTransactionManagerSpi().activateEncryption();
+      } else if (getCommandContext().isEncryptionActive() && !isEncryptionRequested) {
+        getTransactionContext().getSymmetricCryptoTransactionManagerSpi().deactivateEncryption();
       }
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();

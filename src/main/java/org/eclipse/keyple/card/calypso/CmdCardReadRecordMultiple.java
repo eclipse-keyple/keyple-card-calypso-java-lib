@@ -96,7 +96,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   CmdCardReadRecordMultiple(
       CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard, null);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard, null, null);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -128,7 +128,8 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param sfi The SFI.
    * @param recordNumber The number of the first record to read.
    * @param offset The offset from which to read in each record.
@@ -136,9 +137,14 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    * @since 2.3.2
    */
   CmdCardReadRecordMultiple(
-      CommandContextDto context, byte sfi, byte recordNumber, byte offset, byte length) {
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte sfi,
+      byte recordNumber,
+      byte offset,
+      byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, null, context);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -151,7 +157,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                context.getCard().getCardClass().getValue(),
+                transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 recordNumber,
                 p2,
@@ -195,7 +201,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -220,7 +226,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     byte[] dataOut = apduResponse.getDataOut();
     int nbRecords = dataOut.length / length;
     for (int i = 0; i < nbRecords; i++) {
-      getContext()
+      getTransactionContext()
           .getCard()
           .setContent(
               sfi,

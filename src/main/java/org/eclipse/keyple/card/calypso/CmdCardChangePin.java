@@ -75,7 +75,7 @@ final class CmdCardChangePin extends CardCommand {
   @Deprecated
   CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] pin) {
 
-    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard, null);
+    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard, null, null);
     this.pin = null;
     this.isPinEncryptedMode = false;
     this.cipheringKif = 0;
@@ -97,12 +97,14 @@ final class CmdCardChangePin extends CardCommand {
   /**
    * Constructor for plain PIN.
    *
-   * @param context The current transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param pin The new PIN plain value.
    * @since 2.3.2
    */
-  CmdCardChangePin(CommandContextDto context, byte[] pin) {
-    super(CardCommandRef.CHANGE_PIN, 0, null, context);
+  CmdCardChangePin(
+      TransactionContextDto transactionContext, CommandContextDto commandContext, byte[] pin) {
+    super(CardCommandRef.CHANGE_PIN, 0, null, transactionContext, commandContext);
     this.pin = pin;
     this.isPinEncryptedMode = false;
     this.cipheringKif = 0;
@@ -112,14 +114,20 @@ final class CmdCardChangePin extends CardCommand {
   /**
    * Constructor for encrypted PIN.
    *
-   * @param context The current transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param pin The new PIN plain value.
    * @param cipheringKif The ciphering KIF.
    * @param cipheringKvc The ciphering KVC.
    * @since 2.3.2
    */
-  CmdCardChangePin(CommandContextDto context, byte[] pin, byte cipheringKif, byte cipheringKvc) {
-    super(CardCommandRef.CHANGE_PIN, 0, null, context);
+  CmdCardChangePin(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte[] pin,
+      byte cipheringKif,
+      byte cipheringKvc) {
+    super(CardCommandRef.CHANGE_PIN, 0, null, transactionContext, commandContext);
     this.pin = pin;
     this.isPinEncryptedMode = true;
     this.cipheringKif = cipheringKif;
@@ -147,10 +155,10 @@ final class CmdCardChangePin extends CardCommand {
     if (isPinEncryptedMode) {
       try {
         pin =
-            getContext()
+            getTransactionContext()
                 .getSymmetricCryptoTransactionManagerSpi()
                 .cipherPinForModification(
-                    getContext().getCard().getChallenge(),
+                    getTransactionContext().getCard().getChallenge(),
                     new byte[4],
                     pin,
                     cipheringKif,
@@ -164,7 +172,7 @@ final class CmdCardChangePin extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00, // CL-PIN-MP1P2.1
                 (byte) 0xFF,

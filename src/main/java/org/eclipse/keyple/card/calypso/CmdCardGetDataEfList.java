@@ -59,19 +59,20 @@ final class CmdCardGetDataEfList extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataEfList(CommandContextDto context) {
-    super(CardCommandRef.GET_DATA, 0, null, context);
-    buildCommand(context.getCard().getCardClass());
+  CmdCardGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    buildCommand(transactionContext.getCard().getCardClass());
   }
 
   /**
@@ -81,7 +82,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null);
+    super(CardCommandRef.GET_DATA, 0, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -144,7 +145,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -168,7 +169,7 @@ final class CmdCardGetDataEfList extends CardCommand {
     super.setApduResponseAndCheckStatus(apduResponse);
     Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = getEfHeaders();
     for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
-      getContext().getCard().setFileHeader(entry.getValue(), entry.getKey());
+      getTransactionContext().getCard().setFileHeader(entry.getValue(), entry.getKey());
     }
     updateTerminalSessionMacIfNeeded();
   }

@@ -77,7 +77,7 @@ final class CmdCardReadBinary extends CardCommand {
   @Deprecated
   CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, int length) {
 
-    super(CardCommandRef.READ_BINARY, length, calypsoCard, null);
+    super(CardCommandRef.READ_BINARY, length, calypsoCard, null, null);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -108,15 +108,21 @@ final class CmdCardReadBinary extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param sfi The sfi to select.
    * @param offset The offset.
    * @param length The number of bytes to read.
    * @since 2.3.2
    */
-  CmdCardReadBinary(CommandContextDto context, byte sfi, int offset, int length) {
+  CmdCardReadBinary(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte sfi,
+      int offset,
+      int length) {
 
-    super(CardCommandRef.READ_BINARY, length, null, context);
+    super(CardCommandRef.READ_BINARY, length, null, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -131,7 +137,7 @@ final class CmdCardReadBinary extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                context.getCard().getCardClass().getValue(),
+                transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 p1,
                 lsb,
@@ -183,7 +189,7 @@ final class CmdCardReadBinary extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -205,7 +211,7 @@ final class CmdCardReadBinary extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getContext().getCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
+    getTransactionContext().getCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
     updateTerminalSessionMacIfNeeded();
   }
 

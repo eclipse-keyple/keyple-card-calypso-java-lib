@@ -91,7 +91,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   @Deprecated
   CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard, null);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard, null, null);
 
     this.data = data;
 
@@ -155,13 +155,17 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param data The search command input/output data.
    * @since 2.3.2
    */
-  CmdCardSearchRecordMultiple(CommandContextDto context, SearchCommandDataAdapter data) {
+  CmdCardSearchRecordMultiple(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, null, context);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
 
     this.data = data;
 
@@ -200,7 +204,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                context.getCard().getCardClass().getValue(),
+                transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) data.getRecordNumber(),
                 p2,
@@ -250,7 +254,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -278,7 +282,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
       data.getMatchingRecordNumbers().add((int) dataOut[i]);
     }
     if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
-      getContext()
+      getTransactionContext()
           .getCard()
           .setContent(
               data.getSfi(),

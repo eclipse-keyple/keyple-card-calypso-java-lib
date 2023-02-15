@@ -137,6 +137,7 @@ final class CardTransactionManagerAdapter
   private boolean isEncryptionActive;
 
   /* New fields */
+  private final TransactionContextDto _transactionContext;
   private Boolean _isLastApiLevelUsed;
   private final List<CardCommand> _cardCommands = new ArrayList<CardCommand>();
   private WriteAccessLevel _writeAccessLevel;
@@ -165,10 +166,12 @@ final class CardTransactionManagerAdapter
     }
   }
 
-  /** @return The current transaction context as a new DTO instance. */
-  private CommandContextDto getContext() {
-    return new CommandContextDto(
-        card, symmetricCryptoTransactionManagerSpi, _isSecureSessionOpen, _isEncryptionActive);
+  /**
+   * @return The current command context as a new DTO instance containing a reference to the global
+   *     transaction context.
+   */
+  private CommandContextDto getCommandContext() {
+    return new CommandContextDto(_isSecureSessionOpen, _isEncryptionActive);
   }
 
   /**
@@ -224,6 +227,8 @@ final class CardTransactionManagerAdapter
 
     this.modificationsCounter = card.getModificationsCounter();
     this._modificationsCounter = card.getModificationsCounter();
+    this._transactionContext =
+        new TransactionContextDto(card, symmetricCryptoTransactionManagerSpi);
   }
 
   private SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
@@ -1317,20 +1322,29 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareOpenSecureSession(WriteAccessLevel writeAccessLevel) {
-    checkApiLevelCompliance(true);
-    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
-    checkSymmetricCryptoTransactionManager();
-    checkNoSecureSession();
-    _cardCommands.add(
-        new CmdCardOpenSecureSession(
-            getContext(), symmetricCryptoSecuritySetting, writeAccessLevel, isExtendedMode));
-    this._writeAccessLevel = writeAccessLevel; // CL-KEY-INDEXPO.1
-    _isSecureSessionOpen = true;
-    _isEncryptionActive = false;
-    _modificationsCounter = card.getModificationsCounter();
-    _nbPostponedData = 0;
-    _svPostponedDataIndex = -1;
-    _isSvOperationInSecureSession = false;
+    try {
+      checkApiLevelCompliance(true);
+      Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+      checkSymmetricCryptoTransactionManager();
+      checkNoSecureSession();
+      _cardCommands.add(
+          new CmdCardOpenSecureSession(
+              _transactionContext,
+              getCommandContext(),
+              symmetricCryptoSecuritySetting,
+              writeAccessLevel,
+              isExtendedMode));
+      this._writeAccessLevel = writeAccessLevel; // CL-KEY-INDEXPO.1
+      _isSecureSessionOpen = true;
+      _isEncryptionActive = false;
+      _modificationsCounter = card.getModificationsCounter();
+      _nbPostponedData = 0;
+      _svPostponedDataIndex = -1;
+      _isSvOperationInSecureSession = false;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -1452,8 +1466,13 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareComputeSignature(CommonSignatureComputationData data) {
-    checkSymmetricCryptoTransactionManager();
-    cryptoExtension.prepareComputeSignature(data);
+    try {
+      checkSymmetricCryptoTransactionManager();
+      cryptoExtension.prepareComputeSignature(data);
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -1464,8 +1483,13 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareVerifySignature(CommonSignatureVerificationData data) {
-    checkSymmetricCryptoTransactionManager();
-    cryptoExtension.prepareVerifySignature(data);
+    try {
+      checkSymmetricCryptoTransactionManager();
+      cryptoExtension.prepareVerifySignature(data);
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -1519,15 +1543,7 @@ final class CardTransactionManagerAdapter
       executeCardCommands(cardRequestCommands, closePhysicalChannel);
       processSamPreparedCommands();
     } catch (RuntimeException e) {
-      _isSecureSessionOpen = false;
-      _isEncryptionActive = false;
-      _modificationsCounter = card.getModificationsCounter();
-      _nbPostponedData = 0;
-      _svPostponedDataIndex = -1;
-      _isSvGet = false;
-      _svOperation = null;
-      _svAction = null;
-      _isSvOperationInSecureSession = false;
+      resetTransaction();
       throw e;
     } finally {
       _cardCommands.clear();
@@ -1536,6 +1552,38 @@ final class CardTransactionManagerAdapter
       }
     }
     return this;
+  }
+
+  /**
+   * Resets the transaction fields and try to cancel silently the current secure session if opened,
+   * without raising any exception.
+   */
+  private void resetTransaction() {
+    _isSecureSessionOpen = false;
+    _isEncryptionActive = false;
+    _modificationsCounter = card.getModificationsCounter();
+    _nbPostponedData = 0;
+    _svPostponedDataIndex = -1;
+    _isSvGet = false;
+    _svOperation = null;
+    _svAction = null;
+    _isSvOperationInSecureSession = false;
+    _cardCommands.clear();
+    if (_transactionContext.isSecureSessionOpen()) {
+      try {
+        CmdCardCloseSecureSession cancelSecureSessionCommand =
+            new CmdCardCloseSecureSession(_transactionContext, getCommandContext());
+        cancelSecureSessionCommand.finalizeRequest();
+        List<CardCommand> commands = new ArrayList<CardCommand>(1);
+        commands.add(cancelSecureSessionCommand);
+        executeCardCommands(commands, false);
+      } catch (RuntimeException e) {
+        logger.debug("Secure session abortion error: {}", e.getMessage());
+      } finally {
+        card.restoreFiles();
+        _transactionContext.setSecureSessionOpen(false);
+      }
+    }
   }
 
   /**
@@ -1596,7 +1644,7 @@ final class CardTransactionManagerAdapter
     for (int i = 0; i < apduResponses.size(); i++) {
       CardCommand command = commands.get(i);
       try {
-        command.parseApduResponse(apduResponses.get(i));
+        command.parseResponse(apduResponses.get(i));
       } catch (CardCommandException e) {
         throw new UnexpectedCommandStatusException(
             MSG_CARD_COMMAND_ERROR
@@ -1719,20 +1767,29 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareCloseSecureSession() {
-    checkApiLevelCompliance(true);
-    checkSecureSession();
-    if (symmetricCryptoSecuritySetting.isRatificationMechanismEnabled()
-        && ((CardReader) cardReader).isContactless()) {
-      // CL-RAT-CMD.1
-      // CL-RAT-DELAY.1
-      // CL-RAT-NXTCLOSE.1
-      _cardCommands.add(new CmdCardCloseSecureSession(getContext(), false, _svPostponedDataIndex));
-      _cardCommands.add(new CmdCardRatification(getContext()));
-    } else {
-      _cardCommands.add(new CmdCardCloseSecureSession(getContext(), true, _svPostponedDataIndex));
+    try {
+      checkApiLevelCompliance(true);
+      checkSecureSession();
+      if (symmetricCryptoSecuritySetting.isRatificationMechanismEnabled()
+          && ((CardReader) cardReader).isContactless()) {
+        // CL-RAT-CMD.1
+        // CL-RAT-DELAY.1
+        // CL-RAT-NXTCLOSE.1
+        _cardCommands.add(
+            new CmdCardCloseSecureSession(
+                _transactionContext, getCommandContext(), false, _svPostponedDataIndex));
+        _cardCommands.add(new CmdCardRatification(_transactionContext, getCommandContext()));
+      } else {
+        _cardCommands.add(
+            new CmdCardCloseSecureSession(
+                _transactionContext, getCommandContext(), true, _svPostponedDataIndex));
+      }
+      _isSecureSessionOpen = false;
+      _isEncryptionActive = false;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    _isSecureSessionOpen = false;
-    _isEncryptionActive = false;
     return this;
   }
 
@@ -1852,10 +1909,15 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareCancelSecureSession() {
-    checkApiLevelCompliance(true);
-    _cardCommands.add(new CmdCardCloseSecureSession(getContext()));
-    _isSecureSessionOpen = false;
-    _isEncryptionActive = false;
+    try {
+      checkApiLevelCompliance(true);
+      _cardCommands.add(new CmdCardCloseSecureSession(_transactionContext, getCommandContext()));
+      _isSecureSessionOpen = false;
+      _isEncryptionActive = false;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -1929,26 +1991,32 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareVerifyPin(byte[] pin) {
-    checkApiLevelCompliance(true);
-    Assert.getInstance()
-        .notNull(pin, "pin")
-        .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
-    if (!card.isPinFeatureAvailable()) {
-      throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
-    }
-    if (symmetricCryptoSecuritySetting == null
-        || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-      _cardCommands.add(new CmdCardVerifyPin(getContext(), pin));
-    } else {
-      // CL-PIN-PENCRYPT.1
-      // CL-PIN-GETCHAL.1
-      _cardCommands.add(new CmdCardGetChallenge(getContext()));
-      _cardCommands.add(
-          new CmdCardVerifyPin(
-              getContext(),
-              pin,
-              symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
-              symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc()));
+    try {
+      checkApiLevelCompliance(true);
+      Assert.getInstance()
+          .notNull(pin, "pin")
+          .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+      if (!card.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+      }
+      if (symmetricCryptoSecuritySetting == null
+          || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
+        _cardCommands.add(new CmdCardVerifyPin(_transactionContext, getCommandContext(), pin));
+      } else {
+        // CL-PIN-PENCRYPT.1
+        // CL-PIN-GETCHAL.1
+        _cardCommands.add(new CmdCardGetChallenge(_transactionContext, getCommandContext()));
+        _cardCommands.add(
+            new CmdCardVerifyPin(
+                _transactionContext,
+                getCommandContext(),
+                pin,
+                symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
+                symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc()));
+      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
     return this;
   }
@@ -2045,27 +2113,33 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareChangePin(byte[] newPin) {
-    checkApiLevelCompliance(true);
-    Assert.getInstance()
-        .notNull(newPin, "newPin")
-        .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
-    if (!card.isPinFeatureAvailable()) {
-      throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
-    }
-    checkNoSecureSession();
-    // CL-PIN-MENCRYPT.1
-    if (symmetricCryptoSecuritySetting == null
-        || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-      _cardCommands.add(new CmdCardChangePin(getContext(), newPin));
-    } else {
-      // CL-PIN-GETCHAL.1
-      _cardCommands.add(new CmdCardGetChallenge(getContext()));
-      _cardCommands.add(
-          new CmdCardChangePin(
-              getContext(),
-              newPin,
-              symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
-              symmetricCryptoSecuritySetting.getPinModificationCipheringKvc()));
+    try {
+      checkApiLevelCompliance(true);
+      Assert.getInstance()
+          .notNull(newPin, "newPin")
+          .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+      if (!card.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+      }
+      checkNoSecureSession();
+      // CL-PIN-MENCRYPT.1
+      if (symmetricCryptoSecuritySetting == null
+          || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
+        _cardCommands.add(new CmdCardChangePin(_transactionContext, getCommandContext(), newPin));
+      } else {
+        // CL-PIN-GETCHAL.1
+        _cardCommands.add(new CmdCardGetChallenge(_transactionContext, getCommandContext()));
+        _cardCommands.add(
+            new CmdCardChangePin(
+                _transactionContext,
+                getCommandContext(),
+                newPin,
+                symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
+                symmetricCryptoSecuritySetting.getPinModificationCipheringKvc()));
+      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
     return this;
   }
@@ -2158,16 +2232,28 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareChangeKey(
       int keyIndex, byte newKif, byte newKvc, byte issuerKif, byte issuerKvc) {
-    checkApiLevelCompliance(true);
-    if (card.getProductType() == CalypsoCard.ProductType.BASIC) {
-      throw new UnsupportedOperationException("'Change Key' command not available for this card");
+    try {
+      checkApiLevelCompliance(true);
+      if (card.getProductType() == CalypsoCard.ProductType.BASIC) {
+        throw new UnsupportedOperationException("'Change Key' command not available for this card");
+      }
+      checkNoSecureSession();
+      Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");
+      // CL-KEY-CHANGE.1
+      _cardCommands.add(new CmdCardGetChallenge(_transactionContext, getCommandContext()));
+      _cardCommands.add(
+          new CmdCardChangeKey(
+              _transactionContext,
+              getCommandContext(),
+              (byte) keyIndex,
+              newKif,
+              newKvc,
+              issuerKif,
+              issuerKvc));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    checkNoSecureSession();
-    Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");
-    // CL-KEY-CHANGE.1
-    _cardCommands.add(new CmdCardGetChallenge(getContext()));
-    _cardCommands.add(
-        new CmdCardChangeKey(getContext(), (byte) keyIndex, newKif, newKvc, issuerKif, issuerKvc));
     return this;
   }
 
@@ -2308,28 +2394,33 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareEarlyMutualAuthentication() {
-    if (!isExtendedMode) {
-      throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+    try {
+      if (!isExtendedMode) {
+        throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+      }
+      if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
+        checkSecureSession();
+      }
+      // Add a new command or update the last command if it is an MSS command.
+      if (!_cardCommands.isEmpty()
+          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+              == CardCommandRef.MANAGE_SECURE_SESSION) {
+        ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
+            .setMutualAuthenticationRequested(true);
+      } else {
+        _cardCommands.add(
+            new CmdCardManageSession(_transactionContext, getCommandContext())
+                .setMutualAuthenticationRequested(true)
+                .setEncryptionRequested(_isEncryptionActive));
+      }
+      // TODO legacy
+      ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
+      dto.isEarlyMutualAuthenticationRequested = true;
+      dto.isEncryptionRequested = isEncryptionRequested;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
-      checkSecureSession();
-    }
-    // Add a new command or update the last command if it is an MSS command.
-    if (!_cardCommands.isEmpty()
-        && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.MANAGE_SECURE_SESSION) {
-      ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
-          .setMutualAuthenticationRequested(true);
-    } else {
-      _cardCommands.add(
-          new CmdCardManageSession(getContext())
-              .setMutualAuthenticationRequested(true)
-              .setEncryptionRequested(_isEncryptionActive));
-    }
-    // TODO legacy
-    ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
-    dto.isEarlyMutualAuthenticationRequested = true;
-    dto.isEncryptionRequested = isEncryptionRequested;
     return this;
   }
 
@@ -2340,29 +2431,36 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareActivateEncryption() {
-    if (!isExtendedMode) {
-      throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+    try {
+      if (!isExtendedMode) {
+        throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+      }
+      if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
+        checkSecureSession();
+      }
+      if (_isEncryptionActive) {
+        throw new IllegalStateException(MSG_ENCRYPTION_ALREADY_ACTIVE);
+      }
+      // Add a new command or update the last command if it is an MSS command.
+      if (!_cardCommands.isEmpty()
+          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+              == CardCommandRef.MANAGE_SECURE_SESSION) {
+        ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
+            .setEncryptionRequested(true);
+      } else {
+        _cardCommands.add(
+            new CmdCardManageSession(_transactionContext, getCommandContext())
+                .setEncryptionRequested(true));
+      }
+      _isEncryptionActive = true;
+      // TODO legacy
+      ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
+      dto.isEncryptionRequested = true;
+      isEncryptionRequested = true;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
-      checkSecureSession();
-    }
-    if (_isEncryptionActive) {
-      throw new IllegalStateException(MSG_ENCRYPTION_ALREADY_ACTIVE);
-    }
-    // Add a new command or update the last command if it is an MSS command.
-    if (!_cardCommands.isEmpty()
-        && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.MANAGE_SECURE_SESSION) {
-      ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
-          .setEncryptionRequested(true);
-    } else {
-      _cardCommands.add(new CmdCardManageSession(getContext()).setEncryptionRequested(true));
-    }
-    _isEncryptionActive = true;
-    // TODO legacy
-    ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
-    dto.isEncryptionRequested = true;
-    isEncryptionRequested = true;
     return this;
   }
 
@@ -2373,29 +2471,36 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareDeactivateEncryption() {
-    if (!isExtendedMode) {
-      throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+    try {
+      if (!isExtendedMode) {
+        throw new UnsupportedOperationException(MSG_MSS_COMMAND_NOT_SUPPORTED);
+      }
+      if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
+        checkSecureSession();
+      }
+      if (!_isEncryptionActive) {
+        throw new IllegalStateException(MSG_ENCRYPTION_NOT_ACTIVE);
+      }
+      // Add a new command or update the last command if it is an MSS command.
+      if (!_cardCommands.isEmpty()
+          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+              == CardCommandRef.MANAGE_SECURE_SESSION) {
+        ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
+            .setEncryptionRequested(false);
+      } else {
+        _cardCommands.add(
+            new CmdCardManageSession(_transactionContext, getCommandContext())
+                .setEncryptionRequested(false));
+      }
+      _isEncryptionActive = false;
+      // TODO legacy
+      ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
+      dto.isEncryptionRequested = false;
+      isEncryptionRequested = false;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    if (_isLastApiLevelUsed != null && _isLastApiLevelUsed) {
-      checkSecureSession();
-    }
-    if (!_isEncryptionActive) {
-      throw new IllegalStateException(MSG_ENCRYPTION_NOT_ACTIVE);
-    }
-    // Add a new command or update the last command if it is an MSS command.
-    if (!_cardCommands.isEmpty()
-        && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.MANAGE_SECURE_SESSION) {
-      ((CmdCardManageSession) _cardCommands.get(_cardCommands.size() - 1))
-          .setEncryptionRequested(false);
-    } else {
-      _cardCommands.add(new CmdCardManageSession(getContext()).setEncryptionRequested(false));
-    }
-    _isEncryptionActive = false;
-    // TODO legacy
-    ManageSecureSessionDto dto = getOrCreateManageSecureSessionDto();
-    dto.isEncryptionRequested = false;
-    isEncryptionRequested = false;
     return this;
   }
 
@@ -2446,9 +2551,14 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSelectFile(short lid) {
-    _cardCommands.add(new CmdCardSelectFile(getContext(), lid));
-    // TODO legacy
-    cardCommands.add(new CmdCardSelectFile(card, lid));
+    try {
+      _cardCommands.add(new CmdCardSelectFile(_transactionContext, getCommandContext(), lid));
+      // TODO legacy
+      cardCommands.add(new CmdCardSelectFile(card, lid));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2459,10 +2569,16 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSelectFile(SelectFileControl selectFileControl) {
-    Assert.getInstance().notNull(selectFileControl, "selectFileControl");
-    _cardCommands.add(new CmdCardSelectFile(getContext(), selectFileControl));
-    // TODO legacy
-    cardCommands.add(new CmdCardSelectFile(card, selectFileControl));
+    try {
+      Assert.getInstance().notNull(selectFileControl, "selectFileControl");
+      _cardCommands.add(
+          new CmdCardSelectFile(_transactionContext, getCommandContext(), selectFileControl));
+      // TODO legacy
+      cardCommands.add(new CmdCardSelectFile(card, selectFileControl));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2473,30 +2589,36 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareGetData(GetDataTag tag) {
-    Assert.getInstance().notNull(tag, "tag");
-    switch (tag) {
-      case FCI_FOR_CURRENT_DF:
-        _cardCommands.add(new CmdCardGetDataFci(getContext()));
-        // TODO legacy
-        cardCommands.add(new CmdCardGetDataFci(card));
-        break;
-      case FCP_FOR_CURRENT_FILE:
-        _cardCommands.add(new CmdCardGetDataFcp(getContext()));
-        // TODO legacy
-        cardCommands.add(new CmdCardGetDataFcp(card));
-        break;
-      case EF_LIST:
-        _cardCommands.add(new CmdCardGetDataEfList(getContext()));
-        // TODO legacy
-        cardCommands.add(new CmdCardGetDataEfList(card));
-        break;
-      case TRACEABILITY_INFORMATION:
-        _cardCommands.add(new CmdCardGetDataTraceabilityInformation(getContext()));
-        // TODO legacy
-        cardCommands.add(new CmdCardGetDataTraceabilityInformation(card));
-        break;
-      default:
-        throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
+    try {
+      Assert.getInstance().notNull(tag, "tag");
+      switch (tag) {
+        case FCI_FOR_CURRENT_DF:
+          _cardCommands.add(new CmdCardGetDataFci(_transactionContext, getCommandContext()));
+          // TODO legacy
+          cardCommands.add(new CmdCardGetDataFci(card));
+          break;
+        case FCP_FOR_CURRENT_FILE:
+          _cardCommands.add(new CmdCardGetDataFcp(_transactionContext, getCommandContext()));
+          // TODO legacy
+          cardCommands.add(new CmdCardGetDataFcp(card));
+          break;
+        case EF_LIST:
+          _cardCommands.add(new CmdCardGetDataEfList(_transactionContext, getCommandContext()));
+          // TODO legacy
+          cardCommands.add(new CmdCardGetDataEfList(card));
+          break;
+        case TRACEABILITY_INFORMATION:
+          _cardCommands.add(
+              new CmdCardGetDataTraceabilityInformation(_transactionContext, getCommandContext()));
+          // TODO legacy
+          cardCommands.add(new CmdCardGetDataTraceabilityInformation(card));
+          break;
+        default:
+          throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
+      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
     return this;
   }
@@ -2546,39 +2668,49 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareReadRecord(byte sfi, int recordNumber) {
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              recordNumber,
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              RECORD_NUMBER);
 
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            RECORD_NUMBER);
-
-    // Try to group the first read record command with the open secure session command.
-    if (_isSecureSessionOpen
-        && !securitySetting.isReadOnSessionOpeningDisabled()
-        && !_cardCommands.isEmpty()
-        && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.OPEN_SECURE_SESSION
-        && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-            .isReadModeConfigured()) {
-      ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-          .configureReadMode(sfi, recordNumber);
-    } else {
-      if (_isSecureSessionOpen && !((CardReader) cardReader).isContactless()) {
-        throw new IllegalStateException(
-            "Explicit record size is expected inside a secure session in contact mode.");
+      // Try to group the first read record command with the open secure session command.
+      if (_isSecureSessionOpen
+          && !securitySetting.isReadOnSessionOpeningDisabled()
+          && !_cardCommands.isEmpty()
+          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+              == CardCommandRef.OPEN_SECURE_SESSION
+          && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
+              .isReadModeConfigured()) {
+        ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
+            .configureReadMode(sfi, recordNumber);
+      } else {
+        if (_isSecureSessionOpen && !((CardReader) cardReader).isContactless()) {
+          throw new IllegalStateException(
+              "Explicit record size is expected inside a secure session in contact mode.");
+        }
+        _cardCommands.add(
+            new CmdCardReadRecords(
+                _transactionContext,
+                getCommandContext(),
+                sfi,
+                recordNumber,
+                CmdCardReadRecords.ReadMode.ONE_RECORD,
+                0,
+                0));
       }
-      _cardCommands.add(
+      // TODO legacy
+      cardCommands.add(
           new CmdCardReadRecords(
-              getContext(), sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0, 0));
-    }
-    // TODO legacy
-    cardCommands.add(
-        new CmdCardReadRecords(
-            card, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0, 0));
+              card, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0, 0));
 
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2590,119 +2722,126 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareReadRecords(
       byte sfi, int fromRecordNumber, int toRecordNumber, int recordSize) {
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              fromRecordNumber,
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              "fromRecordNumber")
+          .isInRange(
+              toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
+          .isInRange(recordSize, 0, cardPayloadCapacity, "recordSize");
 
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            fromRecordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "fromRecordNumber")
-        .isInRange(
-            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
-        .isInRange(recordSize, 0, cardPayloadCapacity, "recordSize");
+      if (toRecordNumber == fromRecordNumber
+          || (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+              && card.getProductType() != CalypsoCard.ProductType.LIGHT)) {
+        // Creates N unitary "Read Records" commands.
+        // Try to group the first read record command with the open secure session command.
+        if (_isSecureSessionOpen
+            && !securitySetting.isReadOnSessionOpeningDisabled()
+            && !_cardCommands.isEmpty()
+            && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+                == CardCommandRef.OPEN_SECURE_SESSION
+            && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
+                .isReadModeConfigured()) {
+          ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
+              .configureReadMode(sfi, fromRecordNumber);
+          // TODO legacy
+          cardCommands.add(
+              new CmdCardReadRecords(
+                  card,
+                  sfi,
+                  fromRecordNumber,
+                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  recordSize,
+                  recordSize));
+          fromRecordNumber++;
+        }
+        for (int i = fromRecordNumber; i <= toRecordNumber; i++) {
+          _cardCommands.add(
+              new CmdCardReadRecords(
+                  _transactionContext,
+                  getCommandContext(),
+                  sfi,
+                  i,
+                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  recordSize,
+                  recordSize));
+          // TODO legacy
+          cardCommands.add(
+              new CmdCardReadRecords(
+                  card, sfi, i, CmdCardReadRecords.ReadMode.ONE_RECORD, recordSize, recordSize));
+        }
+      } else {
+        // Manages the reading of multiple records taking into account the transmission capacity
+        // of the card and the response format (2 extra bytes).
+        // Multiple APDUs can be generated depending on record size and transmission capacity.
+        final int nbBytesPerRecord = recordSize + 2;
+        final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesPerRecord;
+        final int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
 
-    if (toRecordNumber == fromRecordNumber
-        || (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
-            && card.getProductType() != CalypsoCard.ProductType.LIGHT)) {
-      // Creates N unitary "Read Records" commands.
-      // Try to group the first read record command with the open secure session command.
-      if (_isSecureSessionOpen
-          && !securitySetting.isReadOnSessionOpeningDisabled()
-          && !_cardCommands.isEmpty()
-          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-              == CardCommandRef.OPEN_SECURE_SESSION
-          && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-              .isReadModeConfigured()) {
-        ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-            .configureReadMode(sfi, fromRecordNumber);
-        // TODO legacy
-        cardCommands.add(
-            new CmdCardReadRecords(
-                card,
-                sfi,
-                fromRecordNumber,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
-                recordSize,
-                recordSize));
-        fromRecordNumber++;
+        int currentRecordNumber = fromRecordNumber;
+        int nbRecordsRemainingToRead = toRecordNumber - fromRecordNumber + 1;
+        int currentLength;
+
+        while (currentRecordNumber < toRecordNumber) {
+          currentLength =
+              nbRecordsRemainingToRead <= nbRecordsPerApdu
+                  ? nbRecordsRemainingToRead * nbBytesPerRecord
+                  : dataSizeMaxPerApdu;
+
+          _cardCommands.add(
+              new CmdCardReadRecords(
+                  _transactionContext,
+                  getCommandContext(),
+                  sfi,
+                  currentRecordNumber,
+                  CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
+                  currentLength,
+                  recordSize));
+          // TODO legacy
+          cardCommands.add(
+              new CmdCardReadRecords(
+                  card,
+                  sfi,
+                  currentRecordNumber,
+                  CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
+                  currentLength,
+                  recordSize));
+
+          currentRecordNumber += (currentLength / nbBytesPerRecord);
+          nbRecordsRemainingToRead -= (currentLength / nbBytesPerRecord);
+        }
+
+        // Optimization: prepare a read "one record" if possible for last iteration.
+        if (currentRecordNumber == toRecordNumber) {
+          _cardCommands.add(
+              new CmdCardReadRecords(
+                  _transactionContext,
+                  getCommandContext(),
+                  sfi,
+                  currentRecordNumber,
+                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  recordSize,
+                  recordSize));
+          // TODO legacy
+          cardCommands.add(
+              new CmdCardReadRecords(
+                  card,
+                  sfi,
+                  currentRecordNumber,
+                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  recordSize,
+                  recordSize));
+        }
       }
-      for (int i = fromRecordNumber; i <= toRecordNumber; i++) {
-        _cardCommands.add(
-            new CmdCardReadRecords(
-                getContext(),
-                sfi,
-                i,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
-                recordSize,
-                recordSize));
-        // TODO legacy
-        cardCommands.add(
-            new CmdCardReadRecords(
-                card, sfi, i, CmdCardReadRecords.ReadMode.ONE_RECORD, recordSize, recordSize));
-      }
-    } else {
-      // Manages the reading of multiple records taking into account the transmission capacity
-      // of the card and the response format (2 extra bytes).
-      // Multiple APDUs can be generated depending on record size and transmission capacity.
-      final int nbBytesPerRecord = recordSize + 2;
-      final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesPerRecord;
-      final int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
 
-      int currentRecordNumber = fromRecordNumber;
-      int nbRecordsRemainingToRead = toRecordNumber - fromRecordNumber + 1;
-      int currentLength;
-
-      while (currentRecordNumber < toRecordNumber) {
-        currentLength =
-            nbRecordsRemainingToRead <= nbRecordsPerApdu
-                ? nbRecordsRemainingToRead * nbBytesPerRecord
-                : dataSizeMaxPerApdu;
-
-        _cardCommands.add(
-            new CmdCardReadRecords(
-                getContext(),
-                sfi,
-                currentRecordNumber,
-                CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
-                currentLength,
-                recordSize));
-        // TODO legacy
-        cardCommands.add(
-            new CmdCardReadRecords(
-                card,
-                sfi,
-                currentRecordNumber,
-                CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
-                currentLength,
-                recordSize));
-
-        currentRecordNumber += (currentLength / nbBytesPerRecord);
-        nbRecordsRemainingToRead -= (currentLength / nbBytesPerRecord);
-      }
-
-      // Optimization: prepare a read "one record" if possible for last iteration.
-      if (currentRecordNumber == toRecordNumber) {
-        _cardCommands.add(
-            new CmdCardReadRecords(
-                getContext(),
-                sfi,
-                currentRecordNumber,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
-                recordSize,
-                recordSize));
-        // TODO legacy
-        cardCommands.add(
-            new CmdCardReadRecords(
-                card,
-                sfi,
-                currentRecordNumber,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
-                recordSize,
-                recordSize));
-      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-
     return this;
   }
 
@@ -2714,44 +2853,53 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareReadRecordsPartially(
       byte sfi, int fromRecordNumber, int toRecordNumber, int offset, int nbBytesToRead) {
+    try {
+      if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+          && card.getProductType() != CalypsoCard.ProductType.LIGHT) {
+        throw new UnsupportedOperationException(
+            "The 'Read Record Multiple' command is not available for this card.");
+      }
 
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
-        && card.getProductType() != CalypsoCard.ProductType.LIGHT) {
-      throw new UnsupportedOperationException(
-          "The 'Read Record Multiple' command is not available for this card.");
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              fromRecordNumber,
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              "fromRecordNumber")
+          .isInRange(
+              toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
+          .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, OFFSET)
+          .isInRange(
+              nbBytesToRead,
+              CalypsoCardConstant.DATA_LENGTH_MIN,
+              cardPayloadCapacity,
+              "nbBytesToRead");
+
+      final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
+
+      int currentRecordNumber = fromRecordNumber;
+
+      while (currentRecordNumber <= toRecordNumber) {
+        _cardCommands.add(
+            new CmdCardReadRecordMultiple(
+                _transactionContext,
+                getCommandContext(),
+                sfi,
+                (byte) currentRecordNumber,
+                (byte) offset,
+                (byte) nbBytesToRead));
+        // TODO legacy
+        cardCommands.add(
+            new CmdCardReadRecordMultiple(
+                card, sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
+        currentRecordNumber += nbRecordsPerApdu;
+      }
+
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            fromRecordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "fromRecordNumber")
-        .isInRange(
-            toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
-        .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, OFFSET)
-        .isInRange(
-            nbBytesToRead,
-            CalypsoCardConstant.DATA_LENGTH_MIN,
-            cardPayloadCapacity,
-            "nbBytesToRead");
-
-    final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
-
-    int currentRecordNumber = fromRecordNumber;
-
-    while (currentRecordNumber <= toRecordNumber) {
-      _cardCommands.add(
-          new CmdCardReadRecordMultiple(
-              getContext(), sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
-      // TODO legacy
-      cardCommands.add(
-          new CmdCardReadRecordMultiple(
-              card, sfi, (byte) currentRecordNumber, (byte) offset, (byte) nbBytesToRead));
-      currentRecordNumber += nbRecordsPerApdu;
-    }
-
     return this;
   }
 
@@ -2762,44 +2910,51 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
-
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
-        logger.warn(
-            "The 'Read Binary' command may not be supported by this PRIME_REVISION_2 card.");
-      } else {
-        throw new UnsupportedOperationException(
-            "The 'Read Binary' command is not available for this card.");
+    try {
+      if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+        if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
+          logger.warn(
+              "The 'Read Binary' command may not be supported by this PRIME_REVISION_2 card.");
+        } else {
+          throw new UnsupportedOperationException(
+              "The 'Read Binary' command is not available for this card.");
+        }
       }
+
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
+          .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
+
+      if (sfi > 0 && offset > 255) { // FFh
+        // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
+        _cardCommands.add(
+            new CmdCardReadBinary(_transactionContext, getCommandContext(), sfi, 0, 1));
+        // TODO legacy
+        cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
+      }
+
+      int currentLength;
+      int currentOffset = offset;
+      int nbBytesRemainingToRead = nbBytesToRead;
+      do {
+        currentLength = Math.min(nbBytesRemainingToRead, cardPayloadCapacity);
+
+        _cardCommands.add(
+            new CmdCardReadBinary(
+                _transactionContext, getCommandContext(), sfi, currentOffset, currentLength));
+        // TODO legacy
+        cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, currentLength));
+
+        currentOffset += currentLength;
+        nbBytesRemainingToRead -= currentLength;
+      } while (nbBytesRemainingToRead > 0);
+
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
-        .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
-
-    if (sfi > 0 && offset > 255) { // FFh
-      // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      _cardCommands.add(new CmdCardReadBinary(getContext(), sfi, 0, 1));
-      // TODO legacy
-      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
-    }
-
-    int currentLength;
-    int currentOffset = offset;
-    int nbBytesRemainingToRead = nbBytesToRead;
-    do {
-      currentLength = Math.min(nbBytesRemainingToRead, cardPayloadCapacity);
-
-      _cardCommands.add(new CmdCardReadBinary(getContext(), sfi, currentOffset, currentLength));
-      // TODO legacy
-      cardCommands.add(new CmdCardReadBinary(card, sfi, currentOffset, currentLength));
-
-      currentOffset += currentLength;
-      nbBytesRemainingToRead -= currentLength;
-    } while (nbBytesRemainingToRead > 0);
-
     return this;
   }
 
@@ -2820,55 +2975,60 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSearchRecords(SearchCommandData data) {
+    try {
+      if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+        throw new UnsupportedOperationException(
+            "The 'Search Record Multiple' command is not available for this card.");
+      }
 
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      throw new UnsupportedOperationException(
-          "The 'Search Record Multiple' command is not available for this card.");
-    }
+      if (!(data instanceof SearchCommandDataAdapter)) {
+        throw new IllegalArgumentException(
+            "The provided data must be an instance of 'SearchCommandDataAdapter'");
+      }
 
-    if (!(data instanceof SearchCommandDataAdapter)) {
-      throw new IllegalArgumentException(
-          "The provided data must be an instance of 'SearchCommandDataAdapter'");
-    }
+      SearchCommandDataAdapter dataAdapter = (SearchCommandDataAdapter) data;
 
-    SearchCommandDataAdapter dataAdapter = (SearchCommandDataAdapter) data;
-
-    Assert.getInstance()
-        .notNull(dataAdapter, "data")
-        .isInRange(
-            (int) dataAdapter.getSfi(),
-            CalypsoCardConstant.SFI_MIN,
-            CalypsoCardConstant.SFI_MAX,
-            "sfi")
-        .isInRange(
-            dataAdapter.getRecordNumber(),
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            "startAtRecord")
-        .isInRange(
-            dataAdapter.getOffset(),
-            CalypsoCardConstant.OFFSET_MIN,
-            CalypsoCardConstant.OFFSET_MAX,
-            OFFSET)
-        .notNull(dataAdapter.getSearchData(), "searchData")
-        .isInRange(
-            dataAdapter.getSearchData().length,
-            CalypsoCardConstant.DATA_LENGTH_MIN,
-            cardPayloadCapacity,
-            "searchData");
-    if (dataAdapter.getMask() != null) {
       Assert.getInstance()
+          .notNull(dataAdapter, "data")
           .isInRange(
-              dataAdapter.getMask().length,
-              CalypsoCardConstant.DATA_LENGTH_MIN,
+              (int) dataAdapter.getSfi(),
+              CalypsoCardConstant.SFI_MIN,
+              CalypsoCardConstant.SFI_MAX,
+              "sfi")
+          .isInRange(
+              dataAdapter.getRecordNumber(),
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              "startAtRecord")
+          .isInRange(
+              dataAdapter.getOffset(),
+              CalypsoCardConstant.OFFSET_MIN,
+              CalypsoCardConstant.OFFSET_MAX,
+              OFFSET)
+          .notNull(dataAdapter.getSearchData(), "searchData")
+          .isInRange(
               dataAdapter.getSearchData().length,
-              "mask");
+              CalypsoCardConstant.DATA_LENGTH_MIN,
+              cardPayloadCapacity,
+              "searchData");
+      if (dataAdapter.getMask() != null) {
+        Assert.getInstance()
+            .isInRange(
+                dataAdapter.getMask().length,
+                CalypsoCardConstant.DATA_LENGTH_MIN,
+                dataAdapter.getSearchData().length,
+                "mask");
+      }
+
+      _cardCommands.add(
+          new CmdCardSearchRecordMultiple(_transactionContext, getCommandContext(), dataAdapter));
+      // TODO legacy
+      cardCommands.add(new CmdCardSearchRecordMultiple(card, dataAdapter));
+
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-
-    _cardCommands.add(new CmdCardSearchRecordMultiple(getContext(), dataAdapter));
-    // TODO legacy
-    cardCommands.add(new CmdCardSearchRecordMultiple(card, dataAdapter));
-
     return this;
   }
 
@@ -2879,15 +3039,21 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareAppendRecord(byte sfi, byte[] recordData) {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .notNull(recordData, MSG_RECORD_DATA)
-        .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
-    CmdCardAppendRecord command = new CmdCardAppendRecord(getContext(), sfi, recordData);
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    // TODO legacy
-    cardCommands.add(new CmdCardAppendRecord(card, sfi, recordData));
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .notNull(recordData, MSG_RECORD_DATA)
+          .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
+      CmdCardAppendRecord command =
+          new CmdCardAppendRecord(_transactionContext, getCommandContext(), sfi, recordData);
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      // TODO legacy
+      cardCommands.add(new CmdCardAppendRecord(card, sfi, recordData));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2898,21 +3064,27 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareUpdateRecord(byte sfi, int recordNumber, byte[] recordData) {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            RECORD_NUMBER)
-        .notNull(recordData, MSG_RECORD_DATA)
-        .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
-    CmdCardUpdateRecord command =
-        new CmdCardUpdateRecord(getContext(), sfi, recordNumber, recordData);
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    // TODO legacy
-    cardCommands.add(new CmdCardUpdateRecord(card, sfi, recordNumber, recordData));
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              recordNumber,
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              RECORD_NUMBER)
+          .notNull(recordData, MSG_RECORD_DATA)
+          .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
+      CmdCardUpdateRecord command =
+          new CmdCardUpdateRecord(
+              _transactionContext, getCommandContext(), sfi, recordNumber, recordData);
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      // TODO legacy
+      cardCommands.add(new CmdCardUpdateRecord(card, sfi, recordNumber, recordData));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2923,21 +3095,27 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareWriteRecord(byte sfi, int recordNumber, byte[] recordData) {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            recordNumber,
-            CalypsoCardConstant.NB_REC_MIN,
-            CalypsoCardConstant.NB_REC_MAX,
-            RECORD_NUMBER)
-        .notNull(recordData, MSG_RECORD_DATA)
-        .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
-    CmdCardWriteRecord command =
-        new CmdCardWriteRecord(getContext(), sfi, recordNumber, recordData);
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    // TODO legacy
-    cardCommands.add(new CmdCardWriteRecord(card, sfi, recordNumber, recordData));
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              recordNumber,
+              CalypsoCardConstant.NB_REC_MIN,
+              CalypsoCardConstant.NB_REC_MAX,
+              RECORD_NUMBER)
+          .notNull(recordData, MSG_RECORD_DATA)
+          .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
+      CmdCardWriteRecord command =
+          new CmdCardWriteRecord(
+              _transactionContext, getCommandContext(), sfi, recordNumber, recordData);
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      // TODO legacy
+      cardCommands.add(new CmdCardWriteRecord(card, sfi, recordNumber, recordData));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -2973,86 +3151,105 @@ final class CardTransactionManagerAdapter
    */
   private CardTransactionManager prepareUpdateOrWriteBinary(
       boolean isUpdateCommand, byte sfi, int offset, byte[] data) {
-
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
-      if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
-        logger.warn(
-            "The 'Update/Write Binary' command may not be supported by this PRIME_REVISION_2 card.");
-      } else {
-        throw new UnsupportedOperationException(
-            "The 'Update/Write Binary' command is not available for this card.");
+    try {
+      if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
+        if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
+          logger.warn(
+              "The 'Update/Write Binary' command may not be supported by this PRIME_REVISION_2 card.");
+        } else {
+          throw new UnsupportedOperationException(
+              "The 'Update/Write Binary' command is not available for this card.");
+        }
       }
+
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
+          .notEmpty(data, "data");
+
+      if (sfi > 0 && offset > 255) { // FFh
+        // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
+        _cardCommands.add(
+            new CmdCardReadBinary(_transactionContext, getCommandContext(), sfi, 0, 1));
+        // TODO legacy
+        cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
+      }
+
+      final int dataLength = data.length;
+
+      int currentLength;
+      int currentOffset = offset;
+      int currentIndex = 0;
+      do {
+        currentLength = Math.min(dataLength - currentIndex, cardPayloadCapacity);
+
+        CmdCardUpdateOrWriteBinary command =
+            new CmdCardUpdateOrWriteBinary(
+                isUpdateCommand,
+                _transactionContext,
+                getCommandContext(),
+                sfi,
+                currentOffset,
+                Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength));
+        prepareNewSecureSessionIfNeeded(command);
+        _cardCommands.add(command);
+        // TODO legacy
+        cardCommands.add(
+            new CmdCardUpdateOrWriteBinary(
+                isUpdateCommand,
+                card,
+                sfi,
+                currentOffset,
+                Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
+
+        currentOffset += currentLength;
+        currentIndex += currentLength;
+      } while (currentIndex < dataLength);
+
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
-        .notEmpty(data, "data");
-
-    if (sfi > 0 && offset > 255) { // FFh
-      // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      _cardCommands.add(new CmdCardReadBinary(getContext(), sfi, 0, 1));
-      // TODO legacy
-      cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
-    }
-
-    final int dataLength = data.length;
-
-    int currentLength;
-    int currentOffset = offset;
-    int currentIndex = 0;
-    do {
-      currentLength = Math.min(dataLength - currentIndex, cardPayloadCapacity);
-
-      CmdCardUpdateOrWriteBinary command =
-          new CmdCardUpdateOrWriteBinary(
-              isUpdateCommand,
-              getContext(),
-              sfi,
-              currentOffset,
-              Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength));
-      prepareNewSecureSessionIfNeeded(command);
-      _cardCommands.add(command);
-      // TODO legacy
-      cardCommands.add(
-          new CmdCardUpdateOrWriteBinary(
-              isUpdateCommand,
-              card,
-              sfi,
-              currentOffset,
-              Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength)));
-
-      currentOffset += currentLength;
-      currentIndex += currentLength;
-    } while (currentIndex < dataLength);
-
     return this;
   }
 
   /** Factorisation of prepareDecreaseCounter and prepareIncreaseCounter. */
   private CardTransactionManager prepareIncreaseOrDecreaseCounter(
       boolean isDecreaseCommand, byte sfi, int counterNumber, int incDecValue) {
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            counterNumber, CalypsoCardConstant.NB_CNT_MIN, cardPayloadCapacity / 3, "counterNumber")
-        .isInRange(
-            incDecValue,
-            CalypsoCardConstant.CNT_VALUE_MIN,
-            CalypsoCardConstant.CNT_VALUE_MAX,
-            "incDecValue");
-    CmdCardIncreaseOrDecrease command =
-        new CmdCardIncreaseOrDecrease(
-            isDecreaseCommand, getContext(), sfi, counterNumber, incDecValue);
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    if (_isSecureSessionOpen && card.isCounterValuePostponed()) {
-      _nbPostponedData++;
+    try {
+      Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+          .isInRange(
+              counterNumber,
+              CalypsoCardConstant.NB_CNT_MIN,
+              cardPayloadCapacity / 3,
+              "counterNumber")
+          .isInRange(
+              incDecValue,
+              CalypsoCardConstant.CNT_VALUE_MIN,
+              CalypsoCardConstant.CNT_VALUE_MAX,
+              "incDecValue");
+      CmdCardIncreaseOrDecrease command =
+          new CmdCardIncreaseOrDecrease(
+              isDecreaseCommand,
+              _transactionContext,
+              getCommandContext(),
+              sfi,
+              counterNumber,
+              incDecValue);
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      if (_isSecureSessionOpen && card.isCounterValuePostponed()) {
+        _nbPostponedData++;
+      }
+      // TODO legacy
+      cardCommands.add(
+          new CmdCardIncreaseOrDecrease(isDecreaseCommand, card, sfi, counterNumber, incDecValue));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    // TODO legacy
-    cardCommands.add(
-        new CmdCardIncreaseOrDecrease(isDecreaseCommand, card, sfi, counterNumber, incDecValue));
     return this;
   }
 
@@ -3096,12 +3293,20 @@ final class CardTransactionManagerAdapter
     _modificationsCounter -= computeCommandSessionBufferSize(command);
     if (_modificationsCounter < 0) {
       checkMultipleSessionEnabled(command);
-      _cardCommands.add(new CmdCardCloseSecureSession(getContext(), true, _svPostponedDataIndex));
+      _cardCommands.add(
+          new CmdCardCloseSecureSession(
+              _transactionContext, getCommandContext(), true, _svPostponedDataIndex));
       _cardCommands.add(
           new CmdCardOpenSecureSession(
-              getContext(), symmetricCryptoSecuritySetting, _writeAccessLevel, isExtendedMode));
+              _transactionContext,
+              getCommandContext(),
+              symmetricCryptoSecuritySetting,
+              _writeAccessLevel,
+              isExtendedMode));
       if (_isEncryptionActive) {
-        _cardCommands.add(new CmdCardManageSession(getContext()).setEncryptionRequested(true));
+        _cardCommands.add(
+            new CmdCardManageSession(_transactionContext, getCommandContext())
+                .setEncryptionRequested(true));
       }
       _modificationsCounter = card.getModificationsCounter();
       _modificationsCounter -= computeCommandSessionBufferSize(command);
@@ -3114,90 +3319,100 @@ final class CardTransactionManagerAdapter
   /** Factorisation of prepareDecreaseMultipleCounters and prepareIncreaseMultipleCounters. */
   private CardTransactionManager prepareIncreaseOrDecreaseCounters(
       boolean isDecreaseCommand, byte sfi, Map<Integer, Integer> counterNumberToIncDecValueMap) {
-
-    Assert.getInstance()
-        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
-        .isInRange(
-            counterNumberToIncDecValueMap.size(),
-            CalypsoCardConstant.NB_CNT_MIN,
-            cardPayloadCapacity / 3,
-            "counterNumberToIncDecValueMap");
-
-    for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
+    try {
       Assert.getInstance()
+          .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
-              entry.getKey(),
+              counterNumberToIncDecValueMap.size(),
               CalypsoCardConstant.NB_CNT_MIN,
               cardPayloadCapacity / 3,
-              "counterNumberToIncDecValueMapKey")
-          .isInRange(
-              entry.getValue(),
-              CalypsoCardConstant.CNT_VALUE_MIN,
-              CalypsoCardConstant.CNT_VALUE_MAX,
-              "counterNumberToIncDecValueMapValue");
-    }
+              "counterNumberToIncDecValueMap");
 
-    if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
-        && card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
       for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-        if (isDecreaseCommand) {
-          prepareDecreaseCounter(sfi, entry.getKey(), entry.getValue());
-        } else {
-          prepareIncreaseCounter(sfi, entry.getKey(), entry.getValue());
-        }
+        Assert.getInstance()
+            .isInRange(
+                entry.getKey(),
+                CalypsoCardConstant.NB_CNT_MIN,
+                cardPayloadCapacity / 3,
+                "counterNumberToIncDecValueMapKey")
+            .isInRange(
+                entry.getValue(),
+                CalypsoCardConstant.CNT_VALUE_MIN,
+                CalypsoCardConstant.CNT_VALUE_MAX,
+                "counterNumberToIncDecValueMapValue");
       }
-    } else {
-      final int nbCountersPerApdu = cardPayloadCapacity / 4;
-      if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
-        CmdCardIncreaseOrDecreaseMultiple command =
-            new CmdCardIncreaseOrDecreaseMultiple(
-                isDecreaseCommand,
-                getContext(),
-                sfi,
-                new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap));
-        prepareNewSecureSessionIfNeeded(command);
-        _cardCommands.add(command);
-        // TODO legacy
-        cardCommands.add(
-            new CmdCardIncreaseOrDecreaseMultiple(
-                isDecreaseCommand,
-                card,
-                sfi,
-                new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap)));
-      } else {
-        // the number of counters exceeds the payload capacity, let's split into several apdu
-        // commands
-        int i = 0;
-        TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
+
+      if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
+          && card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_2) {
         for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-          i++;
-          map.put(entry.getKey(), entry.getValue());
-          if (i == nbCountersPerApdu) {
-            CmdCardIncreaseOrDecreaseMultiple command =
-                new CmdCardIncreaseOrDecreaseMultiple(
-                    isDecreaseCommand, getContext(), sfi, new TreeMap<Integer, Integer>(map));
-            prepareNewSecureSessionIfNeeded(command);
-            _cardCommands.add(command);
-            // TODO legacy
-            cardCommands.add(
-                new CmdCardIncreaseOrDecreaseMultiple(
-                    isDecreaseCommand, card, sfi, new TreeMap<Integer, Integer>(map)));
-            i = 0;
-            map.clear();
+          if (isDecreaseCommand) {
+            prepareDecreaseCounter(sfi, entry.getKey(), entry.getValue());
+          } else {
+            prepareIncreaseCounter(sfi, entry.getKey(), entry.getValue());
           }
         }
-        if (!map.isEmpty()) {
+      } else {
+        final int nbCountersPerApdu = cardPayloadCapacity / 4;
+        if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
           CmdCardIncreaseOrDecreaseMultiple command =
-              new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, getContext(), sfi, map);
+              new CmdCardIncreaseOrDecreaseMultiple(
+                  isDecreaseCommand,
+                  _transactionContext,
+                  getCommandContext(),
+                  sfi,
+                  new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap));
           prepareNewSecureSessionIfNeeded(command);
           _cardCommands.add(command);
           // TODO legacy
           cardCommands.add(
-              new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
+              new CmdCardIncreaseOrDecreaseMultiple(
+                  isDecreaseCommand,
+                  card,
+                  sfi,
+                  new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap)));
+        } else {
+          // the number of counters exceeds the payload capacity, let's split into several apdu
+          // commands
+          int i = 0;
+          TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
+          for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
+            i++;
+            map.put(entry.getKey(), entry.getValue());
+            if (i == nbCountersPerApdu) {
+              CmdCardIncreaseOrDecreaseMultiple command =
+                  new CmdCardIncreaseOrDecreaseMultiple(
+                      isDecreaseCommand,
+                      _transactionContext,
+                      getCommandContext(),
+                      sfi,
+                      new TreeMap<Integer, Integer>(map));
+              prepareNewSecureSessionIfNeeded(command);
+              _cardCommands.add(command);
+              // TODO legacy
+              cardCommands.add(
+                  new CmdCardIncreaseOrDecreaseMultiple(
+                      isDecreaseCommand, card, sfi, new TreeMap<Integer, Integer>(map)));
+              i = 0;
+              map.clear();
+            }
+          }
+          if (!map.isEmpty()) {
+            CmdCardIncreaseOrDecreaseMultiple command =
+                new CmdCardIncreaseOrDecreaseMultiple(
+                    isDecreaseCommand, _transactionContext, getCommandContext(), sfi, map);
+            prepareNewSecureSessionIfNeeded(command);
+            _cardCommands.add(command);
+            // TODO legacy
+            cardCommands.add(
+                new CmdCardIncreaseOrDecreaseMultiple(isDecreaseCommand, card, sfi, map));
+          }
         }
       }
-    }
 
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -3230,44 +3445,49 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSetCounter(byte sfi, int counterNumber, int newValue) {
-    Integer oldValue = null;
-    ElementaryFile ef = card.getFileBySfi(sfi);
-    if (ef != null) {
-      oldValue = ef.getData().getContentAsCounterValue(counterNumber);
-    }
-    if (oldValue == null) {
-      throw new IllegalStateException(
-          "The value for counter " + counterNumber + " in file " + sfi + " is not available");
-    }
-    int delta = newValue - oldValue;
-    if (delta > 0) {
-      if (logger.isTraceEnabled()) {
-        logger.trace(
-            "Increment counter {} (file {}) from {} to {}",
+    try {
+      Integer oldValue = null;
+      ElementaryFile ef = card.getFileBySfi(sfi);
+      if (ef != null) {
+        oldValue = ef.getData().getContentAsCounterValue(counterNumber);
+      }
+      if (oldValue == null) {
+        throw new IllegalStateException(
+            "The value for counter " + counterNumber + " in file " + sfi + " is not available");
+      }
+      int delta = newValue - oldValue;
+      if (delta > 0) {
+        if (logger.isTraceEnabled()) {
+          logger.trace(
+              "Increment counter {} (file {}) from {} to {}",
+              counterNumber,
+              sfi,
+              newValue - delta,
+              newValue);
+        }
+        prepareIncreaseCounter(sfi, counterNumber, delta);
+      } else if (delta < 0) {
+        if (logger.isTraceEnabled()) {
+          logger.trace(
+              "Decrement counter {} (file {}) from {} to {}",
+              counterNumber,
+              sfi,
+              newValue - delta,
+              newValue);
+        }
+        prepareDecreaseCounter(sfi, counterNumber, -delta);
+      } else {
+        logger.info(
+            "The counter {} (SFI {}) is already set to the desired value {}.",
             counterNumber,
             sfi,
-            newValue - delta,
             newValue);
       }
-      prepareIncreaseCounter(sfi, counterNumber, delta);
-    } else if (delta < 0) {
-      if (logger.isTraceEnabled()) {
-        logger.trace(
-            "Decrement counter {} (file {}) from {} to {}",
-            counterNumber,
-            sfi,
-            newValue - delta,
-            newValue);
-      }
-      prepareDecreaseCounter(sfi, counterNumber, -delta);
-    } else {
-      logger.info(
-          "The counter {} (SFI {}) is already set to the desired value {}.",
-          counterNumber,
-          sfi,
-          newValue);
-    }
 
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -3278,12 +3498,17 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareCheckPinStatus() {
-    if (!card.isPinFeatureAvailable()) {
-      throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+    try {
+      if (!card.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+      }
+      _cardCommands.add(new CmdCardVerifyPin(_transactionContext, getCommandContext()));
+      // TODO legacy
+      cardCommands.add(new CmdCardVerifyPin(card));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    _cardCommands.add(new CmdCardVerifyPin(getContext()));
-    // TODO legacy
-    cardCommands.add(new CmdCardVerifyPin(card));
     return this;
   }
 
@@ -3294,30 +3519,36 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvGet(SvOperation svOperation, SvAction svAction) {
+    try {
+      Assert.getInstance().notNull(svOperation, "svOperation").notNull(svAction, "svAction");
 
-    Assert.getInstance().notNull(svOperation, "svOperation").notNull(svAction, "svAction");
+      if (!card.isSvFeatureAvailable()) {
+        throw new UnsupportedOperationException("Stored Value is not available for this card.");
+      }
 
-    if (!card.isSvFeatureAvailable()) {
-      throw new UnsupportedOperationException("Stored Value is not available for this card.");
-    }
-
-    if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {
-      // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
-      // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
-      // CL-SV-GETNUMBER.1
-      SvOperation operation1 =
-          svOperation == SvOperation.RELOAD ? SvOperation.DEBIT : SvOperation.RELOAD;
-      _cardCommands.add(new CmdCardSvGet(getContext(), operation1, false));
+      if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {
+        // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
+        // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
+        // CL-SV-GETNUMBER.1
+        SvOperation operation1 =
+            svOperation == SvOperation.RELOAD ? SvOperation.DEBIT : SvOperation.RELOAD;
+        _cardCommands.add(
+            new CmdCardSvGet(_transactionContext, getCommandContext(), operation1, false));
+        // TODO legacy
+        addStoredValueCommand(new CmdCardSvGet(card, operation1, false), operation1);
+      }
+      _cardCommands.add(
+          new CmdCardSvGet(_transactionContext, getCommandContext(), svOperation, isExtendedMode));
+      this._isSvGet = true;
+      this._svOperation = svOperation;
+      this._svAction = svAction;
       // TODO legacy
-      addStoredValueCommand(new CmdCardSvGet(card, operation1, false), operation1);
+      addStoredValueCommand(new CmdCardSvGet(card, svOperation, isExtendedMode), svOperation);
+      this.svAction = svAction;
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    _cardCommands.add(new CmdCardSvGet(getContext(), svOperation, isExtendedMode));
-    this._isSvGet = true;
-    this._svOperation = svOperation;
-    this._svAction = svAction;
-    // TODO legacy
-    addStoredValueCommand(new CmdCardSvGet(card, svOperation, isExtendedMode), svOperation);
-    this.svAction = svAction;
     return this;
   }
 
@@ -3328,19 +3559,24 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvReload(int amount, byte[] date, byte[] time, byte[] free) {
+    try {
+      checkSvModifyingCommandPreconditions(SvOperation.RELOAD);
 
-    checkSvModifyingCommandPreconditions(SvOperation.RELOAD);
+      CmdCardSvReload command =
+          new CmdCardSvReload(
+              _transactionContext, getCommandContext(), amount, date, time, free, isExtendedMode);
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
 
-    CmdCardSvReload command =
-        new CmdCardSvReload(getContext(), amount, date, time, free, isExtendedMode);
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
+      // TODO legacy
+      // create the initial command with the application data
+      addStoredValueCommand(
+          new CmdCardSvReload(card, amount, date, time, free, isExtendedMode), SvOperation.RELOAD);
 
-    // TODO legacy
-    // create the initial command with the application data
-    addStoredValueCommand(
-        new CmdCardSvReload(card, amount, date, time, free, isExtendedMode), SvOperation.RELOAD);
-
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -3391,28 +3627,33 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
+    try {
+      checkSvModifyingCommandPreconditions(SvOperation.DEBIT);
 
-    checkSvModifyingCommandPreconditions(SvOperation.DEBIT);
+      CmdCardSvDebitOrUndebit command =
+          new CmdCardSvDebitOrUndebit(
+              svAction == SvAction.DO,
+              _transactionContext,
+              getCommandContext(),
+              amount,
+              date,
+              time,
+              isExtendedMode,
+              symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized());
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
 
-    CmdCardSvDebitOrUndebit command =
-        new CmdCardSvDebitOrUndebit(
-            svAction == SvAction.DO,
-            getContext(),
-            amount,
-            date,
-            time,
-            isExtendedMode,
-            symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized());
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
+      // TODO legacy
+      // create the initial command with the application data
+      addStoredValueCommand(
+          new CmdCardSvDebitOrUndebit(
+              svAction == SvAction.DO, card, amount, date, time, isExtendedMode),
+          SvOperation.DEBIT);
 
-    // TODO legacy
-    // create the initial command with the application data
-    addStoredValueCommand(
-        new CmdCardSvDebitOrUndebit(
-            svAction == SvAction.DO, card, amount, date, time, isExtendedMode),
-        SvOperation.DEBIT);
-
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
     return this;
   }
 
@@ -3435,25 +3676,30 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvReadAllLogs() {
-    if (!card.isSvFeatureAvailable()) {
-      throw new UnsupportedOperationException("Stored Value is not available for this card.");
+    try {
+      if (!card.isSvFeatureAvailable()) {
+        throw new UnsupportedOperationException("Stored Value is not available for this card.");
+      }
+      if (card.getApplicationSubtype() != CalypsoCardConstant.STORED_VALUE_FILE_STRUCTURE_ID) {
+        throw new UnsupportedOperationException(
+            "The currently selected application is not an SV application.");
+      }
+      // reset SV data in CalypsoCard if any
+      card.setSvData((byte) 0, null, null, 0, 0, null, null);
+      prepareReadRecords(
+          CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI,
+          1,
+          CalypsoCardConstant.SV_RELOAD_LOG_FILE_NB_REC,
+          CalypsoCardConstant.SV_LOG_FILE_REC_LENGTH);
+      prepareReadRecords(
+          CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI,
+          1,
+          CalypsoCardConstant.SV_DEBIT_LOG_FILE_NB_REC,
+          CalypsoCardConstant.SV_LOG_FILE_REC_LENGTH);
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    if (card.getApplicationSubtype() != CalypsoCardConstant.STORED_VALUE_FILE_STRUCTURE_ID) {
-      throw new UnsupportedOperationException(
-          "The currently selected application is not an SV application.");
-    }
-    // reset SV data in CalypsoCard if any
-    card.setSvData((byte) 0, null, null, 0, 0, null, null);
-    prepareReadRecords(
-        CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI,
-        1,
-        CalypsoCardConstant.SV_RELOAD_LOG_FILE_NB_REC,
-        CalypsoCardConstant.SV_LOG_FILE_REC_LENGTH);
-    prepareReadRecords(
-        CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI,
-        1,
-        CalypsoCardConstant.SV_DEBIT_LOG_FILE_NB_REC,
-        CalypsoCardConstant.SV_LOG_FILE_REC_LENGTH);
     return this;
   }
 
@@ -3464,14 +3710,19 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareInvalidate() {
-    if (card.isDfInvalidated()) {
-      throw new IllegalStateException("Card already invalidated");
+    try {
+      if (card.isDfInvalidated()) {
+        throw new IllegalStateException("Card already invalidated");
+      }
+      CmdCardInvalidate command = new CmdCardInvalidate(_transactionContext, getCommandContext());
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      // TODO legacy
+      cardCommands.add(new CmdCardInvalidate(card));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    CmdCardInvalidate command = new CmdCardInvalidate(getContext());
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    // TODO legacy
-    cardCommands.add(new CmdCardInvalidate(card));
     return this;
   }
 
@@ -3482,14 +3733,20 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareRehabilitate() {
-    if (!card.isDfInvalidated()) {
-      throw new IllegalStateException("Card not invalidated");
+    try {
+      if (!card.isDfInvalidated()) {
+        throw new IllegalStateException("Card not invalidated");
+      }
+      CmdCardRehabilitate command =
+          new CmdCardRehabilitate(_transactionContext, getCommandContext());
+      prepareNewSecureSessionIfNeeded(command);
+      _cardCommands.add(command);
+      // TODO legacy
+      cardCommands.add(new CmdCardRehabilitate(card));
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
     }
-    CmdCardRehabilitate command = new CmdCardRehabilitate(getContext());
-    prepareNewSecureSessionIfNeeded(command);
-    _cardCommands.add(command);
-    // TODO legacy
-    cardCommands.add(new CmdCardRehabilitate(card));
     return this;
   }
 

@@ -16,7 +16,6 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.calypsonet.terminal.card.ApduResponseApi;
-import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -78,7 +77,7 @@ final class CmdCardChangeKey extends CardCommand {
   @Deprecated
   CmdCardChangeKey(CalypsoCardAdapter calypsoCard, byte keyIndex, byte[] cryptogram) {
 
-    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard, null);
+    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard, null, null);
     this.keyIndex = 0;
     this.newKif = 0;
     this.newKvc = 0;
@@ -97,7 +96,8 @@ final class CmdCardChangeKey extends CardCommand {
   /**
    * Constructor.
    *
-   * @param context The transaction context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param keyIndex The key index.
    * @param newKif The new KIF.
    * @param newKvc The new KVC.
@@ -106,13 +106,14 @@ final class CmdCardChangeKey extends CardCommand {
    * @since 2.3.2
    */
   CmdCardChangeKey(
-      CommandContextDto context,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
       byte keyIndex,
       byte newKif,
       byte newKvc,
       byte issuerKif,
       byte issuerKvc) {
-    super(CardCommandRef.CHANGE_KEY, 0, null, context);
+    super(CardCommandRef.CHANGE_KEY, 0, null, transactionContext, commandContext);
     this.keyIndex = keyIndex;
     this.newKif = newKif;
     this.newKvc = newKvc;
@@ -141,10 +142,14 @@ final class CmdCardChangeKey extends CardCommand {
     byte[] cipheredKey;
     try {
       cipheredKey =
-          getContext()
+          getTransactionContext()
               .getSymmetricCryptoTransactionManagerSpi()
               .generateCipheredCardKey(
-                  getContext().getCard().getChallenge(), issuerKif, issuerKvc, newKif, newKvc);
+                  getTransactionContext().getCard().getChallenge(),
+                  issuerKif,
+                  issuerKvc,
+                  newKif,
+                  newKvc);
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     } catch (SymmetricCryptoIOException e) {
@@ -153,7 +158,7 @@ final class CmdCardChangeKey extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                getContext().getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 keyIndex,

@@ -102,7 +102,7 @@ final class CmdCardReadRecords extends CardCommand {
       ReadMode readMode,
       int expectedLength,
       int recordSize) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard, null);
+    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard, null, null);
     buildCommand(
         calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength, recordSize);
   }
@@ -110,7 +110,8 @@ final class CmdCardReadRecords extends CardCommand {
   /**
    * Instantiates a new read records cmd build.
    *
-   * @param context The context.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param sfi the sfi top select.
    * @param firstRecordNumber the record number to read (or first record to read in case of several.
    *     records)
@@ -120,15 +121,16 @@ final class CmdCardReadRecords extends CardCommand {
    * @since 2.3.2
    */
   CmdCardReadRecords(
-      CommandContextDto context,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength,
       int recordSize) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, null, context);
+    super(CardCommandRef.READ_RECORDS, expectedLength, null, transactionContext, commandContext);
     buildCommand(
-        context.getCard().getCardClass(),
+        transactionContext.getCard().getCardClass(),
         sfi,
         firstRecordNumber,
         readMode,
@@ -153,7 +155,7 @@ final class CmdCardReadRecords extends CardCommand {
       int firstRecordNumber,
       ReadMode readMode,
       int expectedLength) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, null, null);
+    super(CardCommandRef.READ_RECORDS, expectedLength, null, null, null);
     buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength, 0);
   }
 
@@ -239,7 +241,7 @@ final class CmdCardReadRecords extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getContext().isEncryptionActive();
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -262,7 +264,9 @@ final class CmdCardReadRecords extends CardCommand {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-      getContext().getCard().setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
+      getTransactionContext()
+          .getCard()
+          .setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
     } else {
       byte[] apdu = apduResponse.getDataOut();
       int apduLen = apdu.length;
@@ -270,7 +274,7 @@ final class CmdCardReadRecords extends CardCommand {
       while (apduLen > 0) {
         byte recordNb = apdu[index++];
         byte len = apdu[index++];
-        getContext()
+        getTransactionContext()
             .getCard()
             .setContent((byte) sfi, recordNb, Arrays.copyOfRange(apdu, index, index + len));
         index = index + len;
