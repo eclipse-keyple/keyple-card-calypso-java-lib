@@ -349,16 +349,45 @@ abstract class CardCommand {
   }
 
   /**
-   * Parses the response {@link ApduResponseApi} and checks the status word.
+   * Parses the response and checks the status word.
    *
    * @param apduResponse The APDU response.
-   * @throws CardCommandException if status is not successful or if the length of the response is
+   * @throws CardCommandException If status is not successful or if the length of the response is
    *     not equal to the LE field in the request.
    * @since 2.0.1
    */
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     this.apduResponse = apduResponse;
     checkStatus();
+  }
+
+  /**
+   * Parses the response and checks the status word in "best effort" mode.
+   *
+   * <p>Do not throw exception for "file not found" and "record not found" errors outside a secure
+   * session.
+   *
+   * @param apduResponse The APDU response.
+   * @return "false" in case of "best effort" mode and a "file not found" or a "record not found"
+   *     error occurs. In this case, the process must be stopped.
+   * @throws CardCommandException If status is not successful and a secure session is open or the SW
+   *     is different of 6A82h and 6A83h, or if the length of the response is not equal to the LE
+   *     field in the request.
+   * @since 2.3.2
+   */
+  final boolean setApduResponseAndCheckStatusInBestEffortMode(ApduResponseApi apduResponse)
+      throws CardCommandException {
+    this.apduResponse = apduResponse;
+    try {
+      checkStatus();
+    } catch (CardDataAccessException e) {
+      if (getCommandContext().isSecureSessionOpen()
+          || (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83)) {
+        throw e;
+      }
+      return false;
+    }
+    return true;
   }
 
   /**

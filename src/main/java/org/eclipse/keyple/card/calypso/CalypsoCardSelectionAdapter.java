@@ -391,8 +391,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         commands.get(i).setApduResponseAndCheckStatus(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
-        if (commandRef == CardCommandRef.READ_RECORDS
-            || commandRef == CardCommandRef.OPEN_SECURE_SESSION) {
+        if (commandRef == CardCommandRef.READ_RECORDS) {
           continue;
         }
         if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {

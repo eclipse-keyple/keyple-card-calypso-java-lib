@@ -222,7 +222,9 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
-    super.setApduResponseAndCheckStatus(apduResponse);
+    if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
+      return;
+    }
     byte[] dataOut = apduResponse.getDataOut();
     int nbRecords = dataOut.length / length;
     for (int i = 0; i < nbRecords; i++) {

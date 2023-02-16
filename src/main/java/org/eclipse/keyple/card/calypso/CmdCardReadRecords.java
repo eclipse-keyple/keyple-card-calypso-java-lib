@@ -262,7 +262,9 @@ final class CmdCardReadRecords extends CardCommand {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
-    super.setApduResponseAndCheckStatus(apduResponse);
+    if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
+      return;
+    }
     if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
       getTransactionContext()
           .getCard()

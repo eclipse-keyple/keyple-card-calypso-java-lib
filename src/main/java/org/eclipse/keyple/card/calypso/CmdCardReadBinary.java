@@ -210,7 +210,9 @@ final class CmdCardReadBinary extends CardCommand {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
-    super.setApduResponseAndCheckStatus(apduResponse);
+    if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
+      return;
+    }
     getTransactionContext().getCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
     updateTerminalSessionMacIfNeeded();
   }

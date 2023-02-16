@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - The errors raised by the "Read Record" command executed during the card selection process are no longer blocking.
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.6.0` (replacement of "process" commands by "prepare" commands).
 
 ## [2.3.1] - 2022-12-22
 ### Fixed
