@@ -58,7 +58,7 @@ class DtoAdapters {
 
     private static final int DEFAULT_SUCCESSFUL_CODE = 0x9000;
 
-    private final byte[] apdu;
+    private byte[] apdu;
     private final Set<Integer> successfulStatusWords;
     private String info;
 
@@ -133,6 +133,16 @@ class DtoAdapters {
     @Override
     public byte[] getApdu() {
       return this.apdu;
+    }
+
+    /**
+     * Sets the APDU.
+     *
+     * @param apdu The APDU to set.
+     * @since 2.3.2
+     */
+    void setApdu(byte[] apdu) {
+      this.apdu = apdu;
     }
 
     /**
@@ -1502,6 +1512,104 @@ class DtoAdapters {
           + ", \"svSamTransactionNumber\":"
           + getSamTNum()
           + "}";
+    }
+  }
+
+  /**
+   * The local command context specific to each command.
+   *
+   * @since 2.3.2
+   */
+  static class CommandContextDto {
+
+    private final boolean isSecureSessionOpen;
+    private final boolean isEncryptionActive;
+
+    /**
+     * Constructor.
+     *
+     * @param isSecureSessionOpen Is secure session open?
+     * @param isEncryptionActive Is encryption active?
+     * @since 2.3.2
+     */
+    CommandContextDto(boolean isSecureSessionOpen, boolean isEncryptionActive) {
+      this.isSecureSessionOpen = isSecureSessionOpen;
+      this.isEncryptionActive = isEncryptionActive;
+    }
+
+    /**
+     * @return "true" if the secure session is open.
+     * @since 2.3.2
+     */
+    boolean isSecureSessionOpen() {
+      return isSecureSessionOpen;
+    }
+
+    /**
+     * @return "true" if the encryption is active.
+     * @since 2.3.2
+     */
+    boolean isEncryptionActive() {
+      return isEncryptionActive;
+    }
+  }
+
+  /**
+   * The global transaction context common to all commands.
+   *
+   * @since 2.3.2
+   */
+  static class TransactionContextDto {
+
+    private final CalypsoCardAdapter card;
+    private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+    private boolean isSecureSessionOpen;
+
+    /**
+     * Constructor.
+     *
+     * @param card The Calypso card.
+     * @param symmetricCryptoTransactionManagerSpi The symmetric crypto service SPI.
+     * @since 2.3.2
+     */
+    public TransactionContextDto(
+        CalypsoCardAdapter card,
+        SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi) {
+      this.card = card;
+      this.symmetricCryptoTransactionManagerSpi = symmetricCryptoTransactionManagerSpi;
+      this.isSecureSessionOpen = false;
+    }
+
+    /**
+     * @return The Calypso card.
+     * @since 2.3.2
+     */
+    CalypsoCardAdapter getCard() {
+      return card;
+    }
+
+    /**
+     * @return The symmetric crypto service or "null" if not set.
+     * @since 2.3.2
+     */
+    SymmetricCryptoTransactionManagerSpi getSymmetricCryptoTransactionManagerSpi() {
+      return symmetricCryptoTransactionManagerSpi;
+    }
+
+    /**
+     * @return "true" if the secure session is open.
+     * @since 2.3.2
+     */
+    boolean isSecureSessionOpen() {
+      return isSecureSessionOpen;
+    }
+
+    /**
+     * @param isSecureSessionOpen Is secure session open?
+     * @since 2.3.2
+     */
+    void setSecureSessionOpen(boolean isSecureSessionOpen) {
+      this.isSecureSessionOpen = isSecureSessionOpen;
     }
   }
 }

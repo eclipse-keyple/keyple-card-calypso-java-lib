@@ -67,8 +67,11 @@ final class CmdCardVerifyPin extends CardCommand {
     STATUS_TABLE = m;
   }
 
-  private final byte cla;
-  private final boolean readCounterOnly;
+  private byte[] pin;
+  private final boolean isReadCounterMode;
+  private final boolean isPinEncryptedMode;
+  private final byte cipheringKif;
+  private final byte cipheringKvc;
 
   /**
    * Verify the PIN
@@ -78,32 +81,77 @@ final class CmdCardVerifyPin extends CardCommand {
    * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
    *     transmission (@see setCipheredPinData).
    * @since 2.0.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard, boolean encryptPinTransmission, byte[] pin) {
-
-    super(commandRef, 0, calypsoCard);
-
+    super(commandRef, 0, calypsoCard, null, null);
+    this.isReadCounterMode = false;
+    this.pin = pin;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
     if (pin == null
         || (!encryptPinTransmission && pin.length != 4)
         || (encryptPinTransmission && pin.length != 8)) {
       throw new IllegalArgumentException("The PIN must be 4 bytes long");
     }
-
-    cla = calypsoCard.getCardClass().getValue();
-
-    // CL-PIN-PP1P2.1
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
-
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, pin, null)));
-
+            ApduUtil.build(
+                calypsoCard.getCardClass().getValue(),
+                commandRef.getInstructionByte(),
+                (byte) 0x00,
+                (byte) 0x00,
+                pin,
+                null)));
     if (logger.isDebugEnabled()) {
       addSubName(encryptPinTransmission ? "ENCRYPTED" : "PLAIN");
     }
+  }
 
-    readCounterOnly = false;
+  /**
+   * Verify the PIN in encrypted mode.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
+   *     transmission (@see setCipheredPinData).
+   * @param cipheringKif The ciphering KIF.
+   * @param cipheringKvc The ciphering KVC.
+   * @since 2.3.2
+   */
+  CmdCardVerifyPin(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte[] pin,
+      byte cipheringKif,
+      byte cipheringKvc) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+    this.isReadCounterMode = false;
+    this.pin = pin;
+    this.isPinEncryptedMode = true;
+    this.cipheringKif = cipheringKif;
+    this.cipheringKvc = cipheringKvc;
+  }
+
+  /**
+   * Verify the PIN in plain mode.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
+   *     transmission (@see setCipheredPinData).
+   * @since 2.3.2
+   */
+  CmdCardVerifyPin(
+      TransactionContextDto transactionContext, CommandContextDto commandContext, byte[] pin) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+    this.isReadCounterMode = false;
+    this.pin = pin;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
   }
 
   /**
@@ -111,25 +159,44 @@ final class CmdCardVerifyPin extends CardCommand {
    *
    * @param calypsoCard The Calypso card.
    * @since 2.0.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardVerifyPin(CalypsoCardAdapter calypsoCard) {
-
-    super(commandRef, 0, calypsoCard);
-
-    cla = calypsoCard.getCardClass().getValue();
-
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
-
+    super(commandRef, 0, calypsoCard, null, null);
+    this.isReadCounterMode = true;
+    this.pin = null;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, null, null)));
-
+            ApduUtil.build(
+                calypsoCard.getCardClass().getValue(),
+                commandRef.getInstructionByte(),
+                (byte) 0x00,
+                (byte) 0x00,
+                null,
+                null)));
     if (logger.isDebugEnabled()) {
       addSubName("Read presentation counter");
     }
+  }
 
-    readCounterOnly = true;
+  /**
+   * Alternate command dedicated to the reading of the wrong presentation counter
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @since 2.3.2
+   */
+  CmdCardVerifyPin(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+    this.isReadCounterMode = true;
+    this.pin = null;
+    this.isPinEncryptedMode = false;
+    this.cipheringKif = 0;
+    this.cipheringKvc = 0;
   }
 
   /**
@@ -138,9 +205,9 @@ final class CmdCardVerifyPin extends CardCommand {
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     try {
-      super.parseApduResponse(apduResponse);
+      super.setApduResponseAndCheckStatus(apduResponse);
       getCalypsoCard().setPinAttemptRemaining(3);
     } catch (CardPinException e) {
       switch (apduResponse.getStatusWord()) {
@@ -157,7 +224,7 @@ final class CmdCardVerifyPin extends CardCommand {
       }
       // Forward the exception if the operation do not target the reading of the attempt counter.
       // Catch it silently otherwise
-      if (!readCounterOnly) {
+      if (!isReadCounterMode) {
         throw e;
       }
     }
@@ -172,6 +239,104 @@ final class CmdCardVerifyPin extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    if (isPinEncryptedMode) {
+      try {
+        pin =
+            getTransactionContext()
+                .getSymmetricCryptoTransactionManagerSpi()
+                .cipherPinForPresentation(
+                    getTransactionContext().getCard().getChallenge(),
+                    pin,
+                    cipheringKif,
+                    cipheringKvc);
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+    }
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                getTransactionContext().getCard().getCardClass().getValue(),
+                commandRef.getInstructionByte(),
+                (byte) 0x00, // CL-PIN-PP1P2.1
+                (byte) 0x00,
+                pin,
+                null)));
+    if (logger.isDebugEnabled()) {
+      addSubName(
+          isReadCounterMode
+              ? "Read presentation counter"
+              : isPinEncryptedMode ? "ENCRYPTED" : "PLAIN");
+    }
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return isPinEncryptedMode || getCommandContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    try {
+      super.setApduResponseAndCheckStatus(apduResponse);
+      getTransactionContext().getCard().setPinAttemptRemaining(3);
+    } catch (CardPinException e) {
+      switch (apduResponse.getStatusWord()) {
+        case 0x63C2:
+          getTransactionContext().getCard().setPinAttemptRemaining(2);
+          break;
+        case 0x63C1:
+          getTransactionContext().getCard().setPinAttemptRemaining(1);
+          break;
+        case 0x6983:
+          getTransactionContext().getCard().setPinAttemptRemaining(0);
+          break;
+        default: // NOP
+      }
+      // Forward the exception if the operation do not target the reading of the attempt counter.
+      // Catch it silently otherwise
+      if (!isReadCounterMode) {
+        throw e;
+      }
+    }
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

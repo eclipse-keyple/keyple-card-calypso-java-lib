@@ -84,14 +84,18 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
    * @param offset the offset.
    * @param data the data to write.
    * @since 2.1.0
+   * @deprecated
    */
+  @Deprecated
   CmdCardUpdateOrWriteBinary(
       boolean isUpdateCommand, CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte[] data) {
 
     super(
         isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
         0,
-        calypsoCard);
+        calypsoCard,
+        null,
+        null);
 
     this.sfi = sfi;
     this.offset = offset;
@@ -121,13 +125,67 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
+   *     Binary" command.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param sfi the sfi to select.
+   * @param offset the offset.
+   * @param data the data to write.
+   * @since 2.3.2
+   */
+  CmdCardUpdateOrWriteBinary(
+      boolean isUpdateCommand,
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte sfi,
+      int offset,
+      byte[] data) {
+
+    super(
+        isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
+        0,
+        null,
+        transactionContext,
+        commandContext);
+
+    this.sfi = sfi;
+    this.offset = offset;
+    this.data = data;
+
+    byte msb = (byte) (offset >> Byte.SIZE);
+    byte lsb = (byte) (offset & 0xFF);
+
+    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
+    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
+    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                transactionContext.getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                p1,
+                lsb,
+                data,
+                null)));
+
+    if (logger.isDebugEnabled()) {
+      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d", sfi, offset);
+      addSubName(extraInfo);
+    }
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
       getCalypsoCard().setContent(sfi, 1, data, offset);
     } else {
@@ -146,6 +204,57 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getCommandContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
+      getTransactionContext().getCard().setContent(sfi, 1, data, offset);
+    } else {
+      getTransactionContext().getCard().fillContent(sfi, 1, data, offset);
+    }
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -58,6 +59,12 @@ final class CmdCardChangeKey extends CardCommand {
     STATUS_TABLE = m;
   }
 
+  private final byte keyIndex;
+  private final byte newKif;
+  private final byte newKvc;
+  private final byte issuerKif;
+  private final byte issuerKvc;
+
   /**
    * Change Key Calypso command
    *
@@ -65,10 +72,17 @@ final class CmdCardChangeKey extends CardCommand {
    * @param keyIndex index of the key of the current DF to change.
    * @param cryptogram key encrypted with Issuer key (key #1).
    * @since 2.1.0
+   * @deprecated
    */
+  @Deprecated
   CmdCardChangeKey(CalypsoCardAdapter calypsoCard, byte keyIndex, byte[] cryptogram) {
 
-    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard);
+    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard, null, null);
+    this.keyIndex = 0;
+    this.newKif = 0;
+    this.newKvc = 0;
+    this.issuerKif = 0;
+    this.issuerKvc = 0;
 
     byte cla = calypsoCard.getCardClass().getValue();
     byte p1 = (byte) 0x00;
@@ -80,6 +94,34 @@ final class CmdCardChangeKey extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param keyIndex The key index.
+   * @param newKif The new KIF.
+   * @param newKvc The new KVC.
+   * @param issuerKif The issuer KIF.
+   * @param issuerKvc The issuer KVC.
+   * @since 2.3.2
+   */
+  CmdCardChangeKey(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte keyIndex,
+      byte newKif,
+      byte newKvc,
+      byte issuerKif,
+      byte issuerKvc) {
+    super(CardCommandRef.CHANGE_KEY, 0, null, transactionContext, commandContext);
+    this.keyIndex = keyIndex;
+    this.newKif = newKif;
+    this.newKvc = newKvc;
+    this.issuerKif = issuerKif;
+    this.issuerKvc = issuerKvc;
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @return false
@@ -88,6 +130,70 @@ final class CmdCardChangeKey extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    byte[] cipheredKey;
+    try {
+      cipheredKey =
+          getTransactionContext()
+              .getSymmetricCryptoTransactionManagerSpi()
+              .generateCipheredCardKey(
+                  getTransactionContext().getCard().getChallenge(),
+                  issuerKif,
+                  issuerKvc,
+                  newKif,
+                  newKvc);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                getTransactionContext().getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                (byte) 0x00,
+                keyIndex,
+                cipheredKey,
+                null)));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
   }
 
   /**

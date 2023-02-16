@@ -388,20 +388,14 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     // exception.
     for (int i = 0; i < apduResponses.size(); i++) {
       try {
-        commands.get(i).parseApduResponse(apduResponses.get(i), calypsoCard);
+        commands.get(i).setApduResponseAndCheckStatus(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
-        if (e instanceof CardDataAccessException) {
-          if (commandRef == CardCommandRef.READ_RECORDS) {
-            // best effort mode, do not throw exception for "file not found" and "record not found"
-            // errors.
-            if (commands.get(i).getApduResponse().getStatusWord() != 0x6A82
-                && commands.get(i).getApduResponse().getStatusWord() != 0x6A83) {
-              throw e;
-            }
-          } else if (commandRef == CardCommandRef.SELECT_FILE) {
-            throw new SelectFileException("File not found", e);
-          }
+        if (commandRef == CardCommandRef.READ_RECORDS) {
+          continue;
+        }
+        if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {
+          throw new SelectFileException("File not found", e);
         } else {
           throw new UnexpectedCommandStatusException(
               MSG_CARD_COMMAND_ERROR + "while processing responses to card commands: " + commandRef,

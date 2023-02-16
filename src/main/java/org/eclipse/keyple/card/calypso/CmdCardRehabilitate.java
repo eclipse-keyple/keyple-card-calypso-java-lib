@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -51,10 +52,12 @@ final class CmdCardRehabilitate extends CardCommand {
    *
    * @param calypsoCard The Calypso card.
    * @since 2.0.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardRehabilitate(CalypsoCardAdapter calypsoCard) {
 
-    super(CardCommandRef.REHABILITATE, 0, calypsoCard);
+    super(CardCommandRef.REHABILITATE, 0, calypsoCard, null, null);
 
     byte p1 = (byte) 0x00;
     byte p2 = (byte) 0x00;
@@ -71,6 +74,26 @@ final class CmdCardRehabilitate extends CardCommand {
   }
 
   /**
+   * Constructor.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @since 2.3.2
+   */
+  CmdCardRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.REHABILITATE, 0, null, transactionContext, commandContext);
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                transactionContext.getCard().getCardClass().getValue(),
+                getCommandRef().getInstructionByte(),
+                (byte) 0x00,
+                (byte) 0x00,
+                null,
+                null)));
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @return True
@@ -79,6 +102,52 @@ final class CmdCardRehabilitate extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getCommandContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**

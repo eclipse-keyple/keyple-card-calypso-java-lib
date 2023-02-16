@@ -175,11 +175,11 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
   }
 
   @Override
-  public byte getKvc(WriteAccessLevel lwriteAccessLevelvel) {
+  public byte getKvc(WriteAccessLevel writeAccessLevel) {
 
-    Assert.getInstance().notNull(lwriteAccessLevelvel, LEVEL_STR);
+    Assert.getInstance().notNull(writeAccessLevel, LEVEL_STR);
 
-    return kvc.get(lwriteAccessLevelvel);
+    return kvc.get(writeAccessLevel);
   }
 
   /**

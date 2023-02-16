@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
@@ -93,7 +94,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private SvLoadLogRecord svLoadLogRecord;
   private SvDebitLogRecord svDebitLogRecord;
   private boolean isHce;
-  private byte[] cardChallenge;
+  private byte[] challenge;
   private byte[] traceabilityInformation;
   private byte svKvc;
   private byte[] svGetHeader;
@@ -104,6 +105,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte sessionModification;
   private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
   private boolean isCounterValuePostponed;
+  private WriteAccessLevel preOpenWriteAccessLevel;
+  private byte[] preOpenDataOut;
 
   private static final List<PatchRev3> patchesRev3 = new ArrayList<PatchRev3>();
   private static final List<PatchRev12> patchesRev12 = new ArrayList<PatchRev12>();
@@ -196,7 +199,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
     CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci(CalypsoCardClass.ISO);
-    cmdCardGetDataFci.parseApduResponse(selectApplicationResponse, this);
+    cmdCardGetDataFci.setApduResponseAndCheckStatus(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");
@@ -1065,11 +1068,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * Sets the challenge received in response to the GET CHALLENGE command.
    *
-   * @param cardChallenge A not empty array.
+   * @param challenge A not empty array.
    * @since 2.0.0
    */
-  void setCardChallenge(byte[] cardChallenge) {
-    this.cardChallenge = cardChallenge;
+  void setChallenge(byte[] challenge) {
+    this.challenge = challenge;
   }
 
   /**
@@ -1100,8 +1103,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *     product type of the card). May be null if the challenge is not available.
    * @since 2.0.0
    */
-  byte[] getCardChallenge() {
-    return cardChallenge;
+  byte[] getChallenge() {
+    return challenge;
   }
 
   /**
@@ -1171,6 +1174,24 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void disableExtendedMode() {
     isExtendedModeSupported = false;
+  }
+
+  WriteAccessLevel getPreOpenWriteAccessLevel() {
+    return preOpenWriteAccessLevel;
+  }
+
+  CalypsoCardAdapter setPreOpenWriteAccessLevel(WriteAccessLevel preOpenWriteAccessLevel) {
+    this.preOpenWriteAccessLevel = preOpenWriteAccessLevel;
+    return this;
+  }
+
+  byte[] getPreOpenDataOut() {
+    return preOpenDataOut;
+  }
+
+  CalypsoCardAdapter setPreOpenDataOut(byte[] preOpenDataOut) {
+    this.preOpenDataOut = preOpenDataOut;
+    return this;
   }
 
   /**

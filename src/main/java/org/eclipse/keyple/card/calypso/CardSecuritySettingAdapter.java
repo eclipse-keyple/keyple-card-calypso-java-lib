@@ -33,6 +33,7 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   private boolean isPinPlainTransmissionEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
+  private boolean isReadOnSessionOpeningDisabled;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
       new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
@@ -115,6 +116,17 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
   @Override
   public CardSecuritySettingAdapter authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public CardSecuritySetting disableReadOnSessionOpening() {
+    isReadOnSessionOpeningDisabled = true;
     return this;
   }
 
@@ -254,6 +266,15 @@ final class CardSecuritySettingAdapter extends CommonSecuritySettingAdapter<Card
    */
   boolean isSvNegativeBalanceAuthorized() {
     return isSvNegativeBalanceAuthorized;
+  }
+
+  /**
+   * @return True if the auto-read optimization feature in the "Open Secure Session" command is
+   *     disabled.
+   * @since 2.3.2
+   */
+  boolean isReadOnSessionOpeningDisabled() {
+    return isReadOnSessionOpeningDisabled;
   }
 
   /**

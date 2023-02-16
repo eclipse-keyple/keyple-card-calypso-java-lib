@@ -67,13 +67,56 @@ final class CmdCardSvGet extends CardCommand {
    * @param useExtendedMode True if the extended mode must be used.
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.0.1
+   * @deprecated
    */
+  @Deprecated
   CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, calypsoCard);
+    super(CardCommandRef.SV_GET, 0, calypsoCard, null, null);
 
     byte cla =
         calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
+            ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
+            : CalypsoCardClass.ISO.getValue();
+
+    byte p1 = useExtendedMode ? (byte) 0x01 : (byte) 0x00;
+    byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
+
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
+
+    if (logger.isDebugEnabled()) {
+      addSubName(String.format("OPERATION:%s", svOperation.toString()));
+    }
+
+    header = new byte[4];
+    header[0] = getCommandRef().getInstructionByte();
+    header[1] = p1;
+    header[2] = p2;
+    header[3] = (byte) 0x00;
+  }
+
+  /**
+   * Instantiates a new CmdCardSvGet.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param svOperation the desired SV operation.
+   * @param useExtendedMode True if the extended mode must be used.
+   * @throws IllegalArgumentException If the command is inconsistent
+   * @since 2.3.2
+   */
+  CmdCardSvGet(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      SvOperation svOperation,
+      boolean useExtendedMode) {
+
+    super(CardCommandRef.SV_GET, 0, null, transactionContext, commandContext);
+
+    byte cla =
+        transactionContext.getCard().getCardClass() == CalypsoCardClass.LEGACY
             ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
             : CalypsoCardClass.ISO.getValue();
 
@@ -109,11 +152,95 @@ final class CmdCardSvGet extends CardCommand {
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getCommandContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    byte[] cardResponse = apduResponse.getDataOut();
+    byte currentKvc;
+    int transactionNumber;
+    int balance;
+    SvLoadLogRecord loadLog;
+    SvDebitLogRecord debitLog;
+    switch (cardResponse.length) {
+      case 0x21: /* Compatibility mode, Reload */
+      case 0x1E: /* Compatibility mode, Debit or Undebit */
+        currentKvc = cardResponse[0];
+        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 1, 2, false);
+        balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
+        if (cardResponse.length == 0x21) {
+          /* Reload */
+          loadLog = new SvLoadLogRecordAdapter(cardResponse, 11);
+          debitLog = null;
+        } else {
+          /* Debit */
+          loadLog = null;
+          debitLog = new SvDebitLogRecordAdapter(cardResponse, 11);
+        }
+        break;
+      case 0x3D: /* Revision 3.2 mode */
+        currentKvc = cardResponse[8];
+        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
+        balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
+        loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
+        debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);
+        break;
+      default:
+        throw new IllegalStateException("Incorrect data length in response to SVGet");
+    }
+    getTransactionContext()
+        .getCard()
+        .setSvData(
+            currentKvc,
+            header,
+            apduResponse.getApdu(),
+            balance,
+            transactionNumber,
+            loadLog,
+            debitLog);
+    updateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.1
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     byte[] cardResponse = apduResponse.getDataOut();
     byte currentKvc;
     int transactionNumber;

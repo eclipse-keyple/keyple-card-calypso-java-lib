@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.calypsonet.terminal.calypso.transaction.UnauthorizedKeyException;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -27,10 +29,11 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardOpenSession extends CardCommand {
+final class CmdCardOpenSecureSession extends CardCommand {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSession.class);
+  private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSecureSession.class);
   private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
+  private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -71,54 +74,69 @@ final class CmdCardOpenSession extends CardCommand {
     m.put(
         0x6B00,
         new StatusProperties(
-            "P1 or P2 value not supported (key index incorrect, wrong P2).",
+            "P1 or P2 value not supported (key index incorrect, wrong P2, extended mode not supported).",
             CardIllegalParameterException.class));
-    m.put(0x61FF, new StatusProperties("Correct execution (ISO7816 T=0).", null));
+    m.put(0x61FF, new StatusProperties("Correct execution (ISO7816 T=0)."));
+    m.put(
+        0x6200,
+        new StatusProperties(
+            "Successful execution, with warning (Pre-Open variant, secure session not opened)."));
     STATUS_TABLE = m;
   }
 
   private final boolean isExtendedModeAllowed;
-
+  private final WriteAccessLevel writeAccessLevel;
+  private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private boolean isReadModeConfigured;
   private int sfi;
   private int recordNumber;
 
-  /** The secure session. */
-  private SecureSession secureSession;
+  private boolean isPreviousSessionRatified;
+  private byte[] challengeTransactionCounter;
+  private byte[] challengeRandomNumber;
+  private Byte kif;
+  private Byte kvc;
+  private byte[] recordData;
 
   /**
    * Constructor.
    *
    * @param calypsoCard The Calypso card.
-   * @param keyIndex The key index.
+   * @param writeAccessLevel The write access level.
    * @param samChallenge The SAM challenge.
    * @param sfi The optional SFI of the file to read.
    * @param recordNumber The optional record number to read.
    * @param isExtendedModeAllowed True if the extended mode is allowed.
-   * @throws IllegalArgumentException If the key index is 0 and rev is 2.4
    * @since 2.0.1
    */
-  CmdCardOpenSession(
+  CmdCardOpenSecureSession(
       CalypsoCardAdapter calypsoCard,
-      byte keyIndex,
+      WriteAccessLevel writeAccessLevel,
       byte[] samChallenge,
       int sfi,
       int recordNumber,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null, null);
 
+    this.symmetricCryptoSecuritySetting = null;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.writeAccessLevel = writeAccessLevel;
+    this.sfi = sfi;
+    this.recordNumber = recordNumber;
+
+    byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
     switch (getCalypsoCard().getProductType()) {
       case PRIME_REVISION_1:
-        createRev10(keyIndex, samChallenge, sfi, recordNumber);
+        createRev10(keyIndex, samChallenge);
         break;
       case PRIME_REVISION_2:
-        createRev24(keyIndex, samChallenge, sfi, recordNumber);
+        createRev24(keyIndex, samChallenge);
         break;
       case PRIME_REVISION_3:
       case LIGHT:
       case BASIC:
-        createRev3(keyIndex, samChallenge, sfi, recordNumber);
+        createRev3(keyIndex, samChallenge);
         break;
       default:
         throw new IllegalArgumentException(
@@ -127,18 +145,35 @@ final class CmdCardOpenSession extends CardCommand {
   }
 
   /**
+   * Partial constructor.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param symmetricCryptoSecuritySetting The symmetric crypto security settings to use.
+   * @param writeAccessLevel The write access level.
+   * @param isExtendedModeAllowed Is the extended mode allowed?
+   * @since 2.3.2
+   */
+  CmdCardOpenSecureSession(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
+      WriteAccessLevel writeAccessLevel,
+      boolean isExtendedModeAllowed) {
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
+    this.writeAccessLevel = writeAccessLevel;
+    this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
+    this.isExtendedModeAllowed = isExtendedModeAllowed;
+  }
+
+  /**
    * Create Rev 3
    *
    * @param keyIndex the key index.
    * @param samChallenge the sam challenge returned by the SAM Get Challenge APDU command.
-   * @param sfi the sfi to select.
-   * @param recordNumber the record number to read.
    * @throws IllegalArgumentException If the request is inconsistent
    */
-  private void createRev3(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
+  private void createRev3(byte keyIndex, byte[] samChallenge) {
 
     byte p1 = (byte) ((recordNumber * 8) + keyIndex);
     byte p2;
@@ -178,22 +213,9 @@ final class CmdCardOpenSession extends CardCommand {
    *
    * @param keyIndex the key index.
    * @param samChallenge the sam challenge returned by the SAM Get Challenge APDU command.
-   * @param sfi the sfi to select.
-   * @param recordNumber the record number to read.
-   * @throws IllegalArgumentException If key index is 0 (rev 2.4)
-   * @throws IllegalArgumentException If the request is inconsistent
    */
-  private void createRev24(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-
-    if (keyIndex == 0x00) {
-      throw new IllegalArgumentException("Key index can't be zero for rev 2.4!");
-    }
-
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-
+  private void createRev24(byte keyIndex, byte[] samChallenge) {
     byte p1 = (byte) (0x80 + (recordNumber * 8) + keyIndex);
-
     buildLegacyApduRequest(keyIndex, samChallenge, sfi, recordNumber, p1);
   }
 
@@ -202,22 +224,9 @@ final class CmdCardOpenSession extends CardCommand {
    *
    * @param keyIndex the key index.
    * @param samChallenge the sam challenge returned by the SAM Get Challenge APDU command.
-   * @param sfi the sfi to select.
-   * @param recordNumber the record number to read.
-   * @throws IllegalArgumentException If key index is 0 (rev 1.0)
-   * @throws IllegalArgumentException If the request is inconsistent
    */
-  private void createRev10(byte keyIndex, byte[] samChallenge, int sfi, int recordNumber) {
-
-    if (keyIndex == 0x00) {
-      throw new IllegalArgumentException("Key index can't be zero for rev 1.0!");
-    }
-
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-
+  private void createRev10(byte keyIndex, byte[] samChallenge) {
     byte p1 = (byte) ((recordNumber * 8) + keyIndex);
-
     buildLegacyApduRequest(keyIndex, samChallenge, sfi, recordNumber, p1);
   }
 
@@ -267,19 +276,165 @@ final class CmdCardOpenSession extends CardCommand {
   }
 
   /**
-   * @return the SFI of the file read while opening the secure session
-   * @since 2.0.1
+   * Configures the read mode.
+   *
+   * @param sfi The SFI to select.
+   * @param recordNumber The number of the record to read.
+   * @since 2.3.2
    */
-  int getSfi() {
-    return sfi;
+  void configureReadMode(int sfi, int recordNumber) {
+    this.sfi = sfi;
+    this.recordNumber = recordNumber;
+    this.isReadModeConfigured = true;
   }
 
   /**
-   * @return the record number to read
-   * @since 2.0.1
+   * @return "true" if the read mode is already configured.
+   * @since 2.3.2
    */
-  int getRecordNumber() {
-    return recordNumber;
+  boolean isReadModeConfigured() {
+    return isReadModeConfigured;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    byte[] samChallenge;
+    try {
+      samChallenge =
+          getTransactionContext()
+              .getSymmetricCryptoTransactionManagerSpi()
+              .initTerminalSecureSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+    byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
+    switch (getTransactionContext().getCard().getProductType()) {
+      case PRIME_REVISION_1:
+        createRev10(keyIndex, samChallenge);
+        break;
+      case PRIME_REVISION_2:
+        createRev24(keyIndex, samChallenge);
+        break;
+      case PRIME_REVISION_3:
+      case LIGHT:
+      case BASIC:
+        createRev3(keyIndex, samChallenge);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Product type "
+                + getTransactionContext().getCard().getProductType()
+                + " not supported");
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
+    getTransactionContext().getCard().backupFiles();
+    getTransactionContext().setSecureSessionOpen(true);
+    byte[] dataOut = getApduResponse().getDataOut();
+    switch (getTransactionContext().getCard().getProductType()) {
+      case PRIME_REVISION_1:
+        parseRev10(dataOut);
+        break;
+      case PRIME_REVISION_2:
+        parseRev24(dataOut);
+        break;
+      default:
+        parseRev3(dataOut);
+    }
+    // CL-CSS-INFORAT.1
+    getTransactionContext().getCard().setDfRatified(isPreviousSessionRatified);
+    // CL-CSS-INFOTCNT.1
+    getTransactionContext()
+        .getCard()
+        .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
+    if (recordData.length > 0) {
+      getTransactionContext().getCard().setContent((byte) sfi, recordNumber, recordData);
+    }
+    // Post-processing
+    Byte computedKvc = computeKvc();
+    Byte computedKif = computeKif(computedKvc);
+    if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
+      throw new UnauthorizedKeyException(
+          String.format(
+              "Unauthorized key error: KIF=%s, KVC=%s",
+              computedKif != null ? String.format(PATTERN_1_BYTE_HEX, computedKif) : null,
+              computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
+    }
+    try {
+      getTransactionContext()
+          .getSymmetricCryptoTransactionManagerSpi()
+          .initTerminalSessionMac(getApduResponse().getDataOut(), computedKif, computedKvc);
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+  }
+
+  /**
+   * Returns the KVC to use according to the provided write access and the card's KVC.
+   *
+   * @return "null" if the card did not provide a KVC value and if there's no default KVC value.
+   */
+  private Byte computeKvc() {
+    if (kvc != null) {
+      return kvc;
+    }
+    return symmetricCryptoSecuritySetting.getDefaultKvc(writeAccessLevel);
+  }
+
+  /**
+   * Returns the KIF to use according to the provided write access level and KVC.
+   *
+   * @param kvc The previously computed KVC value.
+   * @return "null" if the card did not provide a KIF value and if there's no default KIF value.
+   */
+  private Byte computeKif(Byte kvc) {
+    // CL-KEY-KIF.1
+    if ((kif != null && kif != (byte) 0xFF) || (kvc == null)) {
+      return kif;
+    }
+    // CL-KEY-KIFUNK.1
+    Byte result = symmetricCryptoSecuritySetting.getKif(writeAccessLevel, kvc);
+    if (result == null) {
+      result = symmetricCryptoSecuritySetting.getDefaultKif(writeAccessLevel);
+    }
+    return result;
   }
 
   /**
@@ -288,8 +443,8 @@ final class CmdCardOpenSession extends CardCommand {
    * @since 2.0.1
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     byte[] dataOut = getApduResponse().getDataOut();
     switch (getCalypsoCard().getProductType()) {
       case PRIME_REVISION_1:
@@ -302,13 +457,12 @@ final class CmdCardOpenSession extends CardCommand {
         parseRev3(dataOut);
     }
     // CL-CSS-INFORAT.1
-    getCalypsoCard().setDfRatified(secureSession.isPreviousSessionRatified());
+    getCalypsoCard().setDfRatified(isPreviousSessionRatified);
     // CL-CSS-INFOTCNT.1
     getCalypsoCard()
-        .setTransactionCounter(
-            ByteArrayUtil.extractInt(secureSession.getChallengeTransactionCounter(), 0, 3, false));
-    if (secureSession.getOriginalData().length > 0) {
-      getCalypsoCard().setContent((byte) sfi, recordNumber, secureSession.getOriginalData());
+        .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
+    if (recordData.length > 0) {
+      getCalypsoCard().setContent((byte) sfi, recordNumber, recordData);
     }
   }
 
@@ -318,41 +472,28 @@ final class CmdCardOpenSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev3(byte[] apduResponseData) {
-
-    boolean previousSessionRatified;
-    boolean manageSecureSessionAuthorized;
+    CalypsoCardAdapter card =
+        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     int offset;
-
     // CL-CSS-OSSRFU.1
     if (isExtendedModeAllowed) {
       offset = 4;
-      previousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
-      manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
+      isPreviousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
+      boolean manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
       if (!manageSecureSessionAuthorized) {
-        getCalypsoCard().disableExtendedMode();
+        card.disableExtendedMode();
       }
     } else {
       offset = 0;
-      previousSessionRatified = (apduResponseData[4] == (byte) 0x00);
-      manageSecureSessionAuthorized = false;
-      getCalypsoCard().disableExtendedMode();
+      isPreviousSessionRatified = (apduResponseData[4] == (byte) 0x00);
+      card.disableExtendedMode();
     }
-
-    byte kif = apduResponseData[5 + offset];
-    byte kvc = apduResponseData[6 + offset];
+    challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
+    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4 + offset);
+    kif = apduResponseData[5 + offset];
+    kvc = apduResponseData[6 + offset];
     int dataLength = apduResponseData[7 + offset];
-    byte[] data = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
-
-    this.secureSession =
-        new SecureSession(
-            Arrays.copyOfRange(apduResponseData, 0, 3),
-            Arrays.copyOfRange(apduResponseData, 3, 4 + offset),
-            previousSessionRatified,
-            manageSecureSessionAuthorized,
-            kif,
-            kvc,
-            data,
-            apduResponseData);
+    recordData = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
   }
 
   /**
@@ -383,45 +524,31 @@ final class CmdCardOpenSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev24(byte[] apduResponseData) {
-
-    boolean previousSessionRatified;
-
-    byte[] data;
-
     switch (apduResponseData.length) {
       case 5:
-        previousSessionRatified = true;
-        data = new byte[0];
+        isPreviousSessionRatified = true;
+        recordData = new byte[0];
         break;
       case 34:
-        previousSessionRatified = true;
-        data = Arrays.copyOfRange(apduResponseData, 5, 34);
+        isPreviousSessionRatified = true;
+        recordData = Arrays.copyOfRange(apduResponseData, 5, 34);
         break;
       case 7:
-        previousSessionRatified = false;
-        data = new byte[0];
+        isPreviousSessionRatified = false;
+        recordData = new byte[0];
         break;
       case 36:
-        previousSessionRatified = false;
-        data = Arrays.copyOfRange(apduResponseData, 7, 36);
+        isPreviousSessionRatified = false;
+        recordData = Arrays.copyOfRange(apduResponseData, 7, 36);
         break;
       default:
         throw new IllegalStateException(
             "Bad response length to Open Secure Session: " + apduResponseData.length);
     }
-
-    byte kvc = apduResponseData[0];
-
-    this.secureSession =
-        new SecureSession(
-            Arrays.copyOfRange(apduResponseData, 1, 4),
-            Arrays.copyOfRange(apduResponseData, 4, 5),
-            previousSessionRatified,
-            false,
-            null,
-            kvc,
-            data,
-            apduResponseData);
+    challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 1, 4);
+    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 4, 5);
+    kif = null;
+    kvc = apduResponseData[0];
   }
 
   /**
@@ -451,44 +578,31 @@ final class CmdCardOpenSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev10(byte[] apduResponseData) {
-
-    boolean previousSessionRatified;
-
-    byte[] data;
-
     switch (apduResponseData.length) {
       case 4:
-        previousSessionRatified = true;
-        data = new byte[0];
+        isPreviousSessionRatified = true;
+        recordData = new byte[0];
         break;
       case 33:
-        previousSessionRatified = true;
-        data = Arrays.copyOfRange(apduResponseData, 4, 33);
+        isPreviousSessionRatified = true;
+        recordData = Arrays.copyOfRange(apduResponseData, 4, 33);
         break;
       case 6:
-        previousSessionRatified = false;
-        data = new byte[0];
+        isPreviousSessionRatified = false;
+        recordData = new byte[0];
         break;
       case 35:
-        previousSessionRatified = false;
-        data = Arrays.copyOfRange(apduResponseData, 6, 35);
+        isPreviousSessionRatified = false;
+        recordData = Arrays.copyOfRange(apduResponseData, 6, 35);
         break;
       default:
         throw new IllegalStateException(
             "Bad response length to Open Secure Session: " + apduResponseData.length);
     }
-
-    /* KVC doesn't exist and is set to null for this type of card */
-    this.secureSession =
-        new SecureSession(
-            Arrays.copyOfRange(apduResponseData, 0, 3),
-            Arrays.copyOfRange(apduResponseData, 3, 4),
-            previousSessionRatified,
-            false,
-            null,
-            null,
-            data,
-            apduResponseData);
+    challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
+    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4);
+    kif = null;
+    kvc = null;
   }
 
   /**
@@ -496,31 +610,23 @@ final class CmdCardOpenSession extends CardCommand {
    * @since 2.0.1
    */
   byte[] getCardChallenge() {
-    return secureSession.getChallengeRandomNumber();
-  }
-
-  /**
-   * @return True if the managed secure session is authorized.
-   * @since 2.0.1
-   */
-  boolean isManageSecureSessionAuthorized() {
-    return secureSession.isManageSecureSessionAuthorized();
+    return challengeRandomNumber;
   }
 
   /**
    * @return The current KIF.
    * @since 2.0.1
    */
-  Byte getSelectedKif() {
-    return secureSession.getKIF();
+  Byte getKif() {
+    return kif;
   }
 
   /**
    * @return The current KVC.
    * @since 2.0.1
    */
-  Byte getSelectedKvc() {
-    return secureSession.getKVC();
+  Byte getKvc() {
+    return kvc;
   }
 
   /**
@@ -531,135 +637,5 @@ final class CmdCardOpenSession extends CardCommand {
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
-  }
-
-  /** The Class SecureSession. */
-  private static class SecureSession {
-
-    /** Challenge transaction counter */
-    private final byte[] challengeTransactionCounter;
-
-    /** Challenge random number */
-    private final byte[] challengeRandomNumber;
-
-    /** The previous session ratified boolean. */
-    private final boolean previousSessionRatified;
-
-    /** The manage secure session authorized boolean. */
-    private final boolean manageSecureSessionAuthorized;
-
-    /** The kif (it may be null if it doesn't exist in the considered card [rev 1.0]). */
-    private final Byte kif;
-
-    /** The kvc (it may be null if it doesn't exist in the considered card [rev 1.0]). */
-    private final Byte kvc;
-
-    /** The original data. */
-    private final byte[] originalData;
-
-    /** The secure session data. */
-    private final byte[] secureSessionData;
-
-    /**
-     * Instantiates a new SecureSession
-     *
-     * @param challengeTransactionCounter Challenge transaction counter.
-     * @param challengeRandomNumber Challenge random number.
-     * @param previousSessionRatified the previous session ratified.
-     * @param manageSecureSessionAuthorized the manage secure session authorized.
-     * @param kif the KIF from the response of the open secure session APDU command.
-     * @param kvc the KVC from the response of the open secure session APDU command.
-     * @param originalData the original data from the response of the open secure session APDU.
-     *     command
-     * @param secureSessionData the secure session data from the response of open secure session.
-     *     APDU command
-     * @since 2.0.1
-     */
-    private SecureSession( // NOSONAR
-        byte[] challengeTransactionCounter,
-        byte[] challengeRandomNumber,
-        boolean previousSessionRatified,
-        boolean manageSecureSessionAuthorized,
-        Byte kif,
-        Byte kvc,
-        byte[] originalData,
-        byte[] secureSessionData) {
-      this.challengeTransactionCounter = challengeTransactionCounter;
-      this.challengeRandomNumber = challengeRandomNumber;
-      this.previousSessionRatified = previousSessionRatified;
-      this.manageSecureSessionAuthorized = manageSecureSessionAuthorized;
-      this.kif = kif;
-      this.kvc = kvc;
-      this.originalData = originalData;
-      this.secureSessionData = secureSessionData;
-    }
-
-    public byte[] getChallengeTransactionCounter() {
-      return challengeTransactionCounter;
-    }
-
-    public byte[] getChallengeRandomNumber() {
-      return challengeRandomNumber;
-    }
-
-    /**
-     * Checks if is previous session ratified.
-     *
-     * @return The boolean
-     * @since 2.0.1
-     */
-    public boolean isPreviousSessionRatified() {
-      return previousSessionRatified;
-    }
-
-    /**
-     * Checks if is manage secure session authorized.
-     *
-     * @return True if the secure session is authorized
-     * @since 2.0.1
-     */
-    public boolean isManageSecureSessionAuthorized() {
-      return manageSecureSessionAuthorized;
-    }
-
-    /**
-     * Gets the kif.
-     *
-     * @return A byte
-     * @since 2.0.1
-     */
-    public Byte getKIF() {
-      return kif;
-    }
-
-    /**
-     * Gets the kvc.
-     *
-     * @return A byte
-     * @since 2.0.1
-     */
-    public Byte getKVC() {
-      return kvc;
-    }
-
-    /**
-     * Gets the original data.
-     *
-     * @return An array of bytes
-     * @since 2.0.1
-     */
-    public byte[] getOriginalData() {
-      return originalData;
-    }
-
-    /**
-     * Gets the secure session data.
-     *
-     * @return An array of bytes
-     * @since 2.0.1
-     */
-    public byte[] getSecureSessionData() {
-      return secureSessionData;
-    }
   }
 }

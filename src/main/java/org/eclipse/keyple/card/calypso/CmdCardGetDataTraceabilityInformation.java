@@ -48,10 +48,25 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    *
    * @param calypsoCard The Calypso card.
    * @since 2.2.3
+   * @deprecated
    */
+  @Deprecated
   CmdCardGetDataTraceabilityInformation(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard);
+    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @since 2.3.2
+   */
+  CmdCardGetDataTraceabilityInformation(
+      TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    buildCommand(getTransactionContext().getCard().getCardClass());
   }
 
   /**
@@ -61,7 +76,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    * @since 2.1.0
    */
   CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null);
+    super(CardCommandRef.GET_DATA, 0, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -88,8 +103,8 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    * @since 2.2.3
    */
   @Override
-  void parseApduResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.parseApduResponse(apduResponse);
+  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().setTraceabilityInformation(apduResponse.getDataOut());
   }
 
@@ -102,6 +117,49 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   @Override
   boolean isSessionBufferUsed() {
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void finalizeRequest() {
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean isCryptoServiceRequiredToFinalizeRequest() {
+    return getCommandContext().isEncryptionActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    super.setApduResponseAndCheckStatus(apduResponse);
+    getTransactionContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
+    updateTerminalSessionMacIfNeeded();
   }
 
   /**
