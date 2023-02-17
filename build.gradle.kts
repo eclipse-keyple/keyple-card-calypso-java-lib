@@ -32,12 +32,12 @@ repositories {
 dependencies {
     implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.2.0")
     implementation("org.calypsonet.terminal:calypsonet-terminal-card-java-api:1.0.0")
-    implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.6.0-SNAPSHOT") { isChanging = true }
+    implementation("org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.6.0")
     implementation("org.eclipse.keyple:keyple-common-java-api:2.0.0")
     implementation("org.eclipse.keyple:keyple-service-resource-java-lib:2.0.2")
     implementation("org.eclipse.keyple:keyple-util-java-lib:2.3.0")
     implementation("org.slf4j:slf4j-api:1.7.32")
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation("com.google.code.gson:gson:2.10.1")
     testImplementation("org.slf4j:slf4j-simple:1.7.32")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.assertj:assertj-core:3.15.0")
