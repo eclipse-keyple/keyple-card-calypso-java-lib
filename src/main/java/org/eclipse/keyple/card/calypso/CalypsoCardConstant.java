@@ -85,6 +85,10 @@ final class CalypsoCardConstant {
   static final byte SV_DEBIT_LOG_FILE_SFI = (byte) 0x15;
   static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
   static final int SV_LOG_FILE_REC_LENGTH = 29;
+  static final int SV_LOAD_MIN_VALUE = -8388608;
+  static final int SV_LOAD_MAX_VALUE = 8388607;
+  static final int SV_DEBIT_MIN_VALUE = 0;
+  static final int SV_DEBIT_MAX_VALUE = 32767;
 
   /** (private) */
   private CalypsoCardConstant() {}

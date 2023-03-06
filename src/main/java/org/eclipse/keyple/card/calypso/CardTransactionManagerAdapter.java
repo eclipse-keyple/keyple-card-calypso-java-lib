@@ -3561,7 +3561,14 @@ final class CardTransactionManagerAdapter
   public CardTransactionManager prepareSvReload(int amount, byte[] date, byte[] time, byte[] free) {
     try {
       Assert.getInstance()
-          .isInRange(amount, -8388608, 8388607, "amount")
+          .isInRange(
+              amount,
+              CalypsoCardConstant.SV_LOAD_MIN_VALUE,
+              CalypsoCardConstant.SV_LOAD_MAX_VALUE,
+              "amount")
+          .notNull(date, "date")
+          .notNull(time, "time")
+          .notNull(free, "free")
           .isEqual(date.length, 2, "date")
           .isEqual(time.length, 2, "time")
           .isEqual(free.length, 2, "free");
@@ -3637,7 +3644,13 @@ final class CardTransactionManagerAdapter
       /* @see Calypso Layer ID 8.02 (200108) */
       // CL-SV-DEBITVAL.1
       Assert.getInstance()
-          .isInRange(amount, 0, 32767, "amount")
+          .isInRange(
+              amount,
+              CalypsoCardConstant.SV_DEBIT_MIN_VALUE,
+              CalypsoCardConstant.SV_DEBIT_MAX_VALUE,
+              "amount")
+          .notNull(date, "date")
+          .notNull(time, "time")
           .isEqual(date.length, 2, "date")
           .isEqual(time.length, 2, "time");
 

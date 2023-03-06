@@ -1328,25 +1328,23 @@ class DtoAdapters {
      */
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("{\"amount\":")
-          .append(getAmount())
-          .append(", \"balance\":")
-          .append(getBalance())
-          .append(", \"debitDate\": \"")
-          .append(HexUtil.toHex(getDebitDate()))
-          .append("\", \"debitTime\": \"")
-          .append(HexUtil.toHex(getDebitTime()))
-          .append("\", \"kvc\": \"")
-          .append(HexUtil.toHex(getKvc()))
-          .append("\", \"samId\": \"")
-          .append(HexUtil.toHex(getSamId()))
-          .append("\", \"svTransactionNumber\": ")
-          .append(getSvTNum())
-          .append(", \"svSamTransactionNumber\": ")
-          .append(getSamTNum())
-          .append("}");
-      return sb.toString();
+      return "{\"amount\":"
+          + getAmount()
+          + ", \"balance\":"
+          + getBalance()
+          + ", \"debitDate\": \""
+          + HexUtil.toHex(getDebitDate())
+          + "\", \"debitTime\": \""
+          + HexUtil.toHex(getDebitTime())
+          + "\", \"kvc\": \""
+          + HexUtil.toHex(getKvc())
+          + "\", \"samId\": \""
+          + HexUtil.toHex(getSamId())
+          + "\", \"svTransactionNumber\": "
+          + getSvTNum()
+          + ", \"svSamTransactionNumber\": "
+          + getSamTNum()
+          + "}";
     }
   }
 
@@ -1495,27 +1493,25 @@ class DtoAdapters {
      */
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("{\"amount\":")
-          .append(getAmount())
-          .append(", \"balance\":")
-          .append(getBalance())
-          .append(", \"loadDate\": \"")
-          .append(HexUtil.toHex(getLoadDate()))
-          .append("\", \"loadTime\": \"")
-          .append(HexUtil.toHex(getLoadTime()))
-          .append("\", \"freeBytes\": \"")
-          .append(HexUtil.toHex(getFreeData()))
-          .append("\", \"kvc\": \"")
-          .append(HexUtil.toHex(getKvc()))
-          .append("\", \"samId\": \"")
-          .append(HexUtil.toHex(getSamId()))
-          .append("\", \"svTransactionNumber\": ")
-          .append(getSvTNum())
-          .append(", \"svSamTransactionNumber\": ")
-          .append(getSamTNum())
-          .append("}");
-      return sb.toString();
+      return "{\"amount\":"
+          + getAmount()
+          + ", \"balance\":"
+          + getBalance()
+          + ", \"loadDate\": \""
+          + HexUtil.toHex(getLoadDate())
+          + "\", \"loadTime\": \""
+          + HexUtil.toHex(getLoadTime())
+          + "\", \"freeBytes\": \""
+          + HexUtil.toHex(getFreeData())
+          + "\", \"kvc\": \""
+          + HexUtil.toHex(getKvc())
+          + "\", \"samId\": \""
+          + HexUtil.toHex(getSamId())
+          + "\", \"svTransactionNumber\": "
+          + getSvTNum()
+          + ", \"svSamTransactionNumber\": "
+          + getSamTNum()
+          + "}";
     }
   }
 
