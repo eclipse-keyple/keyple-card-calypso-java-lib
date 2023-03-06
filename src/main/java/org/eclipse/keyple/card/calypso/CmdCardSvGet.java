@@ -13,10 +13,9 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.SvDebitLogRecord;
-import org.calypsonet.terminal.calypso.card.SvLoadLogRecord;
 import org.calypsonet.terminal.calypso.transaction.SvOperation;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -192,8 +191,8 @@ final class CmdCardSvGet extends CardCommand {
     byte currentKvc;
     int transactionNumber;
     int balance;
-    SvLoadLogRecord loadLog;
-    SvDebitLogRecord debitLog;
+    byte[] loadLog;
+    byte[] debitLog;
     switch (cardResponse.length) {
       case 0x21: /* Compatibility mode, Reload */
       case 0x1E: /* Compatibility mode, Debit or Undebit */
@@ -202,34 +201,32 @@ final class CmdCardSvGet extends CardCommand {
         balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
         if (cardResponse.length == 0x21) {
           /* Reload */
-          loadLog = new SvLoadLogRecordAdapter(cardResponse, 11);
+          loadLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
           debitLog = null;
         } else {
           /* Debit */
           loadLog = null;
-          debitLog = new SvDebitLogRecordAdapter(cardResponse, 11);
+          debitLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
         }
         break;
       case 0x3D: /* Revision 3.2 mode */
         currentKvc = cardResponse[8];
         transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
         balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
-        loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
-        debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);
+        loadLog = Arrays.copyOfRange(cardResponse, 20, 42);
+        debitLog = Arrays.copyOfRange(cardResponse, 42, cardResponse.length);
         break;
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");
     }
-    getTransactionContext()
-        .getCard()
-        .setSvData(
-            currentKvc,
-            header,
-            apduResponse.getApdu(),
-            balance,
-            transactionNumber,
-            loadLog,
-            debitLog);
+    CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
+    calypsoCard.setSvData(currentKvc, header, apduResponse.getApdu(), balance, transactionNumber);
+    if (loadLog != null) {
+      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, loadLog);
+    }
+    if (debitLog != null) {
+      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI, debitLog);
+    }
     updateTerminalSessionMacIfNeeded();
   }
 
@@ -245,8 +242,8 @@ final class CmdCardSvGet extends CardCommand {
     byte currentKvc;
     int transactionNumber;
     int balance;
-    SvLoadLogRecord loadLog;
-    SvDebitLogRecord debitLog;
+    byte[] loadLog;
+    byte[] debitLog;
     switch (cardResponse.length) {
       case 0x21: /* Compatibility mode, Reload */
       case 0x1E: /* Compatibility mode, Debit or Undebit */
@@ -255,33 +252,32 @@ final class CmdCardSvGet extends CardCommand {
         balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
         if (cardResponse.length == 0x21) {
           /* Reload */
-          loadLog = new SvLoadLogRecordAdapter(cardResponse, 11);
+          loadLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
           debitLog = null;
         } else {
           /* Debit */
           loadLog = null;
-          debitLog = new SvDebitLogRecordAdapter(cardResponse, 11);
+          debitLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
         }
         break;
       case 0x3D: /* Revision 3.2 mode */
         currentKvc = cardResponse[8];
         transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
         balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
-        loadLog = new SvLoadLogRecordAdapter(cardResponse, 20);
-        debitLog = new SvDebitLogRecordAdapter(cardResponse, 42);
+        loadLog = Arrays.copyOfRange(cardResponse, 20, 42);
+        debitLog = Arrays.copyOfRange(cardResponse, 42, cardResponse.length);
         break;
       default:
         throw new IllegalStateException("Incorrect data length in response to SVGet");
     }
-    getCalypsoCard()
-        .setSvData(
-            currentKvc,
-            header,
-            apduResponse.getApdu(),
-            balance,
-            transactionNumber,
-            loadLog,
-            debitLog);
+    CalypsoCardAdapter calypsoCard = getCalypsoCard();
+    calypsoCard.setSvData(currentKvc, header, apduResponse.getApdu(), balance, transactionNumber);
+    if (loadLog != null) {
+      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, loadLog);
+    }
+    if (debitLog != null) {
+      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI, debitLog);
+    }
   }
 
   /**

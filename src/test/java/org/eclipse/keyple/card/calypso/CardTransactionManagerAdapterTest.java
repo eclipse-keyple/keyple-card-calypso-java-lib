@@ -22,9 +22,7 @@ import java.util.*;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
 import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
-import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.card.FileHeader;
+import org.calypsonet.terminal.calypso.card.*;
 import org.calypsonet.terminal.calypso.transaction.*;
 import org.calypsonet.terminal.card.*;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -46,6 +44,9 @@ public class CardTransactionManagerAdapterTest {
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C21051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C22051410019000";
+  private static final String
+      SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED_WITH_STORED_VALUE =
+          "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C2A051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2 =
       "6F238409315449432E49434131A516BF0C13C708000000001122334453070A3C02051410019000";
   private static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE =
@@ -312,28 +313,211 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_VERIFY_PIN_KO_RSP = "63C2";
   private static final String CARD_CHANGE_PIN_RSP = SW1SW2_OK;
   private static final String CARD_CHANGE_PIN_PLAIN_RSP = SW1SW2_OK;
-
-  private static final int SV_BALANCE = 0x123456;
-  private static final String SV_BALANCE_STR = "123456";
+  private static final String SV_R_PREV_SIGN_LO = "A54BC9";
+  private static final String SV_R_CHALLENGE_OUT = "7DFA";
+  private static final String SV_R_PREV_SIGN_LO_EXT = "55AABB66DD77";
+  private static final String SV_D_PREV_SIGN_LO_EXT = "55AABB66DD77";
+  private static final String SV_R_CHALLENGE_OUT_EXT = "8877665544332211";
+  private static final String SV_D_CHALLENGE_OUT_EXT = "8877665544332211";
+  private static final String SV_D_BALANCE_STR = "123456";
+  private static final String SV_R_CURRENT_KVC = "12";
+  private static final String SV_R_TNUM = "1234";
+  private static final String SV_R_BALANCE = "564321";
+  private static final String SV_R_LOG_DATE = "0123";
+  private static final String SV_R_LOG_FREE1 = "12";
+  private static final String SV_R_LOG_KVC = "34";
+  private static final String SV_R_LOG_FREE2 = "34";
+  private static final String SV_R_LOG_BALANCE = "7890AB";
+  private static final String SV_R_LOG_AMOUNT = "223344";
+  private static final String SV_R_LOG_TIME = "3210";
+  private static final String SV_R_LOG_SAM_ID = "11223344";
+  private static final String SV_R_LOG_SAM_TNUM = "543210";
+  private static final String SV_R_LOG_SV_TNUM = "5678";
+  private static final String SV_D_CURRENT_KVC = "CD";
+  private static final String SV_D_TNUM = "1234";
+  private static final String SV_D_PREV_SIGN_LO = "A54BC9";
+  private static final String SV_D_CHALLENGE_OUT = "7DFA";
+  private static final String SV_D_BALANCE = "564321";
+  private static final String SV_D_LOG_AMOUNT = "3344";
+  private static final String SV_D_LOG_DATE = "0123";
+  private static final String SV_D_LOG_TIME = "3210";
+  private static final String SV_D_LOG_KVC = "34";
+  private static final String SV_D_LOG_SAM_ID = "11223344";
+  private static final String SV_D_LOG_SAM_TNUM = "543210";
+  private static final String SV_D_LOG_BALANCE = "7890AB";
+  private static final String SV_D_LOG_SV_TNUM = "5678";
   private static final String CARD_SV_GET_DEBIT_CMD = "007C000900";
+
+  private static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C010900";
   private static final String CARD_SV_GET_DEBIT_RSP =
-      "790073A54BC97DFA" + SV_BALANCE_STR + "FFFE0000000079123456780000DD0000160072" + SW1SW2_OK;
+      SV_D_CURRENT_KVC
+          + SV_D_TNUM
+          + SV_D_PREV_SIGN_LO
+          + SV_D_CHALLENGE_OUT
+          + SV_D_BALANCE
+          + SV_D_LOG_AMOUNT
+          + SV_D_LOG_DATE
+          + SV_D_LOG_TIME
+          + SV_D_LOG_KVC
+          + SV_D_LOG_SAM_ID
+          + SV_D_LOG_SAM_TNUM
+          + SV_D_LOG_BALANCE
+          + SV_D_LOG_SV_TNUM
+          + SW1SW2_OK;
+  private static final String CARD_SV_GET_DEBIT_EXT_RSP =
+      SV_D_CHALLENGE_OUT_EXT
+          + SV_D_CURRENT_KVC
+          + SV_D_TNUM
+          + SV_D_PREV_SIGN_LO_EXT
+          + SV_D_BALANCE
+          + SV_R_LOG_DATE
+          + SV_R_LOG_FREE1
+          + SV_R_LOG_KVC
+          + SV_R_LOG_FREE2
+          + SV_R_LOG_BALANCE
+          + SV_R_LOG_AMOUNT
+          + SV_R_LOG_TIME
+          + SV_R_LOG_SAM_ID
+          + SV_R_LOG_SAM_TNUM
+          + SV_R_LOG_SV_TNUM
+          + SV_D_LOG_AMOUNT
+          + SV_D_LOG_DATE
+          + SV_D_LOG_TIME
+          + SV_D_LOG_KVC
+          + SV_D_LOG_SAM_ID
+          + SV_D_LOG_SAM_TNUM
+          + SV_D_LOG_BALANCE
+          + SV_D_LOG_SV_TNUM
+          + SW1SW2_OK;
   private static final String CARD_SV_GET_RELOAD_CMD = "007C000700";
+  private static final String CARD_SV_GET_RELOAD_EXT_CMD = "007C010700";
   private static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000700";
   private static final String CARD_SV_GET_RELOAD_RSP =
-      "79007221D35F0E36"
-          + SV_BALANCE_STR
-          + "000000790000001A0000020000123456780000DB0070"
+      SV_R_CURRENT_KVC
+          + SV_R_TNUM
+          + SV_R_PREV_SIGN_LO
+          + SV_R_CHALLENGE_OUT
+          + SV_R_BALANCE
+          + SV_R_LOG_DATE
+          + SV_R_LOG_FREE1
+          + SV_R_LOG_KVC
+          + SV_R_LOG_FREE2
+          + SV_R_LOG_BALANCE
+          + SV_R_LOG_AMOUNT
+          + SV_R_LOG_TIME
+          + SV_R_LOG_SAM_ID
+          + SV_R_LOG_SAM_TNUM
+          + SV_R_LOG_SV_TNUM
           + SW1SW2_OK;
+  private static final String CARD_SV_GET_RELOAD_EXT_RSP =
+      SV_R_CHALLENGE_OUT_EXT
+          + SV_R_CURRENT_KVC
+          + SV_R_TNUM
+          + SV_R_PREV_SIGN_LO_EXT
+          + SV_R_BALANCE
+          + SV_R_LOG_DATE
+          + SV_R_LOG_FREE1
+          + SV_R_LOG_KVC
+          + SV_R_LOG_FREE2
+          + SV_R_LOG_BALANCE
+          + SV_R_LOG_AMOUNT
+          + SV_R_LOG_TIME
+          + SV_R_LOG_SAM_ID
+          + SV_R_LOG_SAM_TNUM
+          + SV_R_LOG_SV_TNUM
+          + SV_D_LOG_AMOUNT
+          + SV_D_LOG_DATE
+          + SV_D_LOG_TIME
+          + SV_D_LOG_KVC
+          + SV_D_LOG_SAM_ID
+          + SV_D_LOG_SAM_TNUM
+          + SV_D_LOG_BALANCE
+          + SV_D_LOG_SV_TNUM
+          + SW1SW2_OK;
+  private static final String SV_R_DATE = "3210";
+  private static final String SV_R_FREE1 = "21";
+  private static final String SV_R_KVC = "43";
+  private static final String SV_R_FREE2 = "54";
+  private static final String SV_R_AMOUNT = "012345";
+  private static final String SV_R_TIME = "0123";
+  private static final String SV_R_SAM_ID = "11223344";
+  private static final String SV_D_SAM_ID = "11223344";
+  private static final String SV_R_SAM_TNUM = "012345";
+  private static final String SV_D_AMOUNT = "4321";
+  private static final String SV_D_AMOUNT_NEG = "BCDF";
+  private static final String SV_D_DATE = "3210";
+  private static final String SV_D_TIME = "1032";
+  private static final String SAM_PREPARE_LOAD_RSP_CHALLENGE_01 = "9591";
+  private static final String SAM_PREPARE_LOAD_RSP_CHALLENGE_2 = "16";
+  private static final String SAM_PREPARE_LOAD_RSP_TNUM = "ABCDEF";
+  private static final String SAM_PREPARE_LOAD_RSP_CRYPTOHI = "2C8CB3D280";
+  private static final String SAM_PREPARE_LOAD_EXT_RSP_CRYPTOHI = "AA998877665544332211";
+  private static final String SAM_PREPARE_DEBIT_RSP_CHALLENGE_01 = "9591";
+  private static final String SAM_PREPARE_DEBIT_RSP_CHALLENGE_2 = "16";
+  private static final String SAM_PREPARE_DEBIT_RSP_TNUM = "ABCDEF";
+  private static final String SAM_PREPARE_DEBIT_RSP_CRYPTOHI = "2C8CB3D280";
+  private static final String SAM_PREPARE_DEBIT_EXT_RSP_CRYPTOHI = "AA998877665544332211";
   private static final String CARD_SV_RELOAD_CMD =
-      "00B89591171600000079000000020000123456780000DE2C8CB3D280";
-  private static final String CARD_SV_RELOAD_RSP = "A54BC9" + SW1SW2_OK;
+      "00B8"
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_01
+          + "17"
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_2
+          + SV_R_DATE
+          + SV_R_FREE1
+          + SV_R_CURRENT_KVC
+          + SV_R_FREE2
+          + SV_R_AMOUNT
+          + SV_R_TIME
+          + SV_R_SAM_ID
+          + SAM_PREPARE_LOAD_RSP_TNUM
+          + SAM_PREPARE_LOAD_RSP_CRYPTOHI;
+  private static final String CARD_SV_RELOAD_EXT_CMD =
+      "00B8"
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_01
+          + "1C"
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_2
+          + SV_R_DATE
+          + SV_R_FREE1
+          + SV_R_CURRENT_KVC
+          + SV_R_FREE2
+          + SV_R_AMOUNT
+          + SV_R_TIME
+          + SV_R_SAM_ID
+          + SAM_PREPARE_LOAD_RSP_TNUM
+          + SAM_PREPARE_LOAD_EXT_RSP_CRYPTOHI;
+  private static final String CARD_SV_CRYPTO = "A54BC9";
+  private static final String CARD_SV_RELOAD_RSP = CARD_SV_CRYPTO + SW1SW2_OK;
+  private static final String CARD_SV_CRYPTO_EXT = "A54BC99CB45A";
+  private static final String CARD_SV_RELOAD_EXT_RSP = CARD_SV_CRYPTO_EXT + SW1SW2_OK;
   private static final String CARD_SV_DEBIT_CMD =
-      "00BACD001434FFFE0000000079123456780000DF0C9437AABB";
-  private static final String CARD_SV_DEBIT_RSP = "A54BC9" + SW1SW2_OK;
+      "00BA"
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_01
+          + "14"
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_2
+          + SV_D_AMOUNT_NEG
+          + SV_D_DATE
+          + SV_D_TIME
+          + SV_D_CURRENT_KVC
+          + SV_D_SAM_ID
+          + SAM_PREPARE_DEBIT_RSP_TNUM
+          + SAM_PREPARE_DEBIT_RSP_CRYPTOHI;
+  private static final String CARD_SV_DEBIT_EXT_CMD =
+      "00BA"
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_01
+          + "19"
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_2
+          + SV_D_AMOUNT_NEG
+          + SV_D_DATE
+          + SV_D_TIME
+          + SV_D_CURRENT_KVC
+          + SV_D_SAM_ID
+          + SAM_PREPARE_DEBIT_RSP_TNUM
+          + SAM_PREPARE_DEBIT_EXT_RSP_CRYPTOHI;
+  private static final String CARD_SV_DEBIT_RSP = CARD_SV_CRYPTO + SW1SW2_OK;
+  private static final String CARD_SV_DEBIT_EXT_RSP = CARD_SV_CRYPTO_EXT + SW1SW2_OK;
   private static final String CARD_SV_UNDEBIT_CMD =
       "00BCCD00143400020000000079123456780000DF0C9437AABB";
-  private static final String CARD_SV_UNDEBIT_RSP = "A54BC9" + SW1SW2_OK;
+  private static final String CARD_SV_UNDEBIT_RSP = CARD_SV_CRYPTO + SW1SW2_OK;
   private static final String CARD_READ_SV_LOAD_LOG_FILE_CMD = "00B201A400";
   private static final String CARD_READ_SV_LOAD_LOG_FILE_RSP =
       "000000780000001A0000020000AABBCCDD0000DB007000000000000000" + SW1SW2_OK;
@@ -424,22 +608,74 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + CARD_CHALLENGE;
   private static final String SAM_GIVE_RANDOM_RSP = SW1SW2_OK;
   private static final String SAM_PREPARE_LOAD_CMD =
-      "805601FF367C00070079007221D35F0E36"
-          + SV_BALANCE_STR
-          + "000000790000001A0000020000123456780000DB00709000B80000170000000079000000020000";
-  private static final String SAM_PREPARE_LOAD_RSP = "9591160000DE2C8CB3D280" + SW1SW2_OK;
+      "805601FF367C000700"
+          + CARD_SV_GET_RELOAD_RSP
+          + "B800001700"
+          + SV_R_DATE
+          + SV_R_FREE1
+          + SV_R_CURRENT_KVC
+          + SV_R_FREE2
+          + SV_R_AMOUNT
+          + SV_R_TIME;
+  private static final String SAM_PREPARE_LOAD_EXT_CMD =
+      "805601FF527C010700"
+          + CARD_SV_GET_RELOAD_EXT_RSP
+          + "B800001C00"
+          + SV_R_DATE
+          + SV_R_FREE1
+          + SV_R_CURRENT_KVC
+          + SV_R_FREE2
+          + SV_R_AMOUNT
+          + SV_R_TIME;
+
+  // 805601FF527C010700887766554433221112123455AABB66DD7756432101231234347890AB223344321011223344543210567833440123321034112233445432107890AB56789000B800001C0032102112540123450123
+  private static final String SAM_PREPARE_LOAD_RSP =
+      SAM_PREPARE_LOAD_RSP_CHALLENGE_01
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_2
+          + SAM_PREPARE_LOAD_RSP_TNUM
+          + SAM_PREPARE_LOAD_RSP_CRYPTOHI
+          + SW1SW2_OK;
+  private static final String SAM_PREPARE_LOAD_EXT_RSP =
+      SAM_PREPARE_LOAD_RSP_CHALLENGE_01
+          + SAM_PREPARE_LOAD_RSP_CHALLENGE_2
+          + SAM_PREPARE_LOAD_RSP_TNUM
+          + SAM_PREPARE_LOAD_EXT_RSP_CRYPTOHI
+          + SW1SW2_OK;
   private static final String SAM_PREPARE_DEBIT_CMD =
-      "805401FF307C000900790073A54BC97DFA"
-          + SV_BALANCE_STR
-          + "FFFE0000000079123456780000DD00001600729000BA00001400FFFE0000000079";
-  private static final String SAM_PREPARE_DEBIT_RSP = "CD00340000DF0C9437AABB" + SW1SW2_OK;
+      "805401FF307C000900"
+          + CARD_SV_GET_DEBIT_RSP
+          + "BA00001400"
+          + SV_D_AMOUNT_NEG
+          + SV_D_DATE
+          + SV_D_TIME
+          + SV_D_CURRENT_KVC;
+  private static final String SAM_PREPARE_DEBIT_RSP =
+      SAM_PREPARE_DEBIT_RSP_CHALLENGE_01
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_2
+          + SAM_PREPARE_DEBIT_RSP_TNUM
+          + SAM_PREPARE_DEBIT_RSP_CRYPTOHI
+          + SW1SW2_OK;
+  private static final String SAM_PREPARE_DEBIT_EXT_CMD =
+      "805401FF4F7C010900"
+          + CARD_SV_GET_DEBIT_EXT_RSP
+          + "BA00001900"
+          + SV_D_AMOUNT_NEG
+          + SV_D_DATE
+          + SV_D_TIME
+          + SV_D_CURRENT_KVC;
+  private static final String SAM_PREPARE_DEBIT_EXT_RSP =
+      SAM_PREPARE_DEBIT_RSP_CHALLENGE_01
+          + SAM_PREPARE_DEBIT_RSP_CHALLENGE_2
+          + SAM_PREPARE_DEBIT_RSP_TNUM
+          + SAM_PREPARE_DEBIT_EXT_RSP_CRYPTOHI
+          + SW1SW2_OK;
   private static final String SAM_PREPARE_UNDEBIT_CMD =
       "805C01FF307C000900790073A54BC97DFA"
-          + SV_BALANCE_STR
+          + SV_D_BALANCE_STR
           + "FFFE0000000079123456780000DD00001600729000BC0000140000020000000079";
   private static final String SAM_PREPARE_UNDEBIT_RSP = "CD00340000DF0C9437AABB" + SW1SW2_OK;
-  private static final String SAM_SV_CHECK_CMD = "8058000003A54BC9";
-
+  private static final String SAM_SV_CHECK_CMD = "8058000003" + CARD_SV_CRYPTO;
+  private static final String SAM_SV_CHECK_EXT_CMD = "8058000006" + CARD_SV_CRYPTO_EXT;
   private static final String SAM_CARD_GENERATE_KEY_CMD = "8012FFFF050405020390";
   private static final String SAM_CARD_GENERATE_KEY_RSP = CIPHERED_KEY + SW1SW2_OK;
   private static final String SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD = "8088800008";
@@ -3044,7 +3280,7 @@ public class CardTransactionManagerAdapterTest {
     try {
       cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
 
     assertThat(calypsoCard.isExtendedModeSupported()).isFalse();
@@ -3052,17 +3288,17 @@ public class CardTransactionManagerAdapterTest {
     try {
       cardTransactionManager.prepareEarlyMutualAuthentication();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
     try {
       cardTransactionManager.prepareActivateEncryption();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
     try {
       cardTransactionManager.prepareDeactivateEncryption();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
   }
 
@@ -5847,6 +6083,352 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager.prepareSvReload(1);
   }
 
+  @Test
+  public void _prepareSvReload_whenOutOfSession_InRegularMode_shouldUpdateReloadLog()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+
+    CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_RELOAD_CMD);
+    CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_RELOAD_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse1);
+
+    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_RELOAD_CMD);
+    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_RELOAD_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse2);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_LOAD_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_LOAD_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO).processCommands(false);
+
+    assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_R_BALANCE));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_R_TNUM));
+    SvLoadLogRecord loadLog1 = calypsoCard.getSvLoadLogRecord();
+    assertThat(loadLog1.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_DATE));
+    assertThat(loadLog1.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_TIME));
+    assertThat(loadLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_R_LOG_BALANCE));
+    assertThat(loadLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_R_LOG_AMOUNT));
+    assertThat(loadLog1.getFreeData())
+        .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
+    assertThat(loadLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_R_LOG_KVC));
+    assertThat(loadLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_SAM_ID));
+    assertThat(loadLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SAM_TNUM));
+    assertThat(loadLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SV_TNUM));
+
+    cardTransactionManager
+        .prepareSvReload(
+            HexUtil.toInt(SV_R_AMOUNT),
+            HexUtil.toByteArray(SV_R_DATE),
+            HexUtil.toByteArray(SV_R_TIME),
+            HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2))
+        .processCommands(true);
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getSvBalance())
+        .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
+    SvLoadLogRecord loadLog2 = calypsoCard.getSvLoadLogRecord();
+    assertThat(loadLog2.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_DATE));
+    assertThat(loadLog2.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_TIME));
+    assertThat(loadLog2.getBalance())
+        .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(loadLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(loadLog2.getFreeData()).isEqualTo(HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2));
+    assertThat(loadLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_R_CURRENT_KVC));
+    assertThat(loadLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_SAM_ID));
+    assertThat(loadLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
+    assertThat(loadLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
+  }
+
+  @Test
+  public void _prepareSvReload_whenOutOfSession_InExtendedMode_shouldUpdateReloadLog()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED_WITH_STORED_VALUE);
+
+    CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_RELOAD_EXT_CMD);
+    CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_RELOAD_EXT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse1);
+
+    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_RELOAD_EXT_CMD);
+    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_RELOAD_EXT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse2);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_LOAD_EXT_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_LOAD_EXT_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_EXT_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO).processCommands(false);
+
+    assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_R_BALANCE));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_R_TNUM));
+    SvLoadLogRecord loadLog1 = calypsoCard.getSvLoadLogRecord();
+    assertThat(loadLog1.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_DATE));
+    assertThat(loadLog1.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_TIME));
+    assertThat(loadLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_R_LOG_BALANCE));
+    assertThat(loadLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_R_LOG_AMOUNT));
+    assertThat(loadLog1.getFreeData())
+        .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
+    assertThat(loadLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_R_LOG_KVC));
+    assertThat(loadLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_SAM_ID));
+    assertThat(loadLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SAM_TNUM));
+    assertThat(loadLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SV_TNUM));
+    SvDebitLogRecord debitLog1 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog1.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_DATE));
+    assertThat(debitLog1.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_TIME));
+    assertThat(debitLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_D_LOG_BALANCE));
+    assertThat(debitLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_D_LOG_AMOUNT));
+    assertThat(debitLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_D_LOG_KVC));
+    assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
+    assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
+    assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+
+    cardTransactionManager
+        .prepareSvReload(
+            HexUtil.toInt(SV_R_AMOUNT),
+            HexUtil.toByteArray(SV_R_DATE),
+            HexUtil.toByteArray(SV_R_TIME),
+            HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2))
+        .processCommands(true);
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getSvBalance())
+        .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
+    SvLoadLogRecord loadLog2 = calypsoCard.getSvLoadLogRecord();
+    assertThat(loadLog2.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_DATE));
+    assertThat(loadLog2.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_TIME));
+    assertThat(loadLog2.getBalance())
+        .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(loadLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_R_AMOUNT));
+    assertThat(loadLog2.getFreeData()).isEqualTo(HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2));
+    assertThat(loadLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_R_CURRENT_KVC));
+    assertThat(loadLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_SAM_ID));
+    assertThat(loadLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
+    assertThat(loadLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
+    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_DATE));
+    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_TIME));
+    assertThat(debitLog2.getBalance()).isEqualTo(HexUtil.toInt(SV_D_LOG_BALANCE));
+    assertThat(debitLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_D_LOG_AMOUNT));
+    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_LOG_KVC));
+    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
+    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
+    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+  }
+
+  @Test
+  public void _prepareSvDebit_whenOutOfSession_InRegularMode_shouldUpdateReloadLog()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+
+    CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_DEBIT_CMD);
+    CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_DEBIT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse1);
+
+    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_DEBIT_CMD);
+    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_DEBIT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse2);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_DEBIT_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_DEBIT_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO).processCommands(false);
+
+    assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_D_BALANCE));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_D_TNUM));
+    SvDebitLogRecord debitLog1 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog1.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_DATE));
+    assertThat(debitLog1.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_TIME));
+    assertThat(debitLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_D_LOG_BALANCE));
+    assertThat(debitLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_D_LOG_AMOUNT));
+    assertThat(debitLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_D_LOG_KVC));
+    assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
+    assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
+    assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+
+    cardTransactionManager
+        .prepareSvDebit(
+            HexUtil.toInt(SV_D_AMOUNT),
+            HexUtil.toByteArray(SV_D_DATE),
+            HexUtil.toByteArray(SV_D_TIME))
+        .processCommands(true);
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getSvBalance())
+        .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
+    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_DATE));
+    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_TIME));
+    assertThat(debitLog2.getBalance())
+        .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(debitLog2.getAmount()).isEqualTo(-HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_CURRENT_KVC));
+    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_SAM_ID));
+    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
+    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
+  }
+
+  @Test
+  public void _prepareSvDebit_whenOutOfSession_InExtendedMode_shouldUpdateReloadLog()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED_WITH_STORED_VALUE);
+
+    CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_DEBIT_EXT_CMD);
+    CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_DEBIT_EXT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse1);
+
+    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_DEBIT_EXT_CMD);
+    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_DEBIT_EXT_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse2);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_DEBIT_EXT_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_DEBIT_EXT_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_EXT_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO).processCommands(false);
+
+    assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_D_BALANCE));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_D_TNUM));
+    SvDebitLogRecord debitLog1 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog1.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_DATE));
+    assertThat(debitLog1.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_TIME));
+    assertThat(debitLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_D_LOG_BALANCE));
+    assertThat(debitLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_D_LOG_AMOUNT));
+    assertThat(debitLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_D_LOG_KVC));
+    assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
+    assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
+    assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+
+    cardTransactionManager
+        .prepareSvDebit(
+            HexUtil.toInt(SV_D_AMOUNT),
+            HexUtil.toByteArray(SV_D_DATE),
+            HexUtil.toByteArray(SV_D_TIME))
+        .processCommands(true);
+
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+
+    assertThat(calypsoCard.getSvBalance())
+        .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
+    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
+    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_DATE));
+    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_TIME));
+    assertThat(debitLog2.getBalance())
+        .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(debitLog2.getAmount()).isEqualTo(-HexUtil.toInt(SV_D_AMOUNT));
+    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_CURRENT_KVC));
+    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_SAM_ID));
+    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
+    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
+  }
+
   @Test(expected = IllegalStateException.class)
   public void _prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws Exception {
     CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
@@ -6009,7 +6591,7 @@ public class CardTransactionManagerAdapterTest {
     try {
       cardTransactionManager.processCommands(false);
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
 
     assertThat(calypsoCard.isExtendedModeSupported()).isFalse();
@@ -6018,17 +6600,17 @@ public class CardTransactionManagerAdapterTest {
     try {
       cardTransactionManager.prepareEarlyMutualAuthentication();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
     try {
       cardTransactionManager.prepareActivateEncryption();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
     try {
       cardTransactionManager.prepareDeactivateEncryption();
       shouldHaveThrown(UnsupportedOperationException.class);
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException ignored) {
     }
   }
 

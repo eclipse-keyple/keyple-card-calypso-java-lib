@@ -135,19 +135,6 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
         null,
         null);
 
-    /* @see Calypso Layer ID 8.02 (200108) */
-    // CL-SV-DEBITVAL.1
-    if (amount < 0 || amount > 32767) {
-      throw new IllegalArgumentException(
-          "Amount is outside allowed boundaries (0 <= amount <= 32767)");
-    }
-    if (date == null || time == null) {
-      throw new IllegalArgumentException("date and time cannot be null");
-    }
-    if (date.length != 2 || time.length != 2) {
-      throw new IllegalArgumentException("date and time must be 2-byte arrays");
-    }
-
     // keeps a copy of these fields until the command is finalized
     this.amount = amount;
     this.isDebitCommand = isDebitCommand;
@@ -200,19 +187,6 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
         null,
         transactionContext,
         commandContext);
-
-    /* @see Calypso Layer ID 8.02 (200108) */
-    // CL-SV-DEBITVAL.1
-    if (amount < 0 || amount > 32767) {
-      throw new IllegalArgumentException(
-          "Amount is outside allowed boundaries (0 <= amount <= 32767)");
-    }
-    if (date == null || time == null) {
-      throw new IllegalArgumentException("date and time cannot be null");
-    }
-    if (date.length != 2 || time.length != 2) {
-      throw new IllegalArgumentException("date and time must be 2-byte arrays");
-    }
 
     // keeps a copy of these fields until the command is finalized
     this.amount = amount;
@@ -375,7 +349,9 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
     }
-    getTransactionContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
+    CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
+    calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
+    updateCalypsoCardSvHistory(calypsoCard);
     updateTerminalSessionMacIfNeeded();
     if (!getCommandContext().isSecureSessionOpen()) {
       try {
@@ -408,7 +384,25 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Debit/Undebit command.");
     }
-    getCalypsoCard().setSvOperationSignature(apduResponse.getDataOut());
+    CalypsoCardAdapter calypsoCard = getCalypsoCard();
+    calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
+    updateCalypsoCardSvHistory(calypsoCard);
+  }
+
+  /**
+   * Updates the Calypso card with the SV Debit/Undebit data to update the SV balance and the SV
+   * debit log.
+   *
+   * @param calypsoCard The Calypso card.
+   */
+  private void updateCalypsoCardSvHistory(CalypsoCardAdapter calypsoCard) {
+    int balance = calypsoCard.getSvBalance() - amount;
+    calypsoCard.updateSvData(balance, calypsoCard.getSvLastTNum() + 1);
+    byte[] debitLog = new byte[19];
+    System.arraycopy(getApduRequest().getApdu(), 6, debitLog, 0, 14);
+    ByteArrayUtil.copyBytes(balance, debitLog, 14, 3);
+    ByteArrayUtil.copyBytes(calypsoCard.getSvLastTNum(), debitLog, 17, 2);
+    calypsoCard.addCyclicContent(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI, debitLog);
   }
 
   /**

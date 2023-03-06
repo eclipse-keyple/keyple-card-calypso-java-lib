@@ -58,6 +58,7 @@ final class CmdCardSvReload extends CardCommand {
   public static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
   private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
+  private final int amount;
 
   static {
     Map<Integer, StatusProperties> m =
@@ -116,19 +117,9 @@ final class CmdCardSvReload extends CardCommand {
 
     super(CardCommandRef.SV_RELOAD, 0, calypsoCard, null, null);
 
-    if (amount < -8388608 || amount > 8388607) {
-      throw new IllegalArgumentException(
-          "Amount is outside allowed boundaries (-8388608 <= amount <=  8388607)");
-    }
-    if (date == null || time == null || free == null) {
-      throw new IllegalArgumentException("date, time and free cannot be null");
-    }
-    if (date.length != 2 || time.length != 2 || free.length != 2) {
-      throw new IllegalArgumentException("date, time and free must be 2-byte arrays");
-    }
-
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.amount = amount;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
@@ -173,19 +164,9 @@ final class CmdCardSvReload extends CardCommand {
 
     super(CardCommandRef.SV_RELOAD, 0, null, transactionContext, commandContext);
 
-    if (amount < -8388608 || amount > 8388607) {
-      throw new IllegalArgumentException(
-          "Amount is outside allowed boundaries (-8388608 <= amount <=  8388607)");
-    }
-    if (date == null || time == null || free == null) {
-      throw new IllegalArgumentException("date, time and free cannot be null");
-    }
-    if (date.length != 2 || time.length != 2 || free.length != 2) {
-      throw new IllegalArgumentException("date, time and free must be 2-byte arrays");
-    }
-
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    this.amount = amount;
 
     // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
     // 10-byte signature)
@@ -338,7 +319,9 @@ final class CmdCardSvReload extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
-    getTransactionContext().getCard().setSvOperationSignature(apduResponse.getDataOut());
+    CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
+    calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
+    updateCalypsoCardSvHistory(calypsoCard);
     updateTerminalSessionMacIfNeeded();
     if (!getCommandContext().isSecureSessionOpen()) {
       try {
@@ -371,7 +354,27 @@ final class CmdCardSvReload extends CardCommand {
         && apduResponse.getDataOut().length != 6) {
       throw new IllegalStateException("Bad length in response to SV Reload command.");
     }
-    getCalypsoCard().setSvOperationSignature(apduResponse.getDataOut());
+    CalypsoCardAdapter calypsoCard = getCalypsoCard();
+    calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
+    updateCalypsoCardSvHistory(calypsoCard);
+  }
+
+  /**
+   * Updates the Calypso card with the SV Reload data to update the SV balance and the SV reload
+   * log.
+   *
+   * @param calypsoCard The Calypso card.
+   */
+  private void updateCalypsoCardSvHistory(CalypsoCardAdapter calypsoCard) {
+    int balance = calypsoCard.getSvBalance() + amount;
+    calypsoCard.updateSvData(balance, calypsoCard.getSvLastTNum() + 1);
+    byte[] reloadLog = new byte[22];
+    System.arraycopy(getApduRequest().getApdu(), 6, reloadLog, 0, 5);
+    ByteArrayUtil.copyBytes(balance, reloadLog, 5, 3);
+    ByteArrayUtil.copyBytes(amount, reloadLog, 8, 3);
+    System.arraycopy(getApduRequest().getApdu(), 14, reloadLog, 11, 9);
+    ByteArrayUtil.copyBytes(calypsoCard.getSvLastTNum(), reloadLog, 20, 2);
+    calypsoCard.addCyclicContent(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, reloadLog);
   }
 
   /**
