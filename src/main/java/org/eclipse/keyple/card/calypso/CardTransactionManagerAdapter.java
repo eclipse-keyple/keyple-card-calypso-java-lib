@@ -3560,6 +3560,19 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareSvReload(int amount, byte[] date, byte[] time, byte[] free) {
     try {
+      Assert.getInstance()
+          .isInRange(
+              amount,
+              CalypsoCardConstant.SV_LOAD_MIN_VALUE,
+              CalypsoCardConstant.SV_LOAD_MAX_VALUE,
+              "amount")
+          .notNull(date, "date")
+          .notNull(time, "time")
+          .notNull(free, "free")
+          .isEqual(date.length, 2, "date")
+          .isEqual(time.length, 2, "time")
+          .isEqual(free.length, 2, "free");
+
       checkSvModifyingCommandPreconditions(SvOperation.RELOAD);
 
       CmdCardSvReload command =
@@ -3628,6 +3641,19 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareSvDebit(int amount, byte[] date, byte[] time) {
     try {
+      /* @see Calypso Layer ID 8.02 (200108) */
+      // CL-SV-DEBITVAL.1
+      Assert.getInstance()
+          .isInRange(
+              amount,
+              CalypsoCardConstant.SV_DEBIT_MIN_VALUE,
+              CalypsoCardConstant.SV_DEBIT_MAX_VALUE,
+              "amount")
+          .notNull(date, "date")
+          .notNull(time, "time")
+          .isEqual(date.length, 2, "date")
+          .isEqual(time.length, 2, "time");
+
       checkSvModifyingCommandPreconditions(SvOperation.DEBIT);
 
       CmdCardSvDebitOrUndebit command =
@@ -3685,7 +3711,7 @@ final class CardTransactionManagerAdapter
             "The currently selected application is not an SV application.");
       }
       // reset SV data in CalypsoCard if any
-      card.setSvData((byte) 0, null, null, 0, 0, null, null);
+      card.setSvData((byte) 0, null, null, 0, 0);
       prepareReadRecords(
           CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI,
           1,

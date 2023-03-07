@@ -91,8 +91,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private Integer pinAttemptCounter;
   private Integer svBalance;
   private int svLastTNum;
-  private SvLoadLogRecord svLoadLogRecord;
-  private SvDebitLogRecord svDebitLogRecord;
+  private Integer svBalanceBackup;
+  private int svLastTNumBackup;
   private boolean isHce;
   private byte[] challenge;
   private byte[] traceabilityInformation;
@@ -614,31 +614,26 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * @param svGetData A not empty array.
    * @param svBalance the current SV balance.
    * @param svLastTNum the last SV transaction number.
-   * @param svLoadLogRecord the SV load log record (it may be null if not available).
-   * @param svDebitLogRecord the SV debit log record (it may be null if not available).
    * @since 2.0.0
    */
-  void setSvData(
-      byte svKvc,
-      byte[] svGetHeader,
-      byte[] svGetData,
-      int svBalance,
-      int svLastTNum,
-      SvLoadLogRecord svLoadLogRecord,
-      SvDebitLogRecord svDebitLogRecord) {
-
+  void setSvData(byte svKvc, byte[] svGetHeader, byte[] svGetData, int svBalance, int svLastTNum) {
     this.svKvc = svKvc;
     this.svGetHeader = svGetHeader;
     this.svGetData = svGetData;
     this.svBalance = svBalance;
     this.svLastTNum = svLastTNum;
-    // update logs, do not overwrite existing values (case of double reading)
-    if (this.svLoadLogRecord == null) {
-      this.svLoadLogRecord = svLoadLogRecord;
-    }
-    if (this.svDebitLogRecord == null) {
-      this.svDebitLogRecord = svDebitLogRecord;
-    }
+  }
+
+  /**
+   * Updates the Stored Value data from the SV Get command
+   *
+   * @param svBalance the current SV balance.
+   * @param svLastTNum the last SV transaction number.
+   * @since 2.3.3
+   */
+  void updateSvData(int svBalance, int svLastTNum) {
+    this.svBalance = svBalance;
+    this.svLastTNum = svLastTNum;
   }
 
   /**
@@ -674,15 +669,13 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public SvLoadLogRecord getSvLoadLogRecord() {
-    if (svLoadLogRecord == null) {
-      // try to get it from the file data
-      ElementaryFile ef = getFileBySfi(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI);
-      if (ef != null) {
-        byte[] logRecord = ef.getData().getContent();
-        svLoadLogRecord = new SvLoadLogRecordAdapter(logRecord, 0);
-      }
+    // try to get it from the file data
+    ElementaryFile ef = getFileBySfi(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI);
+    if (ef != null) {
+      byte[] logRecord = ef.getData().getContent();
+      return new SvLoadLogRecordAdapter(logRecord, 0);
     }
-    return svLoadLogRecord;
+    return null;
   }
 
   /**
@@ -692,12 +685,12 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public SvDebitLogRecord getSvDebitLogLastRecord() {
-    if (svDebitLogRecord == null) {
-      // try to get it from the file data
-      List<SvDebitLogRecord> svDebitLogRecords = getSvDebitLogAllRecords();
-      svDebitLogRecord = svDebitLogRecords.get(0);
+    // try to get it from the file data
+    List<SvDebitLogRecord> svDebitLogRecords = getSvDebitLogAllRecords();
+    if (!svDebitLogRecords.isEmpty()) {
+      return svDebitLogRecords.get(0);
     }
-    return svDebitLogRecord;
+    return null;
   }
 
   /**
@@ -1016,6 +1009,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void backupFiles() {
     copyFiles(files, filesBackup);
+    svBalanceBackup = svBalance;
+    svLastTNumBackup = svLastTNum;
   }
 
   /**
@@ -1027,6 +1022,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void restoreFiles() {
     copyFiles(filesBackup, files);
+    svBalance = svBalanceBackup;
+    svLastTNum = svLastTNumBackup;
   }
 
   /**
