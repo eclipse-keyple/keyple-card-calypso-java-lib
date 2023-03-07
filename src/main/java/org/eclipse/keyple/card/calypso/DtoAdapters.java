@@ -1330,19 +1330,19 @@ class DtoAdapters {
     public String toString() {
       return "{\"amount\":"
           + getAmount()
-          + ", \"balance\":"
+          + ",\"balance\":"
           + getBalance()
-          + ", \"debitDate\": \""
+          + ",\"debitDate\":\""
           + HexUtil.toHex(getDebitDate())
-          + "\", \"debitTime\": \""
+          + "\",\"debitTime\":\""
           + HexUtil.toHex(getDebitTime())
-          + "\", \"kvc\": \""
+          + "\",\"kvc\":\""
           + HexUtil.toHex(getKvc())
-          + "\", \"samId\": \""
+          + "\",\"samId\":\""
           + HexUtil.toHex(getSamId())
-          + "\", \"svTransactionNumber\": "
+          + "\",\"svTransactionNumber\":"
           + getSvTNum()
-          + ", \"svSamTransactionNumber\": "
+          + ",\"svSamTransactionNumber\":"
           + getSamTNum()
           + "}";
     }
@@ -1495,21 +1495,21 @@ class DtoAdapters {
     public String toString() {
       return "{\"amount\":"
           + getAmount()
-          + ", \"balance\":"
+          + ",\"balance\":"
           + getBalance()
-          + ", \"loadDate\": \""
+          + ",\"loadDate\":\""
           + HexUtil.toHex(getLoadDate())
-          + "\", \"loadTime\": \""
+          + "\",\"loadTime\":\""
           + HexUtil.toHex(getLoadTime())
-          + "\", \"freeBytes\": \""
+          + "\",\"freeBytes\":\""
           + HexUtil.toHex(getFreeData())
-          + "\", \"kvc\": \""
+          + "\",\"kvc\":\""
           + HexUtil.toHex(getKvc())
-          + "\", \"samId\": \""
+          + "\",\"samId\":\""
           + HexUtil.toHex(getSamId())
-          + "\", \"svTransactionNumber\": "
+          + "\",\"svTransactionNumber\":"
           + getSvTNum()
-          + ", \"svSamTransactionNumber\": "
+          + ",\"svSamTransactionNumber\":"
           + getSamTNum()
           + "}";
     }

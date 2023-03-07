@@ -85,10 +85,10 @@ final class CalypsoCardConstant {
   static final byte SV_DEBIT_LOG_FILE_SFI = (byte) 0x15;
   static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
   static final int SV_LOG_FILE_REC_LENGTH = 29;
-  static final int SV_LOAD_MIN_VALUE = -8388608;
-  static final int SV_LOAD_MAX_VALUE = 8388607;
+  static final int SV_LOAD_MIN_VALUE = -8388608; // -2^23: smallest 3-byte negative value
+  static final int SV_LOAD_MAX_VALUE = 8388607; //  2^23 - 1: largest 3-byte positive value
   static final int SV_DEBIT_MIN_VALUE = 0;
-  static final int SV_DEBIT_MAX_VALUE = 32767;
+  static final int SV_DEBIT_MAX_VALUE = 32767; // 2^15 - 1: largest 2-byte positive value
 
   /** (private) */
   private CalypsoCardConstant() {}
