@@ -369,9 +369,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0.0
    */
   @Override
-  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponseApi)
-      throws ParseException {
-    CardResponseApi cardResponse = cardSelectionResponseApi.getCardResponse();
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
+    CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
     List<ApduResponseApi> apduResponses =
         cardResponse != null
             ? cardResponse.getApduResponses()
@@ -381,7 +380,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
     }
     CalypsoCardAdapter calypsoCard;
     try {
-      calypsoCard = new CalypsoCardAdapter(cardSelectionResponseApi);
+      calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
       if (!commands.isEmpty()) {
         parseApduResponses(calypsoCard, commands, apduResponses);
       }
@@ -389,8 +388,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
       throw new ParseException("Invalid card response: " + e.getMessage(), e);
     }
     if (calypsoCard.getProductType() == CalypsoCard.ProductType.UNKNOWN
-        && cardSelectionResponseApi.getSelectApplicationResponse() == null
-        && cardSelectionResponseApi.getPowerOnData() == null) {
+        && cardSelectionResponse.getSelectApplicationResponse() == null
+        && cardSelectionResponse.getPowerOnData() == null) {
       throw new ParseException(
           "Unable to create a CalypsoCard: no power-on data and no FCI provided.");
     }
