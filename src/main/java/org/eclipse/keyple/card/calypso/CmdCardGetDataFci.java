@@ -56,13 +56,13 @@ final class CmdCardGetDataFci extends CardCommand {
   private static final int TAG_DISCRETIONARY_DATA = 0x53;
 
   /** attributes result of th FCI parsing */
-  private boolean isDfInvalidated = false;
+  private boolean isDfInvalidated;
 
-  private boolean isValidCalypsoFCI = false;
+  private boolean isValidCalypsoFCI;
 
-  private byte[] dfName = null;
-  private byte[] applicationSN = null;
-  private byte[] discretionaryData = null;
+  private byte[] dfName;
+  private byte[] applicationSN;
+  private byte[] discretionaryData;
 
   /**
    * Instantiates a new CmdCardGetDataFci.
@@ -155,7 +155,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**
@@ -200,7 +200,7 @@ final class CmdCardGetDataFci extends CardCommand {
     /* parse the raw data with the help of the TLV class */
     try {
       /* init TLV object with the raw data and extract the FCI Template */
-      final byte[] responseData = getApduResponse().getDataOut();
+      byte[] responseData = getApduResponse().getDataOut();
       // CL-SEL-TLVDATA.1
       // CL-TLV-VAR.1
       // CL-TLV-ORDER.1
@@ -300,7 +300,7 @@ final class CmdCardGetDataFci extends CardCommand {
     /* parse the raw data with the help of the TLV class */
     try {
       /* init TLV object with the raw data and extract the FCI Template */
-      final byte[] responseData = getApduResponse().getDataOut();
+      byte[] responseData = getApduResponse().getDataOut();
       // CL-SEL-TLVDATA.1
       // CL-TLV-VAR.1
       // CL-TLV-ORDER.1

@@ -19,6 +19,7 @@ import java.util.Map;
 import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,8 @@ final class CmdCardReadRecords extends CardCommand {
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, stored value log file and a stored value operation was done during the current session).",
+            "Access forbidden (Never access mode, stored value log file and a stored value operation was done"
+                + " during the current session).",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
@@ -80,6 +82,8 @@ final class CmdCardReadRecords extends CardCommand {
   private int firstRecordNumber;
   private int recordSize;
   private ReadMode readMode;
+  private boolean isPreOpenMode;
+  private byte[] anticipatedDataOut;
 
   /**
    * Instantiates a new read records cmd build.
@@ -129,6 +133,7 @@ final class CmdCardReadRecords extends CardCommand {
       int expectedLength,
       int recordSize) {
     super(CardCommandRef.READ_RECORDS, expectedLength, null, transactionContext, commandContext);
+    isPreOpenMode = transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
     buildCommand(
         transactionContext.getCard().getCardClass(),
         sfi,
@@ -139,9 +144,8 @@ final class CmdCardReadRecords extends CardCommand {
   }
 
   /**
-   * Instantiates a new read records cmd build.
+   * Constructor (to be used for card selection only).
    *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    * @param sfi the sfi top select.
    * @param firstRecordNumber the record number to read (or first record to read in case of several.
    *     records)
@@ -149,14 +153,9 @@ final class CmdCardReadRecords extends CardCommand {
    * @param expectedLength the expected length of the record(s).
    * @since 2.0.1
    */
-  CmdCardReadRecords(
-      CalypsoCardClass calypsoCardClass,
-      int sfi,
-      int firstRecordNumber,
-      ReadMode readMode,
-      int expectedLength) {
+  CmdCardReadRecords(int sfi, int firstRecordNumber, ReadMode readMode, int expectedLength) {
     super(CardCommandRef.READ_RECORDS, expectedLength, null, null, null);
-    buildCommand(calypsoCardClass, sfi, firstRecordNumber, readMode, expectedLength, 0);
+    buildCommand(CalypsoCardClass.ISO, sfi, firstRecordNumber, readMode, expectedLength, 0);
   }
 
   /**
@@ -251,7 +250,32 @@ final class CmdCardReadRecords extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    if (!getCommandContext().isSecureSessionOpen()) {
+      return true; // Nothing to synchronize
+    }
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    if (!isPreOpenMode) {
+      return false;
+    }
+    // Pre-open mode without encryption in secure session
+    if (!isCryptoServiceSynchronized()) {
+      byte[] anticipatedApduResponse = buildAnticipatedResponse();
+      if (anticipatedApduResponse == null) {
+        logger.warn(
+            "Unable to determine the anticipated APDU response for the command '{}' (SFI {}h, record {})"
+                + " because the record or some records have not been read beforehand.",
+            getName(),
+            HexUtil.toHex(sfi),
+            firstRecordNumber);
+        return false;
+      }
+      anticipatedDataOut =
+          Arrays.copyOf(anticipatedApduResponse, anticipatedApduResponse.length - 2);
+      updateTerminalSessionMacIfNeeded(anticipatedApduResponse);
+    }
+    return true;
   }
 
   /**
@@ -265,25 +289,30 @@ final class CmdCardReadRecords extends CardCommand {
     if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
       return;
     }
+    byte[] dataOut = apduResponse.getDataOut();
     if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-      getTransactionContext()
-          .getCard()
-          .setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
+      getTransactionContext().getCard().setContent((byte) sfi, firstRecordNumber, dataOut);
     } else {
-      byte[] apdu = apduResponse.getDataOut();
-      int apduLen = apdu.length;
+      int apduLen = dataOut.length;
       int index = 0;
       while (apduLen > 0) {
-        byte recordNb = apdu[index++];
-        byte len = apdu[index++];
+        byte recordNb = dataOut[index++];
+        byte len = dataOut[index++];
         getTransactionContext()
             .getCard()
-            .setContent((byte) sfi, recordNb, Arrays.copyOfRange(apdu, index, index + len));
+            .setContent((byte) sfi, recordNb, Arrays.copyOfRange(dataOut, index, index + len));
         index = index + len;
         apduLen = apduLen - 2 - len;
       }
     }
-    updateTerminalSessionMacIfNeeded();
+    if (!isCryptoServiceSynchronized()) {
+      updateTerminalSessionMacIfNeeded();
+    } else if (getCommandContext().isSecureSessionOpen()
+        && isPreOpenMode
+        && !Arrays.equals(dataOut, anticipatedDataOut)) {
+      throw new CardSecurityContextException(
+          "Data out does not match the anticipated data out", CardCommandRef.READ_RECORDS);
+    }
   }
 
   /**
@@ -324,28 +353,24 @@ final class CmdCardReadRecords extends CardCommand {
   /**
    * Builds the anticipated APDU response with the SW.
    *
-   * @return A not empty byte array.
-   * @throws IllegalStateException If the record or some records have not been read beforehand.
-   * @since 2.3.2
+   * @return Null if the record or some records have not been read beforehand.
    */
-  byte[] buildAnticipatedResponse() {
-    ElementaryFile ef = getCalypsoCard().getFileBySfi((byte) sfi);
-    if (ef != null) {
-      byte[] apdu =
-          readMode == CmdCardReadRecords.ReadMode.ONE_RECORD
-              ? buildAnticipatedResponseForOneRecordMode(ef)
-              : buildAnticipatedResponseForMultipleRecordsMode(ef);
-      if (apdu != null) {
-        return apdu;
-      }
+  private byte[] buildAnticipatedResponse() {
+    ElementaryFile ef = getTransactionContext().getCard().getFileBySfi((byte) sfi);
+    if (ef == null) {
+      return null; // NOSONAR
     }
-    throw new IllegalStateException(
-        String.format(
-            "Unable to determine the anticipated APDU response for the command '%s' (SFI %02Xh, record %d)"
-                + " because the record or some records have not been read beforehand.",
-            getName(), sfi, firstRecordNumber));
+    return readMode == CmdCardReadRecords.ReadMode.ONE_RECORD
+        ? buildAnticipatedResponseForOneRecordMode(ef)
+        : buildAnticipatedResponseForMultipleRecordsMode(ef);
   }
 
+  /**
+   * Builds the anticipated APDU response with the SW for single record mode.
+   *
+   * @param ef The EF.
+   * @return Null if the record has not been read beforehand.
+   */
   private byte[] buildAnticipatedResponseForOneRecordMode(ElementaryFile ef) {
     byte[] content = ef.getData().getContent(firstRecordNumber);
     if (content.length > 0 && content.length >= getLe()) {
@@ -358,6 +383,12 @@ final class CmdCardReadRecords extends CardCommand {
     return null; // NOSONAR
   }
 
+  /**
+   * Builds the anticipated APDU response with the SW for multiple records mode.
+   *
+   * @param ef The EF.
+   * @return Null if some records have not been read beforehand.
+   */
   private byte[] buildAnticipatedResponseForMultipleRecordsMode(ElementaryFile ef) {
     byte[] apdu = new byte[getLe() + 2];
     int nbRecords = getLe() / (recordSize + 2);

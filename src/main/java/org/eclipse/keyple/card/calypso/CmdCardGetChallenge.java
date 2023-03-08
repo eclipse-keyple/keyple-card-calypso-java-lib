@@ -35,9 +35,9 @@ final class CmdCardGetChallenge extends CardCommand {
 
     super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard, null, null);
 
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
-    byte le = (byte) 0x08;
+    byte p1 = 0x00;
+    byte p2 = 0x00;
+    byte le = 0x08;
 
     setApduRequest(
         new ApduRequestAdapter(
@@ -119,7 +119,7 @@ final class CmdCardGetChallenge extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return false; // Need to synchronize the card image with the challenge.
   }
 
   /**

@@ -146,7 +146,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**

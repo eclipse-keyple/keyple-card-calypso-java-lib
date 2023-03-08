@@ -190,17 +190,17 @@ final class CmdCardSelectFile extends CardCommand {
     byte[] selectData = new byte[] {0x00, 0x00};
     switch (selectFileControl) {
       case FIRST_EF:
-        p1 = (byte) 0x02;
-        p2 = (byte) 0x00;
+        p1 = 0x02;
+        p2 = 0x00;
         break;
       case NEXT_EF:
-        p1 = (byte) 0x02;
-        p2 = (byte) 0x02;
+        p1 = 0x02;
+        p2 = 0x02;
         break;
       case CURRENT_DF:
         // CL-KEY-KIFSF.1
-        p1 = (byte) 0x09;
-        p2 = (byte) 0x00;
+        p1 = 0x09;
+        p2 = 0x00;
         break;
       default:
         throw new IllegalStateException(
@@ -231,11 +231,11 @@ final class CmdCardSelectFile extends CardCommand {
     byte p1;
     if (calypsoCardClass == CalypsoCardClass.LEGACY
         && productType == CalypsoCard.ProductType.PRIME_REVISION_2) {
-      p1 = (byte) 0x02;
+      p1 = 0x02;
     } else if (calypsoCardClass == CalypsoCardClass.LEGACY) {
-      p1 = (byte) 0x08;
+      p1 = 0x08;
     } else {
-      p1 = (byte) 0x09;
+      p1 = 0x09;
     }
 
     byte[] dataIn = ByteArrayUtil.extractBytes(lid, 2);
@@ -304,7 +304,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**

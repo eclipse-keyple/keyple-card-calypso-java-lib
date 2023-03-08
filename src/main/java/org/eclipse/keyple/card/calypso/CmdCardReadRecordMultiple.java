@@ -48,7 +48,8 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done during the current secure session).",
+            "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done"
+                + " during the current secure session).",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
@@ -58,7 +59,8 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect command data (incorrect Tag, incorrect Length, R. Length > RecSize, R. Offset + R. Length > RecSize, R. Length = 0).",
+            "Incorrect command data (incorrect Tag, incorrect Length, R. Length > RecSize,"
+                + " R. Offset + R. Length > RecSize, R. Length = 0).",
             CardIllegalParameterException.class));
     m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(
@@ -72,7 +74,8 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     m.put(
         0x6200,
         new StatusProperties(
-            "Successful execution, partial read only: issue another Read Record Multiple from record (P1 + (Size of returned data) / (R. Length)) to continue reading."));
+            "Successful execution, partial read only: issue another Read Record Multiple from record"
+                + " (P1 + (Size of returned data) / (R. Length)) to continue reading."));
     STATUS_TABLE = m;
   }
 
@@ -104,7 +107,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     this.length = length;
 
     byte p2 = (byte) (sfi * 8 + 5);
-    byte[] dataIn = new byte[] {0x54, 0x02, offset, length};
+    byte[] dataIn = {0x54, 0x02, offset, length};
 
     setApduRequest(
         new ApduRequestAdapter(
@@ -152,7 +155,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     this.length = length;
 
     byte p2 = (byte) (sfi * 8 + 5);
-    byte[] dataIn = new byte[] {0x54, 0x02, offset, length};
+    byte[] dataIn = {0x54, 0x02, offset, length};
 
     setApduRequest(
         new ApduRequestAdapter(
@@ -211,7 +214,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**

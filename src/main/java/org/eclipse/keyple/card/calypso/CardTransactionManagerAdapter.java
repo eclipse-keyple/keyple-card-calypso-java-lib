@@ -73,6 +73,9 @@ final class CardTransactionManagerAdapter
   private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   /* Prefix/suffix used to compose exception messages */
+  private static final String MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS =
+      "The number of commands/responses does not match: nb commands = ";
+  private static final String MSG_NB_RESPONSES = ", nb responses = ";
   private static final String MSG_CARD_READER_COMMUNICATION_ERROR =
       "A communication error with the card reader occurred ";
   private static final String MSG_CARD_COMMUNICATION_ERROR =
@@ -121,7 +124,6 @@ final class CardTransactionManagerAdapter
 
   /* Dynamic fields */
   private boolean isSecureSessionOpen;
-  private CmdCardOpenSecureSession openSecureSessionCommand;
   private WriteAccessLevel writeAccessLevel;
   private ChannelControl channelControl = ChannelControl.KEEP_OPEN;
   private int modificationsCounter;
@@ -148,7 +150,6 @@ final class CardTransactionManagerAdapter
   private int _svPostponedDataIndex = -1;
   private boolean _isSvGet;
   private SvOperation _svOperation;
-  private SvAction _svAction;
   private boolean _isSvOperationInSecureSession;
 
   /**
@@ -156,7 +157,7 @@ final class CardTransactionManagerAdapter
    *
    * @param isLastApiLevelUsed Is last API level used?
    */
-  void checkApiLevelCompliance(boolean isLastApiLevelUsed) {
+  private void checkApiLevelCompliance(boolean isLastApiLevelUsed) {
     if (_isLastApiLevelUsed == null) {
       _isLastApiLevelUsed = isLastApiLevelUsed;
     } else if (isLastApiLevelUsed != _isLastApiLevelUsed) {
@@ -205,6 +206,9 @@ final class CardTransactionManagerAdapter
       isExtendedMode =
           card.isExtendedModeSupported()
               && cryptoTransactionManagerFactory.isExtendedModeSupported();
+      if (!isExtendedMode) {
+        disablePreOpenMode();
+      }
       // Adjust card & SAM payload capacities
       cardPayloadCapacity =
           Math.min(
@@ -225,13 +229,12 @@ final class CardTransactionManagerAdapter
       cryptoExtension = null;
     }
 
-    this.modificationsCounter = card.getModificationsCounter();
-    this._modificationsCounter = card.getModificationsCounter();
-    this._transactionContext =
-        new TransactionContextDto(card, symmetricCryptoTransactionManagerSpi);
+    modificationsCounter = card.getModificationsCounter();
+    _modificationsCounter = card.getModificationsCounter();
+    _transactionContext = new TransactionContextDto(card, symmetricCryptoTransactionManagerSpi);
   }
 
-  private SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
+  private static SymmetricCryptoSecuritySettingAdapter buildSymmetricCryptoSecuritySetting(
       CardSecuritySettingAdapter src, ContextSettingAdapter contextSetting) {
     SymmetricCryptoSecuritySettingAdapter dest = new SymmetricCryptoSecuritySettingAdapter();
     dest.setCryptoTransactionManager(
@@ -269,6 +272,12 @@ final class CardTransactionManagerAdapter
           src.getPinModificationCipheringKif(), src.getPinModificationCipheringKvc());
     }
     return dest;
+  }
+
+  /** Clears the info associated with the "pre-open" mode. */
+  private void disablePreOpenMode() {
+    card.setPreOpenWriteAccessLevel(null);
+    card.setPreOpenDataOut(null);
   }
 
   /**
@@ -951,7 +960,7 @@ final class CardTransactionManagerAdapter
     }
 
     // Retrieve the list of R-APDUs
-    // We copy the list because it is not mutable and we plan to remove some elements.
+    // We copy the list because it is not mutable, and we plan to remove some elements.
     List<ApduResponseApi> apduResponses =
         new ArrayList<ApduResponseApi>(
             cardResponse.getApduResponses()); // NOSONAR cardResponse is not null
@@ -1058,9 +1067,9 @@ final class CardTransactionManagerAdapter
     // desynchronized exception.
     if (apduResponses.size() > commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
               + commands.size()
-              + ", nb responses = "
+              + MSG_NB_RESPONSES
               + apduResponses.size());
     }
 
@@ -1096,9 +1105,9 @@ final class CardTransactionManagerAdapter
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
               + commands.size()
-              + ", nb responses = "
+              + MSG_NB_RESPONSES
               + apduResponses.size());
     }
   }
@@ -1268,9 +1277,6 @@ final class CardTransactionManagerAdapter
       if (isSecureSessionOpen) {
         throw new IllegalStateException("Secure session already opened");
       }
-      if (openSecureSessionCommand != null) {
-        throw new IllegalStateException("Secure session opening already requested");
-      }
       isEncryptionActive = false;
       prepareManageSecureSessionIfNeeded(true);
 
@@ -1327,6 +1333,15 @@ final class CardTransactionManagerAdapter
       Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
       checkSymmetricCryptoTransactionManager();
       checkNoSecureSession();
+      if (card.getPreOpenWriteAccessLevel() != null
+          && card.getPreOpenWriteAccessLevel() != writeAccessLevel) {
+        logger.warn(
+            "Pre-open mode cancelled because writeAccessLevel '{}' mismatches the writeAccessLevel used for"
+                + " pre-open mode '{}'",
+            writeAccessLevel,
+            card.getPreOpenWriteAccessLevel());
+        disablePreOpenMode();
+      }
       _cardCommands.add(
           new CmdCardOpenSecureSession(
               _transactionContext,
@@ -1334,7 +1349,7 @@ final class CardTransactionManagerAdapter
               symmetricCryptoSecuritySetting,
               writeAccessLevel,
               isExtendedMode));
-      this._writeAccessLevel = writeAccessLevel; // CL-KEY-INDEXPO.1
+      _writeAccessLevel = writeAccessLevel; // CL-KEY-INDEXPO.1
       _isSecureSessionOpen = true;
       _isEncryptionActive = false;
       _modificationsCounter = card.getModificationsCounter();
@@ -1566,8 +1581,8 @@ final class CardTransactionManagerAdapter
     _svPostponedDataIndex = -1;
     _isSvGet = false;
     _svOperation = null;
-    _svAction = null;
     _isSvOperationInSecureSession = false;
+    disablePreOpenMode();
     _cardCommands.clear();
     if (_transactionContext.isSecureSessionOpen()) {
       try {
@@ -1631,9 +1646,9 @@ final class CardTransactionManagerAdapter
     // desynchronized exception.
     if (apduResponses.size() > commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
               + commands.size()
-              + ", nb responses = "
+              + MSG_NB_RESPONSES
               + apduResponses.size()
               + getTransactionAuditDataAsString());
     }
@@ -1659,9 +1674,9 @@ final class CardTransactionManagerAdapter
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
               + commands.size()
-              + ", nb responses = "
+              + MSG_NB_RESPONSES
               + apduResponses.size()
               + getTransactionAuditDataAsString());
     }
@@ -1784,11 +1799,13 @@ final class CardTransactionManagerAdapter
             new CmdCardCloseSecureSession(
                 _transactionContext, getCommandContext(), true, _svPostponedDataIndex));
       }
-      _isSecureSessionOpen = false;
-      _isEncryptionActive = false;
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
+    } finally {
+      _isSecureSessionOpen = false;
+      _isEncryptionActive = false;
+      disablePreOpenMode();
     }
     return this;
   }
@@ -1840,20 +1857,6 @@ final class CardTransactionManagerAdapter
     // Clear the list.
     cardAtomicCommands.clear();
   }
-
-  //  /**
-  //   * Increments the keys of the MSS map. This is useful when a new command is inserted in first
-  //   * position.
-  //   */
-  //  private void incrementKeysOfManageSecureSessionMap() {
-  //    Map<Integer, ManageSecureSessionDto> newMap =
-  //        new HashMap<Integer, ManageSecureSessionDto>(manageSecureSessionMap.size());
-  //    for (Integer key : manageSecureSessionMap.keySet()) {
-  //      newMap.put(key + 1, manageSecureSessionMap.get(key));
-  //    }
-  //    manageSecureSessionMap.clear();
-  //    manageSecureSessionMap.putAll(newMap);
-  //  }
 
   /**
    * {@inheritDoc}
@@ -1912,11 +1915,13 @@ final class CardTransactionManagerAdapter
     try {
       checkApiLevelCompliance(true);
       _cardCommands.add(new CmdCardCloseSecureSession(_transactionContext, getCommandContext()));
-      _isSecureSessionOpen = false;
-      _isEncryptionActive = false;
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
+    } finally {
+      _isSecureSessionOpen = false;
+      _isEncryptionActive = false;
+      disablePreOpenMode();
     }
     return this;
   }
@@ -2678,13 +2683,7 @@ final class CardTransactionManagerAdapter
               RECORD_NUMBER);
 
       // Try to group the first read record command with the open secure session command.
-      if (_isSecureSessionOpen
-          && !securitySetting.isReadOnSessionOpeningDisabled()
-          && !_cardCommands.isEmpty()
-          && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-              == CardCommandRef.OPEN_SECURE_SESSION
-          && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-              .isReadModeConfigured()) {
+      if (canConfigureReadOnOpenSecureSession()) {
         ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
             .configureReadMode(sfi, recordNumber);
       } else {
@@ -2715,6 +2714,21 @@ final class CardTransactionManagerAdapter
   }
 
   /**
+   * @return True if it is possible to configure the auto read record into the open secure session
+   *     command.
+   */
+  private boolean canConfigureReadOnOpenSecureSession() {
+    return _isSecureSessionOpen
+        && !securitySetting.isReadOnSessionOpeningDisabled()
+        && card.getPreOpenWriteAccessLevel() == null // No pre-open mode
+        && !_cardCommands.isEmpty()
+        && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
+            == CardCommandRef.OPEN_SECURE_SESSION
+        && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
+            .isReadModeConfigured();
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.1.0
@@ -2739,13 +2753,7 @@ final class CardTransactionManagerAdapter
               && card.getProductType() != CalypsoCard.ProductType.LIGHT)) {
         // Creates N unitary "Read Records" commands.
         // Try to group the first read record command with the open secure session command.
-        if (_isSecureSessionOpen
-            && !securitySetting.isReadOnSessionOpeningDisabled()
-            && !_cardCommands.isEmpty()
-            && _cardCommands.get(_cardCommands.size() - 1).getCommandRef()
-                == CardCommandRef.OPEN_SECURE_SESSION
-            && !((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-                .isReadModeConfigured()) {
+        if (canConfigureReadOnOpenSecureSession()) {
           ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
               .configureReadMode(sfi, fromRecordNumber);
           // TODO legacy
@@ -2778,9 +2786,9 @@ final class CardTransactionManagerAdapter
         // Manages the reading of multiple records taking into account the transmission capacity
         // of the card and the response format (2 extra bytes).
         // Multiple APDUs can be generated depending on record size and transmission capacity.
-        final int nbBytesPerRecord = recordSize + 2;
-        final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesPerRecord;
-        final int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
+        int nbBytesPerRecord = recordSize + 2;
+        int nbRecordsPerApdu = cardPayloadCapacity / nbBytesPerRecord;
+        int dataSizeMaxPerApdu = nbRecordsPerApdu * nbBytesPerRecord;
 
         int currentRecordNumber = fromRecordNumber;
         int nbRecordsRemainingToRead = toRecordNumber - fromRecordNumber + 1;
@@ -2876,7 +2884,7 @@ final class CardTransactionManagerAdapter
               cardPayloadCapacity,
               "nbBytesToRead");
 
-      final int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
+      int nbRecordsPerApdu = cardPayloadCapacity / nbBytesToRead;
 
       int currentRecordNumber = fromRecordNumber;
 
@@ -3176,7 +3184,7 @@ final class CardTransactionManagerAdapter
         cardCommands.add(new CmdCardReadBinary(card, sfi, 0, 1));
       }
 
-      final int dataLength = data.length;
+      int dataLength = data.length;
 
       int currentLength;
       int currentOffset = offset;
@@ -3296,6 +3304,7 @@ final class CardTransactionManagerAdapter
       _cardCommands.add(
           new CmdCardCloseSecureSession(
               _transactionContext, getCommandContext(), true, _svPostponedDataIndex));
+      disablePreOpenMode();
       _cardCommands.add(
           new CmdCardOpenSecureSession(
               _transactionContext,
@@ -3352,7 +3361,7 @@ final class CardTransactionManagerAdapter
           }
         }
       } else {
-        final int nbCountersPerApdu = cardPayloadCapacity / 4;
+        int nbCountersPerApdu = cardPayloadCapacity / 4;
         if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
           CmdCardIncreaseOrDecreaseMultiple command =
               new CmdCardIncreaseOrDecreaseMultiple(
@@ -3539,9 +3548,8 @@ final class CardTransactionManagerAdapter
       }
       _cardCommands.add(
           new CmdCardSvGet(_transactionContext, getCommandContext(), svOperation, isExtendedMode));
-      this._isSvGet = true;
-      this._svOperation = svOperation;
-      this._svAction = svAction;
+      _isSvGet = true;
+      _svOperation = svOperation;
       // TODO legacy
       addStoredValueCommand(new CmdCardSvGet(card, svOperation, isExtendedMode), svOperation);
       this.svAction = svAction;
@@ -3628,7 +3636,7 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvReload(int amount) {
-    final byte[] zero = {0x00, 0x00};
+    byte[] zero = {0x00, 0x00};
     prepareSvReload(amount, zero, zero, zero);
     return this;
   }
@@ -3690,7 +3698,7 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public CardTransactionManager prepareSvDebit(int amount) {
-    final byte[] zero = {0x00, 0x00};
+    byte[] zero = {0x00, 0x00};
     prepareSvDebit(amount, zero, zero);
     return this;
   }
@@ -3859,7 +3867,7 @@ final class CardTransactionManagerAdapter
    * @return An empty list if there is no command.
    * @since 2.2.0
    */
-  private List<ApduRequestSpi> getApduRequests(List<CardCommand> commands) {
+  private static List<ApduRequestSpi> getApduRequests(List<CardCommand> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
       for (CardCommand command : commands) {
@@ -3870,13 +3878,13 @@ final class CardTransactionManagerAdapter
   }
 
   /** Adapter of {@link ApduResponseApi} used to create anticipated card responses. */
-  private static class ApduResponseAdapter implements ApduResponseApi {
+  private static final class ApduResponseAdapter implements ApduResponseApi {
 
     private final byte[] apdu;
     private final int statusWord;
 
     /** Constructor */
-    public ApduResponseAdapter(byte[] apdu) {
+    private ApduResponseAdapter(byte[] apdu) {
       this.apdu = apdu;
       statusWord = ByteArrayUtil.extractInt(apdu, apdu.length - 2, 2, false);
     }
@@ -3890,7 +3898,7 @@ final class CardTransactionManagerAdapter
     /** {@inheritDoc} */
     @Override
     public byte[] getDataOut() {
-      return Arrays.copyOfRange(this.apdu, 0, this.apdu.length - 2);
+      return Arrays.copyOfRange(apdu, 0, apdu.length - 2);
     }
 
     /** {@inheritDoc} */

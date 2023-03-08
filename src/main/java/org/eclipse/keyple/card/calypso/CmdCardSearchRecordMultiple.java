@@ -54,7 +54,8 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done during the current secure session).",
+            "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done"
+                + " during the current secure session).",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
@@ -64,7 +65,8 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect command data (S. Length incompatible with Lc, S. Length > RecSize, S. Offset + S. Length > RecSize, S. Mask bigger than S. Data).",
+            "Incorrect command data (S. Length incompatible with Lc, S. Length > RecSize,"
+                + " S. Offset + S. Length > RecSize, S. Mask bigger than S. Data).",
             CardIllegalParameterException.class));
     m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
     m.put(
@@ -95,7 +97,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
 
     this.data = data;
 
-    final int searchDataLength = data.getSearchData().length;
+    int searchDataLength = data.getSearchData().length;
 
     byte p2 = (byte) (data.getSfi() * 8 + 7);
 
@@ -140,7 +142,8 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
     if (logger.isDebugEnabled()) {
       String extraInfo =
           String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh, MASK:%sh",
+              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh,"
+                  + " MASK:%sh",
               data.getSfi(),
               data.getRecordNumber(),
               data.getOffset(),
@@ -169,7 +172,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
 
     this.data = data;
 
-    final int searchDataLength = data.getSearchData().length;
+    int searchDataLength = data.getSearchData().length;
 
     byte p2 = (byte) (data.getSfi() * 8 + 7);
 
@@ -214,7 +217,8 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
     if (logger.isDebugEnabled()) {
       String extraInfo =
           String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh, MASK:%sh",
+              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh,"
+                  + " MASK:%sh",
               data.getSfi(),
               data.getRecordNumber(),
               data.getOffset(),
@@ -264,7 +268,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**
