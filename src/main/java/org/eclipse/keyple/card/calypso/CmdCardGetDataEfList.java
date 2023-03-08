@@ -155,7 +155,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    return !getCommandContext().isSecureSessionOpen();
   }
 
   /**
@@ -190,7 +190,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @return A not empty map.
    * @since 2.1.0
    */
-  Map<FileHeaderAdapter, Byte> getEfHeaders() {
+  private Map<FileHeaderAdapter, Byte> getEfHeaders() {
     byte[] rawList = getApduResponse().getDataOut();
     Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = new HashMap<FileHeaderAdapter, Byte>();
     int nbFiles = rawList[1] / DESCRIPTOR_TAG_LENGTH;
@@ -220,7 +220,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @param efDescriptorByteArray A 6-byte array.
    * @return A not null {@link FileHeader}.
    */
-  private FileHeaderAdapter createFileHeader(byte[] efDescriptorByteArray) {
+  private static FileHeaderAdapter createFileHeader(byte[] efDescriptorByteArray) {
     ElementaryFile.Type efType;
     switch (efDescriptorByteArray[3]) {
       case CalypsoCardConstant.EF_TYPE_LINEAR:

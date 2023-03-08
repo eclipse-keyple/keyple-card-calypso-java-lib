@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCard;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
@@ -47,6 +48,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
   private final List<CardCommand> commands;
   private final CardSelectorAdapter cardSelector;
+  private boolean isPreOpenPrepared;
 
   /**
    * Creates an instance of {@link CalypsoCardSelection}.
@@ -55,10 +57,8 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @throws IllegalArgumentException If cardSelector is null.
    */
   CalypsoCardSelectionAdapter() {
-
     cardSelector = new CardSelectorAdapter();
-
-    this.commands = new ArrayList<CardCommand>();
+    commands = new ArrayList<CardCommand>();
   }
 
   /**
@@ -68,9 +68,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection filterByCardProtocol(String cardProtocol) {
-
     Assert.getInstance().notEmpty(cardProtocol, "cardProtocol");
-
     cardSelector.filterByCardProtocol(cardProtocol);
     return this;
   }
@@ -82,16 +80,13 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection filterByPowerOnData(String powerOnDataRegex) {
-
     Assert.getInstance().notEmpty(powerOnDataRegex, "powerOnDataRegex");
-
     try {
       Pattern.compile(powerOnDataRegex);
     } catch (PatternSyntaxException exception) {
       throw new IllegalArgumentException(
           String.format("Invalid regular expression: '%s'.", powerOnDataRegex));
     }
-
     cardSelector.filterByPowerOnData(powerOnDataRegex);
     return this;
   }
@@ -103,11 +98,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection filterByDfName(byte[] aid) {
-
     Assert.getInstance()
         .notNull(aid, "aid")
         .isInRange(aid.length, AID_MIN_LENGTH, AID_MAX_LENGTH, "aid");
-
     cardSelector.filterByDfName(aid);
     return this;
   }
@@ -120,7 +113,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection filterByDfName(String aid) {
     Assert.getInstance().isHexString(aid, "aid format");
-    this.filterByDfName(HexUtil.toByteArray(aid));
+    filterByDfName(HexUtil.toByteArray(aid));
     return this;
   }
 
@@ -131,9 +124,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection setFileOccurrence(FileOccurrence fileOccurrence) {
-
     Assert.getInstance().notNull(fileOccurrence, "fileOccurrence");
-
     switch (fileOccurrence) {
       case FIRST:
         cardSelector.setFileOccurrence(CardSelectorSpi.FileOccurrence.FIRST);
@@ -159,9 +150,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection setFileControlInformation(
       FileControlInformation fileControlInformation) {
-
     Assert.getInstance().notNull(fileControlInformation, "fileControlInformation");
-
     if (fileControlInformation == FileControlInformation.FCI) {
       cardSelector.setFileControlInformation(CardSelectorSpi.FileControlInformation.FCI);
     } else if (fileControlInformation == FileControlInformation.NO_RESPONSE) {
@@ -179,9 +168,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   @Deprecated
   public CalypsoCardSelection addSuccessfulStatusWord(int statusWord) {
-
     Assert.getInstance().isInRange(statusWord, 0, 0xFFFF, "statusWord");
-
     cardSelector.addSuccessfulStatusWord(statusWord);
     return null;
   }
@@ -216,7 +203,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    */
   @Override
   public CalypsoCardSelection prepareReadRecord(byte sfi, int recordNumber) {
-
     Assert.getInstance()
         .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
         .isInRange(
@@ -224,11 +210,73 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
             CalypsoCardConstant.NB_REC_MIN,
             CalypsoCardConstant.NB_REC_MAX,
             "recordNumber");
+    commands.add(
+        new CmdCardReadRecords(sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0));
+    return this;
+  }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.3
+   */
+  @Override
+  public CalypsoCardSelection prepareReadBinary(byte sfi, int offset, int nbBytesToRead) {
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, "offset")
+        .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
+    if (sfi > 0 && offset > 255) { // FFh
+      // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
+      commands.add(new CmdCardReadBinary(sfi, 0, 1));
+    }
+    int currentLength;
+    int currentOffset = offset;
+    int nbBytesRemainingToRead = nbBytesToRead;
+    do {
+      currentLength =
+          Math.min(nbBytesRemainingToRead, CalypsoCardConstant.DEFAULT_PAYLOAD_CAPACITY);
+      commands.add(new CmdCardReadBinary(sfi, currentOffset, currentLength));
+      currentOffset += currentLength;
+      nbBytesRemainingToRead -= currentLength;
+    } while (nbBytesRemainingToRead > 0);
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.3
+   */
+  @Override
+  public CalypsoCardSelection prepareReadCounter(byte sfi, int nbCountersToRead) {
+    Assert.getInstance()
+        .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
+        .isInRange(
+            nbCountersToRead,
+            0,
+            CalypsoCardConstant.DEFAULT_PAYLOAD_CAPACITY / 3,
+            "nbCountersToRead");
     commands.add(
         new CmdCardReadRecords(
-            CalypsoCardClass.ISO, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0));
+            sfi, 1, CmdCardReadRecords.ReadMode.ONE_RECORD, nbCountersToRead * 3));
+    return this;
+  }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.3
+   */
+  @Override
+  public CalypsoCardSelection preparePreOpenSecureSession(WriteAccessLevel writeAccessLevel) {
+    if (isPreOpenPrepared) {
+      throw new IllegalStateException("'Pre-Open Secure Session' command already prepared");
+    }
+    Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
+    commands.add(new CmdCardOpenSecureSession(writeAccessLevel));
+    isPreOpenPrepared = true;
     return this;
   }
 
@@ -240,8 +288,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CalypsoCardSelection prepareGetData(GetDataTag tag) {
     Assert.getInstance().notNull(tag, "tag");
-
-    // create the command and add it to the list of commands
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
         commands.add(new CmdCardGetDataFci(CalypsoCardClass.ISO));
@@ -258,7 +304,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
     }
-
     return this;
   }
 
@@ -307,14 +352,14 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
     List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
-    if (!commands.isEmpty()) {
+    if (commands.isEmpty()) {
+      return new CardSelectionRequestAdapter(cardSelector, null);
+    } else {
       for (CardCommand command : commands) {
         cardSelectionApduRequests.add(command.getApduRequest());
       }
       return new CardSelectionRequestAdapter(
           cardSelector, new CardRequestAdapter(cardSelectionApduRequests, false));
-    } else {
-      return new CardSelectionRequestAdapter(cardSelector, null);
     }
   }
 
@@ -324,36 +369,31 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @since 2.0.0
    */
   @Override
-  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponse) throws ParseException {
-
-    CardResponseApi cardResponse = cardSelectionResponse.getCardResponse();
-
+  public SmartCardSpi parse(CardSelectionResponseApi cardSelectionResponseApi)
+      throws ParseException {
+    CardResponseApi cardResponse = cardSelectionResponseApi.getCardResponse();
     List<ApduResponseApi> apduResponses =
         cardResponse != null
             ? cardResponse.getApduResponses()
             : Collections.<ApduResponseApi>emptyList();
-
     if (commands.size() != apduResponses.size()) {
       throw new ParseException("Mismatch in the number of requests/responses.");
     }
-
     CalypsoCardAdapter calypsoCard;
     try {
-      calypsoCard = new CalypsoCardAdapter(cardSelectionResponse);
+      calypsoCard = new CalypsoCardAdapter(cardSelectionResponseApi);
       if (!commands.isEmpty()) {
         parseApduResponses(calypsoCard, commands, apduResponses);
       }
     } catch (Exception e) {
       throw new ParseException("Invalid card response: " + e.getMessage(), e);
     }
-
     if (calypsoCard.getProductType() == CalypsoCard.ProductType.UNKNOWN
-        && cardSelectionResponse.getSelectApplicationResponse() == null
-        && cardSelectionResponse.getPowerOnData() == null) {
+        && cardSelectionResponseApi.getSelectApplicationResponse() == null
+        && cardSelectionResponseApi.getPowerOnData() == null) {
       throw new ParseException(
           "Unable to create a CalypsoCard: no power-on data and no FCI provided.");
     }
-
     return calypsoCard;
   }
 
@@ -363,15 +403,11 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
    * @param calypsoCard The Calypso card.
    * @param commands The list of commands that get the responses.
    * @param apduResponses The APDU responses returned by the card to all commands.
-   * @throws CardCommandException If a response from the card was unexpected.
-   * @throws InconsistentDataException If the number of commands/responses does not match.
    */
-  private void parseApduResponses(
+  private static void parseApduResponses(
       CalypsoCardAdapter calypsoCard,
-      List<CardCommand> commands,
-      List<ApduResponseApi> apduResponses)
-      throws CardCommandException {
-
+      List<? extends CardCommand> commands,
+      List<? extends ApduResponseApi> apduResponses) {
     // If there are more responses than requests, then we are unable to fill the card image. In this
     // case we stop processing immediately because it may be a case of fraud, and we throw a
     // desynchronized exception.
@@ -382,7 +418,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
               + ", nb responses = "
               + apduResponses.size());
     }
-
     // We go through all the responses (and not the requests) because there may be fewer in the
     // case of an error that occurred in strict mode. In this case the last response will raise an
     // exception.
@@ -391,7 +426,9 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         commands.get(i).setApduResponseAndCheckStatus(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
-        if (commandRef == CardCommandRef.READ_RECORDS) {
+        if (commandRef == CardCommandRef.READ_RECORDS
+            || commandRef == CardCommandRef.READ_BINARY
+            || commandRef == CardCommandRef.OPEN_SECURE_SESSION) {
           continue;
         }
         if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {
@@ -403,7 +440,6 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
         }
       }
     }
-
     // Finally, if no error has occurred and there are fewer responses than requests, then we
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {

@@ -78,11 +78,11 @@ public class CardTransactionManagerAdapterTest {
   private static final byte PIN_CIPHERING_KEY_KIF = 0x11;
   private static final byte PIN_CIPHERING_KEY_KVC = 0x22;
 
-  private static final byte FILE7 = (byte) 0x07;
-  private static final byte FILE8 = (byte) 0x08;
-  private static final byte FILE9 = (byte) 0x09;
-  private static final byte FILE10 = (byte) 0x10;
-  private static final byte FILE11 = (byte) 0x11;
+  private static final byte FILE7 = 0x07;
+  private static final byte FILE8 = 0x08;
+  private static final byte FILE9 = 0x09;
+  private static final byte FILE10 = 0x10;
+  private static final byte FILE11 = 0x11;
 
   private static final String SW1SW2_OK = "9000";
   private static final String SW1SW2_KO = "6700";
@@ -130,9 +130,9 @@ public class CardTransactionManagerAdapterTest {
   private static final byte[] FILE8_REC1_5B_BYTES = HexUtil.toByteArray(FILE8_REC1_5B);
   private static final byte[] FILE8_REC1_4B_BYTES = HexUtil.toByteArray(FILE8_REC1_4B);
 
-  private static final short LID_3F00 = (short) 0x3F00;
-  private static final short LID_0002 = (short) 0x0002;
-  private static final short LID_0003 = (short) 0x0003;
+  private static final short LID_3F00 = 0x3F00;
+  private static final short LID_0002 = 0x0002;
+  private static final short LID_0003 = 0x0003;
   private static final String LID_3F00_STR = "3F00";
   private static final String LID_0002_STR = "0002";
   private static final String LID_0003_STR = "0003";
@@ -157,8 +157,13 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_OPEN_SECURE_SESSION_RSP = "0304909800307900" + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_CMD =
       "008A030209" + "00" + SAM_CHALLENGE_EXTENDED + "00";
+
+  private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT =
+      "C8C7C6C5C4C3C2C102AABB00";
+  private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2 =
+      "C8C7C6C5C4C3C2C102AAFF00";
   private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_RSP =
-      "C8C7C6C5C4C3C2C102AABB00" + SW1SW2_OK;
+      CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_EXTENDED_NOT_SUPPORTED_RSP =
       "C8C7C6C50000000000AABB00" + SW1SW2_OK;
   private static final String CARD_OPEN_SECURE_SESSION_KVC_78_CMD = "0304909800307800" + SW1SW2_OK;
@@ -263,6 +268,8 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_RSP = "55" + SW1SW2_OK;
   private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD = "00B0810001";
   private static final String CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP = "11" + SW1SW2_OK;
+  private static final String CARD_READ_BINARY_SFI1_OFFSET1_1B_CMD = "00B0810101";
+  private static final String CARD_READ_BINARY_SFI1_OFFSET1_1B_RSP = "22" + SW1SW2_OK;
   private static final String CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD = "00B0010001";
   private static final String CARD_READ_BINARY_SFI0_OFFSET256_1B_RSP = "66" + SW1SW2_OK;
   private static final String CARD_READ_BINARY_SFI1_OFFSET0_2B_CMD = "00B0810002";
@@ -546,12 +553,16 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD =
       "808A00FF0A30790304909800307900";
   private static final String SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD =
-      "808A02FF" + "0E" + "AABB" + "C8C7C6C5C4C3C2C102AABB00";
+      "808A02FF" + "0E" + "AABB" + CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT;
+  private static final String SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2 =
+      "808A02FF" + "0E" + "AAFF" + CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2;
   private static final String SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD =
       "808A02FF" + "0E" + "AABB" + "C8C7C6C50000000000AABB00";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_CMD = "808C00000500B2013C00";
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD =
       "808C8000" + "26" + "05" + "00B2013C1D" + "1F" + FILE7_REC1_29B + SW1SW2_OK;
+  private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC2_L29_CMD =
+      "808C8000" + "26" + "05" + "00B2013C1D" + "1F" + FILE7_REC2_29B + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC2_CMD =
       "808C8000" + "0A" + "05" + "00B2020C00" + "03" + "22" + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC4_CMD =
@@ -771,7 +782,7 @@ public class CardTransactionManagerAdapterTest {
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
   }
 
-  private CardRequestSpi createCardRequest(String... apduCommands) {
+  private static CardRequestSpi createCardRequest(String... apduCommands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     for (String apduCommand : apduCommands) {
       apduRequests.add(new ApduRequestAdapter(HexUtil.toByteArray(apduCommand)));
@@ -779,7 +790,7 @@ public class CardTransactionManagerAdapterTest {
     return new CardRequestAdapter(apduRequests, false);
   }
 
-  private CardResponseApi createCardResponse(String... apduCommandResponses) {
+  private static CardResponseApi createCardResponse(String... apduCommandResponses) {
     List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
     for (String apduResponse : apduCommandResponses) {
       apduResponses.add(new ApduResponseAdapter(HexUtil.toByteArray(apduResponse)));
@@ -1688,14 +1699,14 @@ public class CardTransactionManagerAdapterTest {
     FileHeader fileHeader07 = calypsoCard.getFileBySfi((byte) 0x07).getHeader();
     assertThat(fileHeader07.getLid()).isEqualTo((short) 0x2001);
     assertThat(fileHeader07.getEfType()).isEqualTo(ElementaryFile.Type.LINEAR);
-    assertThat(fileHeader07.getRecordSize()).isEqualTo((byte) 0x1D);
-    assertThat(fileHeader07.getRecordsNumber()).isEqualTo((byte) 0x01);
+    assertThat(fileHeader07.getRecordSize()).isEqualTo(0x1D);
+    assertThat(fileHeader07.getRecordsNumber()).isEqualTo(0x01);
 
     FileHeader fileHeader09 = calypsoCard.getFileBySfi((byte) 0x09).getHeader();
     assertThat(fileHeader09.getLid()).isEqualTo((short) 0x20FF);
     assertThat(fileHeader09.getEfType()).isEqualTo(ElementaryFile.Type.BINARY);
-    assertThat(fileHeader09.getRecordSize()).isEqualTo((byte) 0x1D);
-    assertThat(fileHeader09.getRecordsNumber()).isEqualTo((byte) 0x04);
+    assertThat(fileHeader09.getRecordSize()).isEqualTo(0x1D);
+    assertThat(fileHeader09.getRecordsNumber()).isEqualTo(0x04);
 
     FileHeader fileHeader10 = calypsoCard.getFileBySfi((byte) 0x10).getHeader();
     assertThat(fileHeader10.getLid()).isEqualTo((short) 0xF123);
@@ -1827,6 +1838,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(7);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareReadRecords((byte) 1, 1, 2, 1);
     cardTransactionManager.processCommands();
@@ -2316,6 +2331,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(3);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 2, 3, 1);
     cardTransactionManager.processCommands();
 
@@ -2449,6 +2468,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCommands();
 
@@ -2466,15 +2489,23 @@ public class CardTransactionManagerAdapterTest {
       prepareReadBinary_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_READ_BINARY_SFI1_OFFSET1_1B_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, CARD_READ_BINARY_SFI1_OFFSET1_1B_RSP);
 
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+    when(calypsoCard.getPayloadCapacity()).thenReturn(1);
 
-    cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    cardTransactionManager.prepareReadBinary((byte) 1, 0, 2);
     cardTransactionManager.processCommands();
 
     verify(cardReader)
@@ -2483,7 +2514,7 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
-        .isEqualTo(HexUtil.toByteArray("11"));
+        .isEqualTo(HexUtil.toByteArray("1122"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -2551,6 +2582,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareUpdateBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands();
@@ -2670,6 +2705,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareWriteBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands();
 
@@ -2744,7 +2783,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands();
@@ -2787,7 +2825,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     cardTransactionManager.prepareDecreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands();
@@ -2812,7 +2849,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToIncValueMap.put(1, 100);
@@ -2939,7 +2975,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToDecValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToDecValueMap.put(1, 100);
@@ -3887,25 +3922,29 @@ public class CardTransactionManagerAdapterTest {
 
   @Test
   public void
-      prepareOpenSecureSession_whenTwoReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
+      prepareOpenSecureSession_whenTwoReadRecordArePreparedAndNoRestrictions_shouldMergeFirstReadRecord()
           throws Exception {
+
     CardRequestSpi samCardRequest =
         createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
     CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
+
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
     cardTransactionManager.prepareReadRecord(FILE7, 1);
     cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
     cardTransactionManager.processCommands(false);
+
     InOrder inOrder = inOrder(cardReader, samReader);
     inOrder
         .verify(samReader)
@@ -3916,6 +3955,428 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareOpenSecureSession_whenTwoReadRecordArePreparedAndReadOnSessionOpeningIsDisabled_shouldNotMergeFirstReadRecord()
+          throws Exception {
+
+    cardSecuritySetting.disableReadOnSessionOpening();
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_CMD, CARD_READ_REC_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_RSP, CARD_READ_REC_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareOpenSecureSession_whenTwoReadRecordArePreparedAndPreOpenVariant_shouldNotMergeFirstReadRecord()
+          throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP,
+            CARD_READ_REC_SFI8_REC1_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareOpenSecureSession_whenPreOpenVariantWithOtherWriteAccessLevel_shouldProcessInStandardMode()
+          throws Exception {
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.LOAD);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareOpenSecureSession_whenPreOpenVariantButNotAtomicSession_shouldNotAnticipateDataOut()
+          throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD, CARD_READ_REC_SFI7_REC1_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP, CARD_READ_REC_SFI7_REC1_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareOpenSecureSession_whenPreOpenVariantButExtendedModeNotSupported_shouldProcessInStandardMode()
+          throws Exception {
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void prepareOpenSecureSession_whenPreOpenVariant_shouldBeSuccessful() throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT));
+    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
+            SAM_DIGEST_CLOSE_EXTENDED_CMD);
+    CardResponseApi samCardResponse2 =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    CardRequestSpi samCardRequest3 = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
+    CardResponseApi samCardResponse3 = createCardResponse(SW1SW2_OK_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse3);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
+    cardTransactionManager.prepareCloseSecureSession();
+    cardTransactionManager.processCommands(false);
+
+    InOrder inOrder = inOrder(cardReader, samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test(expected = UnexpectedCommandStatusException.class)
+  public void prepareOpenSecureSession_whenPreOpenVariantWithDifferentDataOut_shouldThrowUCSE()
+      throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2));
+    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
+            SAM_DIGEST_CLOSE_EXTENDED_CMD);
+    CardResponseApi samCardResponse2 =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    CardRequestSpi samCardRequest3 = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
+    CardResponseApi samCardResponse3 = createCardResponse(SW1SW2_OK_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse3);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
+    cardTransactionManager.prepareCloseSecureSession();
+    cardTransactionManager.processCommands(false);
+  }
+
+  @Test(expected = UnexpectedCommandStatusException.class)
+  public void
+      prepareOpenSecureSession_whenPreOpenVariantWithDifferentRecordContent_shouldThrowUCSE()
+          throws Exception {
+
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
+    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2));
+    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC2_29B));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
+    CardRequestSpi samCardRequest1 =
+        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 =
+        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse1);
+
+    CardRequestSpi samCardRequest2 =
+        createCardRequest(
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC2_L29_CMD,
+            SAM_DIGEST_CLOSE_EXTENDED_CMD);
+    CardResponseApi samCardResponse2 =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    CardRequestSpi samCardRequest3 = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
+    CardResponseApi samCardResponse3 = createCardResponse(SW1SW2_OK_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse3);
+
+    CardRequestSpi cardCardRequest =
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+    CardResponseApi cardCardResponse =
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
+    cardTransactionManager.prepareCloseSecureSession();
+    cardTransactionManager.processCommands(false);
   }
 
   @Test(expected = UnauthorizedKeyException.class)
@@ -4648,14 +5109,14 @@ public class CardTransactionManagerAdapterTest {
     FileHeader fileHeader07 = calypsoCard.getFileBySfi((byte) 0x07).getHeader();
     assertThat(fileHeader07.getLid()).isEqualTo((short) 0x2001);
     assertThat(fileHeader07.getEfType()).isEqualTo(ElementaryFile.Type.LINEAR);
-    assertThat(fileHeader07.getRecordSize()).isEqualTo((byte) 0x1D);
-    assertThat(fileHeader07.getRecordsNumber()).isEqualTo((byte) 0x01);
+    assertThat(fileHeader07.getRecordSize()).isEqualTo(0x1D);
+    assertThat(fileHeader07.getRecordsNumber()).isEqualTo(0x01);
 
     FileHeader fileHeader09 = calypsoCard.getFileBySfi((byte) 0x09).getHeader();
     assertThat(fileHeader09.getLid()).isEqualTo((short) 0x20FF);
     assertThat(fileHeader09.getEfType()).isEqualTo(ElementaryFile.Type.BINARY);
-    assertThat(fileHeader09.getRecordSize()).isEqualTo((byte) 0x1D);
-    assertThat(fileHeader09.getRecordsNumber()).isEqualTo((byte) 0x04);
+    assertThat(fileHeader09.getRecordSize()).isEqualTo(0x1D);
+    assertThat(fileHeader09.getRecordsNumber()).isEqualTo(0x04);
 
     FileHeader fileHeader10 = calypsoCard.getFileBySfi((byte) 0x10).getHeader();
     assertThat(fileHeader10.getLid()).isEqualTo((short) 0xF123);
@@ -4788,6 +5249,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(7);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareReadRecords((byte) 1, 1, 2, 1);
     cardTransactionManager.processCommands(false);
@@ -5278,6 +5743,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(3);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 2, 3, 1);
     cardTransactionManager.processCommands(false);
 
@@ -5411,6 +5880,9 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCommands(false);
 
@@ -5435,6 +5907,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCommands(false);
@@ -5513,6 +5989,10 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
     cardTransactionManager.prepareUpdateBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands(false);
@@ -5633,6 +6113,10 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+
     cardTransactionManager.prepareWriteBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands(false);
 
@@ -5707,7 +6191,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands(false);
@@ -5750,7 +6233,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     cardTransactionManager.prepareDecreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands(false);
@@ -5776,7 +6258,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToIncValueMap.put(1, 100);
@@ -5903,7 +6384,6 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    when(calypsoCard.getPayloadCapacity()).thenReturn(2);
 
     Map<Integer, Integer> counterNumberToDecValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToDecValueMap.put(1, 100);

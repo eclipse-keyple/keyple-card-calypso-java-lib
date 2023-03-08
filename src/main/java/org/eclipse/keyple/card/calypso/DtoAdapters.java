@@ -33,7 +33,7 @@ import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 
-class DtoAdapters {
+final class DtoAdapters {
 
   private static final String MSG_THE_COMMAND_HAS_NOT_YET_BEEN_PROCESSED =
       "The command has not yet been processed";
@@ -70,10 +70,10 @@ class DtoAdapters {
      * @param apdu The bytes of the APDU's body.
      * @since 2.0.0
      */
-    public ApduRequestAdapter(byte[] apdu) {
+    ApduRequestAdapter(byte[] apdu) {
       this.apdu = apdu;
-      this.successfulStatusWords = new HashSet<Integer>();
-      this.successfulStatusWords.add(DEFAULT_SUCCESSFUL_CODE);
+      successfulStatusWords = new HashSet<Integer>();
+      successfulStatusWords.add(DEFAULT_SUCCESSFUL_CODE);
     }
 
     /**
@@ -85,8 +85,8 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public ApduRequestAdapter addSuccessfulStatusWord(int successfulStatusWord) {
-      this.successfulStatusWords.add(successfulStatusWord);
+    ApduRequestAdapter addSuccessfulStatusWord(int successfulStatusWord) {
+      successfulStatusWords.add(successfulStatusWord);
       return this;
     }
 
@@ -110,7 +110,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public ApduRequestAdapter setInfo(final String info) {
+    ApduRequestAdapter setInfo(String info) {
       this.info = info;
       return this;
     }
@@ -132,7 +132,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getApdu() {
-      return this.apdu;
+      return apdu;
     }
 
     /**
@@ -195,7 +195,7 @@ class DtoAdapters {
      */
     @Override
     public T setSignatureSize(int size) {
-      this.signatureSize = size;
+      signatureSize = size;
       return currentInstance;
     }
 
@@ -206,7 +206,7 @@ class DtoAdapters {
      */
     @Override
     public T setKeyDiversifier(byte[] diversifier) {
-      this.keyDiversifier = diversifier;
+      keyDiversifier = diversifier;
       return currentInstance;
     }
 
@@ -313,7 +313,7 @@ class DtoAdapters {
      */
     @Override
     public T setKeyDiversifier(byte[] diversifier) {
-      this.keyDiversifier = diversifier;
+      keyDiversifier = diversifier;
       return currentInstance;
     }
 
@@ -387,7 +387,7 @@ class DtoAdapters {
    *
    * @since 2.2.0
    */
-  static class BasicSignatureComputationDataAdapter
+  static final class BasicSignatureComputationDataAdapter
       extends CommonSignatureComputationDataAdapter<BasicSignatureComputationData>
       implements BasicSignatureComputationData {}
 
@@ -396,7 +396,7 @@ class DtoAdapters {
    *
    * @since 2.2.0
    */
-  static class BasicSignatureVerificationDataAdapter
+  static final class BasicSignatureVerificationDataAdapter
       extends CommonSignatureVerificationDataAdapter<BasicSignatureVerificationData>
       implements BasicSignatureVerificationData {}
 
@@ -422,7 +422,7 @@ class DtoAdapters {
      * @param isStatusCodesVerificationEnabled true or false.
      * @since 2.0.0
      */
-    public CardRequestAdapter(
+    CardRequestAdapter(
         List<ApduRequestSpi> apduRequests, boolean isStatusCodesVerificationEnabled) {
       this.apduRequests = apduRequests;
       this.isStatusCodesVerificationEnabled = isStatusCodesVerificationEnabled;
@@ -477,7 +477,7 @@ class DtoAdapters {
     private final Set<Integer> successfulSelectionStatusWords;
 
     /**
-     * Created an instance of {@link CardSelectorAdapter}.
+     * Created a new instance.
      *
      * <p>Initialize default values.
      *
@@ -499,7 +499,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi filterByCardProtocol(String cardProtocol) {
+    CardSelectorSpi filterByCardProtocol(String cardProtocol) {
       this.cardProtocol = cardProtocol;
       return this;
     }
@@ -515,7 +515,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi filterByPowerOnData(String powerOnDataRegex) {
+    CardSelectorSpi filterByPowerOnData(String powerOnDataRegex) {
       this.powerOnDataRegex = powerOnDataRegex;
       return this;
     }
@@ -531,7 +531,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi filterByDfName(byte[] aid) {
+    CardSelectorSpi filterByDfName(byte[] aid) {
       this.aid = aid;
       return this;
     }
@@ -548,7 +548,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi filterByDfName(String aid) {
+    CardSelectorSpi filterByDfName(String aid) {
       return filterByDfName(HexUtil.toByteArray(aid));
     }
 
@@ -561,7 +561,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi setFileOccurrence(FileOccurrence fileOccurrence) {
+    CardSelectorSpi setFileOccurrence(FileOccurrence fileOccurrence) {
       this.fileOccurrence = fileOccurrence;
       return this;
     }
@@ -575,8 +575,7 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi setFileControlInformation(
-        FileControlInformation fileControlInformation) {
+    CardSelectorSpi setFileControlInformation(FileControlInformation fileControlInformation) {
       this.fileControlInformation = fileControlInformation;
       return this;
     }
@@ -591,8 +590,8 @@ class DtoAdapters {
      * @return The object instance.
      * @since 2.0.0
      */
-    public CardSelectorSpi addSuccessfulStatusWord(int statusWord) {
-      this.successfulSelectionStatusWords.add(statusWord);
+    CardSelectorSpi addSuccessfulStatusWord(int statusWord) {
+      successfulSelectionStatusWords.add(statusWord);
       return this;
     }
 
@@ -602,7 +601,7 @@ class DtoAdapters {
      * @since 2.0.0
      */
     @Override
-    public final String getCardProtocol() {
+    public String getCardProtocol() {
       return cardProtocol;
     }
 
@@ -682,7 +681,7 @@ class DtoAdapters {
      * @param cardSelector The card selector.
      * @since 2.0.0
      */
-    public CardSelectionRequestAdapter(CardSelectorSpi cardSelector) {
+    CardSelectionRequestAdapter(CardSelectorSpi cardSelector) {
       this(cardSelector, null);
     }
 
@@ -694,7 +693,7 @@ class DtoAdapters {
      * @param cardRequest The card request.
      * @since 2.0.0
      */
-    public CardSelectionRequestAdapter(CardSelectorSpi cardSelector, CardRequestSpi cardRequest) {
+    CardSelectionRequestAdapter(CardSelectorSpi cardSelector, CardRequestSpi cardRequest) {
       this.cardSelector = cardSelector;
       this.cardRequest = cardRequest;
     }
@@ -755,9 +754,9 @@ class DtoAdapters {
     @Override
     public TraceableSignatureComputationData withSamTraceabilityMode(
         int offset, boolean usePartialSamSerialNumber) {
-      this.isSamTraceabilityMode = true;
-      this.traceabilityOffset = offset;
-      this.isPartialSamSerialNumber = usePartialSamSerialNumber;
+      isSamTraceabilityMode = true;
+      traceabilityOffset = offset;
+      isPartialSamSerialNumber = usePartialSamSerialNumber;
       return this;
     }
 
@@ -768,7 +767,7 @@ class DtoAdapters {
      */
     @Override
     public TraceableSignatureComputationData withoutBusyMode() {
-      this.isBusyMode = false;
+      isBusyMode = false;
       return this;
     }
 
@@ -854,10 +853,10 @@ class DtoAdapters {
     @Override
     public TraceableSignatureVerificationData withSamTraceabilityMode(
         int offset, boolean isPartialSamSerialNumber, boolean checkSamRevocationStatus) {
-      this.isSamTraceabilityMode = true;
-      this.traceabilityOffset = offset;
+      isSamTraceabilityMode = true;
+      traceabilityOffset = offset;
       this.isPartialSamSerialNumber = isPartialSamSerialNumber;
-      this.isSamRevocationStatusVerificationRequested = checkSamRevocationStatus;
+      isSamRevocationStatusVerificationRequested = checkSamRevocationStatus;
       return this;
     }
 
@@ -868,7 +867,7 @@ class DtoAdapters {
      */
     @Override
     public TraceableSignatureVerificationData withoutBusyMode() {
-      this.isBusyMode = false;
+      isBusyMode = false;
       return this;
     }
 
@@ -973,7 +972,7 @@ class DtoAdapters {
      */
     @Override
     public SearchCommandData enableRepeatedOffset() {
-      this.enableRepeatedOffset = true;
+      enableRepeatedOffset = true;
       return this;
     }
 
@@ -984,7 +983,7 @@ class DtoAdapters {
      */
     @Override
     public SearchCommandData setSearchData(byte[] data) {
-      this.searchData = data;
+      searchData = data;
       return this;
     }
 
@@ -1006,7 +1005,7 @@ class DtoAdapters {
      */
     @Override
     public SearchCommandData fetchFirstMatchingResult() {
-      this.fetchFirstMatchingResult = true;
+      fetchFirstMatchingResult = true;
       return this;
     }
 
@@ -1082,7 +1081,7 @@ class DtoAdapters {
    *
    * @since 2.3.1
    */
-  static class SvCommandSecurityDataApiAdapter implements SvCommandSecurityDataApi {
+  static final class SvCommandSecurityDataApiAdapter implements SvCommandSecurityDataApi {
 
     private byte[] svGetRequest;
     private byte[] svGetResponse;
@@ -1203,9 +1202,9 @@ class DtoAdapters {
    *
    * @since 2.0.0
    */
-  static class SvDebitLogRecordAdapter implements SvDebitLogRecord {
-    final int offset;
-    final byte[] cardResponse;
+  static final class SvDebitLogRecordAdapter implements SvDebitLogRecord {
+    private final int offset;
+    private final byte[] cardResponse;
 
     /**
      * Constructor
@@ -1213,7 +1212,7 @@ class DtoAdapters {
      * @param cardResponse the Sv Get or Read Record (SV Load log file) response data.
      * @param offset the debit log offset in the response (may change from a card to another).
      */
-    public SvDebitLogRecordAdapter(byte[] cardResponse, int offset) {
+    SvDebitLogRecordAdapter(byte[] cardResponse, int offset) {
       this.cardResponse = cardResponse;
       this.offset = offset;
     }
@@ -1255,7 +1254,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getDebitTime() {
-      final byte[] time = new byte[2];
+      byte[] time = new byte[2];
       time[0] = cardResponse[offset + 4];
       time[1] = cardResponse[offset + 5];
       return time;
@@ -1268,7 +1267,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getDebitDate() {
-      final byte[] date = new byte[2];
+      byte[] date = new byte[2];
       date[0] = cardResponse[offset + 2];
       date[1] = cardResponse[offset + 3];
       return date;
@@ -1302,7 +1301,7 @@ class DtoAdapters {
      */
     @Override
     public int getSvTNum() {
-      final byte[] tnNum = new byte[2];
+      byte[] tnNum = new byte[2];
       tnNum[0] = cardResponse[offset + 17];
       tnNum[1] = cardResponse[offset + 18];
       return ByteArrayUtil.extractInt(tnNum, 0, 2, false);
@@ -1353,9 +1352,9 @@ class DtoAdapters {
    *
    * @since 2.0.0
    */
-  static class SvLoadLogRecordAdapter implements SvLoadLogRecord {
-    final int offset;
-    final byte[] cardResponse;
+  static final class SvLoadLogRecordAdapter implements SvLoadLogRecord {
+    private final int offset;
+    private final byte[] cardResponse;
 
     /**
      * Constructor
@@ -1364,7 +1363,7 @@ class DtoAdapters {
      * @param offset the load log offset in the response (may change from a card to another).
      * @since 2.0.0
      */
-    public SvLoadLogRecordAdapter(byte[] cardResponse, int offset) {
+    SvLoadLogRecordAdapter(byte[] cardResponse, int offset) {
       this.cardResponse = cardResponse;
       this.offset = offset;
     }
@@ -1406,7 +1405,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getLoadTime() {
-      final byte[] time = new byte[2];
+      byte[] time = new byte[2];
       time[0] = cardResponse[offset + 11];
       time[1] = cardResponse[offset + 12];
       return time;
@@ -1419,7 +1418,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getLoadDate() {
-      final byte[] date = new byte[2];
+      byte[] date = new byte[2];
       date[0] = cardResponse[offset];
       date[1] = cardResponse[offset + 1];
       return date;
@@ -1432,7 +1431,7 @@ class DtoAdapters {
      */
     @Override
     public byte[] getFreeData() {
-      final byte[] free = new byte[2];
+      byte[] free = new byte[2];
       free[0] = cardResponse[offset + 2];
       free[1] = cardResponse[offset + 4];
       return free;
@@ -1467,7 +1466,7 @@ class DtoAdapters {
      */
     @Override
     public int getSvTNum() {
-      final byte[] tnNum = new byte[2];
+      byte[] tnNum = new byte[2];
       tnNum[0] = cardResponse[offset + 20];
       tnNum[1] = cardResponse[offset + 21];
       return ByteArrayUtil.extractInt(tnNum, 0, 2, false);
@@ -1520,7 +1519,7 @@ class DtoAdapters {
    *
    * @since 2.3.2
    */
-  static class CommandContextDto {
+  static final class CommandContextDto {
 
     private final boolean isSecureSessionOpen;
     private final boolean isEncryptionActive;
@@ -1538,7 +1537,7 @@ class DtoAdapters {
     }
 
     /**
-     * @return "true" if the secure session is open.
+     * @return True if the secure session is open.
      * @since 2.3.2
      */
     boolean isSecureSessionOpen() {
@@ -1546,7 +1545,7 @@ class DtoAdapters {
     }
 
     /**
-     * @return "true" if the encryption is active.
+     * @return True if the encryption is active.
      * @since 2.3.2
      */
     boolean isEncryptionActive() {
@@ -1559,7 +1558,7 @@ class DtoAdapters {
    *
    * @since 2.3.2
    */
-  static class TransactionContextDto {
+  static final class TransactionContextDto {
 
     private final CalypsoCardAdapter card;
     private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
@@ -1572,12 +1571,12 @@ class DtoAdapters {
      * @param symmetricCryptoTransactionManagerSpi The symmetric crypto service SPI.
      * @since 2.3.2
      */
-    public TransactionContextDto(
+    TransactionContextDto(
         CalypsoCardAdapter card,
         SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi) {
       this.card = card;
       this.symmetricCryptoTransactionManagerSpi = symmetricCryptoTransactionManagerSpi;
-      this.isSecureSessionOpen = false;
+      isSecureSessionOpen = false;
     }
 
     /**

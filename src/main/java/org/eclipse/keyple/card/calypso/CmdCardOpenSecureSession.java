@@ -84,9 +84,11 @@ final class CmdCardOpenSecureSession extends CardCommand {
     STATUS_TABLE = m;
   }
 
-  private final boolean isExtendedModeAllowed;
   private final WriteAccessLevel writeAccessLevel;
-  private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private final boolean isExtendedModeAllowed;
+  private SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private boolean isPreOpenMode;
+  private byte[] preOpenDataOut;
   private boolean isReadModeConfigured;
   private int sfi;
   private int recordNumber;
@@ -119,7 +121,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
 
     super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null, null);
 
-    this.symmetricCryptoSecuritySetting = null;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
     this.writeAccessLevel = writeAccessLevel;
     this.sfi = sfi;
@@ -145,6 +146,22 @@ final class CmdCardOpenSecureSession extends CardCommand {
   }
 
   /**
+   * Constructor for "pre-open" variant (to be used for card selection only).
+   *
+   * @param writeAccessLevel The write access level.
+   * @since 2.3.3
+   */
+  CmdCardOpenSecureSession(WriteAccessLevel writeAccessLevel) {
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, null, null);
+    isExtendedModeAllowed = true;
+    this.writeAccessLevel = writeAccessLevel;
+    createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
+    if (logger.isDebugEnabled()) {
+      addSubName(", PREOPEN");
+    }
+  }
+
+  /**
    * Partial constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -164,6 +181,8 @@ final class CmdCardOpenSecureSession extends CardCommand {
     this.writeAccessLevel = writeAccessLevel;
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
+    preOpenDataOut = transactionContext.getCard().getPreOpenDataOut();
+    isPreOpenMode = preOpenDataOut != null;
   }
 
   /**
@@ -285,7 +304,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
   void configureReadMode(int sfi, int recordNumber) {
     this.sfi = sfi;
     this.recordNumber = recordNumber;
-    this.isReadModeConfigured = true;
+    isReadModeConfigured = true;
   }
 
   /**
@@ -352,40 +371,22 @@ final class CmdCardOpenSecureSession extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false;
+    if (!isPreOpenMode) {
+      return false;
+    }
+    if (!isCryptoServiceSynchronized()) {
+      parseRev3(preOpenDataOut);
+      synchronizeCryptoService(preOpenDataOut);
+    }
+    return true;
   }
 
   /**
-   * {@inheritDoc}
+   * Synchronizes the crypto service.
    *
-   * @since 2.3.2
+   * @param dataOut The APDU dataOut field.
    */
-  @Override
-  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().getCard().backupFiles();
-    getTransactionContext().setSecureSessionOpen(true);
-    byte[] dataOut = getApduResponse().getDataOut();
-    switch (getTransactionContext().getCard().getProductType()) {
-      case PRIME_REVISION_1:
-        parseRev10(dataOut);
-        break;
-      case PRIME_REVISION_2:
-        parseRev24(dataOut);
-        break;
-      default:
-        parseRev3(dataOut);
-    }
-    // CL-CSS-INFORAT.1
-    getTransactionContext().getCard().setDfRatified(isPreviousSessionRatified);
-    // CL-CSS-INFOTCNT.1
-    getTransactionContext()
-        .getCard()
-        .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
-    if (recordData.length > 0) {
-      getTransactionContext().getCard().setContent((byte) sfi, recordNumber, recordData);
-    }
-    // Post-processing
+  private void synchronizeCryptoService(byte[] dataOut) {
     Byte computedKvc = computeKvc();
     Byte computedKif = computeKif(computedKvc);
     if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
@@ -398,11 +399,50 @@ final class CmdCardOpenSecureSession extends CardCommand {
     try {
       getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
-          .initTerminalSessionMac(getApduResponse().getDataOut(), computedKif, computedKvc);
+          .initTerminalSessionMac(dataOut, computedKif, computedKvc);
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     } catch (SymmetricCryptoIOException e) {
       throw (RuntimeException) e.getCause();
+    }
+    confirmCryptoServiceSuccessfullySynchronized();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    super.setApduResponseAndCheckStatus(apduResponse);
+    CalypsoCardAdapter card = getTransactionContext().getCard();
+    card.backupFiles();
+    getTransactionContext().setSecureSessionOpen(true);
+    byte[] dataOut = getApduResponse().getDataOut();
+    switch (card.getProductType()) {
+      case PRIME_REVISION_1:
+        parseRev10(dataOut);
+        break;
+      case PRIME_REVISION_2:
+        parseRev24(dataOut);
+        break;
+      default:
+        parseRev3(dataOut);
+    }
+    // CL-CSS-INFORAT.1
+    card.setDfRatified(isPreviousSessionRatified);
+    // CL-CSS-INFOTCNT.1
+    card.setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
+    if (recordData.length > 0) {
+      card.setContent((byte) sfi, recordNumber, recordData);
+    }
+    if (!isCryptoServiceSynchronized()) {
+      synchronizeCryptoService(dataOut);
+    } else if (!Arrays.equals(dataOut, preOpenDataOut)) {
+      throw new CardSecurityContextException(
+          "Session has been pre-opened but 'dataOut' fields do not match",
+          CardCommandRef.OPEN_SECURE_SESSION);
     }
   }
 
@@ -445,8 +485,9 @@ final class CmdCardOpenSecureSession extends CardCommand {
   @Override
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] dataOut = getApduResponse().getDataOut();
-    switch (getCalypsoCard().getProductType()) {
+    byte[] dataOut = apduResponse.getDataOut();
+    CalypsoCardAdapter card = getCalypsoCard();
+    switch (card.getProductType()) {
       case PRIME_REVISION_1:
         parseRev10(dataOut);
         break;
@@ -457,12 +498,16 @@ final class CmdCardOpenSecureSession extends CardCommand {
         parseRev3(dataOut);
     }
     // CL-CSS-INFORAT.1
-    getCalypsoCard().setDfRatified(isPreviousSessionRatified);
+    card.setDfRatified(isPreviousSessionRatified);
     // CL-CSS-INFOTCNT.1
-    getCalypsoCard()
-        .setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
+    card.setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
     if (recordData.length > 0) {
-      getCalypsoCard().setContent((byte) sfi, recordNumber, recordData);
+      card.setContent((byte) sfi, recordNumber, recordData);
+    }
+    // If it is a pre-open variant, then we save the pre-open data into the Calypso card image.
+    if (apduResponse.getStatusWord() == 0x6200) {
+      card.setPreOpenWriteAccessLevel(writeAccessLevel);
+      card.setPreOpenDataOut(dataOut);
     }
   }
 

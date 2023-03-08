@@ -12,10 +12,12 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.shouldHaveThrown;
 import static org.mockito.Mockito.mock;
 
 import org.calypsonet.terminal.calypso.GetDataTag;
 import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
 import org.calypsonet.terminal.card.CardSelectionResponseApi;
 import org.calypsonet.terminal.card.spi.ApduRequestSpi;
@@ -119,30 +121,127 @@ public class CalypsoCardSelectionAdapterTest {
 
   @Test
   public void prepareSelectFile_whenLidIs1234_shouldProduceSelectFileApduWithLid1234() {
-    cardSelection.filterByDfName("1122334455");
     cardSelection.prepareSelectFile((short) 0x1234);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00A4090002123400"));
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00A4090002123400");
   }
 
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsNext_shouldProduceSelectFileApduWithSelectFileControlNext() {
-    cardSelection.filterByDfName("1122334455");
     cardSelection.prepareSelectFile(SelectFileControl.NEXT_EF);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00A4020202000000"));
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00A4020202000000");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecord_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardSelection.prepareReadRecord((byte) 31, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecord_whenRecordNumberIsLessThan0_shouldThrowIAE() {
+    cardSelection.prepareReadRecord((byte) 0x07, -1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadRecord_whenRecordNumberIsMoreThan250_shouldThrowIAE() {
+    cardSelection.prepareReadRecord((byte) 0x07, 251);
   }
 
   @Test
-  public void prepareReadRecordFile_whenSfiIs07_shouldProduceReadRecordsApduWithSfi07() {
-    cardSelection.filterByDfName("1122334455");
+  public void
+      prepareReadRecord_whenSfi07RecNumber1_shouldPrepareReadRecordApduWithSfi07RecNumber1() {
     cardSelection.prepareReadRecord((byte) 0x07, 1);
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
-    assertThat(commandApdu.getApdu()).isEqualTo(HexUtil.toByteArray("00B2013C00"));
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B2013C00");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenSfiIsNegative_shouldThrowIAE() {
+    cardSelection.prepareReadBinary((byte) -1, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardSelection.prepareReadBinary((byte) 31, 1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenOffsetIsNegative_shouldThrowIAE() {
+    cardSelection.prepareReadBinary((byte) 1, -1, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenOffsetIsGreaterThan32767_shouldThrowIAE() {
+    cardSelection.prepareReadBinary((byte) 1, 32768, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadBinary_whenNbBytesToReadIsLessThan1_shouldThrowIAE() {
+    cardSelection.prepareReadBinary((byte) 1, 1, 0);
+  }
+
+  @Test
+  public void
+      prepareReadBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand() {
+    cardSelection.prepareReadBinary((byte) 1, 256, 1);
+    CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
+    ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B0810001");
+    commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(1);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B0010001");
+  }
+
+  @Test
+  public void prepareReadBinary_whenNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand() {
+    cardSelection.prepareReadBinary((byte) 1, 0, 1);
+    CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
+    ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B0810001");
+  }
+
+  @Test
+  public void
+      prepareReadBinary_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands() {
+    cardSelection.prepareReadBinary((byte) 1, 0, 251);
+    CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
+    ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B08100FA");
+    commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(1);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("00B081FA01");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void prepareReadCounter_whenSfiIsGreaterThan30_shouldThrowIAE() {
+    cardSelection.prepareReadCounter((byte) 31, 1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void preparePreOpenSecureSession_whenWriteAccessLevelIsNull_shouldThrowIAE() {
+    cardSelection.preparePreOpenSecureSession(null);
+  }
+
+  @Test
+  public void preparePreOpenSecureSession_whenIsAlreadyPrepared_shouldThrowISE() {
+    cardSelection.preparePreOpenSecureSession(WriteAccessLevel.LOAD);
+    try {
+      cardSelection.preparePreOpenSecureSession(WriteAccessLevel.LOAD);
+      shouldHaveThrown(IllegalStateException.class);
+    } catch (IllegalStateException ignored) {
+    }
+  }
+
+  @Test
+  public void
+      preparePreOpenSecureSession_whenWriteAccessLevelIsLoad_shouldAddCmd_Cla00_Ins8A_P102_P202_Lc01_Data00_Le00() {
+    cardSelection.preparePreOpenSecureSession(WriteAccessLevel.LOAD);
+    CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
+    ApduRequestSpi commandApdu = cardSelectionRequest.getCardRequest().getApduRequests().get(0);
+    assertThat(HexUtil.toHex(commandApdu.getApdu())).isEqualTo("008A0202010000");
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -189,7 +288,7 @@ public class CalypsoCardSelectionAdapterTest {
     cardSelection.filterByDfName("6677889900");
     CardSelectionRequestSpi cardSelectionRequest = cardSelection.getCardSelectionRequest();
     CardSelectorSpi cardSelector = cardSelectionRequest.getCardSelector();
-    assertThat(cardSelector.getAid()).isEqualTo(HexUtil.toByteArray("6677889900"));
+    assertThat(HexUtil.toHex(cardSelector.getAid())).isEqualTo("6677889900");
   }
 
   @Test

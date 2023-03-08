@@ -79,16 +79,18 @@ final class CalypsoCardConstant {
   static final int PIN_LENGTH = 4;
 
   // Stored Value
-  static final byte STORED_VALUE_FILE_STRUCTURE_ID = (byte) 0x20;
-  static final byte SV_RELOAD_LOG_FILE_SFI = (byte) 0x14;
+  static final byte STORED_VALUE_FILE_STRUCTURE_ID = 0x20;
+  static final byte SV_RELOAD_LOG_FILE_SFI = 0x14;
   static final int SV_RELOAD_LOG_FILE_NB_REC = 1;
-  static final byte SV_DEBIT_LOG_FILE_SFI = (byte) 0x15;
+  static final byte SV_DEBIT_LOG_FILE_SFI = 0x15;
   static final int SV_DEBIT_LOG_FILE_NB_REC = 3;
   static final int SV_LOG_FILE_REC_LENGTH = 29;
   static final int SV_LOAD_MIN_VALUE = -8388608; // -2^23: smallest 3-byte negative value
   static final int SV_LOAD_MAX_VALUE = 8388607; //  2^23 - 1: largest 3-byte positive value
   static final int SV_DEBIT_MIN_VALUE = 0;
   static final int SV_DEBIT_MAX_VALUE = 32767; // 2^15 - 1: largest 2-byte positive value
+
+  static final int DEFAULT_PAYLOAD_CAPACITY = 250;
 
   /** (private) */
   private CalypsoCardConstant() {}

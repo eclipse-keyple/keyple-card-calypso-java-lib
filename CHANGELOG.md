@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
-- SV reload and debit logs are now updated in `CalypsoCard` during a transaction. 
+- SV reload and debit logs are now updated in `CalypsoCard` during a transaction.
+### Upgraded
+- "Calypsonet Terminal Calypso API" to version `1.7.0` (pre-open secure session variant).
 
 ## [2.3.2] - 2023-02-17
 ### Changed
