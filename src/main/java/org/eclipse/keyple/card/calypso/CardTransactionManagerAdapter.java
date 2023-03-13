@@ -1934,7 +1934,7 @@ final class CardTransactionManagerAdapter
   @Override
   public void initSamContextForNextTransaction() {
     checkSymmetricCryptoTransactionManager();
-    if (!cardCommands.isEmpty()) {
+    if (!_cardCommands.isEmpty()) {
       throw new IllegalStateException("Unprocessed card commands are pending");
     }
     try {

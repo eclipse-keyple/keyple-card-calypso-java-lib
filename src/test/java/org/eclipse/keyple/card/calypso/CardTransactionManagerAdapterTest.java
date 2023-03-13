@@ -3454,10 +3454,12 @@ public class CardTransactionManagerAdapterTest {
     // Encrypted update record
     CardRequestSpi samDigestInitAndEncryptReqReq4 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
     CardResponseApi samDigestInitAndEncryptReqResp4 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
 
     CardRequestSpi cardEncryptReq4 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD);
     CardResponseApi cardEncryptResp4 = createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP);
@@ -7210,10 +7212,12 @@ public class CardTransactionManagerAdapterTest {
     // Encrypted update record
     CardRequestSpi samDigestInitAndEncryptReqReq4 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
     CardResponseApi samDigestInitAndEncryptReqResp4 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
 
     CardRequestSpi samDigestDecryptRespReq4 =
         createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_CMD);
