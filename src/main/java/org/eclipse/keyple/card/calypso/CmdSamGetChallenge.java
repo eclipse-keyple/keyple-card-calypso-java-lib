@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 
 /**
@@ -56,13 +57,14 @@ final class CmdSamGetChallenge extends SamCommand {
   }
 
   /**
-   * Gets the challenge.
+   * {@inheritDoc}
    *
-   * @return the challenge
-   * @since 2.0.1
+   * @since 2.3.4
    */
-  byte[] getChallenge() {
-    return isSuccessful() ? getApduResponse().getDataOut() : null;
+  @Override
+  void parseApduResponse(ApduResponseApi apduResponse) throws SamCommandException {
+    super.parseApduResponse(apduResponse);
+    getCalypsoSam().setChallenge(apduResponse.getDataOut());
   }
 
   /**

@@ -85,6 +85,7 @@ class SymmetricCryptoTransactionManagerAdapter
   private byte[] currentKeyDiversifier;
   private DigestManager digestManager;
   private boolean isEncryptionActive;
+  private boolean isSelectDiversifierNeededOnDigestInit;
 
   SymmetricCryptoTransactionManagerAdapter(
       ProxyReaderApi samReader,
@@ -106,16 +107,35 @@ class SymmetricCryptoTransactionManagerAdapter
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.4
+   */
+  @Override
+  public void preInitTerminalSecureSessionContext()
+      throws SymmetricCryptoException, SymmetricCryptoIOException {
+    CmdSamGetChallenge cmd = new CmdSamGetChallenge(sam, isExtendedModeRequired ? 8 : 4);
+    samCommands.add(cmd);
+    processCommands();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.3.1
    */
   @Override
   public byte[] initTerminalSecureSessionContext()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
-    prepareSelectDiversifierIfNeeded();
-    CmdSamGetChallenge cmd = new CmdSamGetChallenge(sam, isExtendedModeRequired ? 8 : 4);
-    samCommands.add(cmd);
-    processCommands();
-    return cmd.getChallenge();
+    // Update select diversifier infos
+    if (!Arrays.equals(currentKeyDiversifier, cardKeyDiversifier)) {
+      currentKeyDiversifier = cardKeyDiversifier;
+      isSelectDiversifierNeededOnDigestInit = true;
+    }
+    byte[] challenge = sam.popChallenge();
+    if (challenge == null) {
+      preInitTerminalSecureSessionContext();
+      challenge = sam.popChallenge();
+    }
+    return challenge;
   }
 
   /**
@@ -820,9 +840,13 @@ class SymmetricCryptoTransactionManagerAdapter
 
     /** Prepares the "Digest Init" SAM command. */
     private void prepareDigestInit() {
+      int index = 0;
+      if (isSelectDiversifierNeededOnDigestInit) {
+        samCommands.add(index++, new CmdSamSelectDiversifier(sam, cardKeyDiversifier));
+      }
       // CL-SAM-DINIT.1
       samCommands.add(
-          0,
+          index,
           new CmdSamDigestInit(
               sam,
               false,

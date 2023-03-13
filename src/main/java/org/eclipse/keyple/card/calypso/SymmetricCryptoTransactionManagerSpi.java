@@ -22,10 +22,22 @@ package org.eclipse.keyple.card.calypso;
 interface SymmetricCryptoTransactionManagerSpi {
 
   /**
+   * Retrieves and stores the terminal challenge in the SAM image for later use.
+   *
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
+   * @since 2.3.4
+   */
+  void preInitTerminalSecureSessionContext()
+      throws SymmetricCryptoException, SymmetricCryptoIOException;
+
+  /**
    * Initializes the crypto service context for operating a Secure Session with a card and gets the
    * terminal challenge.
    *
    * @return The terminal challenge.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] initTerminalSecureSessionContext()
@@ -37,6 +49,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param openSecureSessionDataOut The data out from the card Open Secure Session command.
    * @param kif The card KIF.
    * @param kvc The card KVC.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   void initTerminalSessionMac(byte[] openSecureSessionDataOut, byte kif, byte kvc)
@@ -50,6 +64,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param cardApdu A byte array containing either the input or output data of a card command APDU.
    * @return null if the encryption is not activate, either the ciphered or deciphered command data
    *     if the encryption is active.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] updateTerminalSessionMac(byte[] cardApdu)
@@ -59,6 +75,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Finalizes the digest computation and returns the terminal part of the session MAC.
    *
    * @return A byte array containing the terminal session MAC.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] finalizeTerminalSessionMac() throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -67,6 +85,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Generate the terminal part of the session MAC used for an early mutual authentication.
    *
    * @return A byte array containing the terminal session MAC.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] generateTerminalSessionMac() throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -74,6 +94,8 @@ interface SymmetricCryptoTransactionManagerSpi {
   /**
    * Activate the encryption/decryption of the data sent/received during the secure session.
    *
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   void activateEncryption() throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -81,6 +103,8 @@ interface SymmetricCryptoTransactionManagerSpi {
   /**
    * Deactivate the encryption/decryption of the data sent/received during the secure session.
    *
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   void deactivateEncryption() throws SymmetricCryptoException, SymmetricCryptoIOException;
@@ -90,6 +114,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    *
    * @param cardSessionMac A byte array containing the card session MAC.
    * @return true if the card session MAC is validated.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   boolean isCardSessionMacValid(byte[] cardSessionMac)
@@ -99,6 +125,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * Computes the needed data to operate SV card commands.
    *
    * @param data The data involved in the preparation of an SV Reload/Debit/Undebit command.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   void computeSvCommandSecurityData(SvCommandSecurityDataApi data)
@@ -109,6 +137,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    *
    * @param cardSvMac A byte array containing the card SV MAC.
    * @return true if the card SV MAC is validated.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   boolean isCardSvMacValid(byte[] cardSvMac)
@@ -125,6 +155,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param kif The PIN encryption key KIF.
    * @param kvc The PIN encryption key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] cipherPinForPresentation(byte[] cardChallenge, byte[] pin, Byte kif, Byte kvc)
@@ -142,6 +174,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param kif The PIN encryption key KIF.
    * @param kvc The PIN encryption key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] cipherPinForModification(
@@ -157,6 +191,8 @@ interface SymmetricCryptoTransactionManagerSpi {
    * @param targetKeyKif The target key KIF.
    * @param targetKeyKvc The target key KVC.
    * @return A byte array containing the encrypted data block to sent to the card.
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   byte[] generateCipheredCardKey(
@@ -170,6 +206,8 @@ interface SymmetricCryptoTransactionManagerSpi {
   /**
    * Synchronizes data of the associated card transaction crypto extension if needed.
    *
+   * @throws SymmetricCryptoException If an internal error occurred.
+   * @throws SymmetricCryptoIOException If an IO error occurred when processing a command.
    * @since 2.3.1
    */
   void synchronize() throws SymmetricCryptoException, SymmetricCryptoIOException;

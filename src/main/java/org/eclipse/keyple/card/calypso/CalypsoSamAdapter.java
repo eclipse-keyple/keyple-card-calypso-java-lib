@@ -41,6 +41,9 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   private final byte softwareRevision;
   private final byte classByte;
 
+  /* Dynamic fields */
+  private byte[] challenge;
+
   /**
    * Constructor.
    *
@@ -261,6 +264,26 @@ final class CalypsoSamAdapter implements CalypsoSam, SmartCardSpi {
   @Override
   public byte getSoftwareRevision() {
     return softwareRevision;
+  }
+
+  /**
+   * @param challenge The challenge to set.
+   * @since 2.3.4
+   */
+  void setChallenge(byte[] challenge) {
+    this.challenge = challenge;
+  }
+
+  /**
+   * Gets and resets the current challenge.
+   *
+   * @return Null if no challenge is available.
+   * @since 2.3.4
+   */
+  byte[] popChallenge() {
+    byte[] res = challenge;
+    challenge = null;
+    return res;
   }
 
   /**
