@@ -7577,4 +7577,128 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
   }
+
+  @Test(expected = IllegalStateException.class)
+  public void initSamContextForNextTransaction_whenNoSecuritySettings_shouldThrowISE() {
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransactionWithoutSecurity(cardReader, calypsoCard);
+    cardTransactionManager.initSamContextForNextTransaction();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void initSamContextForNextTransaction_whenCommandsArePending_shouldThrowISE() {
+    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.initSamContextForNextTransaction();
+  }
+
+  @Test
+  public void initSamContextForNextTransaction_shouldUpdateChallengeInCryptoService()
+      throws Exception {
+
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    cardTransactionManager.initSamContextForNextTransaction();
+
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader);
+
+    assertThat(HexUtil.toHex(calypsoSam.popChallenge())).isEqualTo(SAM_CHALLENGE);
+    assertThat(calypsoSam.popChallenge()).isNull();
+  }
+
+  @Test
+  public void
+      initSamContextForNextTransaction_whenANewSessionIsOpen_shouldExchangeApduWithCardAndSamWithoutGetChallenge()
+          throws Exception {
+
+    // Init context
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    cardTransactionManager.initSamContextForNextTransaction();
+
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader);
+
+    // Next session
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT).processCommands(false);
+
+    InOrder inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
+            SAM_DIGEST_CLOSE_CMD);
+    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
+    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+
+    samCardResponse =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseRead);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseClose);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareCloseSecureSession()
+        .processCommands(false);
+
+    inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
 }

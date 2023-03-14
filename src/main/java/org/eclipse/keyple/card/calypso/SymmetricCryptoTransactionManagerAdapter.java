@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.3.1
  */
-class SymmetricCryptoTransactionManagerAdapter
+final class SymmetricCryptoTransactionManagerAdapter
     implements SymmetricCryptoTransactionManagerSpi, LegacySamCardTransactionCryptoExtension {
 
   private static final Logger logger =
@@ -98,7 +98,7 @@ class SymmetricCryptoTransactionManagerAdapter
     this.samReader = samReader;
     this.sam = sam;
     this.cardKeyDiversifier = cardKeyDiversifier;
-    this.isExtendedModeRequired = useExtendedMode;
+    isExtendedModeRequired = useExtendedMode;
     this.maxCardApduLengthSupported = maxCardApduLengthSupported;
     this.transactionAuditData = transactionAuditData;
     this.tmpCardSecuritySetting = tmpCardSecuritySetting;
@@ -125,9 +125,7 @@ class SymmetricCryptoTransactionManagerAdapter
   @Override
   public byte[] initTerminalSecureSessionContext()
       throws SymmetricCryptoIOException, SymmetricCryptoException {
-    // Update select diversifier infos
-    if (!Arrays.equals(currentKeyDiversifier, cardKeyDiversifier)) {
-      currentKeyDiversifier = cardKeyDiversifier;
+    if (isSelectDiversifierNeeded(cardKeyDiversifier)) {
       isSelectDiversifierNeededOnDigestInit = true;
     }
     byte[] challenge = sam.popChallenge();
@@ -136,6 +134,19 @@ class SymmetricCryptoTransactionManagerAdapter
       challenge = sam.popChallenge();
     }
     return challenge;
+  }
+
+  /**
+   * @param keyDiversifier The key diversifier to use.
+   * @return true if the current key diversifier has changed and therefore a "Select Diversifier"
+   *     command is needed.
+   */
+  private boolean isSelectDiversifierNeeded(byte[] keyDiversifier) {
+    if (!Arrays.equals(currentKeyDiversifier, keyDiversifier)) {
+      currentKeyDiversifier = keyDiversifier;
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -479,9 +490,8 @@ class SymmetricCryptoTransactionManagerAdapter
    *
    * @param commands The list of commands.
    * @return An empty list if there is no command.
-   * @since 2.2.0
    */
-  private List<ApduRequestSpi> getApduRequests(List<SamCommand> commands) {
+  private static List<ApduRequestSpi> getApduRequests(List<SamCommand> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
       for (SamCommand command : commands) {
@@ -535,7 +545,6 @@ class SymmetricCryptoTransactionManagerAdapter
    *
    * @param cardRequest The card request.
    * @param cardResponse The associated card response.
-   * @since 2.1.1
    */
   private void saveTransactionAuditData(CardRequestSpi cardRequest, CardResponseApi cardResponse) {
     if (cardResponse != null) {
@@ -572,12 +581,10 @@ class SymmetricCryptoTransactionManagerAdapter
    * not already selected.
    *
    * @param specificKeyDiversifier The specific key diversifier (optional).
-   * @since 2.2.0
    */
   private void prepareSelectDiversifierIfNeeded(byte[] specificKeyDiversifier) {
     if (specificKeyDiversifier != null) {
-      if (!Arrays.equals(specificKeyDiversifier, currentKeyDiversifier)) {
-        currentKeyDiversifier = specificKeyDiversifier;
+      if (isSelectDiversifierNeeded(specificKeyDiversifier)) {
         prepareSelectDiversifier();
       }
     } else {
@@ -588,12 +595,9 @@ class SymmetricCryptoTransactionManagerAdapter
   /**
    * Prepares a "SelectDiversifier" command using the default key diversifier if it is not already
    * selected.
-   *
-   * @since 2.2.0
    */
   private void prepareSelectDiversifierIfNeeded() {
-    if (!Arrays.equals(currentKeyDiversifier, cardKeyDiversifier)) {
-      currentKeyDiversifier = cardKeyDiversifier;
+    if (isSelectDiversifierNeeded(cardKeyDiversifier)) {
       prepareSelectDiversifier();
     }
   }
@@ -658,7 +662,8 @@ class SymmetricCryptoTransactionManagerAdapter
 
     } else {
       throw new IllegalArgumentException(
-          "The provided data must be an instance of 'BasicSignatureComputationDataAdapter' or 'TraceableSignatureComputationDataAdapter'");
+          "The provided data must be an instance of 'BasicSignatureComputationDataAdapter'"
+              + " or 'TraceableSignatureComputationDataAdapter'");
     }
     return this;
   }
@@ -765,7 +770,7 @@ class SymmetricCryptoTransactionManagerAdapter
   }
 
   /** The manager of the digest session. */
-  private class DigestManager {
+  private final class DigestManager {
 
     private final byte[] openSecureSessionDataOut;
     private final byte sessionKif;
@@ -783,8 +788,8 @@ class SymmetricCryptoTransactionManagerAdapter
      */
     private DigestManager(byte[] openSecureSessionDataOut, byte kif, byte kvc) {
       this.openSecureSessionDataOut = openSecureSessionDataOut;
-      this.sessionKif = kif;
-      this.sessionKvc = kvc;
+      sessionKif = kif;
+      sessionKvc = kvc;
     }
 
     /**
@@ -904,7 +909,7 @@ class SymmetricCryptoTransactionManagerAdapter
     }
   }
 
-  private static class InvalidCardMacException extends RuntimeException {
+  private static final class InvalidCardMacException extends RuntimeException {
     private InvalidCardMacException(String message) {
       super(message);
     }
