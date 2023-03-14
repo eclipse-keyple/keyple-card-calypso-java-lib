@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Upgraded
-- "Calypsonet Terminal Calypso API" to version `1.8.0` (pre-init SAM for next transaction).
+- "Calypsonet Terminal Calypso API" to version `1.8.0` (initialize SAM context for next transaction).
 
 ## [2.3.3] - 2023-03-08
 ### Fixed
