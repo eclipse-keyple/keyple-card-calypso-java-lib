@@ -1929,6 +1929,27 @@ final class CardTransactionManagerAdapter
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.4
+   */
+  @Override
+  public void initSamContextForNextTransaction() {
+    checkApiLevelCompliance(true);
+    checkSymmetricCryptoTransactionManager();
+    if (!_cardCommands.isEmpty()) {
+      throw new IllegalStateException("Unprocessed card commands are pending");
+    }
+    try {
+      symmetricCryptoTransactionManagerSpi.preInitTerminalSecureSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw (RuntimeException) e.getCause();
+    } catch (SymmetricCryptoIOException e) {
+      throw (RuntimeException) e.getCause();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 2.0.0
    * @deprecated
    */

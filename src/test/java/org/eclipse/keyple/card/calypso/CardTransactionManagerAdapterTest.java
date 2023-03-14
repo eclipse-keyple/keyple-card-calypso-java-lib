@@ -864,10 +864,9 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void processOpening_whenNoCommandsArePrepared_shouldExchangeApduWithCardAndSam()
       throws Exception {
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -892,9 +891,8 @@ public class CardTransactionManagerAdapterTest {
   public void processOpening_whenSuccessful_shouldUpdateTransactionCounterAndRatificationStatus()
       throws Exception {
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
 
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
@@ -915,10 +913,9 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void processOpening_whenOneReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
       throws Exception {
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -943,11 +940,10 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void processOpening_whenTwoReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
       throws Exception {
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest =
         createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse =
         createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(samReader.transmitCardRequest(
@@ -983,10 +979,9 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager =
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -1061,10 +1056,9 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -1086,9 +1080,91 @@ public class CardTransactionManagerAdapterTest {
 
     samCardRequest =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP,
+            SAM_DIGEST_CLOSE_CMD);
+    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
+    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+
+    samCardResponse =
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseRead);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseClose);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
+
+    cardTransactionManager.processClosing();
+    inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      processClosing_whenASessionIsOpenAndSamC1_shouldExchangeApduWithCardAndSamWithDigestUpdateMultiple()
+          throws Exception {
+    // open session
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
+
+    InOrder inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_CMD);
     CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
     CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
@@ -1137,15 +1213,12 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
   }
 
-  @Test
-  public void
-      processClosing_whenASessionIsOpenAndSamC1_shouldExchangeApduWithCardAndSamWithDigestUpdateMultiple()
-          throws Exception {
+  @Test(expected = UnexpectedCommandStatusException.class)
+  public void processClosing_whenCloseSessionFails_shouldThrowUCSE() throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -1167,86 +1240,12 @@ public class CardTransactionManagerAdapterTest {
 
     samCardRequest =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
-            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_CMD);
-    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
-    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
-
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
-    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
-    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
-
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponseRead);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponseClose);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse2);
-
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
-
-    cardTransactionManager.processClosing();
-    inOrder = inOrder(samReader, cardReader);
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-  }
-
-  @Test(expected = UnexpectedCommandStatusException.class)
-  public void processClosing_whenCloseSessionFails_shouldThrowUCSE() throws Exception {
-    // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
-    cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
-
-    InOrder inOrder = inOrder(samReader, cardReader);
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-
-    samCardRequest =
-        createCardRequest(SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_CMD);
     cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
 
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
     cardCardResponse = createCardResponse(SW1SW2_INCORRECT_SIGNATURE);
 
     when(samReader.transmitCardRequest(
@@ -1262,10 +1261,9 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = InvalidCardSignatureException.class)
   public void processClosing_whenCardAuthenticationFails_shouldThrowICSE() throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -1286,10 +1284,13 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
 
     samCardRequest =
-        createCardRequest(SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_CMD);
-    cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_CLOSE_CMD);
+    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
 
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
     cardCardResponse = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
 
     CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
@@ -1321,10 +1322,9 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void processCancel_whenASessionIsOpen_shouldSendCancelApduToCard() throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -3269,9 +3269,9 @@ public class CardTransactionManagerAdapterTest {
 
     // Mock
     CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+        createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
     CardResponseApi samSelectDiversifierAndGetChallengeResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+        createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
 
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp =
@@ -3279,10 +3279,11 @@ public class CardTransactionManagerAdapterTest {
 
     CardRequestSpi samDigestInitAndInternalAuthReq =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
     CardResponseApi samDigestInitAndInternalAuthResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
 
     CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
     CardResponseApi cardMssAuthResp = createCardResponse(SW1SW2_6985);
@@ -3345,9 +3346,9 @@ public class CardTransactionManagerAdapterTest {
 
     /** Process opening */
     CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+        createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
     CardResponseApi samSelectDiversifierAndGetChallengeResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+        createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
 
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp = createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP);
@@ -3355,9 +3356,11 @@ public class CardTransactionManagerAdapterTest {
     // Digest Init + Mutual Authentication with encryption activation
     CardRequestSpi samDigestInitAndInternalAuthReq =
         createCardRequest(
-            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
     CardResponseApi samDigestInitAndInternalAuthResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
 
     CardRequestSpi cardMssAuthEncryptReq =
         createCardRequest(CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD);
@@ -3451,10 +3454,12 @@ public class CardTransactionManagerAdapterTest {
     // Encrypted update record
     CardRequestSpi samDigestInitAndEncryptReqReq4 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
     CardResponseApi samDigestInitAndEncryptReqResp4 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
 
     CardRequestSpi cardEncryptReq4 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD);
     CardResponseApi cardEncryptResp4 = createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP);
@@ -3841,10 +3846,9 @@ public class CardTransactionManagerAdapterTest {
   @Test
   public void prepareOpenSecureSession_whenNoCommandsArePrepared_shouldExchangeApduWithCardAndSam()
       throws Exception {
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -3870,9 +3874,8 @@ public class CardTransactionManagerAdapterTest {
       prepareOpenSecureSession_whenSuccessful_shouldUpdateTransactionCounterAndRatificationStatus()
           throws Exception {
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
 
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
@@ -3894,10 +3897,9 @@ public class CardTransactionManagerAdapterTest {
   public void
       prepareOpenSecureSession_whenOneReadRecordIsPrepared_shouldExchangeApduWithCardAndSam()
           throws Exception {
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -3925,9 +3927,8 @@ public class CardTransactionManagerAdapterTest {
       prepareOpenSecureSession_whenTwoReadRecordArePreparedAndNoRestrictions_shouldMergeFirstReadRecord()
           throws Exception {
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -3968,9 +3969,8 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -4016,10 +4016,8 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -4067,9 +4065,8 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -4110,10 +4107,8 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -4154,9 +4149,8 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
         .thenReturn(samCardResponse);
@@ -4196,21 +4190,21 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest1 =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse1 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    CardRequestSpi samCardRequest1 = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
         .thenReturn(samCardResponse1);
 
     CardRequestSpi samCardRequest2 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_EXTENDED_CMD);
     CardResponseApi samCardResponse2 =
-        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
         .thenReturn(samCardResponse2);
@@ -4274,21 +4268,21 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest1 =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse1 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    CardRequestSpi samCardRequest1 = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
         .thenReturn(samCardResponse1);
 
     CardRequestSpi samCardRequest2 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
             SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_EXTENDED_CMD);
     CardResponseApi samCardResponse2 =
-        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
         .thenReturn(samCardResponse2);
@@ -4334,21 +4328,21 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest1 =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse1 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+    CardRequestSpi samCardRequest1 = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
+    CardResponseApi samCardResponse1 = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
         .thenReturn(samCardResponse1);
 
     CardRequestSpi samCardRequest2 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
             SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC2_L29_CMD,
             SAM_DIGEST_CLOSE_EXTENDED_CMD);
     CardResponseApi samCardResponse2 =
-        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
         .thenReturn(samCardResponse2);
@@ -4391,10 +4385,9 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager =
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -4469,10 +4462,9 @@ public class CardTransactionManagerAdapterTest {
         CalypsoExtensionService.getInstance()
             .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -4494,9 +4486,93 @@ public class CardTransactionManagerAdapterTest {
 
     samCardRequest =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP,
+            SAM_DIGEST_CLOSE_CMD);
+    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
+    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+
+    samCardResponse =
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseRead);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseClose);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareCloseSecureSession()
+        .processCommands(false);
+
+    inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareCloseSecureSession_whenASessionIsOpenAndSamC1_shouldExchangeApduWithCardAndSamWithDigestUpdateMultiple()
+          throws Exception {
+    // open session
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT).processCommands(false);
+
+    InOrder inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_CMD);
     CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
     CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
@@ -4547,15 +4623,12 @@ public class CardTransactionManagerAdapterTest {
     verifyNoMoreInteractions(samReader, cardReader);
   }
 
-  @Test
-  public void
-      prepareCloseSecureSession_whenASessionIsOpenAndSamC1_shouldExchangeApduWithCardAndSamWithDigestUpdateMultiple()
-          throws Exception {
+  @Test(expected = UnexpectedCommandStatusException.class)
+  public void prepareCloseSecureSession_whenCloseSessionFails_shouldThrowUCSE() throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -4577,88 +4650,12 @@ public class CardTransactionManagerAdapterTest {
 
     samCardRequest =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
-            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
             SAM_DIGEST_CLOSE_CMD);
-    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
-    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
-
     samCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
-    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
-    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
 
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
-
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponseRead);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponseClose);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse2);
-
-    cardTransactionManager
-        .prepareReadRecords(FILE7, 1, 1, 29)
-        .prepareCloseSecureSession()
-        .processCommands(false);
-
-    inOrder = inOrder(samReader, cardReader);
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-  }
-
-  @Test(expected = UnexpectedCommandStatusException.class)
-  public void prepareCloseSecureSession_whenCloseSessionFails_shouldThrowUCSE() throws Exception {
-    // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-        .thenReturn(samCardResponse);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT).processCommands(false);
-
-    InOrder inOrder = inOrder(samReader, cardReader);
-    inOrder
-        .verify(samReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-
-    samCardRequest =
-        createCardRequest(SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_CMD);
     cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
-
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
     cardCardResponse = createCardResponse(SW1SW2_INCORRECT_SIGNATURE);
 
     when(samReader.transmitCardRequest(
@@ -4675,10 +4672,9 @@ public class CardTransactionManagerAdapterTest {
   public void prepareCloseSecureSession_whenCardAuthenticationFails_shouldThrowICSE()
       throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -4699,10 +4695,13 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
 
     samCardRequest =
-        createCardRequest(SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_CLOSE_CMD);
-    cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_CLOSE_CMD);
+    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
 
-    samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    cardCardRequest = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
     cardCardResponse = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
 
     CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
@@ -4736,10 +4735,9 @@ public class CardTransactionManagerAdapterTest {
   public void prepareCancelSecureSession_whenASessionIsOpen_shouldSendCancelApduToCard()
       throws Exception {
     // open session
-    CardRequestSpi samCardRequest =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_CMD);
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_RSP);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
     when(samReader.transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
@@ -7024,9 +7022,9 @@ public class CardTransactionManagerAdapterTest {
 
     // Mock
     CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+        createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
     CardResponseApi samSelectDiversifierAndGetChallengeResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+        createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
 
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp =
@@ -7034,10 +7032,11 @@ public class CardTransactionManagerAdapterTest {
 
     CardRequestSpi samDigestInitAndInternalAuthReq =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
     CardResponseApi samDigestInitAndInternalAuthResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
 
     CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
     CardResponseApi cardMssAuthResp = createCardResponse(SW1SW2_6985);
@@ -7102,9 +7101,9 @@ public class CardTransactionManagerAdapterTest {
 
     /** Process opening */
     CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-        createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_GET_CHALLENGE_EXTENDED_CMD);
+        createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
     CardResponseApi samSelectDiversifierAndGetChallengeResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_GET_CHALLENGE_EXTENDED_RSP);
+        createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
 
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp = createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP);
@@ -7112,9 +7111,11 @@ public class CardTransactionManagerAdapterTest {
     // Digest Init + Mutual Authentication with encryption activation
     CardRequestSpi samDigestInitAndInternalAuthReq =
         createCardRequest(
-            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD, SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
     CardResponseApi samDigestInitAndInternalAuthResp =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
 
     CardRequestSpi cardMssAuthEncryptReq =
         createCardRequest(CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD);
@@ -7211,10 +7212,12 @@ public class CardTransactionManagerAdapterTest {
     // Encrypted update record
     CardRequestSpi samDigestInitAndEncryptReqReq4 =
         createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
             SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
             SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
     CardResponseApi samDigestInitAndEncryptReqResp4 =
-        createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
+        createCardResponse(
+            SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
 
     CardRequestSpi samDigestDecryptRespReq4 =
         createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_CMD);
@@ -7573,5 +7576,129 @@ public class CardTransactionManagerAdapterTest {
         .verify(samReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void initSamContextForNextTransaction_whenNoSecuritySettings_shouldThrowISE() {
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .createCardTransactionWithoutSecurity(cardReader, calypsoCard);
+    cardTransactionManager.initSamContextForNextTransaction();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void initSamContextForNextTransaction_whenCommandsArePending_shouldThrowISE() {
+    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.initSamContextForNextTransaction();
+  }
+
+  @Test
+  public void initSamContextForNextTransaction_shouldUpdateChallengeInCryptoService()
+      throws Exception {
+
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    cardTransactionManager.initSamContextForNextTransaction();
+
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader);
+
+    assertThat(HexUtil.toHex(calypsoSam.popChallenge())).isEqualTo(SAM_CHALLENGE);
+    assertThat(calypsoSam.popChallenge()).isNull();
+  }
+
+  @Test
+  public void
+      initSamContextForNextTransaction_whenANewSessionIsOpen_shouldExchangeApduWithCardAndSamWithoutGetChallenge()
+          throws Exception {
+
+    // Init context
+    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
+    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+
+    cardTransactionManager.initSamContextForNextTransaction();
+
+    verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader);
+
+    // Next session
+    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
+    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT).processCommands(false);
+
+    InOrder inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+
+    samCardRequest =
+        createCardRequest(
+            SAM_SELECT_DIVERSIFIER_CMD,
+            SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
+            SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
+            SAM_DIGEST_CLOSE_CMD);
+    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD);
+    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
+
+    samCardResponse =
+        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
+    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP);
+    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
+
+    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
+    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseRead);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
+        .thenReturn(cardCardResponseClose);
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
+        .thenReturn(samCardResponse2);
+
+    cardTransactionManager
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareCloseSecureSession()
+        .processCommands(false);
+
+    inOrder = inOrder(samReader, cardReader);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader, cardReader);
   }
 }
