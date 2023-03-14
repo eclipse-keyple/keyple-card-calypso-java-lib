@@ -1933,6 +1933,7 @@ final class CardTransactionManagerAdapter
    */
   @Override
   public void initSamContextForNextTransaction() {
+    checkApiLevelCompliance(true);
     checkSymmetricCryptoTransactionManager();
     if (!_cardCommands.isEmpty()) {
       throw new IllegalStateException("Unprocessed card commands are pending");
