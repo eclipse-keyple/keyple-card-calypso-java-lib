@@ -82,8 +82,8 @@ final class CmdCardReadRecords extends CardCommand {
   private int firstRecordNumber;
   private int recordSize;
   private ReadMode readMode;
-  private boolean isPreOpenMode;
-  private byte[] anticipatedDataOut;
+  private transient boolean isPreOpenMode; // NOSONAR
+  private transient byte[] anticipatedDataOut; // NOSONAR
 
   /**
    * Instantiates a new read records cmd build.

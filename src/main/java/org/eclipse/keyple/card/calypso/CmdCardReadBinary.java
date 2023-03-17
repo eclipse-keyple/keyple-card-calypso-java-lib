@@ -67,8 +67,8 @@ final class CmdCardReadBinary extends CardCommand {
 
   private final byte sfi;
   private final int offset;
-  private boolean isPreOpenMode;
-  private byte[] anticipatedDataOut;
+  private transient boolean isPreOpenMode; // NOSONAR
+  private transient byte[] anticipatedDataOut; // NOSONAR
 
   /**
    * Constructor.

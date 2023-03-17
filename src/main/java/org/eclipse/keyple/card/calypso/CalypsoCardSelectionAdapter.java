@@ -48,7 +48,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
 
   private final List<CardCommand> commands;
   private final CardSelectorAdapter cardSelector;
-  private boolean isPreOpenPrepared;
+  private transient boolean isPreOpenPrepared; // NOSONAR
 
   /**
    * Creates an instance of {@link CalypsoCardSelection}.
