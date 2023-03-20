@@ -51,13 +51,13 @@ abstract class CardCommand {
 
   private final CardCommandRef commandRef;
   private int le;
-  private String name;
+  private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
   private CalypsoCardAdapter calypsoCard;
   private final TransactionContextDto transactionContext;
   private final CommandContextDto commandContext;
-  private boolean isCryptoServiceSynchronized;
+  private transient boolean isCryptoServiceSynchronized; // NOSONAR
 
   /**
    * Constructor dedicated for the building of referenced Calypso commands

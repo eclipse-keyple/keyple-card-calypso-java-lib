@@ -87,13 +87,13 @@ final class CmdCardOpenSecureSession extends CardCommand {
   private final WriteAccessLevel writeAccessLevel;
   private final boolean isExtendedModeAllowed;
   private SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
-  private boolean isPreOpenMode;
-  private byte[] preOpenDataOut;
-  private boolean isReadModeConfigured;
+  private transient boolean isPreOpenMode; // NOSONAR
+  private transient byte[] preOpenDataOut; // NOSONAR
+  private transient boolean isReadModeConfigured; // NOSONAR
   private int sfi;
   private int recordNumber;
 
-  private boolean isPreviousSessionRatified;
+  private transient boolean isPreviousSessionRatified; // NOSONAR
   private byte[] challengeTransactionCounter;
   private byte[] challengeRandomNumber;
   private Byte kif;
@@ -157,7 +157,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
     this.writeAccessLevel = writeAccessLevel;
     createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
     if (logger.isDebugEnabled()) {
-      addSubName(", PREOPEN");
+      addSubName("PREOPEN");
     }
   }
 
