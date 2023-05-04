@@ -105,6 +105,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte sessionModification;
   private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
   private boolean isCounterValuePostponed;
+  private boolean isLegacyCase1;
   private WriteAccessLevel preOpenWriteAccessLevel;
   private byte[] preOpenDataOut;
 
@@ -125,6 +126,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     patchesRev12.add(new PatchRev12("00000000150000", "0000F000FF0000").setCounterValuePostponed());
     // XX XX 1X XX 15 XX XX
     patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
+    // 03 08 03 04 00 02 00: targets ASK Tango CD97-2
+    patchesRev12.add(new PatchRev12("03080304000200", "FFFFFFFFFFFFFF").setLegacyCase1());
   }
 
   /**
@@ -1164,6 +1167,17 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
+   * Indicates if the card is of a type corresponding to the specific case 1.
+   *
+   * @return true if the card corresponds to the specific case 1, false otherwise.
+   * @since 2.3.5
+   * @see #patchesRev12
+   */
+  boolean isLegacyCase1() {
+    return isLegacyCase1;
+  }
+
+  /**
    * Disables extended mode. Although the card is in revision 3.2, it has indicated in response to
    * the "Open Secure Session" command that it does not use AES keys.
    *
@@ -1257,6 +1271,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private static class PatchRev12 extends Patch {
 
     private Boolean isCounterValuePostponed;
+    private Boolean isLegacyCase1;
 
     private PatchRev12(String startupInfo) {
       super(startupInfo);
@@ -1271,10 +1286,18 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (isCounterValuePostponed != null) {
         calypsoCard.isCounterValuePostponed = isCounterValuePostponed;
       }
+      if (isLegacyCase1 != null) {
+        calypsoCard.isLegacyCase1 = isLegacyCase1;
+      }
     }
 
     private PatchRev12 setCounterValuePostponed() {
       isCounterValuePostponed = true;
+      return this;
+    }
+
+    private PatchRev12 setLegacyCase1() {
+      isLegacyCase1 = true;
       return this;
     }
   }

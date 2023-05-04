@@ -2703,6 +2703,10 @@ final class CardTransactionManagerAdapter
               CalypsoCardConstant.NB_REC_MAX,
               RECORD_NUMBER);
 
+      // A record size of 0 indicates that the card determines the output length.
+      // However, "legacy case 1" cards require a non-zero value.
+      int recordSize = card.isLegacyCase1() ? CalypsoCardConstant.LEGACY_REC_LENGTH : 0;
+
       // Try to group the first read record command with the open secure session command.
       if (canConfigureReadOnOpenSecureSession()) {
         ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
@@ -2719,13 +2723,18 @@ final class CardTransactionManagerAdapter
                 sfi,
                 recordNumber,
                 CmdCardReadRecords.ReadMode.ONE_RECORD,
-                0,
-                0));
+                recordSize,
+                recordSize));
       }
       // TODO legacy
       cardCommands.add(
           new CmdCardReadRecords(
-              card, sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0, 0));
+              card,
+              sfi,
+              recordNumber,
+              CmdCardReadRecords.ReadMode.ONE_RECORD,
+              recordSize,
+              recordSize));
 
     } catch (RuntimeException e) {
       resetTransaction();

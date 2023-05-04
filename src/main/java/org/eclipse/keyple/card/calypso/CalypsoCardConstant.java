@@ -92,6 +92,8 @@ final class CalypsoCardConstant {
 
   static final int DEFAULT_PAYLOAD_CAPACITY = 250;
 
+  static final int LEGACY_REC_LENGTH = 29;
+
   /** (private) */
   private CalypsoCardConstant() {}
 }
