@@ -126,7 +126,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     patchesRev12.add(new PatchRev12("00000000150000", "0000F000FF0000").setCounterValuePostponed());
     // XX XX 1X XX 15 XX XX
     patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
-    // 03 08 03 04 00 02 00: targets ASK Tango CD97-2
+    // 03 08 03 04 00 02 00: targets ASK Tango having this startup info values
     patchesRev12.add(new PatchRev12("03080304000200", "FFFFFFFFFFFFFF").setLegacyCase1());
   }
 
@@ -1170,8 +1170,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    * Indicates if the card is of a type corresponding to the specific case 1.
    *
    * @return true if the card corresponds to the specific case 1, false otherwise.
-   * @since 2.3.5
    * @see #patchesRev12
+   * @since 2.3.5
    */
   boolean isLegacyCase1() {
     return isLegacyCase1;

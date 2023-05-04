@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- An issue with "Select File" and "Read Record" commands when the card is an ASK Tango configured in CD97-2 emulation.
+- An issue with "Select File" and "Read Record" commands when the card is a legacy ASK Tango card having the following 
+startup information value:
+  - `03 08 03 04 00 02 00`
 ### Upgraded
 - "Keyple Service Resource Library" to version `2.1.1`.
 
