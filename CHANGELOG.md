@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- An issue with "Select File" and "Read Record" commands when the card is a legacy ASK Tango card having the following 
+startup information value:
+  - `03 08 03 04 00 02 00`
+### Upgraded
+- "Keyple Service Resource Library" to version `2.1.1`.
+
 ## [2.3.4] - 2023-04-04
 ### Changed
 - Prevent internal fields serialization.

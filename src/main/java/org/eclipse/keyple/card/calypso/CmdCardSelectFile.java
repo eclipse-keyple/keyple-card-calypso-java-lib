@@ -140,7 +140,8 @@ final class CmdCardSelectFile extends CardCommand {
   @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
     super(commandRef, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass(), calypsoCard.getProductType(), lid);
+    buildCommand(
+        calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
   }
 
   /**
@@ -155,10 +156,9 @@ final class CmdCardSelectFile extends CardCommand {
   CmdCardSelectFile(
       TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
     super(commandRef, 0, null, transactionContext, commandContext);
+    CalypsoCardAdapter calypsoCard = transactionContext.getCard();
     buildCommand(
-        transactionContext.getCard().getCardClass(),
-        transactionContext.getCard().getProductType(),
-        lid);
+        calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
   }
 
   /**
@@ -173,7 +173,7 @@ final class CmdCardSelectFile extends CardCommand {
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
     super(commandRef, 0, null, null, null);
-    buildCommand(calypsoCardClass, productType, lid);
+    buildCommand(calypsoCardClass, productType, false, lid);
   }
 
   /**
@@ -221,19 +221,25 @@ final class CmdCardSelectFile extends CardCommand {
    *
    * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
    * @param productType The target product type.
+   * @param forceRevision1Settings true to enforce "revision 1" settings for all cards with a legacy
+   *     class byte, regardless of their actual revision.
    * @param lid The LID.
    */
   private void buildCommand(
-      CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
+      CalypsoCardClass calypsoCardClass,
+      CalypsoCard.ProductType productType,
+      boolean forceRevision1Settings,
+      short lid) {
     // handle the REV1 case
     // CL-KEY-KIFSF.1
     // If legacy and rev2 then 02h else if legacy then 08h else 09h
     byte p1;
-    if (calypsoCardClass == CalypsoCardClass.LEGACY
-        && productType == CalypsoCard.ProductType.PRIME_REVISION_2) {
-      p1 = 0x02;
-    } else if (calypsoCardClass == CalypsoCardClass.LEGACY) {
-      p1 = 0x08;
+    if (calypsoCardClass == CalypsoCardClass.LEGACY) {
+      if (productType == CalypsoCard.ProductType.PRIME_REVISION_1 || forceRevision1Settings) {
+        p1 = 0x08;
+      } else {
+        p1 = 0x02;
+      }
     } else {
       p1 = 0x09;
     }
