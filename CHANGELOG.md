@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.5] - 2023-05-09
 ### Fixed
 - An issue with "Select File" and "Read Record" commands when the card is a legacy ASK Tango card having the following 
 startup information value:
@@ -166,7 +167,8 @@ This is the initial release.
 It follows the extraction of Keyple 1.0 components contained in the `eclipse/keyple-java` repository to dedicated repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.4...HEAD
+[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.5...HEAD
+[2.3.5]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.4...2.3.5
 [2.3.4]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.3...2.3.4
 [2.3.3]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.2...2.3.3
 [2.3.2]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.1...2.3.2
