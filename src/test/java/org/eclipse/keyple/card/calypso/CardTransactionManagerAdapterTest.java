@@ -355,6 +355,14 @@ public class CardTransactionManagerAdapterTest {
   private static final String SV_D_LOG_SV_TNUM = "5678";
   private static final String CARD_SV_GET_DEBIT_CMD = "007C000900";
 
+  private static final String SAM_SERIAL_NUMBER = "0000000011223344";
+  private static final String C_SELECT_DIVERSIFIER = "8014000008" + SAM_SERIAL_NUMBER;
+  private static final String CIPHER_MESSAGE = "A1A2A3A4A5A6A7A8";
+  private static final String C_DATA_CIPHER_DEFAULT = "801C40000A0102" + CIPHER_MESSAGE;
+  private static final String R_9000 = "9000";
+  private static final String CIPHER_MESSAGE_SIGNATURE = "C1C2C3C4C5C6C7C8";
+  private static final String R_DATA_CIPHER_DEFAULT = CIPHER_MESSAGE_SIGNATURE + R_9000;
+
   private static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C010900";
   private static final String CARD_SV_GET_DEBIT_RSP =
       SV_D_CURRENT_KVC
@@ -7700,5 +7708,32 @@ public class CardTransactionManagerAdapterTest {
         .transmitCardRequest(
             argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
     verifyNoMoreInteractions(samReader, cardReader);
+  }
+
+  @Test
+  public void
+      prepareComputeSignature_Basic_whenOnlySamCommandsArePrepared_shouldProcessSamCommands()
+          throws Exception {
+
+    CardRequestSpi cardRequest = createCardRequest(C_SELECT_DIVERSIFIER, C_DATA_CIPHER_DEFAULT);
+    CardResponseApi cardResponse = createCardResponse(R_9000, R_DATA_CIPHER_DEFAULT);
+
+    when(samReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardResponse);
+
+    BasicSignatureComputationData data =
+        new BasicSignatureComputationDataAdapter()
+            .setData(HexUtil.toByteArray(CIPHER_MESSAGE), (byte) 1, (byte) 2);
+    cardTransactionManager.prepareComputeSignature(data).processCommands(true);
+
+    InOrder inOrder = inOrder(samReader);
+    inOrder
+        .verify(samReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
+    verifyNoMoreInteractions(samReader);
+
+    assertThat(data.getSignature()).isEqualTo(HexUtil.toByteArray(CIPHER_MESSAGE_SIGNATURE));
   }
 }

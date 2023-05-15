@@ -1541,6 +1541,7 @@ final class CardTransactionManagerAdapter
   public CardTransactionManager processCommands(boolean closePhysicalChannel) {
     checkApiLevelCompliance(true);
     if (_cardCommands.isEmpty()) {
+      processSamPreparedCommands();
       return this;
     }
     try {
