@@ -5,9 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added project status badges on `README.md` file.
 ### Fixed
 - Fixes the unexpected behavior of card transactions containing only SAM commands, such as signature computation or 
   verification, in which SAM commands were not taken into account.
+- CI: code coverage report when releasing.
 
 ## [2.3.5] - 2023-05-09
 ### Fixed
