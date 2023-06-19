@@ -3261,7 +3261,7 @@ final class CardTransactionManagerAdapter
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
               counterNumber,
-              CalypsoCardConstant.NB_CNT_MIN,
+              0, // Allows simulated counters
               cardPayloadCapacity / 3,
               "counterNumber")
           .isInRange(
@@ -3364,7 +3364,7 @@ final class CardTransactionManagerAdapter
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
               counterNumberToIncDecValueMap.size(),
-              CalypsoCardConstant.NB_CNT_MIN,
+              1,
               cardPayloadCapacity / 3,
               "counterNumberToIncDecValueMap");
 
@@ -3372,7 +3372,7 @@ final class CardTransactionManagerAdapter
         Assert.getInstance()
             .isInRange(
                 entry.getKey(),
-                CalypsoCardConstant.NB_CNT_MIN,
+                CalypsoCardConstant.NUM_CNT_MIN,
                 cardPayloadCapacity / 3,
                 "counterNumberToIncDecValueMapKey")
             .isInRange(

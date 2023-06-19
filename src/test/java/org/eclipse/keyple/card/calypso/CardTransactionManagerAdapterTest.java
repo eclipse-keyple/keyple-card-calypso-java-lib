@@ -6230,6 +6230,17 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager.prepareDecreaseCounter(FILE7, 84, 1);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void _prepareDecreaseCounter_whenCounterNumberIsLessThan0_shouldThrowIAE() {
+    cardTransactionManager.prepareDecreaseCounter(FILE7, -1, 1);
+  }
+
+  @Test
+  public void _prepareDecreaseCounter_whenCounterNumberIs0_shouldNotThrowException() {
+    CardTransactionManager tm = cardTransactionManager.prepareDecreaseCounter(FILE7, 0, 1);
+    assertThat(tm).isNotNull();
+  }
+
   @Test
   public void _prepareDecreaseCounter_whenParametersAreCorrect_shouldAddDecreaseMultipleCommand()
       throws Exception {
@@ -6306,6 +6317,17 @@ public class CardTransactionManagerAdapterTest {
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToIncValueMap.put(1, 16777216);
     cardTransactionManager.prepareIncreaseCounters(FILE7, counterNumberToIncValueMap);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void _prepareIncreaseCounter_whenCounterNumberIsLessThan0_shouldThrowIAE() {
+    cardTransactionManager.prepareIncreaseCounter(FILE7, -1, 1);
+  }
+
+  @Test
+  public void _prepareIncreaseCounter_whenCounterNumberIs0_shouldNotThrowException() {
+    CardTransactionManager tm = cardTransactionManager.prepareIncreaseCounter(FILE7, 0, 1);
+    assertThat(tm).isNotNull();
   }
 
   @Test

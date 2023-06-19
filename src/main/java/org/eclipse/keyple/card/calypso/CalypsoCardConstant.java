@@ -31,7 +31,7 @@ final class CalypsoCardConstant {
   static final int NB_REC_MAX = 250;
 
   // Counter number
-  static final int NB_CNT_MIN = 1;
+  static final int NUM_CNT_MIN = 1;
 
   // Counter value
   static final int CNT_VALUE_MIN = 0;
