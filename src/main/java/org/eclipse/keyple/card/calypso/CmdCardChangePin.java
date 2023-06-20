@@ -208,6 +208,8 @@ final class CmdCardChangePin extends CardCommand {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
+    // The PIN has been successfully updated, and the presentation counter is reset to zero.
+    getTransactionContext().getCard().setPinAttemptRemaining(3);
   }
 
   /**

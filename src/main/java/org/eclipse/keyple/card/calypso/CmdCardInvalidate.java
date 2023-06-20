@@ -148,6 +148,8 @@ final class CmdCardInvalidate extends CardCommand {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     updateTerminalSessionMacIfNeeded();
+    // The DF has been successfully invalidated, update the DF status in the card object
+    getTransactionContext().getCard().setDfInvalidated(true);
   }
 
   /**

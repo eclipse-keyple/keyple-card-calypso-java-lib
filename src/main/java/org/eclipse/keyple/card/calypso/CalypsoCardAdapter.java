@@ -1066,6 +1066,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
+   * Sets the DF invalidation status.
+   *
+   * @param isInvalidated true if DF is invalidated, false if DF is rehabilitated.
+   * @since 2.3.7
+   */
+  void setDfInvalidated(boolean isInvalidated) {
+    this.isDfInvalidated = isInvalidated;
+  }
+
+  /**
    * Sets the challenge received in response to the GET CHALLENGE command.
    *
    * @param challenge A not empty array.
