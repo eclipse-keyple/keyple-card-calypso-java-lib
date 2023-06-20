@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
-- Fixed PIN presentation counter value in `CalypsoCard` after the PIN has been successfully changed.
+- Fixed remaining PIN attempt value in `CalypsoCard` after the PIN has been successfully changed.
 - Fixed DF invalidation status in `CalypsoCard` after a successful invalidation or rehabilitation.
 
 ## [2.3.6] - 2023-06-20
