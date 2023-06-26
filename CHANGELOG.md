@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed remaining PIN attempt value in `CalypsoCard` after the PIN has been successfully changed.
 - Fixed DF invalidation status in `CalypsoCard` after a successful invalidation or rehabilitation.
+### Upgraded
+- Calypsonet Terminal Reader API `1.2.0` -> `1.3.0` (source code not impacted)
 
 ## [2.3.6] - 2023-06-20
 ### Added
