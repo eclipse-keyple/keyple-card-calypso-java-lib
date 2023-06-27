@@ -84,7 +84,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
   /**
    * Constructor.
    *
-   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
+   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
    *     command.
    * @param calypsoCard The Calypso card.
    * @param sfi SFI of the file to select or 00h for current EF.
@@ -160,7 +160,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
   /**
    * Constructor.
    *
-   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an * "Increase"
+   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
    *     command.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
@@ -245,10 +245,14 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
       if (!getCalypsoCard().isCounterValuePostponed()) {
         throw new CardUnknownStatusException("Unexpected status word: 6200h", getCommandRef());
       }
-      getCalypsoCard().setCounter((byte) sfi, counterNumber, buildAnticipatedDataOut());
+      getCalypsoCard()
+          .setCounter(
+              (byte) sfi, counterNumber != 0 ? counterNumber : 1, buildAnticipatedDataOut());
     } else {
       // Set returned value
-      getCalypsoCard().setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
+      getCalypsoCard()
+          .setCounter(
+              (byte) sfi, counterNumber != 0 ? counterNumber : 1, apduResponse.getDataOut());
     }
   }
 
@@ -290,7 +294,8 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
         getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     ElementaryFile ef = card.getFileBySfi((byte) sfi);
     if (ef != null) {
-      Integer oldCounterValue = ef.getData().getContentAsCounterValue(counterNumber);
+      Integer oldCounterValue =
+          ef.getData().getContentAsCounterValue(counterNumber != 0 ? counterNumber : 1);
       if (oldCounterValue != null) {
         return ByteArrayUtil.extractBytes(
             getCommandRef() == CardCommandRef.DECREASE
@@ -366,12 +371,14 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
       }
       getTransactionContext()
           .getCard()
-          .setCounter((byte) sfi, counterNumber, buildAnticipatedDataOut());
+          .setCounter(
+              (byte) sfi, counterNumber != 0 ? counterNumber : 1, buildAnticipatedDataOut());
     } else {
       // Set returned value
       getTransactionContext()
           .getCard()
-          .setCounter((byte) sfi, counterNumber, apduResponse.getDataOut());
+          .setCounter(
+              (byte) sfi, counterNumber != 0 ? counterNumber : 1, apduResponse.getDataOut());
     }
     updateTerminalSessionMacIfNeeded();
   }
