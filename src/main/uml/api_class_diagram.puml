@@ -1,6 +1,6 @@
 @startuml
 title
-    Keyple - keyple-card-calypso-java-lib - 2.3.+ (2022-12-22)
+    Keyple - keyple-card-calypso-java-lib - 3.0.+ (2023-06-30)
 end title
 
 ' == THEME ==
@@ -54,37 +54,39 @@ hide <<grey>> stereotype
 legend top
     __Colors legend__ :
     * __External API references__ :
-    ** <back:yellow>**calypsonet-terminal-reader-java-api**</back>
-    ** <back:pink>**calypsonet-terminal-calypso-java-api**</back>
+    ** <color:red><back:yellow>**keypop-reader-java-api**</back>
+    ** <back:pink>**keypop-calypso-java-api**</back>
     ** <back:cyan>**keyple-common-java-api**</back>
-    ** <back:orange>**keyple-service-resource-java-lib**</back>
+    ** <color:red><back:orange>**keyple-service-resource-java-lib**</back>
 end legend
 
 package "org.eclipse.keyple.card.calypso" as calypso {
-    +class "<<<back:cyan>KeypleCardExtension</back>>>\n**final** CalypsoExtensionService" as CalypsoExtensionService {
+    +class "<<<back:cyan>KeypleCardExtension</back>>>\n**final** CalypsoExtensionService" as CalypsoExtensionService <<green>> {
         --
         +{static} CalypsoExtensionService getInstance ()
 
         +ContextSetting getContextSetting ()
 
-        +<back:pink>SearchCommandData</back> createSearchCommandData ()
-        +<back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
-        +<back:pink>TraceableSignatureComputationData</back> createTraceableSignatureComputationData ()
-        +<back:pink>BasicSignatureVerificationData</back> createBasicSignatureVerificationData ()
-        +<back:pink>TraceableSignatureVerificationData</back> createTraceableSignatureVerificationData ()
+        +<color:blue><back:pink>CalypsoCardApiFactory</back> createCalypsoCardApiFactory ()
 
-        +<back:pink>CalypsoCardSelection</back> createCardSelection ()
-        +<back:pink>CalypsoSamSelection</back> createSamSelection ()
+        +<color:red><back:pink>SearchCommandData</back> createSearchCommandData ()
+        +<color:red><back:pink>BasicSignatureComputationData</back> createBasicSignatureComputationData ()
+        +<color:red><back:pink>TraceableSignatureComputationData</back> createTraceableSignatureComputationData ()
+        +<color:red><back:pink>BasicSignatureVerificationData</back> createBasicSignatureVerificationData ()
+        +<color:red><back:pink>TraceableSignatureVerificationData</back> createTraceableSignatureVerificationData ()
+
+        +<color:red><back:pink>CalypsoCardSelection</back> createCardSelection ()
+        +<color:red><back:pink>CalypsoSamSelection</back> createSamSelection ()
         
-        +<back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
+        +<color:red><back:orange>CardResourceProfileExtension</back> createSamResourceProfileExtension (<back:pink>CalypsoSamSelection</back> calypsoSamSelection)
 
-        +<back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
-        +<back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
-        +<back:pink>CardTransactionManager</back> createCardTransactionWithoutSecurity (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard)
+        +<color:red><back:pink>CardSecuritySetting</back> createCardSecuritySetting ()
+        +<color:red><back:pink>CardTransactionManager</back> createCardTransaction (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard, <back:pink>CardSecuritySetting</back> cardSecuritySetting)
+        +<color:red><back:pink>CardTransactionManager</back> createCardTransactionWithoutSecurity (<back:yellow>CardReader</back> cardReader, <back:pink>CalypsoCard</back> calypsoCard)
 
-        +<s><back:pink>SamSecuritySetting</back> createSamSecuritySetting ()
-        +<s><back:pink>SamTransactionManager</back> createSamTransaction (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam, <back:pink>SamSecuritySetting</back> samSecuritySetting)
-        +<s><back:pink>SamTransactionManager</back> createSamTransactionWithoutSecurity (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam)
+        +<color:red><s><back:pink>SamSecuritySetting</back> createSamSecuritySetting ()
+        +<color:red><s><back:pink>SamTransactionManager</back> createSamTransaction (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam, <back:pink>SamSecuritySetting</back> samSecuritySetting)
+        +<color:red><s><back:pink>SamTransactionManager</back> createSamTransactionWithoutSecurity (<back:yellow>CardReader</back> samReader, <back:pink>CalypsoSam</back> calypsoSam)
 
         -- **KeypleCardExtension** --
         +String getCommonApiVersion ()
