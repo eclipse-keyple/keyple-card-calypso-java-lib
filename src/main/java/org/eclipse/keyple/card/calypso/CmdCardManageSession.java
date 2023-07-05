@@ -14,10 +14,10 @@ package org.eclipse.keyple.card.calypso;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 
 import java.util.*;
-import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
  * Builds the Manage Secure Session APDU command.
@@ -229,7 +229,7 @@ final class CmdCardManageSession extends CardCommand {
         if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
             .isCardSessionMacValid(cardSessionMac)) {
-          throw new InvalidCardSignatureException("Invalid card (authentication failed!)");
+          throw new InvalidCardMacException("Invalid card (authentication failed!)");
         }
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();

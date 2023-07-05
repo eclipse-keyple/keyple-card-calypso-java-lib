@@ -433,14 +433,14 @@ final class SymmetricCryptoTransactionManagerAdapter
           SamCommandRef commandRef = samCommands.get(i).getCommandRef();
           if (commandRef == SamCommandRef.DIGEST_AUTHENTICATE
               && e instanceof SamSecurityDataException) {
-            throw new InvalidCardMacException("Invalid card signature.");
+            throw new InvalidCardMacException("Invalid card mac.");
           } else if ((commandRef == SamCommandRef.PSO_VERIFY_SIGNATURE
                   || commandRef == SamCommandRef.DATA_CIPHER)
               && e instanceof SamSecurityDataException) {
             throw new InvalidSignatureException("Invalid signature.", e);
           } else if (commandRef == SamCommandRef.SV_CHECK
               && e instanceof SamSecurityDataException) {
-            throw new InvalidCardMacException("Invalid SV card signature.");
+            throw new InvalidCardMacException("Invalid SV card mac.");
           }
           String sw =
               samCommands.get(i).getApduResponse() != null

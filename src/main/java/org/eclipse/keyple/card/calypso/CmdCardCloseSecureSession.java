@@ -18,11 +18,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
-import org.calypsonet.terminal.calypso.transaction.CardSignatureNotVerifiableException;
-import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.card.card.CalypsoCard;
+import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
+import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,10 +282,10 @@ final class CmdCardCloseSecureSession extends CardCommand {
       if (!getTransactionContext()
           .getSymmetricCryptoTransactionManagerSpi()
           .isCardSessionMacValid(cardSessionMac)) {
-        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+        throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
       }
     } catch (SymmetricCryptoIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
+      throw new CardMacNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     }
@@ -295,10 +295,10 @@ final class CmdCardCloseSecureSession extends CardCommand {
         if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
             .isCardSvMacValid(postponedData.get(svPostponedDataIndex))) {
-          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+          throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+        throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }

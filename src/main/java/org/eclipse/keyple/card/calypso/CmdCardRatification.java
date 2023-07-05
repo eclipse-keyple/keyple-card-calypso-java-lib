@@ -13,10 +13,10 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.card.calypso.DtoAdapters.TransactionContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
  * Builds a "Ratification" command.

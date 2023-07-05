@@ -16,10 +16,10 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.HexUtil;
+import org.eclipse.keypop.calypso.card.card.ElementaryFile;
+import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

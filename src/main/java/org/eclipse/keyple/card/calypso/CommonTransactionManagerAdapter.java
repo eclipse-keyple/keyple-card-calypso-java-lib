@@ -17,10 +17,10 @@ import org.calypsonet.terminal.calypso.transaction.CommonSecuritySetting;
 import org.calypsonet.terminal.calypso.transaction.CommonTransactionManager;
 import org.calypsonet.terminal.card.ApduResponseApi;
 import org.calypsonet.terminal.card.CardResponseApi;
-import org.calypsonet.terminal.card.spi.ApduRequestSpi;
-import org.calypsonet.terminal.card.spi.CardRequestSpi;
 import org.calypsonet.terminal.reader.selection.spi.SmartCard;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.card.spi.ApduRequestSpi;
+import org.eclipse.keypop.card.spi.CardRequestSpi;
 
 /**
  * Implementation of {@link CommonTransactionManager}.

@@ -15,11 +15,11 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.calypso.transaction.CardSignatureNotVerifiableException;
-import org.calypsonet.terminal.calypso.transaction.InvalidCardSignatureException;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
+import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
  * Builds the SV Reload command.
@@ -328,10 +328,10 @@ final class CmdCardSvReload extends CardCommand {
         if (!getTransactionContext()
             .getSymmetricCryptoTransactionManagerSpi()
             .isCardSvMacValid(getTransactionContext().getCard().getSvOperationSignature())) {
-          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+          throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+        throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }

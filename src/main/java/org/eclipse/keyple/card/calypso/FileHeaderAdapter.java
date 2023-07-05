@@ -12,9 +12,9 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
-import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.card.FileHeader;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.card.ElementaryFile;
+import org.eclipse.keypop.calypso.card.card.FileHeader;
 
 /**
  * Implementation of {@link FileHeader}.

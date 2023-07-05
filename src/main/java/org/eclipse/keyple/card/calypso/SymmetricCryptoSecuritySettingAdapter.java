@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 
 /**
  * Adapter of {@link SymmetricCryptoSecuritySetting}.

@@ -15,7 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.calypsonet.terminal.card.ApduResponseApi;
+import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
  * Superclass for all card commands.
@@ -25,8 +25,8 @@ import org.calypsonet.terminal.card.ApduResponseApi;
  * <ul>
  *   <li>the card command reference,
  *   <li>the name of the command,
- *   <li>the built {@link org.calypsonet.terminal.card.spi.ApduRequestSpi},
- *   <li>the parsed {@link org.calypsonet.terminal.card.ApduResponseApi}.
+ *   <li>the built {@link org.eclipse.keypop.card.spi.ApduRequestSpi},
+ *   <li>the parsed {@link org.eclipse.keypop.card.ApduResponseApi}.
  * </ul>
  *
  * @since 2.0.1

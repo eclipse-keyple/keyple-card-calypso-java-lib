@@ -14,26 +14,29 @@ package org.eclipse.keyple.card.calypso;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.*;
-import org.calypsonet.terminal.calypso.GetDataTag;
-import org.calypsonet.terminal.calypso.SelectFileControl;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
-import org.calypsonet.terminal.calypso.card.ElementaryFile;
-import org.calypsonet.terminal.calypso.transaction.*;
-import org.calypsonet.terminal.calypso.transaction.InconsistentDataException;
-import org.calypsonet.terminal.card.*;
-import org.calypsonet.terminal.card.spi.ApduRequestSpi;
-import org.calypsonet.terminal.card.spi.CardRequestSpi;
-import org.calypsonet.terminal.reader.CardReader;
+import org.calypsonet.terminal.calypso.transaction.CardSecuritySetting;
+import org.calypsonet.terminal.calypso.transaction.CardTransactionManager;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.SelectFileControl;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.card.CalypsoCard;
+import org.eclipse.keypop.calypso.card.card.ElementaryFile;
+import org.eclipse.keypop.calypso.card.transaction.*;
+import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
+import org.eclipse.keypop.calypso.card.transaction.InconsistentDataException;
+import org.eclipse.keypop.card.*;
+import org.eclipse.keypop.card.spi.ApduRequestSpi;
+import org.eclipse.keypop.card.spi.CardRequestSpi;
+import org.eclipse.keypop.reader.CardReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of {@link org.calypsonet.terminal.calypso.transaction.CardTransactionManager}.
+ * Implementation of {@link org.eclipse.keypop.calypso.card.transaction.CardTransactionManager}.
  *
  * <ul>
  *   <li>CL-APP-ISOL.1
@@ -278,30 +281,6 @@ final class CardTransactionManagerAdapter
   private void disablePreOpenMode() {
     card.setPreOpenWriteAccessLevel(null);
     card.setPreOpenDataOut(null);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public CardReader getCardReader() {
-    return (CardReader) cardReader;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.0
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public CalypsoCard getCalypsoCard() {
-    return card;
   }
 
   /**
@@ -653,13 +632,13 @@ final class CardTransactionManagerAdapter
    * Checks card session MAC during the early authentication process.
    *
    * @param cardCommand The card command.
-   * @throws InvalidCardSignatureException If the card session MAC is invalid.
+   * @throws InvalidCardMacException If the card session MAC is invalid.
    */
   private void checkCardSessionMac(CmdCardManageSession cardCommand) {
     try {
       if (!symmetricCryptoTransactionManagerSpi.isCardSessionMacValid(
           cardCommand.getCardSessionMac())) {
-        throw new InvalidCardSignatureException("Invalid card (authentication failed!)");
+        throw new InvalidCardMacException("Invalid card (authentication failed!)");
       }
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
@@ -1009,15 +988,15 @@ final class CardTransactionManagerAdapter
           e);
     }
 
-    // Check the card signature
+    // Check the card mac
     // CL-CSS-MACVERIF.1
     try {
       if (!symmetricCryptoTransactionManagerSpi.isCardSessionMacValid(
           cmdCardCloseSecureSession.getSignatureLo())) {
-        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+        throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
       }
     } catch (SymmetricCryptoIOException e) {
-      throw new CardSignatureNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
+      throw new CardMacNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
     } catch (SymmetricCryptoException e) {
       throw (RuntimeException) e.getCause();
     }
@@ -1028,10 +1007,10 @@ final class CardTransactionManagerAdapter
       try {
         if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
             cmdCardCloseSecureSession.getPostponedData().get(svPostponedDataIndex))) {
-          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+          throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+        throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }
@@ -1161,12 +1140,12 @@ final class CardTransactionManagerAdapter
    *             card as ratified.
    *       </ul>
    *   <li>The card responses of the cardModificationCommands are compared with the
-   *       cardAnticipatedResponses. The card signature is identified from the card Close Session
+   *       cardAnticipatedResponses. The card mac is identified from the card Close Session
    *       response.
-   *   <li>The card certificate is recovered from the Close Session response. The card signature is
+   *   <li>The card certificate is recovered from the Close Session response. The card mac is
    *       identified.
    *   <li>Finally, on the SAM session reader, a Digest Authenticate is automatically operated in
-   *       order to verify the card signature.
+   *       order to verify the card mac.
    *   <li>Returns the corresponding card CardResponse.
    * </ul>
    *
@@ -1400,10 +1379,10 @@ final class CardTransactionManagerAdapter
       try {
         if (!symmetricCryptoTransactionManagerSpi.isCardSvMacValid(
             card.getSvOperationSignature())) {
-          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
+          throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+        throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }

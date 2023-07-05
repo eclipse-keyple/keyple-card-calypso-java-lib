@@ -15,14 +15,14 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.card.*;
-import org.calypsonet.terminal.card.ApduResponseApi;
-import org.calypsonet.terminal.card.CardSelectionResponseApi;
-import org.calypsonet.terminal.card.spi.SmartCardSpi;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.card.*;
+import org.eclipse.keypop.card.ApduResponseApi;
+import org.eclipse.keypop.card.CardSelectionResponseApi;
+import org.eclipse.keypop.card.spi.SmartCardSpi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -810,24 +810,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.0
-   * @deprecated
-   */
-  @Override
-  @Deprecated
-  public Map<Byte, ElementaryFile> getAllFiles() {
-    Map<Byte, ElementaryFile> res = new HashMap<Byte, ElementaryFile>(files.size());
-    for (ElementaryFile ef : files) {
-      if (ef.getSfi() != 0) {
-        res.put(ef.getSfi(), ef);
-      }
-    }
-    return res;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.1.0
    */
   @Override
@@ -1087,7 +1069,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   /**
    * Sets the traceability information received in response to the GET DATA command for the tag
-   * {@link org.calypsonet.terminal.calypso.GetDataTag#TRACEABILITY_INFORMATION}.
+   * {@link org.eclipse.keypop.calypso.card.GetDataTag#TRACEABILITY_INFORMATION}.
    *
    * @param traceabilityInformation The traceability information.
    * @since 2.1.0

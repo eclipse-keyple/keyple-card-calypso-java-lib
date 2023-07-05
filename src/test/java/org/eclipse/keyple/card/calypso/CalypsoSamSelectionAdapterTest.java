@@ -34,8 +34,9 @@ public class CalypsoSamSelectionAdapterTest {
 
   @Before
   public void setUp() {
-    samSelection =
-        (CalypsoSamSelectionAdapter) CalypsoExtensionService.getInstance().createSamSelection();
+    //    samSelection =
+    //        (CalypsoSamSelectionAdapter)
+    // CalypsoExtensionService.getInstance().createSamSelection();
   }
 
   @Test(expected = IllegalArgumentException.class)

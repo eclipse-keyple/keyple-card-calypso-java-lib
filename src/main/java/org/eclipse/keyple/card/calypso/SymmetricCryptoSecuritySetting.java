@@ -11,7 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 
 /**
  * Data to manage the security operations of a Calypso card transaction.

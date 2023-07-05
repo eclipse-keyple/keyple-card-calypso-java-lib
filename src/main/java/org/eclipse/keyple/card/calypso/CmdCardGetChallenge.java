@@ -13,8 +13,8 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
  * Builds the Get Challenge APDU command.
