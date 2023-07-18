@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added S1D7 to the list of SAM types recognized by the library (issue [#99]).
 
 ## [2.3.7] - 2023-06-29
 ### Fixed
@@ -205,6 +207,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#99]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/99
 [#84]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/84
 [#83]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/83
 [#71]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/71
