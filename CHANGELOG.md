@@ -5,8 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.3.8] - 2023-09-11
 ### Added
-- Added S1D7 to the list of SAM types recognized by the library (issue [#99]).
+- Added S1D3 to S1D7 to the list of SAM types recognized by the library (issue [#99]).
+### Fixed
+- Fixed the `prepareSetCounter(...)` method to allow the use of simulated counters (issue [#100]).
+### Upgraded
+- Keyple Util Library `2.3.0` -> `2.3.1` (source code not impacted)
 
 ## [2.3.7] - 2023-06-29
 ### Fixed
@@ -81,7 +87,8 @@ startup information value:
 - Generate multiple increase/decrease counter commands when the card does not support Increase/DecreaseMultiple
   commands (issue [#84]).
 - Expected length issue in "Read Binary" card command.
-- Set payload capacity to 235 for cards revision 3 having the following startup information pattern: `xx 3C xx xx xx 10 xx`
+- Set payload capacity to 235 for cards revision 3 having the following startup information pattern:
+  `xx 3C xx xx xx 10 xx`
 - Set payload capacity to 128 for cards revision 1 & 2.
 - Fix postponed data issue for increase/decrease counter commands for cards revision 1 & 2 having the following startup 
   information pattern:
@@ -183,10 +190,12 @@ startup information value:
 
 ## [2.0.0] - 2021-10-06
 This is the initial release.
-It follows the extraction of Keyple 1.0 components contained in the `eclipse/keyple-java` repository to dedicated repositories.
+It follows the extraction of Keyple 1.0 components contained in the `eclipse/keyple-java` repository to dedicated 
+repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.7...HEAD
+[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.8...HEAD
+[2.3.8]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.7...2.3.8
 [2.3.7]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.6...2.3.7
 [2.3.6]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.5...2.3.6
 [2.3.5]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.4...2.3.5
@@ -207,6 +216,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#100]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/100
 [#99]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/99
 [#84]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/84
 [#83]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/83

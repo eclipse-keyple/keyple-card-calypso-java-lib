@@ -3489,7 +3489,7 @@ final class CardTransactionManagerAdapter
       Integer oldValue = null;
       ElementaryFile ef = card.getFileBySfi(sfi);
       if (ef != null) {
-        oldValue = ef.getData().getContentAsCounterValue(counterNumber);
+        oldValue = ef.getData().getContentAsCounterValue(counterNumber != 0 ? counterNumber : 1);
       }
       if (oldValue == null) {
         throw new IllegalStateException(
