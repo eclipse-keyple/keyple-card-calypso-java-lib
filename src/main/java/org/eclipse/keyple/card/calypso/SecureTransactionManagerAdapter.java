@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * @param <T> The type of the lowest level child object.
  * @since 3.0.0
  */
-class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>> extends TransactionManagerAdapter<T> implements SecureTransactionManager<T> {
+abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>> extends TransactionManagerAdapter<T> implements SecureTransactionManager<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SecureTransactionManagerAdapter.class);
 
@@ -56,12 +56,12 @@ class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>> ext
         // CL-RAT-NXTCLOSE.1
         cardCommands.add(
                 new CmdCardCloseSecureSession(
-                        transactionContext, getCommandContext(), false, svPostponedDataIndex));
-        cardCommands.add(new CmdCardRatification(transactionContext, getCommandContext()));
+                        getTransactionContext(), getCommandContext(), false, svPostponedDataIndex));
+        cardCommands.add(new CmdCardRatification(getTransactionContext(), getCommandContext()));
       } else {
         cardCommands.add(
                 new CmdCardCloseSecureSession(
-                        transactionContext, getCommandContext(), true, svPostponedDataIndex));
+                        getTransactionContext(), getCommandContext(), true, svPostponedDataIndex));
       }
     } catch (RuntimeException e) {
       resetTransaction();
@@ -93,7 +93,7 @@ class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>> ext
   @Override
   public T prepareCancelSecureSession() {
     try {
-      cardCommands.add(new CmdCardCloseSecureSession(transactionContext, getCommandContext()));
+      cardCommands.add(new CmdCardCloseSecureSession(getTransactionContext(), getCommandContext()));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;

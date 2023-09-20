@@ -5,11 +5,15 @@ import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.transaction.*;
+import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Adapter of {@link SecureSymmetricCryptoTransactionManager}.
@@ -17,9 +21,18 @@ import org.slf4j.LoggerFactory;
  * @param <T> The type of the lowest level child object.
  * @since 3.0.0
  */
-class SecureSymmetricCryptoTransactionManagerAdapter<T extends SecureSymmetricCryptoTransactionManager<T>> extends SecureTransactionManagerAdapter<T> implements SecureSymmetricCryptoTransactionManager<T> {
+abstract class SecureSymmetricCryptoTransactionManagerAdapter<T extends SecureSymmetricCryptoTransactionManager<T>> extends SecureTransactionManagerAdapter<T> implements SecureSymmetricCryptoTransactionManager<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SecureSymmetricCryptoTransactionManagerAdapter.class);
+
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+
+  // commands that modify the content of the card in session have a cost on the session buffer equal
+  // to the length of the outgoing data plus 6 bytes
+  private static final int SESSION_BUFFER_CMD_ADDITIONAL_COST = 6;
+  private static final int APDU_HEADER_LENGTH = 5;
+
+  final TransactionContextDto transactionContext;
 
   /**
    * Builds a new instance.
@@ -31,6 +44,248 @@ class SecureSymmetricCryptoTransactionManagerAdapter<T extends SecureSymmetricCr
    */
   SecureSymmetricCryptoTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card, SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting) {
     super(cardReader, card, symmetricCryptoSecuritySetting);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  final TransactionContextDto getTransactionContext() {
+    return transactionContext;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  final void prepareNewSecureSessionIfNeeded(CardCommand command) {
+    if (!isSecureSessionOpen) {
+      return;
+    }
+    modificationsCounter -= computeCommandSessionBufferSize(command);
+    if (modificationsCounter < 0) {
+      checkMultipleSessionEnabled(command);
+      cardCommands.add(
+              new CmdCardCloseSecureSession(
+                      transactionContext, getCommandContext(), true, svPostponedDataIndex));
+      disablePreOpenMode();
+      cardCommands.add(
+              new CmdCardOpenSecureSession(
+                      transactionContext,
+                      getCommandContext(),
+                      symmetricCryptoSecuritySetting,
+                      writeAccessLevel,
+                      isExtendedMode));
+      if (isEncryptionActive) {
+        cardCommands.add(
+                new CmdCardManageSession(transactionContext, getCommandContext())
+                        .setEncryptionRequested(true));
+      }
+      modificationsCounter = card.getModificationsCounter();
+      modificationsCounter -= computeCommandSessionBufferSize(command);
+      nbPostponedData = 0;
+      svPostponedDataIndex = -1;
+      isSvOperationInSecureSession = false;
+    }
+  }
+
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  final boolean canConfigureReadOnOpenSecureSession() {
+    return isSecureSessionOpen
+            && !symmetricCryptoSecuritySetting.isReadOnSessionOpeningDisabled()
+            && card.getPreOpenWriteAccessLevel() == null // No pre-open mode
+            && !cardCommands.isEmpty()
+            && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+            == CardCommandRef.OPEN_SECURE_SESSION
+            && !((CmdCardOpenSecureSession) cardCommands.get(cardCommands.size() - 1))
+            .isReadModeConfigured();
+  }
+
+  /**
+   * Computes the session buffer size of the provided command.<br>
+   * The size may be a number of bytes or 1 depending on the card specificities.
+   *
+   * @param command The command.
+   * @return A positive value.
+   */
+  private int computeCommandSessionBufferSize(CardCommand command) {
+    return card.isModificationsCounterInBytes()
+            ? command.getApduRequest().getApdu().length
+            + SESSION_BUFFER_CMD_ADDITIONAL_COST
+            - APDU_HEADER_LENGTH
+            : 1;
+  }
+
+  /**
+   * Throws an exception if the multiple session is not enabled.
+   *
+   * @param command The command.
+   * @throws SessionBufferOverflowException If the multiple session is not allowed.
+   */
+  private void checkMultipleSessionEnabled(CardCommand command) {
+    // CL-CSS-REQUEST.1
+    // CL-CSS-SMEXCEED.1
+    // CL-CSS-INFOCSS.1
+    if (!symmetricCryptoSecuritySetting.isMultipleSessionEnabled()) {
+      throw new SessionBufferOverflowException(
+              "ATOMIC mode error! This command would overflow the card modifications buffer: "
+                      + command.getName()
+                      + getTransactionAuditDataAsString());
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>For each prepared command, if a pre-processing is required, then we try to execute the
+   * post-processing of each of the previous commands in anticipation. If at least one
+   * post-processing cannot be anticipated, then we execute the block of previous commands first.
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public T processCommands(ChannelControl channelControl) {
+    if (cardCommands.isEmpty()) {
+      processCryptoPreparedCommands();
+      return currentInstance;
+    }
+    try {
+      List<CardCommand> cardRequestCommands = new ArrayList<CardCommand>();
+      for (CardCommand command : cardCommands) {
+        if (command.isCryptoServiceRequiredToFinalizeRequest()) {
+          if (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands)) {
+            executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
+            cardRequestCommands.clear();
+          }
+        }
+        command.finalizeRequest();
+        cardRequestCommands.add(command);
+      }
+      executeCardCommands(cardRequestCommands, channelControl);
+      processCryptoPreparedCommands();
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    } finally {
+      cardCommands.clear();
+      if (isExtendedMode && !card.isExtendedModeSupported()) {
+        isExtendedMode = false;
+      }
+    }
+    return currentInstance;
+  }
+
+  /**
+   * Attempts to synchronize the crypto service before executing the finalized command on the card
+   * and returns "true" on successful execution.
+   *
+   * @param commands The commands.
+   * @return "false" if the crypto service could not be synchronized before transmitting the
+   *     commands to the card.
+   */
+  private boolean synchronizeCryptoServiceBeforeCardProcessing(List<CardCommand> commands) {
+    for (CardCommand command : commands) {
+      if (!command.synchronizeCryptoServiceBeforeCardProcessing()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Process any prepared crypto commands. */
+  private void processCryptoPreparedCommands() {
+    if (symmetricCryptoTransactionManagerSpi != null) {
+      try {
+        symmetricCryptoTransactionManagerSpi.synchronize();
+      } catch (SymmetricCryptoException e) {
+        throw (RuntimeException) e.getCause();
+      } catch (SymmetricCryptoIOException e) {
+        throw (RuntimeException) e.getCause();
+      }
+    }
+  }
+
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public T prepareVerifyPin(byte[] pin) {
+    try {
+      Assert.getInstance()
+              .notNull(pin, "pin")
+              .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+      if (!card.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+      }
+      if (symmetricCryptoSecuritySetting == null
+              || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
+        cardCommands.add(new CmdCardVerifyPin(getTransactionContext(), getCommandContext(), pin));
+      } else {
+        // CL-PIN-PENCRYPT.1
+        // CL-PIN-GETCHAL.1
+        cardCommands.add(new CmdCardGetChallenge(getTransactionContext(), getCommandContext()));
+        cardCommands.add(
+                new CmdCardVerifyPin(
+                        getTransactionContext(),
+                        getCommandContext(),
+                        pin,
+                        symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
+                        symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc()));
+      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
+    return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public T prepareChangePin(byte[] newPin) {
+    try {
+      Assert.getInstance()
+              .notNull(newPin, "newPin")
+              .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+      if (!card.isPinFeatureAvailable()) {
+        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
+      }
+      checkNoSecureSession();
+      // CL-PIN-MENCRYPT.1
+      if (symmetricCryptoSecuritySetting == null
+              || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
+        cardCommands.add(new CmdCardChangePin(getTransactionContext(), getCommandContext(), newPin));
+      } else {
+        // CL-PIN-GETCHAL.1
+        cardCommands.add(new CmdCardGetChallenge(getTransactionContext(), getCommandContext()));
+        cardCommands.add(
+                new CmdCardChangePin(
+                        getTransactionContext(),
+                        getCommandContext(),
+                        newPin,
+                        symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
+                        symmetricCryptoSecuritySetting.getPinModificationCipheringKvc()));
+      }
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
+    return currentInstance;
   }
 
   /**

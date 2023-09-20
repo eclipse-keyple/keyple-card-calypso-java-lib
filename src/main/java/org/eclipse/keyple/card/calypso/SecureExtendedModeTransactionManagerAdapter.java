@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  * Adapter of {@link SecureExtendedModeTransactionManager}.
  * @since 3.0.0
  */
-class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricCryptoTransactionManagerAdapter<SecureExtendedModeTransactionManager> implements SecureExtendedModeTransactionManager {
+final class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricCryptoTransactionManagerAdapter<SecureExtendedModeTransactionManager> implements SecureExtendedModeTransactionManager {
 
   private static final Logger logger = LoggerFactory.getLogger(SecureExtendedModeTransactionManagerAdapter.class);
 

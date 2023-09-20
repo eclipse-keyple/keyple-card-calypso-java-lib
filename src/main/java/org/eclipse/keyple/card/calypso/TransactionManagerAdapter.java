@@ -58,7 +58,7 @@ import java.util.*;
  * @param <T> The type of the lowest level child object.
  * @since 3.0.0
  */
-class TransactionManagerAdapter<T extends TransactionManager<T>> implements TransactionManager<T> {
+abstract class TransactionManagerAdapter<T extends TransactionManager<T>> implements TransactionManager<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(TransactionManagerAdapter.class);
 
@@ -73,7 +73,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
   private static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands.";
-  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
   static final String MSG_MSS_COMMAND_NOT_SUPPORTED =
           "'Manage Secure Session' command not available for this context (Card and/or SAM does not support extended mode)";
   static final String MSG_ENCRYPTION_ALREADY_ACTIVE = "Encryption already active";
@@ -88,7 +87,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
 
   // commands that modify the content of the card in session have a cost on the session buffer equal
   // to the length of the outgoing data plus 6 bytes
-  private static final int SESSION_BUFFER_CMD_ADDITIONAL_COST = 6;
   private static final int APDU_HEADER_LENGTH = 5;
 
   /* Final fields */
@@ -102,7 +100,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
   private final int cardPayloadCapacity;
 
   /* Dynamic fields */
-  final TransactionContextDto transactionContext;
   final List<CardCommand> cardCommands = new ArrayList<CardCommand>();
   WriteAccessLevel writeAccessLevel;
   boolean isExtendedMode;
@@ -162,8 +159,37 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
     }
 
     modificationsCounter = card.getModificationsCounter();
-    this.transactionContext = new TransactionContextDto(card, symmetricCryptoTransactionManagerSpi);
   }
+
+  /**
+   * Returns the transaction context.
+   * @return A non-null reference.
+   * @since 3.0.0
+   */
+  abstract TransactionContextDto getTransactionContext();
+
+  /**
+   * Closes and opens a new secure session if the three following conditions are satisfied:
+   *
+   * <ul>
+   *   <li>a secure session is open
+   *   <li>the command will overflow the modifications buffer size
+   *   <li>the multiple session mode is allowed
+   * </ul>
+   *
+   * @param command The command.
+   * @throws SessionBufferOverflowException If the command will overflow the modifications buffer
+   *     size and the multiple session is not allowed.
+   * @since 3.0.0
+   */
+  abstract void prepareNewSecureSessionIfNeeded(CardCommand command);
+
+  /**
+   * @return True if it is possible to configure the auto read record into the open secure session
+   *     command.
+   * @since 3.0.0
+   */
+  abstract boolean canConfigureReadOnOpenSecureSession();
 
   /** Clears the info associated with the "pre-open" mode. */
   void disablePreOpenMode() {
@@ -194,19 +220,19 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
     isSvOperationInSecureSession = false;
     disablePreOpenMode();
     cardCommands.clear();
-    if (transactionContext.isSecureSessionOpen()) {
+    if (getTransactionContext().isSecureSessionOpen()) {
       try {
         CmdCardCloseSecureSession cancelSecureSessionCommand =
-                new CmdCardCloseSecureSession(transactionContext, getCommandContext());
+                new CmdCardCloseSecureSession(getTransactionContext(), getCommandContext());
         cancelSecureSessionCommand.finalizeRequest();
         List<CardCommand> commands = new ArrayList<CardCommand>(1);
         commands.add(cancelSecureSessionCommand);
-        executeCardCommands(commands, false);
+        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
         logger.debug("Secure session abortion error: {}", e.getMessage());
       } finally {
         card.restoreFiles();
-        transactionContext.setSecureSessionOpen(false);
+        getTransactionContext().setSecureSessionOpen(false);
       }
     }
   }
@@ -216,9 +242,10 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
    * Executes the provided commands.
    *
    * @param commands The commands.
-   * @param closePhysicalChannel "true" if the physical channel must be closed after the operation.
+   * @param channelControl The channel control directive.
+   * @since 3.0.0
    */
-  private void executeCardCommands(List<CardCommand> commands, boolean closePhysicalChannel) {
+  final void executeCardCommands(List<CardCommand> commands, ChannelControl channelControl) {
 
     // Retrieve the list of C-APDUs
     List<ApduRequestSpi> apduRequests = getApduRequests(commands);
@@ -230,7 +257,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
     CardResponseApi cardResponse =
             transmitCardRequest(
                     cardRequest,
-                    closePhysicalChannel ? ChannelControl.CLOSE_AFTER : ChannelControl.KEEP_OPEN);
+                    channelControl);
 
     // Retrieve the list of R-APDUs
     List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
@@ -273,19 +300,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
                       + MSG_NB_RESPONSES
                       + apduResponses.size()
                       + getTransactionAuditDataAsString());
-    }
-  }
-
-  /** Process any prepared SAM commands if control SAM is set. */
-  private void processSamPreparedCommands() {
-    if (symmetricCryptoTransactionManagerSpi != null) {
-      try {
-        symmetricCryptoTransactionManagerSpi.synchronize();
-      } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
-      } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
-      }
     }
   }
 
@@ -352,21 +366,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
   }
 
   /**
-   * @return True if it is possible to configure the auto read record into the open secure session
-   *     command.
-   */
-  private boolean canConfigureReadOnOpenSecureSession() {
-    return isSecureSessionOpen
-            && !symmetricCryptoSecuritySetting.isReadOnSessionOpeningDisabled()
-            && card.getPreOpenWriteAccessLevel() == null // No pre-open mode
-            && !cardCommands.isEmpty()
-            && cardCommands.get(cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.OPEN_SECURE_SESSION
-            && !((CmdCardOpenSecureSession) cardCommands.get(cardCommands.size() - 1))
-            .isReadModeConfigured();
-  }
-
-  /**
    * Saves the provided exchanged APDU commands in the list of transaction audit data.
    *
    * @param cardRequest The card request.
@@ -399,83 +398,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
   }
 
   /**
-   * Closes and opens a new secure session if the three following conditions are satisfied:
-   *
-   * <ul>
-   *   <li>a secure session is open
-   *   <li>the command will overflow the modifications buffer size
-   *   <li>the multiple session mode is allowed
-   * </ul>
-   *
-   * @param command The command.
-   * @throws SessionBufferOverflowException If the command will overflow the modifications buffer
-   *     size and the multiple session is not allowed.
-   */
-  void prepareNewSecureSessionIfNeeded(CardCommand command) {
-    if (!isSecureSessionOpen) {
-      return;
-    }
-    modificationsCounter -= computeCommandSessionBufferSize(command);
-    if (modificationsCounter < 0) {
-      checkMultipleSessionEnabled(command);
-      cardCommands.add(
-              new CmdCardCloseSecureSession(
-                      transactionContext, getCommandContext(), true, svPostponedDataIndex));
-      disablePreOpenMode();
-      cardCommands.add(
-              new CmdCardOpenSecureSession(
-                      transactionContext,
-                      getCommandContext(),
-                      symmetricCryptoSecuritySetting,
-                      writeAccessLevel,
-                      isExtendedMode));
-      if (isEncryptionActive) {
-        cardCommands.add(
-                new CmdCardManageSession(transactionContext, getCommandContext())
-                        .setEncryptionRequested(true));
-      }
-      modificationsCounter = card.getModificationsCounter();
-      modificationsCounter -= computeCommandSessionBufferSize(command);
-      nbPostponedData = 0;
-      svPostponedDataIndex = -1;
-      isSvOperationInSecureSession = false;
-    }
-  }
-
-  /**
-   * Computes the session buffer size of the provided command.<br>
-   * The size may be a number of bytes or 1 depending on the card specificities.
-   *
-   * @param command The command.
-   * @return A positive value.
-   */
-  private int computeCommandSessionBufferSize(CardCommand command) {
-    return card.isModificationsCounterInBytes()
-            ? command.getApduRequest().getApdu().length
-            + SESSION_BUFFER_CMD_ADDITIONAL_COST
-            - APDU_HEADER_LENGTH
-            : 1;
-  }
-
-  /**
-   * Throws an exception if the multiple session is not enabled.
-   *
-   * @param command The command.
-   * @throws SessionBufferOverflowException If the multiple session is not allowed.
-   */
-  private void checkMultipleSessionEnabled(CardCommand command) {
-    // CL-CSS-REQUEST.1
-    // CL-CSS-SMEXCEED.1
-    // CL-CSS-INFOCSS.1
-    if (!symmetricCryptoSecuritySetting.isMultipleSessionEnabled()) {
-      throw new SessionBufferOverflowException(
-              "ATOMIC mode error! This command would overflow the card modifications buffer: "
-                      + command.getName()
-                      + getTransactionAuditDataAsString());
-    }
-  }
-
-  /**
    * Checks if no secure session is open.
    *
    * @throws IllegalStateException If a secure session is open.
@@ -494,7 +416,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
   @Override
   public T prepareSelectFile(short lid) {
     try {
-      cardCommands.add(new CmdCardSelectFile(transactionContext, getCommandContext(), lid));
+      cardCommands.add(new CmdCardSelectFile(getTransactionContext(), getCommandContext(), lid));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -512,7 +434,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
     try {
       Assert.getInstance().notNull(selectFileControl, "selectFileControl");
       cardCommands.add(
-              new CmdCardSelectFile(transactionContext, getCommandContext(), selectFileControl));
+              new CmdCardSelectFile(getTransactionContext(), getCommandContext(), selectFileControl));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -531,17 +453,17 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       Assert.getInstance().notNull(tag, "tag");
       switch (tag) {
         case FCI_FOR_CURRENT_DF:
-          cardCommands.add(new CmdCardGetDataFci(transactionContext, getCommandContext()));
+          cardCommands.add(new CmdCardGetDataFci(getTransactionContext(), getCommandContext()));
           break;
         case FCP_FOR_CURRENT_FILE:
-          cardCommands.add(new CmdCardGetDataFcp(transactionContext, getCommandContext()));
+          cardCommands.add(new CmdCardGetDataFcp(getTransactionContext(), getCommandContext()));
           break;
         case EF_LIST:
-          cardCommands.add(new CmdCardGetDataEfList(transactionContext, getCommandContext()));
+          cardCommands.add(new CmdCardGetDataEfList(getTransactionContext(), getCommandContext()));
           break;
         case TRACEABILITY_INFORMATION:
           cardCommands.add(
-                  new CmdCardGetDataTraceabilityInformation(transactionContext, getCommandContext()));
+                  new CmdCardGetDataTraceabilityInformation(getTransactionContext(), getCommandContext()));
           break;
         default:
           throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -584,7 +506,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
         }
         cardCommands.add(
                 new CmdCardReadRecords(
-                        transactionContext,
+                        getTransactionContext(),
                         getCommandContext(),
                         sfi,
                         recordNumber,
@@ -631,7 +553,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
         for (int i = fromRecordNumber; i <= toRecordNumber; i++) {
           cardCommands.add(
                   new CmdCardReadRecords(
-                          transactionContext,
+                          getTransactionContext(),
                           getCommandContext(),
                           sfi,
                           i,
@@ -659,7 +581,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
 
           cardCommands.add(
                   new CmdCardReadRecords(
-                          transactionContext,
+                          getTransactionContext(),
                           getCommandContext(),
                           sfi,
                           currentRecordNumber,
@@ -675,7 +597,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
         if (currentRecordNumber == toRecordNumber) {
           cardCommands.add(
                   new CmdCardReadRecords(
-                          transactionContext,
+                          getTransactionContext(),
                           getCommandContext(),
                           sfi,
                           currentRecordNumber,
@@ -729,7 +651,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       while (currentRecordNumber <= toRecordNumber) {
         cardCommands.add(
                 new CmdCardReadRecordMultiple(
-                        transactionContext,
+                        getTransactionContext(),
                         getCommandContext(),
                         sfi,
                         (byte) currentRecordNumber,
@@ -772,7 +694,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       if (sfi > 0 && offset > 255) { // FFh
         // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
         cardCommands.add(
-                new CmdCardReadBinary(transactionContext, getCommandContext(), sfi, 0, 1));
+                new CmdCardReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
       }
 
       int currentLength;
@@ -783,7 +705,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
 
         cardCommands.add(
                 new CmdCardReadBinary(
-                        transactionContext, getCommandContext(), sfi, currentOffset, currentLength));
+                        getTransactionContext(), getCommandContext(), sfi, currentOffset, currentLength));
 
         currentOffset += currentLength;
         nbBytesRemainingToRead -= currentLength;
@@ -859,7 +781,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       }
 
       cardCommands.add(
-              new CmdCardSearchRecordMultiple(transactionContext, getCommandContext(), dataAdapter));
+              new CmdCardSearchRecordMultiple(getTransactionContext(), getCommandContext(), dataAdapter));
 
     } catch (RuntimeException e) {
       resetTransaction();
@@ -879,7 +801,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
-      cardCommands.add(new CmdCardVerifyPin(transactionContext, getCommandContext()));
+      cardCommands.add(new CmdCardVerifyPin(getTransactionContext(), getCommandContext()));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -900,7 +822,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
               .notNull(recordData, MSG_RECORD_DATA)
               .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
       CmdCardAppendRecord command =
-              new CmdCardAppendRecord(transactionContext, getCommandContext(), sfi, recordData);
+              new CmdCardAppendRecord(getTransactionContext(), getCommandContext(), sfi, recordData);
       prepareNewSecureSessionIfNeeded(command);
       cardCommands.add(command);
     } catch (RuntimeException e) {
@@ -929,7 +851,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
               .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
       CmdCardUpdateRecord command =
               new CmdCardUpdateRecord(
-                      transactionContext, getCommandContext(), sfi, recordNumber, recordData);
+                      getTransactionContext(), getCommandContext(), sfi, recordNumber, recordData);
       prepareNewSecureSessionIfNeeded(command);
       cardCommands.add(command);
     } catch (RuntimeException e) {
@@ -958,7 +880,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
               .isInRange(recordData.length, 0, cardPayloadCapacity, MSG_RECORD_DATA_LENGTH);
       CmdCardWriteRecord command =
               new CmdCardWriteRecord(
-                      transactionContext, getCommandContext(), sfi, recordNumber, recordData);
+                      getTransactionContext(), getCommandContext(), sfi, recordNumber, recordData);
       prepareNewSecureSessionIfNeeded(command);
       cardCommands.add(command);
     } catch (RuntimeException e) {
@@ -1020,7 +942,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       if (sfi > 0 && offset > 255) { // FFh
         // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
         cardCommands.add(
-                new CmdCardReadBinary(transactionContext, getCommandContext(), sfi, 0, 1));
+                new CmdCardReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
       }
 
       int dataLength = data.length;
@@ -1034,7 +956,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
         CmdCardUpdateOrWriteBinary command =
                 new CmdCardUpdateOrWriteBinary(
                         isUpdateCommand,
-                        transactionContext,
+                        getTransactionContext(),
                         getCommandContext(),
                         sfi,
                         currentOffset,
@@ -1173,7 +1095,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       CmdCardIncreaseOrDecrease command =
               new CmdCardIncreaseOrDecrease(
                       isDecreaseCommand,
-                      transactionContext,
+                      getTransactionContext(),
                       getCommandContext(),
                       sfi,
                       counterNumber,
@@ -1235,7 +1157,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
           CmdCardIncreaseOrDecreaseMultiple command =
                   new CmdCardIncreaseOrDecreaseMultiple(
                           isDecreaseCommand,
-                          transactionContext,
+                          getTransactionContext(),
                           getCommandContext(),
                           sfi,
                           new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap));
@@ -1253,7 +1175,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
               CmdCardIncreaseOrDecreaseMultiple command =
                       new CmdCardIncreaseOrDecreaseMultiple(
                               isDecreaseCommand,
-                              transactionContext,
+                              getTransactionContext(),
                               getCommandContext(),
                               sfi,
                               new TreeMap<Integer, Integer>(map));
@@ -1266,7 +1188,7 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
           if (!map.isEmpty()) {
             CmdCardIncreaseOrDecreaseMultiple command =
                     new CmdCardIncreaseOrDecreaseMultiple(
-                            isDecreaseCommand, transactionContext, getCommandContext(), sfi, map);
+                            isDecreaseCommand, getTransactionContext(), getCommandContext(), sfi, map);
             prepareNewSecureSessionIfNeeded(command);
             cardCommands.add(command);
           }
@@ -1311,201 +1233,6 @@ class TransactionManagerAdapter<T extends TransactionManager<T>> implements Tran
       throw e;
     }
     return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
-  public T prepareVerifyPin(byte[] pin) {
-    try {
-      Assert.getInstance()
-              .notNull(pin, "pin")
-              .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
-      if (!card.isPinFeatureAvailable()) {
-        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
-      }
-      if (symmetricCryptoSecuritySetting == null
-              || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-        cardCommands.add(new CmdCardVerifyPin(transactionContext, getCommandContext(), pin));
-      } else {
-        // CL-PIN-PENCRYPT.1
-        // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(transactionContext, getCommandContext()));
-        cardCommands.add(
-                new CmdCardVerifyPin(
-                        transactionContext,
-                        getCommandContext(),
-                        pin,
-                        symmetricCryptoSecuritySetting.getPinVerificationCipheringKif(),
-                        symmetricCryptoSecuritySetting.getPinVerificationCipheringKvc()));
-      }
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    }
-    return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
-  public T prepareChangePin(byte[] newPin) {
-    try {
-      Assert.getInstance()
-              .notNull(newPin, "newPin")
-              .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
-      if (!card.isPinFeatureAvailable()) {
-        throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
-      }
-      checkNoSecureSession();
-      // CL-PIN-MENCRYPT.1
-      if (symmetricCryptoSecuritySetting == null
-              || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-        cardCommands.add(new CmdCardChangePin(transactionContext, getCommandContext(), newPin));
-      } else {
-        // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(transactionContext, getCommandContext()));
-        cardCommands.add(
-                new CmdCardChangePin(
-                        transactionContext,
-                        getCommandContext(),
-                        newPin,
-                        symmetricCryptoSecuritySetting.getPinModificationCipheringKif(),
-                        symmetricCryptoSecuritySetting.getPinModificationCipheringKvc()));
-      }
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    }
-    return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>For each prepared command, if a pre-processing is required, then we try to execute the
-   * post-processing of each of the previous commands in anticipation. If at least one
-   * post-processing cannot be anticipated, then we execute the block of previous commands first.
-   *
-   * @since 2.3.2
-   */
-  @Override
-  public T processCommands(ChannelControl channelControl) {
-    if (cardCommands.isEmpty()) {
-      processSamPreparedCommands();
-      return currentInstance;
-    }
-    try {
-      List<CardCommand> cardRequestCommands = new ArrayList<CardCommand>();
-      for (CardCommand command : cardCommands) {
-        if (command.isCryptoServiceRequiredToFinalizeRequest()) {
-          if (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands)) {
-            executeCardCommands(cardRequestCommands, false);
-            cardRequestCommands.clear();
-          }
-        }
-        command.finalizeRequest();
-        cardRequestCommands.add(command);
-      }
-      executeCardCommands(cardRequestCommands, channelControl);
-      processSamPreparedCommands();
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    } finally {
-      cardCommands.clear();
-      if (isExtendedMode && !card.isExtendedModeSupported()) {
-        isExtendedMode = false;
-      }
-    }
-    return currentInstance;
-  }
-
-  /**
-   * Attempts to synchronize the crypto service before executing the finalized command on the card
-   * and returns "true" on successful execution.
-   *
-   * @param commands The commands.
-   * @return "false" if the crypto service could not be synchronized before transmitting the
-   *     commands to the card.
-   */
-  private boolean synchronizeCryptoServiceBeforeCardProcessing(List<CardCommand> commands) {
-    for (CardCommand command : commands) {
-      if (!command.synchronizeCryptoServiceBeforeCardProcessing()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Executes the provided commands.
-   *
-   * @param commands The commands.
-   * @param channelControl Indicates if the physical channel must be closed after the operation.
-   */
-  private void executeCardCommands(List<CardCommand> commands, ChannelControl channelControl) {
-
-    // Retrieve the list of C-APDUs
-    List<ApduRequestSpi> apduRequests = getApduRequests(commands);
-
-    // Wrap the list of C-APDUs into a card request
-    CardRequestSpi cardRequest = new CardRequestAdapter(apduRequests, true);
-
-    // Transmit the commands to the card
-    CardResponseApi cardResponse =
-            transmitCardRequest(
-                    cardRequest,
-                    channelControl);
-
-    // Retrieve the list of R-APDUs
-    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
-
-    // If there are more responses than requests, then we are unable to fill the card image. In this
-    // case we stop processing immediately because it may be a case of fraud, and we throw a
-    // desynchronized exception.
-    if (apduResponses.size() > commands.size()) {
-      throw new InconsistentDataException(
-              MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
-                      + commands.size()
-                      + MSG_NB_RESPONSES
-                      + apduResponses.size()
-                      + getTransactionAuditDataAsString());
-    }
-
-    // We go through all the responses (and not the requests) because there may be fewer in the
-    // case of an error that occurred in strict mode. In this case the last response will raise an
-    // exception.
-    for (int i = 0; i < apduResponses.size(); i++) {
-      CardCommand command = commands.get(i);
-      try {
-        command.parseResponse(apduResponses.get(i));
-      } catch (CardCommandException e) {
-        throw new UnexpectedCommandStatusException(
-                MSG_CARD_COMMAND_ERROR
-                        + "while processing responses to card commands: "
-                        + command.getCommandRef()
-                        + getTransactionAuditDataAsString(),
-                e);
-      }
-    }
-
-    // Finally, if no error has occurred and there are fewer responses than requests, then we
-    // throw a desynchronized exception.
-    if (apduResponses.size() < commands.size()) {
-      throw new InconsistentDataException(
-              MSG_THE_NUMBER_OF_COMMANDS_RESPONSES_DOES_NOT_MATCH_NB_COMMANDS
-                      + commands.size()
-                      + MSG_NB_RESPONSES
-                      + apduResponses.size()
-                      + getTransactionAuditDataAsString());
-    }
   }
 
   /**

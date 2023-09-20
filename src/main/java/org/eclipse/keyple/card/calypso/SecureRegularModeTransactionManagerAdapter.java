@@ -7,7 +7,7 @@ import org.eclipse.keypop.card.ProxyReaderApi;
  * Adapter of {@link SecureRegularModeTransactionManager}.
  * @since 3.0.0
  */
-class SecureRegularModeTransactionManagerAdapter extends SecureSymmetricCryptoTransactionManagerAdapter<SecureRegularModeTransactionManager> implements SecureRegularModeTransactionManager {
+final class SecureRegularModeTransactionManagerAdapter extends SecureSymmetricCryptoTransactionManagerAdapter<SecureRegularModeTransactionManager> implements SecureRegularModeTransactionManager {
 
   /**
    * Builds a new instance.
