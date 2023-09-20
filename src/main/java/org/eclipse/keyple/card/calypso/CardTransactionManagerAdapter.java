@@ -204,7 +204,7 @@ final class CardTransactionManagerAdapter
       symmetricCryptoSecuritySetting =
           buildSymmetricCryptoSecuritySetting(securitySetting, contextSetting);
       SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory =
-          symmetricCryptoSecuritySetting.getCryptoTransactionManagerFactory();
+          symmetricCryptoSecuritySetting.getCryptoTransactionManagerFactorySpi();
       // Extended mode flag
       isExtendedMode =
           card.isExtendedModeSupported()

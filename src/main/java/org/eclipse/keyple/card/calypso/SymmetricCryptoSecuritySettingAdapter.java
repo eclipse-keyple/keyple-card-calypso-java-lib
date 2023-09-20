@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
 
 /**
  * Adapter of {@link SymmetricCryptoSecuritySetting}.
@@ -28,12 +30,13 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory;
+  private SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
+  private boolean isReadOnSessionOpeningDisabled;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
       new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
@@ -52,15 +55,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.1
-   */
-  @Override
-  public SymmetricCryptoSecuritySetting enableMultipleSession() {
-    isMultipleSessionEnabled = true;
-    return this;
+  SymmetricCryptoSecuritySettingAdapter(SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi) {
+    this.cryptoTransactionManagerFactorySpi = cryptoTransactionManagerFactorySpi;
   }
 
   /**
@@ -69,10 +65,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
    * @since 2.3.1
    */
   @Override
-  public SymmetricCryptoSecuritySetting setCryptoTransactionManager(
-      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
-    this.cryptoTransactionManagerFactory =
-        (SymmetricCryptoTransactionManagerFactoryAdapter) cryptoTransactionManagerFactory;
+  public SymmetricCryptoSecuritySetting enableMultipleSession() {
+    isMultipleSessionEnabled = true;
     return this;
   }
 
@@ -117,6 +111,17 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   @Override
   public SymmetricCryptoSecuritySetting authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public SymmetricCryptoSecuritySetting disableReadOnSessionOpening() {
+    isReadOnSessionOpeningDisabled = true;
     return this;
   }
 
@@ -261,6 +266,15 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
+   * @return True if the auto-read optimization feature in the "Open Secure Session" command is
+   *     disabled.
+   * @since 2.3.2
+   */
+  boolean isReadOnSessionOpeningDisabled() {
+    return isReadOnSessionOpeningDisabled;
+  }
+
+  /**
    * Gets the KIF value to use for the provided write access level and KVC value.
    *
    * @param writeAccessLevel The write access level.
@@ -379,8 +393,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return pinModificationCipheringKvc;
   }
 
-  SymmetricCryptoTransactionManagerFactoryAdapter getCryptoTransactionManagerFactory() {
-    return cryptoTransactionManagerFactory;
+  SymmetricCryptoTransactionManagerFactorySpi getCryptoTransactionManagerFactorySpi() {
+    return cryptoTransactionManagerFactorySpi;
   }
 
   Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {

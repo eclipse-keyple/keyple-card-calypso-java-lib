@@ -21,6 +21,8 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.card.SvDebitLogRecord;
 import org.eclipse.keypop.calypso.card.card.SvLoadLogRecord;
 import org.eclipse.keypop.calypso.card.transaction.SearchCommandData;
+import org.eclipse.keypop.calypso.crypto.symmetric.SvCommandSecurityDataApi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerSpi;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.eclipse.keypop.card.spi.CardSelectionRequestSpi;

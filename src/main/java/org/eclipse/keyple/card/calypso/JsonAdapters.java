@@ -20,6 +20,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.eclipse.keypop.calypso.card.card.*;
+
 import java.lang.reflect.Type;
 
 /**
@@ -37,7 +39,7 @@ final class JsonAdapters {
   private JsonAdapters() {}
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.DirectoryHeader}.
+   * JSON serializer/deserializer of a {@link DirectoryHeader}.
    *
    * @since 2.0.0
    */
@@ -69,7 +71,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.ElementaryFile}.
+   * JSON serializer/deserializer of a {@link ElementaryFile}.
    *
    * @since 2.0.0
    */
@@ -101,7 +103,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.FileHeader}.
+   * JSON serializer/deserializer of a {@link FileHeader}.
    *
    * @since 2.0.0
    */
@@ -133,7 +135,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.SvLoadLogRecord}.
+   * JSON serializer/deserializer of a {@link SvLoadLogRecord}.
    *
    * @since 2.0.0
    */
@@ -166,7 +168,7 @@ final class JsonAdapters {
 
   /**
    * JSON serializer/deserializer of a {@link
-   * org.calypsonet.terminal.calypso.card.SvDebitLogRecord}.
+   * SvDebitLogRecord}.
    *
    * @since 2.0.0
    */
