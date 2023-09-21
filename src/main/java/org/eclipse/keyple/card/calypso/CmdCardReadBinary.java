@@ -87,7 +87,7 @@ final class CmdCardReadBinary extends CardCommand {
       int offset,
       int length) {
 
-    super(CardCommandRef.READ_BINARY, length, null, transactionContext, commandContext);
+    super(CardCommandRef.READ_BINARY, length, transactionContext, commandContext);
 
     byte cardClass =
         transactionContext.getCard() != null

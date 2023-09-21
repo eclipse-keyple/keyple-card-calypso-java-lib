@@ -117,7 +117,7 @@ final class CmdCardSvReload extends CardCommand {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.SV_RELOAD, 0, transactionContext, commandContext);
 
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -160,8 +160,6 @@ final class CmdCardSvReload extends CardCommand {
    */
   void finalizeCommand(SvCommandSecurityDataApiAdapter svCommandSecurityData) {
 
-    CalypsoCardAdapter card =
-        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     byte p1 = svCommandSecurityData.getTerminalChallenge()[0];
     byte p2 = svCommandSecurityData.getTerminalChallenge()[1];
     dataIn[0] = svCommandSecurityData.getTerminalChallenge()[2];
@@ -177,7 +175,7 @@ final class CmdCardSvReload extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
-                    card.getCardClass() == CalypsoCardClass.LEGACY
+                    getTransactionContext().getCard().getCardClass() == CalypsoCardClass.LEGACY
                         ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
                         : CalypsoCardClass.ISO.getValue(),
                     getCommandRef().getInstructionByte(),

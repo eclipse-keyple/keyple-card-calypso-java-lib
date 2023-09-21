@@ -76,7 +76,7 @@ final class CmdCardChangePin extends CardCommand {
    */
   CmdCardChangePin(
       TransactionContextDto transactionContext, CommandContextDto commandContext, byte[] pin) {
-    super(CardCommandRef.CHANGE_PIN, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.CHANGE_PIN, 0, transactionContext, commandContext);
     this.pin = pin;
     this.isPinEncryptedMode = false;
     this.cipheringKif = 0;
@@ -99,7 +99,7 @@ final class CmdCardChangePin extends CardCommand {
       byte[] pin,
       byte cipheringKif,
       byte cipheringKvc) {
-    super(CardCommandRef.CHANGE_PIN, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.CHANGE_PIN, 0, transactionContext, commandContext);
     this.pin = pin;
     this.isPinEncryptedMode = true;
     this.cipheringKif = cipheringKif;

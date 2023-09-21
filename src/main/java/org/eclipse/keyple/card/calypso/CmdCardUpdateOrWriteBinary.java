@@ -97,7 +97,6 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
     super(
         isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
         0,
-        null,
         transactionContext,
         commandContext);
 

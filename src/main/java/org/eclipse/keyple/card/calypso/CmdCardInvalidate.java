@@ -55,7 +55,7 @@ final class CmdCardInvalidate extends CardCommand {
    * @since 2.3.2
    */
   CmdCardInvalidate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.INVALIDATE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.INVALIDATE, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

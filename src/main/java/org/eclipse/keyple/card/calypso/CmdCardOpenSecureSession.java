@@ -114,7 +114,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       WriteAccessLevel writeAccessLevel) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
     isPreOpenModeOnSelection = true;
     isExtendedModeAllowed = true;
     this.writeAccessLevel = writeAccessLevel;
@@ -140,7 +140,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
       SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
       WriteAccessLevel writeAccessLevel,
       boolean isExtendedModeAllowed) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
     this.writeAccessLevel = writeAccessLevel;
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -442,8 +442,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @param apduResponseData The response data.
    */
   private void parseRev3(byte[] apduResponseData) {
-    CalypsoCardAdapter card =
-        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     int offset;
     // CL-CSS-OSSRFU.1
     if (isExtendedModeAllowed) {
@@ -451,12 +449,12 @@ final class CmdCardOpenSecureSession extends CardCommand {
       isPreviousSessionRatified = (apduResponseData[8] & 0x01) == (byte) 0x00;
       boolean manageSecureSessionAuthorized = (apduResponseData[8] & 0x02) == (byte) 0x02;
       if (!manageSecureSessionAuthorized) {
-        card.disableExtendedMode();
+        getTransactionContext().getCard().disableExtendedMode();
       }
     } else {
       offset = 0;
       isPreviousSessionRatified = (apduResponseData[4] == (byte) 0x00);
-      card.disableExtendedMode();
+      getTransactionContext().getCard().disableExtendedMode();
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
     kif = apduResponseData[5 + offset];

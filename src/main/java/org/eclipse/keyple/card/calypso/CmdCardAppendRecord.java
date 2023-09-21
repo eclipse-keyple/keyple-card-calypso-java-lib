@@ -81,7 +81,7 @@ final class CmdCardAppendRecord extends CardCommand {
       CommandContextDto commandContext,
       byte sfi,
       byte[] data) {
-    super(CardCommandRef.APPEND_RECORD, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.APPEND_RECORD, 0, transactionContext, commandContext);
     this.sfi = sfi;
     this.data = data;
     byte p1 = (byte) 0x00;

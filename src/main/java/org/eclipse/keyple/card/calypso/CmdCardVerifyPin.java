@@ -92,7 +92,7 @@ final class CmdCardVerifyPin extends CardCommand {
       byte[] pin,
       byte cipheringKif,
       byte cipheringKvc) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
     this.isReadCounterMode = false;
     this.pin = pin;
     this.isPinEncryptedMode = true;
@@ -111,7 +111,7 @@ final class CmdCardVerifyPin extends CardCommand {
    */
   CmdCardVerifyPin(
       TransactionContextDto transactionContext, CommandContextDto commandContext, byte[] pin) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
     this.isReadCounterMode = false;
     this.pin = pin;
     this.isPinEncryptedMode = false;
@@ -127,7 +127,7 @@ final class CmdCardVerifyPin extends CardCommand {
    * @since 2.3.2
    */
   CmdCardVerifyPin(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
     this.isReadCounterMode = true;
     this.pin = null;
     this.isPinEncryptedMode = false;
@@ -171,7 +171,7 @@ final class CmdCardVerifyPin extends CardCommand {
       addSubName(
           isReadCounterMode
               ? "Read presentation counter"
-              : isPinEncryptedMode ? "ENCRYPTED" : "PLAIN");
+              : isPinEncryptedMode ? "ENCRYPTED" : "PLAIN"); // NOSONAR
     }
     encryptRequestAndUpdateTerminalSessionMacIfNeeded();
   }

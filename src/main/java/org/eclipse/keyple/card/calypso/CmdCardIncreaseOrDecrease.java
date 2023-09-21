@@ -106,7 +106,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
         0,
-        null,
         transactionContext,
         commandContext);
 
@@ -166,9 +165,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
    */
   byte[] buildAnticipatedResponse() {
     byte[] response;
-    CalypsoCardAdapter card =
-        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
-    if (card.isCounterValuePostponed()) {
+    if (getTransactionContext().getCard().isCounterValuePostponed()) {
       // Response = 6200
       response = new byte[2];
       response[0] = (byte) 0x62; // SW 6200
@@ -191,9 +188,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
    * @throws IllegalStateException If the counter has not been read beforehand.
    */
   private byte[] buildAnticipatedDataOut() {
-    CalypsoCardAdapter card =
-        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
-    ElementaryFile ef = card.getFileBySfi((byte) sfi);
+    ElementaryFile ef = getTransactionContext().getCard().getFileBySfi((byte) sfi);
     if (ef != null) {
       Integer oldCounterValue =
           ef.getData().getContentAsCounterValue(counterNumber != 0 ? counterNumber : 1);

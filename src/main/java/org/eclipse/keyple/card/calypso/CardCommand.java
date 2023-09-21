@@ -52,13 +52,12 @@ abstract class CardCommand {
   }
 
   private final CardCommandRef commandRef;
+  private final transient TransactionContextDto transactionContext; // NOSONAR
+  private final transient CommandContextDto commandContext; // NOSONAR
   private int le;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
-  private CalypsoCardAdapter calypsoCard;
-  private final TransactionContextDto transactionContext;
-  private final CommandContextDto commandContext;
   private transient boolean isCryptoServiceSynchronized; // NOSONAR
 
   /**
@@ -66,8 +65,6 @@ abstract class CardCommand {
    *
    * @param commandRef A command reference from the Calypso command table.
    * @param le The value of the LE field.
-   * @param calypsoCard The Calypso card (it may be null if the card selection has not yet been
-   *     made).
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command
    * @since 2.0.1
@@ -75,13 +72,11 @@ abstract class CardCommand {
   CardCommand(
       CardCommandRef commandRef,
       int le,
-      CalypsoCardAdapter calypsoCard,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
     this.le = le;
-    this.calypsoCard = calypsoCard;
     this.transactionContext = transactionContext;
     this.commandContext = commandContext;
   }
@@ -150,16 +145,6 @@ abstract class CardCommand {
    */
   final ApduResponseApi getApduResponse() {
     return apduResponse;
-  }
-
-  /**
-   * Returns the Calypso card.
-   *
-   * @return Null if the card selection has not yet been made.
-   * @since 2.2.3
-   */
-  final CalypsoCardAdapter getCalypsoCard() {
-    return calypsoCard;
   }
 
   /**
@@ -265,7 +250,7 @@ abstract class CardCommand {
    */
   final void parseResponseForSelection(ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard)
       throws CardCommandException {
-    this.calypsoCard = calypsoCard;
+    transactionContext.setCard(calypsoCard);
     parseResponse(apduResponse);
   }
 

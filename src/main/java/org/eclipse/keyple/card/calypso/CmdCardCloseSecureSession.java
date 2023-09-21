@@ -85,7 +85,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       CommandContextDto commandContext,
       boolean isAutoRatificationAsked,
       int svPostponedDataIndex) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = svPostponedDataIndex;
@@ -100,7 +100,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
    * @since 2.3.2
    */
   CmdCardCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
-    super(commandRef, 0, null, transactionContext, context);
+    super(commandRef, 0, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.isAbortSecureSession = true;
     this.svPostponedDataIndex = -1;

@@ -71,7 +71,7 @@ final class CmdCardManageSession extends CardCommand {
    */
   CmdCardManageSession(
       DtoAdapters.TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
   }
 
   /**

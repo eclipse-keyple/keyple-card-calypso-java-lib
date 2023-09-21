@@ -11,8 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
-
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.card.*;
 

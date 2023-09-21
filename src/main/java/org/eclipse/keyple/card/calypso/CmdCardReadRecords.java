@@ -107,7 +107,7 @@ final class CmdCardReadRecords extends CardCommand {
       int expectedLength,
       int recordSize) {
 
-    super(CardCommandRef.READ_RECORDS, expectedLength, null, transactionContext, commandContext);
+    super(CardCommandRef.READ_RECORDS, expectedLength, transactionContext, commandContext);
 
     byte cardClass =
         transactionContext.getCard() != null

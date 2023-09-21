@@ -1216,11 +1216,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     private final long startupInfo;
     private final Long mask;
 
-    private Patch(String startupInfo) {
-      this.startupInfo = HexUtil.toLong(startupInfo);
-      this.mask = null;
-    }
-
     private Patch(String startupInfo, String mask) {
       this.startupInfo = HexUtil.toLong(startupInfo);
       this.mask = HexUtil.toLong(mask);
@@ -1239,10 +1234,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private static class PatchRev3 extends Patch {
 
     private Integer payloadCapacity;
-
-    private PatchRev3(String startupInfo) {
-      super(startupInfo);
-    }
 
     private PatchRev3(String startupInfo, String mask) {
       super(startupInfo, mask);
@@ -1266,10 +1257,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     private Boolean isCounterValuePostponed;
     private Boolean isLegacyCase1;
-
-    private PatchRev12(String startupInfo) {
-      super(startupInfo);
-    }
 
     private PatchRev12(String startupInfo, String mask) {
       super(startupInfo, mask);

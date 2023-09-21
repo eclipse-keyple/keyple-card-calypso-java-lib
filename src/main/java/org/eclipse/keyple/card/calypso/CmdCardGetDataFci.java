@@ -71,7 +71,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @since 2.3.2
    */
   CmdCardGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()

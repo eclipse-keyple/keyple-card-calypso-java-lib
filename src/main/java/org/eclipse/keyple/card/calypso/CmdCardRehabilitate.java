@@ -55,7 +55,7 @@ final class CmdCardRehabilitate extends CardCommand {
    * @since 2.3.2
    */
   CmdCardRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.REHABILITATE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.REHABILITATE, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

@@ -914,7 +914,7 @@ final class DtoAdapters {
    */
   static final class TransactionContextDto {
 
-    private final CalypsoCardAdapter card;
+    private CalypsoCardAdapter card;
     private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
     private boolean isSecureSessionOpen;
 
@@ -955,6 +955,16 @@ final class DtoAdapters {
      */
     boolean isSecureSessionOpen() {
       return isSecureSessionOpen;
+    }
+
+    /**
+     * Sets the Calypso card.
+     *
+     * @param card The Calypso card.
+     * @since 3.0.0
+     */
+    void setCard(CalypsoCardAdapter card) {
+      this.card = card;
     }
 
     /**

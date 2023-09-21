@@ -186,7 +186,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     CardResponseApi cardResponse = transmitCardRequest(cardRequest, channelControl);
 
     // Retrieve the list of R-APDUs
-    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses();
+    List<ApduResponseApi> apduResponses = cardResponse.getApduResponses(); // NOSONAR
 
     // If there are more responses than requests, then we are unable to fill the card image. In this
     // case we stop processing immediately because it may be a case of fraud, and we throw a

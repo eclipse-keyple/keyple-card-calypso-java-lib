@@ -52,7 +52,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    */
   CmdCardGetDataTraceabilityInformation(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()

@@ -74,7 +74,7 @@ final class CmdCardSvGet extends CardCommand {
       SvOperation svOperation,
       boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.SV_GET, 0, transactionContext, commandContext);
 
     byte cla =
         transactionContext.getCard().getCardClass() == CalypsoCardClass.LEGACY

@@ -298,11 +298,10 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     try {
       List<CardCommand> cardRequestCommands = new ArrayList<CardCommand>();
       for (CardCommand command : cardCommands) {
-        if (command.isCryptoServiceRequiredToFinalizeRequest()) {
-          if (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands)) {
-            executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
-            cardRequestCommands.clear();
-          }
+        if (command.isCryptoServiceRequiredToFinalizeRequest()
+            && (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands))) {
+          executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
+          cardRequestCommands.clear();
         }
         command.finalizeRequest();
         cardRequestCommands.add(command);

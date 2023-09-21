@@ -93,7 +93,7 @@ final class CmdCardWriteRecord extends CardCommand {
       int recordNumber,
       byte[] newRecordData) {
 
-    super(CardCommandRef.WRITE_RECORD, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.WRITE_RECORD, 0, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;

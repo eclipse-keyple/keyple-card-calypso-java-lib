@@ -36,7 +36,7 @@ final class CmdCardRatification extends CardCommand {
    * @since 2.3.2
    */
   CmdCardRatification(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.RATIFICATION, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.RATIFICATION, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

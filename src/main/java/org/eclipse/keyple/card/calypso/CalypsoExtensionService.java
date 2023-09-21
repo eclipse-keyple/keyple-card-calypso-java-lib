@@ -11,7 +11,6 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import static org.eclipse.keyple.card.calypso.JsonAdapters.*;
 
 import org.eclipse.keyple.core.common.CommonApiProperties;
@@ -27,7 +26,7 @@ import org.eclipse.keypop.reader.ReaderApiProperties;
  *
  * @since 2.0.0
  */
-public final class CalypsoExtensionService implements KeypleCardExtension {
+public final class CalypsoExtensionService implements KeypleCardExtension { // NOSONAR
 
   /** singleton instance of CalypsoExtensionService */
   private static final CalypsoExtensionService INSTANCE = new CalypsoExtensionService();

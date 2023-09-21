@@ -98,7 +98,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
         0,
-        null,
         transactionContext,
         commandContext);
 
@@ -236,9 +235,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
    * @throws IllegalStateException If some expected counters have not been read beforehand.
    */
   private Map<Integer, Integer> getOldCounterValues() {
-    CalypsoCardAdapter card =
-        getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
-    ElementaryFile ef = card.getFileBySfi(sfi);
+    ElementaryFile ef = getTransactionContext().getCard().getFileBySfi(sfi);
     if (ef != null) {
       Map<Integer, Integer> allCountersValue = ef.getData().getAllCountersValue();
       if (allCountersValue.keySet().containsAll(counterNumberToIncDecValueMap.keySet())) {

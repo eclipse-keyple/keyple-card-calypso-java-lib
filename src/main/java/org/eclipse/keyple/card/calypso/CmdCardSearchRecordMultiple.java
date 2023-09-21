@@ -95,7 +95,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
       CommandContextDto commandContext,
       SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, transactionContext, commandContext);
 
     this.data = data;
 

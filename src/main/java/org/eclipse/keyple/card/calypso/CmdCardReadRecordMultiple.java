@@ -103,7 +103,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
       byte offset,
       byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;

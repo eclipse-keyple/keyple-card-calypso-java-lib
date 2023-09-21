@@ -97,7 +97,7 @@ final class CmdCardSelectFile extends CardCommand {
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
 
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
 
     byte cardClass =
         transactionContext.getCard() != null
@@ -147,7 +147,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   CmdCardSelectFile(
       TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 0, transactionContext, commandContext);
 
     CalypsoCardClass calypsoCardClass;
     CalypsoCard.ProductType productType;

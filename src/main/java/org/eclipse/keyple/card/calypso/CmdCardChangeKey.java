@@ -87,7 +87,7 @@ final class CmdCardChangeKey extends CardCommand {
       byte newKvc,
       byte issuerKif,
       byte issuerKvc) {
-    super(CardCommandRef.CHANGE_KEY, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.CHANGE_KEY, 0, transactionContext, commandContext);
     this.keyIndex = keyIndex;
     this.newKif = newKif;
     this.newKvc = newKvc;
