@@ -77,18 +77,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_CARD_COMMUNICATION_ERROR =
       "A communication error with the card occurred ";
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
-
   private static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands.";
-  static final String MSG_MSS_COMMAND_NOT_SUPPORTED =
-      "'Manage Secure Session' command not available for this context (Card and/or SAM does not support extended mode)";
-  static final String MSG_ENCRYPTION_ALREADY_ACTIVE = "Encryption already active";
-  static final String MSG_ENCRYPTION_NOT_ACTIVE = "Encryption not active";
-  static final String SECURE_SESSION_NOT_OPEN = "Secure session not open";
-  static final String SECURE_SESSION_OPEN = "Secure session open";
-  static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
-
-  private static final String RECORD_NUMBER = "record number";
-  private static final String OFFSET = "offset";
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+  private static final String MSG_RECORD_NUMBER = "record number";
+  private static final String MSG_OFFSET = "offset";
   private static final String MSG_RECORD_DATA = "record data";
   private static final String MSG_RECORD_DATA_LENGTH = "record data length";
 
@@ -409,7 +401,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               recordNumber,
               CalypsoCardConstant.NB_REC_MIN,
               CalypsoCardConstant.NB_REC_MAX,
-              RECORD_NUMBER);
+              MSG_RECORD_NUMBER);
 
       // A record size of 0 indicates that the card determines the output length.
       // However, "legacy case 1" cards require a non-zero value.
@@ -560,7 +552,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               "fromRecordNumber")
           .isInRange(
               toRecordNumber, fromRecordNumber, CalypsoCardConstant.NB_REC_MAX, "toRecordNumber")
-          .isInRange(offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, OFFSET)
+          .isInRange(
+              offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_MAX, MSG_OFFSET)
           .isInRange(
               nbBytesToRead,
               CalypsoCardConstant.DATA_LENGTH_MIN,
@@ -611,7 +604,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       Assert.getInstance()
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
-              offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
+              offset,
+              CalypsoCardConstant.OFFSET_MIN,
+              CalypsoCardConstant.OFFSET_BINARY_MAX,
+              MSG_OFFSET)
           .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
 
       if (sfi > 0 && offset > 255) { // FFh
@@ -687,7 +683,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               dataAdapter.getOffset(),
               CalypsoCardConstant.OFFSET_MIN,
               CalypsoCardConstant.OFFSET_MAX,
-              OFFSET)
+              MSG_OFFSET)
           .notNull(dataAdapter.getSearchData(), "searchData")
           .isInRange(
               dataAdapter.getSearchData().length,
@@ -770,7 +766,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               recordNumber,
               CalypsoCardConstant.NB_REC_MIN,
               CalypsoCardConstant.NB_REC_MAX,
-              RECORD_NUMBER)
+              MSG_RECORD_NUMBER)
           .notNull(recordData, MSG_RECORD_DATA)
           .isInRange(recordData.length, 0, getPayloadCapacity(), MSG_RECORD_DATA_LENGTH);
       CommandUpdateRecord command =
@@ -799,7 +795,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               recordNumber,
               CalypsoCardConstant.NB_REC_MIN,
               CalypsoCardConstant.NB_REC_MAX,
-              RECORD_NUMBER)
+              MSG_RECORD_NUMBER)
           .notNull(recordData, MSG_RECORD_DATA)
           .isInRange(recordData.length, 0, getPayloadCapacity(), MSG_RECORD_DATA_LENGTH);
       CommandWriteRecord command =
@@ -859,7 +855,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       Assert.getInstance()
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
-              offset, CalypsoCardConstant.OFFSET_MIN, CalypsoCardConstant.OFFSET_BINARY_MAX, OFFSET)
+              offset,
+              CalypsoCardConstant.OFFSET_MIN,
+              CalypsoCardConstant.OFFSET_BINARY_MAX,
+              MSG_OFFSET)
           .notEmpty(data, "data");
 
       if (sfi > 0 && offset > 255) { // FFh

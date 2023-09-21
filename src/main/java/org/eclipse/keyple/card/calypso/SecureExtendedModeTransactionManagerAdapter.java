@@ -23,6 +23,11 @@ final class SecureExtendedModeTransactionManagerAdapter
     extends SecureSymmetricCryptoTransactionManagerAdapter<SecureExtendedModeTransactionManager>
     implements SecureExtendedModeTransactionManager {
 
+  private static final String MSG_MSS_COMMAND_NOT_SUPPORTED =
+      "'Manage Secure Session' command not available for this context (Card and/or SAM does not support extended mode)";
+  private static final String MSG_ENCRYPTION_ALREADY_ACTIVE = "Encryption already active";
+  private static final String MSG_ENCRYPTION_NOT_ACTIVE = "Encryption not active";
+
   /**
    * Builds a new instance.
    *

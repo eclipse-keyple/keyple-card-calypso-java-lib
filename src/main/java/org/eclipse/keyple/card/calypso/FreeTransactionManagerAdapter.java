@@ -28,6 +28,8 @@ import org.eclipse.keypop.card.ProxyReaderApi;
 final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<FreeTransactionManager>
     implements FreeTransactionManager {
 
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+
   private final TransactionContextDto transactionContext;
   private final CommandContextDto commandContext;
 

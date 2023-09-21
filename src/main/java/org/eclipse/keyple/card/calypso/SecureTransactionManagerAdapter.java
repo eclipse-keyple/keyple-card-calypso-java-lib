@@ -23,6 +23,9 @@ import org.eclipse.keypop.card.*;
 abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>>
     extends TransactionManagerAdapter<T> implements SecureTransactionManager<T> {
 
+  private static final String MSG_SECURE_SESSION_NOT_OPEN = "Secure session not open";
+  private static final String MSG_SECURE_SESSION_OPEN = "Secure session open";
+
   boolean isSecureSessionOpen; // package-private for perf optimization
 
   /**
@@ -51,7 +54,7 @@ abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManage
    */
   final void checkSecureSession() {
     if (!isSecureSessionOpen) {
-      throw new IllegalStateException(SECURE_SESSION_NOT_OPEN);
+      throw new IllegalStateException(MSG_SECURE_SESSION_NOT_OPEN);
     }
   }
 
@@ -62,7 +65,7 @@ abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManage
    */
   void checkNoSecureSession() {
     if (isSecureSessionOpen) {
-      throw new IllegalStateException(SECURE_SESSION_OPEN);
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
     }
   }
 

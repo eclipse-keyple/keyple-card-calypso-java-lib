@@ -44,6 +44,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   private static final Logger logger =
       LoggerFactory.getLogger(SecureSymmetricCryptoTransactionManagerAdapter.class);
 
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+
   // commands that modify the content of the card in session have a cost on the session buffer equal
   // to the length of the outgoing data plus 6 bytes
   private static final int SESSION_BUFFER_CMD_ADDITIONAL_COST = 6;
