@@ -31,10 +31,11 @@ import org.eclipse.keypop.reader.CardReader;
 class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
 
   private static final String MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API =
-          "The provided 'cardReader' must implement 'ProxyReaderApi'";
+      "The provided 'cardReader' must implement 'ProxyReaderApi'";
   private static final String MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER =
-          "The provided 'card' must be an instance of 'CalypsoCardAdapter'";
-  private static final String MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
+      "The provided 'card' must be an instance of 'CalypsoCardAdapter'";
+  private static final String
+      MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
           "The provided 'securitySetting' must be an instance of 'SymmetricCryptoSecuritySettingAdapter'";
 
   /**
@@ -55,11 +56,14 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   @Override
   public SymmetricCryptoSecuritySetting createSymmetricCryptoSecuritySetting(
       SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
-    Assert.getInstance().notNull(cryptoTransactionManagerFactory, "cryptoTransactionManagerFactory");
+    Assert.getInstance()
+        .notNull(cryptoTransactionManagerFactory, "cryptoTransactionManagerFactory");
     if (!(cryptoTransactionManagerFactory instanceof SymmetricCryptoTransactionManagerFactorySpi)) {
-      throw new IllegalArgumentException("The provided 'factory' must implement 'SymmetricCryptoTransactionManagerFactorySpi'");
+      throw new IllegalArgumentException(
+          "The provided 'factory' must implement 'SymmetricCryptoTransactionManagerFactorySpi'");
     }
-    return new SymmetricCryptoSecuritySettingAdapter((SymmetricCryptoTransactionManagerFactorySpi) cryptoTransactionManagerFactory);
+    return new SymmetricCryptoSecuritySettingAdapter(
+        (SymmetricCryptoTransactionManagerFactorySpi) cryptoTransactionManagerFactory);
   }
 
   /**
@@ -70,7 +74,7 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   @Override
   public AsymmetricCryptoSecuritySetting createAsymmetricCryptoSecuritySetting(
       AsymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
-    return null; //TODO
+    return null; // TODO
   }
 
   /**
@@ -84,13 +88,14 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
     Assert.getInstance().notNull(cardReader, "cardReader").notNull(card, "card");
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
     }
-    return new FreeTransactionManagerAdapter((ProxyReaderApi) cardReader, (CalypsoCardAdapter) card);
+    return new FreeTransactionManagerAdapter(
+        (ProxyReaderApi) cardReader, (CalypsoCardAdapter) card);
   }
 
   /**
@@ -101,20 +106,26 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   @Override
   public SecureRegularModeTransactionManager createSecureRegularModeTransactionManager(
       CardReader cardReader, CalypsoCard card, SymmetricCryptoSecuritySetting securitySetting) {
-    Assert.getInstance().notNull(cardReader, "cardReader").notNull(card, "card").notNull(securitySetting, "securitySetting");
+    Assert.getInstance()
+        .notNull(cardReader, "cardReader")
+        .notNull(card, "card")
+        .notNull(securitySetting, "securitySetting");
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
     }
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
     }
-    return new SecureRegularModeTransactionManagerAdapter((ProxyReaderApi) cardReader, (CalypsoCardAdapter) card, (SymmetricCryptoSecuritySettingAdapter) securitySetting);
+    return new SecureRegularModeTransactionManagerAdapter(
+        (ProxyReaderApi) cardReader,
+        (CalypsoCardAdapter) card,
+        (SymmetricCryptoSecuritySettingAdapter) securitySetting);
   }
 
   /**
@@ -125,20 +136,26 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   @Override
   public SecureExtendedModeTransactionManager createSecureExtendedModeTransactionManager(
       CardReader cardReader, CalypsoCard card, SymmetricCryptoSecuritySetting securitySetting) {
-    Assert.getInstance().notNull(cardReader, "cardReader").notNull(card, "card").notNull(securitySetting, "securitySetting");
+    Assert.getInstance()
+        .notNull(cardReader, "cardReader")
+        .notNull(card, "card")
+        .notNull(securitySetting, "securitySetting");
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
     }
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
     }
-    return new SecureExtendedModeTransactionManagerAdapter((ProxyReaderApi) cardReader, (CalypsoCardAdapter) card, (SymmetricCryptoSecuritySettingAdapter) securitySetting);
+    return new SecureExtendedModeTransactionManagerAdapter(
+        (ProxyReaderApi) cardReader,
+        (CalypsoCardAdapter) card,
+        (SymmetricCryptoSecuritySettingAdapter) securitySetting);
   }
 
   /**
@@ -149,14 +166,17 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   @Override
   public SecurePkiModeTransactionManager createSecurePkiModeTransactionManager(
       CardReader cardReader, CalypsoCard card, AsymmetricCryptoSecuritySetting securitySetting) {
-    Assert.getInstance().notNull(cardReader, "cardReader").notNull(card, "card").notNull(securitySetting, "securitySetting");
+    Assert.getInstance()
+        .notNull(cardReader, "cardReader")
+        .notNull(card, "card")
+        .notNull(securitySetting, "securitySetting");
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-              MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
     }
     // TODO test securitySetting
     return null; // TODO

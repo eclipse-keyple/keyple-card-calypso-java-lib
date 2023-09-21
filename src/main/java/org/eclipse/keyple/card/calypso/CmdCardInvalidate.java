@@ -48,32 +48,6 @@ final class CmdCardInvalidate extends CardCommand {
   }
 
   /**
-   * Instantiates a new CmdCardInvalidate.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardInvalidate(CalypsoCardAdapter calypsoCard) {
-
-    super(CardCommandRef.INVALIDATE, 0, calypsoCard, null, null);
-
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0x00;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                null,
-                null)));
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -91,17 +65,6 @@ final class CmdCardInvalidate extends CardCommand {
                 (byte) 0x00,
                 null,
                 null)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

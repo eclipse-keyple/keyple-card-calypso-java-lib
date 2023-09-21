@@ -71,47 +71,6 @@ final class CmdCardReadBinary extends CardCommand {
   private transient byte[] anticipatedDataOut; // NOSONAR
 
   /**
-   * Constructor.
-   *
-   * @param calypsoCard The Calypso card.
-   * @param sfi The sfi to select.
-   * @param offset The offset.
-   * @param length The number of bytes to read.
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardReadBinary(CalypsoCardAdapter calypsoCard, byte sfi, int offset, int length) {
-
-    super(CardCommandRef.READ_BINARY, length, calypsoCard, null, null);
-
-    this.sfi = sfi;
-    this.offset = offset;
-
-    byte msb = (byte) (offset >> Byte.SIZE);
-    byte lsb = (byte) (offset & 0xFF);
-
-    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
-    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
-    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                lsb,
-                null,
-                (byte) length)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(MSG_SFI_02_XH_OFFSET_D_LENGTH_D, sfi, offset, length);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
    * Constructor (to be used for card selection only).
    *
    * @param sfi The sfi to select.
@@ -203,17 +162,6 @@ final class CmdCardReadBinary extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

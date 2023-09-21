@@ -68,39 +68,6 @@ final class CmdCardAppendRecord extends CardCommand {
   private final byte[] data;
 
   /**
-   * Instantiates a new CmdCardUpdateRecord.
-   *
-   * @param calypsoCard The Calypso card.
-   * @param sfi The sfi to select.
-   * @param newRecordData The new record data to write.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardAppendRecord(CalypsoCardAdapter calypsoCard, byte sfi, byte[] newRecordData) {
-
-    super(CardCommandRef.APPEND_RECORD, 0, calypsoCard, null, null);
-
-    byte cla = calypsoCard.getCardClass().getValue();
-
-    this.sfi = sfi;
-    this.data = newRecordData;
-
-    byte p1 = (byte) 0x00;
-    byte p2 = (sfi == 0) ? (byte) 0x00 : (byte) (sfi * 8);
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                cla, getCommandRef().getInstructionByte(), p1, p2, newRecordData, null)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh", sfi);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -143,17 +110,6 @@ final class CmdCardAppendRecord extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().addCyclicContent((byte) sfi, data);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

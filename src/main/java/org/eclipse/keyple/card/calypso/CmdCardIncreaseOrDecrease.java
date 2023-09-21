@@ -86,82 +86,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
    *
    * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
    *     command.
-   * @param calypsoCard The Calypso card.
-   * @param sfi SFI of the file to select or 00h for current EF.
-   * @param counterNumber &gt;= 01h: Counters file, number of the counter. 00h: Simulated Counter.
-   *     file.
-   * @param incDecValue Value to subtract or add to the counter (defined as a positive int &lt;=
-   *     16777215 [FFFFFFh])
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardIncreaseOrDecrease(
-      boolean isDecreaseCommand,
-      CalypsoCardAdapter calypsoCard,
-      byte sfi,
-      int counterNumber,
-      int incDecValue) {
-
-    super(
-        isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
-        0,
-        calypsoCard,
-        null,
-        null);
-
-    byte cla = calypsoCard.getCardClass().getValue();
-    this.sfi = sfi;
-    this.counterNumber = counterNumber;
-    this.incDecValue = incDecValue;
-
-    // convert the integer value into a 3-byte buffer
-    // CL-COUN-DATAIN.1
-    byte[] valueBuffer = ByteArrayUtil.extractBytes(incDecValue, 3);
-
-    byte p2 = (byte) (sfi * 8);
-
-    ApduRequestAdapter apduRequest;
-    if (!calypsoCard.isCounterValuePostponed()) {
-      /* this is a case4 command, we set Le = 0 */
-      apduRequest =
-          new ApduRequestAdapter(
-              ApduUtil.build(
-                  cla,
-                  getCommandRef().getInstructionByte(),
-                  (byte) counterNumber,
-                  p2,
-                  valueBuffer,
-                  (byte) 0x00));
-    } else {
-      /* this command is considered as a case 3, we set Le = null */
-      apduRequest =
-          new ApduRequestAdapter(
-              ApduUtil.build(
-                  cla,
-                  getCommandRef().getInstructionByte(),
-                  (byte) counterNumber,
-                  p2,
-                  valueBuffer,
-                  null));
-      apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
-    }
-
-    setApduRequest(apduRequest);
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(
-              "SFI:%02Xh, COUNTER:%d, %s:%d",
-              sfi, counterNumber, isDecreaseCommand ? "DECREMENT" : "INCREMENT", incDecValue);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
-   * Constructor.
-   *
-   * @param isDecreaseCommand True if it is a "Decrease" command, false if it is an "Increase"
-   *     command.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi SFI of the file to select or 00h for current EF.
@@ -309,17 +233,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
             "Unable to determine the anticipated APDU response for the command '%s' (SFI %02Xh, counter %d)"
                 + " because the counter has not been read beforehand.",
             getName(), sfi, counterNumber));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

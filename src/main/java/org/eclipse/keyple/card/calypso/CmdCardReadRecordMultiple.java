@@ -87,50 +87,6 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   /**
    * Constructor.
    *
-   * @param calypsoCard The Calypso card.
-   * @param sfi The SFI.
-   * @param recordNumber The number of the first record to read.
-   * @param offset The offset from which to read in each record.
-   * @param length The number of bytes to read in each record.
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardReadRecordMultiple(
-      CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
-
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard, null, null);
-
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-    this.offset = offset;
-    this.length = length;
-
-    byte p2 = (byte) (sfi * 8 + 5);
-    byte[] dataIn = {0x54, 0x02, offset, length};
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                recordNumber,
-                p2,
-                dataIn,
-                (byte) 0)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, LENGTH:%d",
-              sfi, recordNumber, offset, length);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
-   * Constructor.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi The SFI.
@@ -174,17 +130,6 @@ final class CmdCardReadRecordMultiple extends CardCommand {
               sfi, recordNumber, offset, length);
       addSubName(extraInfo);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

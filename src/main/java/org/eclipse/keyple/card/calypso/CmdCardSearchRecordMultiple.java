@@ -85,79 +85,6 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   /**
    * Constructor.
    *
-   * @param calypsoCard The Calypso card.
-   * @param data The search command input/output data.
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
-
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard, null, null);
-
-    this.data = data;
-
-    int searchDataLength = data.getSearchData().length;
-
-    byte p2 = (byte) (data.getSfi() * 8 + 7);
-
-    byte[] dataIn = new byte[3 + (2 * searchDataLength)];
-    if (data.isEnableRepeatedOffset()) {
-      dataIn[0] = (byte) 0x80;
-    }
-    if (data.isFetchFirstMatchingResult()) {
-      dataIn[0] |= 1;
-    }
-    dataIn[1] = (byte) data.getOffset();
-    dataIn[2] = (byte) searchDataLength;
-
-    System.arraycopy(data.getSearchData(), 0, dataIn, 3, searchDataLength);
-
-    if (data.getMask() == null) {
-      // CL-CMD-SEARCH.1
-      Arrays.fill(dataIn, dataIn.length - searchDataLength, dataIn.length, (byte) 0xFF);
-    } else {
-      System.arraycopy(
-          data.getMask(), 0, dataIn, dataIn.length - searchDataLength, data.getMask().length);
-      if (data.getMask().length != searchDataLength) {
-        // CL-CMD-SEARCH.1
-        Arrays.fill(
-            dataIn,
-            dataIn.length - searchDataLength + data.getMask().length,
-            dataIn.length,
-            (byte) 0xFF);
-      }
-    }
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                (byte) data.getRecordNumber(),
-                p2,
-                dataIn,
-                (byte) 0)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh,"
-                  + " MASK:%sh",
-              data.getSfi(),
-              data.getRecordNumber(),
-              data.getOffset(),
-              data.isEnableRepeatedOffset(),
-              data.isFetchFirstMatchingResult(),
-              HexUtil.toHex(data.getSearchData()),
-              HexUtil.toHex(data.getMask()));
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
-   * Constructor.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param data The search command input/output data.
@@ -228,17 +155,6 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
               HexUtil.toHex(data.getMask()));
       addSubName(extraInfo);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

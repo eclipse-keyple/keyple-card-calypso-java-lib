@@ -1,12 +1,20 @@
+/* **************************************************************************************
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/
+ *
+ * See the NOTICE file(s) distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
+
 import org.eclipse.keypop.calypso.card.transaction.*;
-import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
 import org.eclipse.keypop.card.*;
-import org.eclipse.keypop.reader.CardReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Adapter of {@link SecureTransactionManager}.
@@ -14,92 +22,76 @@ import org.slf4j.LoggerFactory;
  * @param <T> The type of the lowest level child object.
  * @since 3.0.0
  */
-abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>> extends TransactionManagerAdapter<T> implements SecureTransactionManager<T> {
+abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManager<T>>
+    extends TransactionManagerAdapter<T> implements SecureTransactionManager<T> {
 
-  private static final Logger logger = LoggerFactory.getLogger(SecureTransactionManagerAdapter.class);
+  boolean isSecureSessionOpen; // package-private for perf optimization
 
   /**
    * Builds a new instance.
    *
-   * @param cardReader                     The card reader to be used.
-   * @param card                           The selected card on which to operate the transaction.
-   * @param symmetricCryptoSecuritySetting The symmetric crypto security setting to be used.
+   * @param cardReader The card reader to be used.
+   * @param card The selected card on which to operate the transaction.
    * @since 3.0.0
    */
-  SecureTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card, SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting) {
-    super(cardReader, card, symmetricCryptoSecuritySetting);
+  SecureTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card) {
+    super(cardReader, card);
   }
 
   /**
-   * {@inheritDoc}
+   * Resets the command context.
    *
    * @since 3.0.0
    */
-  @Override
-  public <E extends CardTransactionCryptoExtension> E getCryptoExtension(Class<E> cryptoExtensionClass) {
-    return (E) cryptoExtension;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
-  public T prepareCloseSecureSession() {
-    try {
-      checkSecureSession();
-      if (symmetricCryptoSecuritySetting.isRatificationMechanismEnabled()
-              && ((CardReader) cardReader).isContactless()) {
-        // CL-RAT-CMD.1
-        // CL-RAT-DELAY.1
-        // CL-RAT-NXTCLOSE.1
-        cardCommands.add(
-                new CmdCardCloseSecureSession(
-                        getTransactionContext(), getCommandContext(), false, svPostponedDataIndex));
-        cardCommands.add(new CmdCardRatification(getTransactionContext(), getCommandContext()));
-      } else {
-        cardCommands.add(
-                new CmdCardCloseSecureSession(
-                        getTransactionContext(), getCommandContext(), true, svPostponedDataIndex));
-      }
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    } finally {
-      isSecureSessionOpen = false;
-      isEncryptionActive = false;
-      disablePreOpenMode();
-    }
-    return currentInstance;
-  }
+  abstract void resetCommandContext();
 
   /**
    * Checks if a secure session is open.
    *
    * @throws IllegalStateException If no secure session is open.
+   * @since 3.0.0
    */
-  void checkSecureSession() {
+  final void checkSecureSession() {
     if (!isSecureSessionOpen) {
       throw new IllegalStateException(SECURE_SESSION_NOT_OPEN);
     }
   }
 
   /**
+   * Checks if no secure session is open.
+   *
+   * @throws IllegalStateException If a secure session is open.
+   */
+  void checkNoSecureSession() {
+    if (isSecureSessionOpen) {
+      throw new IllegalStateException(SECURE_SESSION_OPEN);
+    }
+  }
+
+  /**
+   * Clears the info associated with the "pre-open" mode.
+   *
+   * @since 3.0.0
+   */
+  final void disablePreOpenMode() {
+    card.setPreOpenWriteAccessLevel(null);
+    card.setPreOpenDataOut(null);
+  }
+
+  /**
    * {@inheritDoc}
    *
    * @since 2.3.2
    */
   @Override
-  public T prepareCancelSecureSession() {
+  public final T prepareCancelSecureSession() {
     try {
       cardCommands.add(new CmdCardCloseSecureSession(getTransactionContext(), getCommandContext()));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
     } finally {
-      isSecureSessionOpen = false;
-      isEncryptionActive = false;
+      resetCommandContext();
       disablePreOpenMode();
     }
     return currentInstance;

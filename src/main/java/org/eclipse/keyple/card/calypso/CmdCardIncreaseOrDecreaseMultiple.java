@@ -81,66 +81,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
    *
    * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
    *     "Increase Multiple" command.
-   * @param calypsoCard The Calypso card.
-   * @param sfi The SFI.
-   * @param counterNumberToIncDecValueMap The map containing the counter numbers to be incremented
-   *     and their associated increment values.
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardIncreaseOrDecreaseMultiple(
-      boolean isDecreaseCommand,
-      CalypsoCardAdapter calypsoCard,
-      byte sfi,
-      SortedMap<Integer, Integer> counterNumberToIncDecValueMap) {
-
-    super(
-        isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
-        0,
-        calypsoCard,
-        null,
-        null);
-
-    this.sfi = sfi;
-    this.counterNumberToIncDecValueMap = counterNumberToIncDecValueMap;
-    byte p1 = 0;
-    byte p2 = (byte) (sfi * 8);
-    byte[] dataIn = new byte[4 * counterNumberToIncDecValueMap.size()];
-    int index = 0;
-    for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-      dataIn[index] = entry.getKey().byteValue();
-      Integer incDecValue = entry.getValue();
-      ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
-      index += 4;
-    }
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                dataIn,
-                (byte) 0)));
-
-    if (logger.isDebugEnabled()) {
-      StringBuilder extraInfo = new StringBuilder(String.format("SFI:%02Xh", sfi));
-      for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
-        extraInfo.append(", ");
-        extraInfo.append(entry.getKey());
-        extraInfo.append(":");
-        extraInfo.append(entry.getValue());
-      }
-      addSubName(extraInfo.toString());
-    }
-  }
-
-  /**
-   * Constructor.
-   *
-   * @param isDecreaseCommand True if it is a "Decrease Multiple" command, false if it is an
-   *     "Increase Multiple" command.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi The SFI.
@@ -194,19 +134,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
       }
       addSubName(extraInfo.toString());
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>This command modified the contents of the card and therefore uses the session buffer.
-   *
-   * @return false
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

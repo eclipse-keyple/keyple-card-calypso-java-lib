@@ -48,19 +48,6 @@ final class CmdCardGetDataFcp extends CardCommand {
   }
 
   /**
-   * Instantiates a new CmdCardGetDataFci.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetDataFcp(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass());
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -109,17 +96,6 @@ final class CmdCardGetDataFcp extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     CmdCardSelectFile.parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

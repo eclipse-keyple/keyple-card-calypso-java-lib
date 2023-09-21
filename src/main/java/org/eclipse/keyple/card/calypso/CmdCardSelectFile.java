@@ -87,21 +87,6 @@ final class CmdCardSelectFile extends CardCommand {
    * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
    * DF.
    *
-   * @param calypsoCard The Calypso card.
-   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
-    super(commandRef, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass(), selectFileControl);
-  }
-
-  /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
@@ -126,22 +111,6 @@ final class CmdCardSelectFile extends CardCommand {
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
     super(commandRef, 0, null, null, null);
     buildCommand(calypsoCardClass, selectFileControl);
-  }
-
-  /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
-   *
-   * @param calypsoCard The Calypso card.
-   * @param lid The LID.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
-    super(commandRef, 0, calypsoCard, null, null);
-    buildCommand(
-        calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
   }
 
   /**
@@ -270,17 +239,6 @@ final class CmdCardSelectFile extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

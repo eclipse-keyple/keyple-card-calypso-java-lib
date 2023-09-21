@@ -79,56 +79,6 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
    *
    * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
    *     Binary" command.
-   * @param calypsoCard The Calypso card.
-   * @param sfi the sfi to select.
-   * @param offset the offset.
-   * @param data the data to write.
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardUpdateOrWriteBinary(
-      boolean isUpdateCommand, CalypsoCardAdapter calypsoCard, byte sfi, int offset, byte[] data) {
-
-    super(
-        isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
-        0,
-        calypsoCard,
-        null,
-        null);
-
-    this.sfi = sfi;
-    this.offset = offset;
-    this.data = data;
-
-    byte msb = (byte) (offset >> Byte.SIZE);
-    byte lsb = (byte) (offset & 0xFF);
-
-    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
-    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
-    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                lsb,
-                data,
-                null)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d", sfi, offset);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
-   * Constructor.
-   *
-   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
-   *     Binary" command.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi the sfi to select.
@@ -191,19 +141,6 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
     } else {
       getCalypsoCard().fillContent(sfi, 1, data, offset);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>This command modified the contents of the card and therefore uses the session buffer.
-   *
-   * @return True
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

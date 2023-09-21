@@ -1,33 +1,47 @@
+/* **************************************************************************************
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/
+ *
+ * See the NOTICE file(s) distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
+
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
 import org.eclipse.keypop.calypso.card.transaction.FreeTransactionManager;
 import org.eclipse.keypop.card.ProxyReaderApi;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Adapter of {@link FreeTransactionManager}.
+ *
  * @since 3.0.0
  */
-final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<FreeTransactionManager> implements FreeTransactionManager {
+final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<FreeTransactionManager>
+    implements FreeTransactionManager {
 
-  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
-
-  final TransactionContextDto transactionContext;
+  private final TransactionContextDto transactionContext;
+  private final CommandContextDto commandContext;
 
   /**
    * Builds a new instance.
+   *
    * @param cardReader The card reader to be used.
    * @param card The selected card on which to operate the transaction.
    * @since 3.0.0
    */
   FreeTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card) {
-    super(cardReader, card, null);
+    super(cardReader, card);
     transactionContext = new TransactionContextDto(card, null);
+    commandContext = new CommandContextDto(false, false);
   }
 
   /**
@@ -37,7 +51,37 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    */
   @Override
   TransactionContextDto getTransactionContext() {
-    return null;
+    return transactionContext;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  CommandContextDto getCommandContext() {
+    return commandContext;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  int getPayloadCapacity() {
+    return card.getPayloadCapacity();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  void resetTransaction() {
+    cardCommands.clear();
   }
 
   /**
@@ -86,13 +130,9 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
       throw e;
     } finally {
       cardCommands.clear();
-      if (isExtendedMode && !card.isExtendedModeSupported()) {
-        isExtendedMode = false;
-      }
     }
     return currentInstance;
   }
-
 
   /**
    * {@inheritDoc}
@@ -103,8 +143,8 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
   public FreeTransactionManager prepareVerifyPin(byte[] pin) {
     try {
       Assert.getInstance()
-              .notNull(pin, "pin")
-              .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+          .notNull(pin, "pin")
+          .isEqual(pin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
@@ -125,8 +165,8 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
   public FreeTransactionManager prepareChangePin(byte[] newPin) {
     try {
       Assert.getInstance()
-              .notNull(newPin, "newPin")
-              .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
+          .notNull(newPin, "newPin")
+          .isEqual(newPin.length, CalypsoCardConstant.PIN_LENGTH, "PIN length");
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }

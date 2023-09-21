@@ -54,16 +54,6 @@ final class CmdCardRatification extends CardCommand {
    * @since 2.3.2
    */
   @Override
-  boolean isSessionBufferUsed() {
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   */
-  @Override
   void finalizeRequest() {
     // NOP
   }

@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -66,34 +68,6 @@ final class CmdCardChangeKey extends CardCommand {
   private final byte issuerKvc;
 
   /**
-   * Change Key Calypso command
-   *
-   * @param calypsoCard The Calypso card.
-   * @param keyIndex index of the key of the current DF to change.
-   * @param cryptogram key encrypted with Issuer key (key #1).
-   * @since 2.1.0
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardChangeKey(CalypsoCardAdapter calypsoCard, byte keyIndex, byte[] cryptogram) {
-
-    super(CardCommandRef.CHANGE_KEY, 0, calypsoCard, null, null);
-    this.keyIndex = 0;
-    this.newKif = 0;
-    this.newKvc = 0;
-    this.issuerKif = 0;
-    this.issuerKvc = 0;
-
-    byte cla = calypsoCard.getCardClass().getValue();
-    byte p1 = (byte) 0x00;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                cla, getCommandRef().getInstructionByte(), p1, keyIndex, cryptogram, null)));
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -119,17 +93,6 @@ final class CmdCardChangeKey extends CardCommand {
     this.newKvc = newKvc;
     this.issuerKif = issuerKif;
     this.issuerKvc = issuerKvc;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

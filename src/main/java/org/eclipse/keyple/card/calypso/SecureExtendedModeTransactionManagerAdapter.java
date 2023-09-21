@@ -1,27 +1,41 @@
+/* **************************************************************************************
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/
+ *
+ * See the NOTICE file(s) distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
 import org.eclipse.keypop.calypso.card.transaction.SecureExtendedModeTransactionManager;
 import org.eclipse.keypop.card.ProxyReaderApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Adapter of {@link SecureExtendedModeTransactionManager}.
+ *
  * @since 3.0.0
  */
-final class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricCryptoTransactionManagerAdapter<SecureExtendedModeTransactionManager> implements SecureExtendedModeTransactionManager {
-
-  private static final Logger logger = LoggerFactory.getLogger(SecureExtendedModeTransactionManagerAdapter.class);
+final class SecureExtendedModeTransactionManagerAdapter
+    extends SecureSymmetricCryptoTransactionManagerAdapter<SecureExtendedModeTransactionManager>
+    implements SecureExtendedModeTransactionManager {
 
   /**
    * Builds a new instance.
+   *
    * @param cardReader The card reader to be used.
    * @param card The selected card on which to operate the transaction.
    * @param symmetricCryptoSecuritySetting The symmetric crypto security setting to be used.
    * @since 3.0.0
    */
-  SecureExtendedModeTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card, SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting) {
-    super(cardReader, card, null);
+  SecureExtendedModeTransactionManagerAdapter(
+      ProxyReaderApi cardReader,
+      CalypsoCardAdapter card,
+      SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting) {
+    super(cardReader, card, symmetricCryptoSecuritySetting);
   }
 
   /**
@@ -38,15 +52,15 @@ final class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricC
       checkSecureSession();
       // Add a new command or update the last command if it is an MSS command.
       if (!cardCommands.isEmpty()
-              && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
         ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
-                .setMutualAuthenticationRequested(true);
+            .setMutualAuthenticationRequested(true);
       } else {
         cardCommands.add(
-                new CmdCardManageSession(transactionContext, getCommandContext())
-                        .setMutualAuthenticationRequested(true)
-                        .setEncryptionRequested(isEncryptionActive));
+            new CmdCardManageSession(transactionContext, getCommandContext())
+                .setMutualAuthenticationRequested(true)
+                .setEncryptionRequested(isEncryptionActive));
       }
     } catch (RuntimeException e) {
       resetTransaction();
@@ -72,14 +86,14 @@ final class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricC
       }
       // Add a new command or update the last command if it is an MSS command.
       if (!cardCommands.isEmpty()
-              && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
         ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
-                .setEncryptionRequested(true);
+            .setEncryptionRequested(true);
       } else {
         cardCommands.add(
-                new CmdCardManageSession(transactionContext, getCommandContext())
-                        .setEncryptionRequested(true));
+            new CmdCardManageSession(transactionContext, getCommandContext())
+                .setEncryptionRequested(true));
       }
       isEncryptionActive = true;
     } catch (RuntimeException e) {
@@ -106,14 +120,14 @@ final class SecureExtendedModeTransactionManagerAdapter extends SecureSymmetricC
       }
       // Add a new command or update the last command if it is an MSS command.
       if (!cardCommands.isEmpty()
-              && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
         ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
-                .setEncryptionRequested(false);
+            .setEncryptionRequested(false);
       } else {
         cardCommands.add(
-                new CmdCardManageSession(transactionContext, getCommandContext())
-                        .setEncryptionRequested(false));
+            new CmdCardManageSession(transactionContext, getCommandContext())
+                .setEncryptionRequested(false));
       }
       isEncryptionActive = false;
     } catch (RuntimeException e) {

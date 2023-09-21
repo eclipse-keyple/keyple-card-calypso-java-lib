@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -65,36 +67,6 @@ final class CmdCardChangePin extends CardCommand {
   private final byte cipheringKvc;
 
   /**
-   * Builds a Calypso Change PIN command
-   *
-   * @param calypsoCard The Calypso card.
-   * @param pin The new PIN data either plain or encrypted.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardChangePin(CalypsoCardAdapter calypsoCard, byte[] pin) {
-
-    super(CardCommandRef.CHANGE_PIN, 0, calypsoCard, null, null);
-    this.pin = null;
-    this.isPinEncryptedMode = false;
-    this.cipheringKif = 0;
-    this.cipheringKvc = 0;
-
-    if (pin == null || (pin.length != 0x04 && pin.length != 0x10)) {
-      throw new IllegalArgumentException("Bad PIN data length.");
-    }
-
-    byte cla = calypsoCard.getCardClass().getValue();
-    byte p1 = (byte) 0x00;
-    byte p2 = (byte) 0xFF; // CL-PIN-MP1P2.1
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, pin, null)));
-  }
-
-  /**
    * Constructor for plain PIN.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -132,17 +104,6 @@ final class CmdCardChangePin extends CardCommand {
     this.isPinEncryptedMode = true;
     this.cipheringKif = cipheringKif;
     this.cipheringKvc = cipheringKvc;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

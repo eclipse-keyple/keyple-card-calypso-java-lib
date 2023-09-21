@@ -59,23 +59,9 @@ final class CmdCardGetDataFci extends CardCommand {
   private boolean isDfInvalidated;
 
   private boolean isValidCalypsoFCI;
-
   private byte[] dfName;
   private byte[] applicationSN;
   private byte[] discretionaryData;
-
-  /**
-   * Instantiates a new CmdCardGetDataFci.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetDataFci(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass());
-  }
 
   /**
    * Constructor.
@@ -115,17 +101,6 @@ final class CmdCardGetDataFci extends CardCommand {
                 (byte) 0x6F,
                 null,
                 (byte) 0x00)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

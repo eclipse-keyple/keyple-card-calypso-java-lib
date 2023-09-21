@@ -17,6 +17,8 @@ import java.util.*;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -60,47 +62,6 @@ final class CmdCardManageSession extends CardCommand {
   private boolean isEncryptionRequested;
   private boolean isMutualAuthenticationRequested;
   private byte[] cardSessionMac;
-
-  /**
-   * Instantiates a new Manage Secure Session card command depending on the product type of the
-   * card.
-   *
-   * @param calypsoCard The Calypso card.
-   * @param activateEncryption True if the activation of the encryption is required.
-   * @param terminalSessionMac The terminal session MAC when the card authentication is required.
-   * @since 2.3.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardManageSession(
-      CalypsoCardAdapter calypsoCard, boolean activateEncryption, byte[] terminalSessionMac) {
-
-    super(commandRef, terminalSessionMac != null ? 8 : 0, calypsoCard, null, null);
-
-    byte p2;
-    Byte le;
-
-    if (terminalSessionMac != null) {
-      // case 4: this command contains incoming and outgoing data. We define le = 0, the actual
-      // length will be processed by the lower layers.
-      p2 = activateEncryption ? (byte) 0x03 : (byte) 0x01;
-      le = 0;
-    } else {
-      // case 1: this command contains no data. We define le = null.
-      p2 = activateEncryption ? (byte) 0x02 : (byte) 0x00;
-      le = null;
-    }
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                commandRef.getInstructionByte(),
-                (byte) 0x00,
-                p2,
-                terminalSessionMac,
-                le)));
-  }
 
   /**
    * Constructor.
@@ -260,17 +221,6 @@ final class CmdCardManageSession extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @return False
-   * @since 2.3.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * <p>Checks the card response length; the admissible lengths are 0, 4 or 8 bytes.
    *
    * @since 2.3.1
@@ -288,16 +238,6 @@ final class CmdCardManageSession extends CardCommand {
       throw e;
     }
     cardSessionMac = getApduResponse().getDataOut();
-  }
-
-  /**
-   * Gets the low part of the session MAC.
-   *
-   * @return An empty or 8-byte array of bytes.
-   * @since 2.3.1
-   */
-  byte[] getCardSessionMac() {
-    return cardSessionMac;
   }
 
   /**

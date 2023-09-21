@@ -44,19 +44,6 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   }
 
   /**
-   * Instantiates a new CmdCardGetDataTrace.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetDataTraceabilityInformation(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass());
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -106,17 +93,6 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().setTraceabilityInformation(apduResponse.getDataOut());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

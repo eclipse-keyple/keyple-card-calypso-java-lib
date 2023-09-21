@@ -20,6 +20,8 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.transaction.UnauthorizedKeyException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,51 +101,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
   private Byte kif;
   private Byte kvc;
   private byte[] recordData;
-
-  /**
-   * Constructor.
-   *
-   * @param calypsoCard The Calypso card.
-   * @param writeAccessLevel The write access level.
-   * @param samChallenge The SAM challenge.
-   * @param sfi The optional SFI of the file to read.
-   * @param recordNumber The optional record number to read.
-   * @param isExtendedModeAllowed True if the extended mode is allowed.
-   * @since 2.0.1
-   */
-  CmdCardOpenSecureSession(
-      CalypsoCardAdapter calypsoCard,
-      WriteAccessLevel writeAccessLevel,
-      byte[] samChallenge,
-      int sfi,
-      int recordNumber,
-      boolean isExtendedModeAllowed) {
-
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null, null);
-
-    this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.writeAccessLevel = writeAccessLevel;
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-
-    byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
-    switch (getCalypsoCard().getProductType()) {
-      case PRIME_REVISION_1:
-        createRev10(keyIndex, samChallenge);
-        break;
-      case PRIME_REVISION_2:
-        createRev24(keyIndex, samChallenge);
-        break;
-      case PRIME_REVISION_3:
-      case LIGHT:
-      case BASIC:
-        createRev3(keyIndex, samChallenge);
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Product type " + getCalypsoCard().getProductType() + " isn't supported");
-    }
-  }
 
   /**
    * Constructor for "pre-open" variant (to be used for card selection only).
@@ -281,17 +238,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
       String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
       addSubName(extraInfo);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

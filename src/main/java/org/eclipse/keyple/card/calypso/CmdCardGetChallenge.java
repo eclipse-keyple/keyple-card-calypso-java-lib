@@ -24,33 +24,6 @@ import org.eclipse.keypop.card.ApduResponseApi;
 final class CmdCardGetChallenge extends CardCommand {
 
   /**
-   * Instantiates a new CmdCardGetChallenge.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetChallenge(CalypsoCardAdapter calypsoCard) {
-
-    super(CardCommandRef.GET_CHALLENGE, 0x08, calypsoCard, null, null);
-
-    byte p1 = 0x00;
-    byte p2 = 0x00;
-    byte le = 0x08;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                null,
-                le)));
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -79,17 +52,6 @@ final class CmdCardGetChallenge extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().setChallenge(getApduResponse().getDataOut());
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

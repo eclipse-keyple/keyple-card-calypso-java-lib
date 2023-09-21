@@ -55,7 +55,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
 
-  SymmetricCryptoSecuritySettingAdapter(SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi) {
+  SymmetricCryptoSecuritySettingAdapter(
+      SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi) {
     this.cryptoTransactionManagerFactorySpi = cryptoTransactionManagerFactorySpi;
   }
 

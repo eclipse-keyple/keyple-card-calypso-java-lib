@@ -77,47 +77,6 @@ final class CmdCardWriteRecord extends CardCommand {
   /**
    * Instantiates a new CmdCardWriteRecord.
    *
-   * @param calypsoCard The Calypso card.
-   * @param sfi the sfi to select.
-   * @param recordNumber the record number to write.
-   * @param newRecordData the new record data to write.
-   * @throws IllegalArgumentException If record number is &lt; 1
-   * @throws IllegalArgumentException If the request is inconsistent
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardWriteRecord(
-      CalypsoCardAdapter calypsoCard, byte sfi, int recordNumber, byte[] newRecordData) {
-
-    super(CardCommandRef.WRITE_RECORD, 0, calypsoCard, null, null);
-
-    byte cla = calypsoCard.getCardClass().getValue();
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
-    this.data = newRecordData;
-
-    byte p2 = (sfi == 0) ? (byte) 0x04 : (byte) ((byte) (sfi * 8) + 4);
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                cla,
-                getCommandRef().getInstructionByte(),
-                (byte) recordNumber,
-                p2,
-                newRecordData,
-                null)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh, REC:%d", sfi, recordNumber);
-      addSubName(extraInfo);
-    }
-  }
-
-  /**
-   * Instantiates a new CmdCardWriteRecord.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi the sfi to select.
@@ -167,17 +126,6 @@ final class CmdCardWriteRecord extends CardCommand {
   void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     getCalypsoCard().fillContent((byte) sfi, recordNumber, data, 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

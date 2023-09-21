@@ -19,9 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,70 +74,6 @@ final class CmdCardCloseSecureSession extends CardCommand {
   private final List<byte[]> postponedData = new ArrayList<byte[]>(0);
 
   /**
-   * Instantiates a new CmdCardCloseSession depending on the product type of the card.
-   *
-   * @param calypsoCard The {@link CalypsoCard}.
-   * @param isAutoRatificationAsked the ratification asked.
-   * @param terminalSessionSignature the sam half session signature.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardCloseSecureSession(
-      CalypsoCardAdapter calypsoCard,
-      boolean isAutoRatificationAsked,
-      byte[] terminalSessionSignature) {
-
-    super(commandRef, 0, calypsoCard, null, null);
-    this.isAutoRatificationAsked = isAutoRatificationAsked;
-    this.isAbortSecureSession = false;
-    this.svPostponedDataIndex = -1;
-
-    byte p1 = isAutoRatificationAsked ? (byte) 0x80 : (byte) 0x00;
-    /*
-     * case 4: this command contains incoming and outgoing data. We define le = 0, the actual
-     * length will be processed by the lower layers.
-     */
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                commandRef.getInstructionByte(),
-                p1,
-                (byte) 0x00,
-                terminalSessionSignature,
-                (byte) 0)));
-  }
-
-  /**
-   * Instantiates a new CmdCardCloseSession based on the product type of the card to generate an
-   * abort session command (Close Secure Session with p1 = p2 = lc = 0).
-   *
-   * @param calypsoCard The {@link CalypsoCard}.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardCloseSecureSession(CalypsoCardAdapter calypsoCard) {
-
-    super(commandRef, 0, calypsoCard, null, null);
-    this.isAutoRatificationAsked = true;
-    this.isAbortSecureSession = true;
-    this.svPostponedDataIndex = -1;
-
-    // CL-CSS-ABORTCMD.1
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                commandRef.getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0x00,
-                null,
-                (byte) 0)));
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -170,17 +107,6 @@ final class CmdCardCloseSecureSession extends CardCommand {
     this.isAutoRatificationAsked = true;
     this.isAbortSecureSession = true;
     this.svPostponedDataIndex = -1;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**
@@ -329,26 +255,6 @@ final class CmdCardCloseSecureSession extends CardCommand {
       // session abort case
       signatureLo = new byte[0];
     }
-  }
-
-  /**
-   * Gets the low part of the session signature.
-   *
-   * @return A 4 or 8-byte array of bytes according to the extended mode availability.
-   * @since 2.0.1
-   */
-  byte[] getSignatureLo() {
-    return signatureLo;
-  }
-
-  /**
-   * Returns the secure session postponed data (e.g. Sv Signature).
-   *
-   * @return An empty list if there is no postponed data.
-   * @since 2.0.1
-   */
-  List<byte[]> getPostponedData() {
-    return postponedData;
   }
 
   /**

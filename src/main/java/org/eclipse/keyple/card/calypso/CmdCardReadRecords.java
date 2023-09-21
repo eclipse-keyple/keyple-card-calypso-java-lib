@@ -88,32 +88,6 @@ final class CmdCardReadRecords extends CardCommand {
   /**
    * Instantiates a new read records cmd build.
    *
-   * @param calypsoCard The Calypso card.
-   * @param sfi the sfi top select.
-   * @param firstRecordNumber the record number to read (or first record to read in case of several.
-   *     records)
-   * @param readMode read mode, requests the reading of one or all the records.
-   * @param expectedLength the expected length of the record(s).
-   * @param recordSize the size of one record.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardReadRecords(
-      CalypsoCardAdapter calypsoCard,
-      int sfi,
-      int firstRecordNumber,
-      ReadMode readMode,
-      int expectedLength,
-      int recordSize) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard, null, null);
-    buildCommand(
-        calypsoCard.getCardClass(), sfi, firstRecordNumber, readMode, expectedLength, recordSize);
-  }
-
-  /**
-   * Instantiates a new read records cmd build.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi the sfi top select.
@@ -210,17 +184,6 @@ final class CmdCardReadRecords extends CardCommand {
               + expectedLength;
       addSubName(extraInfo);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**
@@ -407,29 +370,5 @@ final class CmdCardReadRecords extends CardCommand {
     }
     apdu[index] = (byte) 0x90; // SW 9000
     return apdu;
-  }
-
-  /**
-   * @return the SFI of the accessed file
-   * @since 2.0.1
-   */
-  int getSfi() {
-    return sfi;
-  }
-
-  /**
-   * @return the number of the first record to read
-   * @since 2.0.1
-   */
-  int getFirstRecordNumber() {
-    return firstRecordNumber;
-  }
-
-  /**
-   * @return the read mode
-   * @since 2.0.1
-   */
-  ReadMode getReadMode() {
-    return readMode;
   }
 }

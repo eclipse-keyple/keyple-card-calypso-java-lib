@@ -19,6 +19,8 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -104,57 +106,6 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   private final boolean isSvNegativeBalanceAuthorized;
   /** apdu data array */
   private final byte[] dataIn;
-
-  /**
-   * Instantiates a new CmdCardSvDebitOrUndebit.
-   *
-   * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
-   *     command.
-   * @param calypsoCard The Calypso card.
-   * @param amount amount to debit or undebit (positive integer from 0 to 32767).
-   * @param date operation date (not checked by the card).
-   * @param time operation time (not checked by the card).
-   * @param isExtendedModeAllowed True if the extended mode is allowed.
-   * @throws IllegalArgumentException If the command is inconsistent
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSvDebitOrUndebit(
-      boolean isDebitCommand,
-      CalypsoCardAdapter calypsoCard,
-      int amount,
-      byte[] date,
-      byte[] time,
-      boolean isExtendedModeAllowed) {
-
-    super(
-        isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT,
-        0,
-        calypsoCard,
-        null,
-        null);
-
-    // keeps a copy of these fields until the command is finalized
-    this.amount = amount;
-    this.isDebitCommand = isDebitCommand;
-    this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.isSvNegativeBalanceAuthorized = true;
-
-    // handle the dataIn size with signatureHi length according to card product type (3.2 rev have a
-    // 10-byte signature)
-    dataIn = new byte[15 + (isExtendedModeAllowed ? 10 : 5)];
-
-    // dataIn[0] will be filled in at the finalization phase.
-    short amountShort = isDebitCommand ? (short) -amount : (short) amount;
-    ByteArrayUtil.copyBytes(amountShort, dataIn, 1, 2);
-    dataIn[3] = date[0];
-    dataIn[4] = date[1];
-    dataIn[5] = time[0];
-    dataIn[6] = time[1];
-    dataIn[7] = calypsoCard.getSvKvc();
-    // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
-  }
 
   /**
    * Instantiates a new CmdCardSvDebitOrUndebit.
@@ -273,17 +224,6 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     // appends the fixed part of dataIn
     System.arraycopy(dataIn, 0, svDebitOrUndebitData, 4, 8);
     return svDebitOrUndebitData;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
   }
 
   /**

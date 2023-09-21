@@ -19,6 +19,8 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -89,53 +91,6 @@ final class CmdCardSvReload extends CardCommand {
   private final boolean isExtendedModeAllowed;
   /** apdu data array */
   private final byte[] dataIn;
-
-  /**
-   * Instantiates a new CmdCardSvReload.
-   *
-   * <p>The process is carried out in two steps: first to check and store the card and application
-   * data, then to create the final APDU with the data from the SAM (see finalizeCommand).
-   *
-   * @param calypsoCard The Calypso card.
-   * @param amount amount to debit (signed integer from -8388608 to 8388607).
-   * @param date debit date (not checked by the card).
-   * @param time debit time (not checked by the card).
-   * @param free 2 free bytes stored in the log but not processed by the card.
-   * @param isExtendedModeAllowed True if the extended mode is allowed.
-   * @throws IllegalArgumentException If the command is inconsistent
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSvReload(
-      CalypsoCardAdapter calypsoCard,
-      int amount,
-      byte[] date,
-      byte[] time,
-      byte[] free,
-      boolean isExtendedModeAllowed) {
-
-    super(CardCommandRef.SV_RELOAD, 0, calypsoCard, null, null);
-
-    // keeps a copy of these fields until the builder is finalized
-    this.isExtendedModeAllowed = isExtendedModeAllowed;
-    this.amount = amount;
-
-    // handle the dataIn size with signatureHi length according to card revision (3.2 rev have a
-    // 10-byte signature)
-    dataIn = new byte[18 + (isExtendedModeAllowed ? 10 : 5)];
-
-    // dataIn[0] will be filled in at the finalization phase.
-    dataIn[1] = date[0];
-    dataIn[2] = date[1];
-    dataIn[3] = free[0];
-    dataIn[4] = calypsoCard.getSvKvc();
-    dataIn[5] = free[1];
-    ByteArrayUtil.copyBytes(amount, dataIn, 6, 3);
-    dataIn[9] = time[0];
-    dataIn[10] = time[1];
-    // dataIn[11]..dataIn[11+7+sigLen] will be filled in at the finalization phase.
-  }
 
   /**
    * Instantiates a new CmdCardSvReload.
@@ -253,17 +208,6 @@ final class CmdCardSvReload extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @return True
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return true;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.3.2
    */
   @Override
@@ -375,18 +319,6 @@ final class CmdCardSvReload extends CardCommand {
     System.arraycopy(getApduRequest().getApdu(), 14, reloadLog, 11, 9);
     ByteArrayUtil.copyBytes(calypsoCard.getSvLastTNum(), reloadLog, 20, 2);
     calypsoCard.addCyclicContent(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, reloadLog);
-  }
-
-  /**
-   * Gets the SV signature. <br>
-   * The signature can be empty here in the case of a secure session where the transmission of the
-   * signature is postponed until the end of the session.
-   *
-   * @return A byte array containing the signature
-   * @since 2.0.1
-   */
-  byte[] getSignatureLo() {
-    return getApduResponse().getDataOut();
   }
 
   /**

@@ -61,44 +61,6 @@ final class CmdCardSvGet extends CardCommand {
   /**
    * Instantiates a new CmdCardSvGet.
    *
-   * @param calypsoCard The Calypso card.
-   * @param svOperation the desired SV operation.
-   * @param useExtendedMode True if the extended mode must be used.
-   * @throws IllegalArgumentException If the command is inconsistent
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
-
-    super(CardCommandRef.SV_GET, 0, calypsoCard, null, null);
-
-    byte cla =
-        calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
-            ? CalypsoCardClass.LEGACY_STORED_VALUE.getValue()
-            : CalypsoCardClass.ISO.getValue();
-
-    byte p1 = useExtendedMode ? (byte) 0x01 : (byte) 0x00;
-    byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
-
-    if (logger.isDebugEnabled()) {
-      addSubName(String.format("OPERATION:%s", svOperation.toString()));
-    }
-
-    header = new byte[4];
-    header[0] = getCommandRef().getInstructionByte();
-    header[1] = p1;
-    header[2] = p2;
-    header[3] = (byte) 0x00;
-  }
-
-  /**
-   * Instantiates a new CmdCardSvGet.
-   *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param svOperation the desired SV operation.
@@ -135,17 +97,6 @@ final class CmdCardSvGet extends CardCommand {
     header[1] = p1;
     header[2] = p2;
     header[3] = (byte) 0x00;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

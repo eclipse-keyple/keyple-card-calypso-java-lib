@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,43 +76,6 @@ final class CmdCardVerifyPin extends CardCommand {
   private final byte cipheringKvc;
 
   /**
-   * Verify the PIN
-   *
-   * @param calypsoCard The Calypso card.
-   * @param encryptPinTransmission true if the PIN transmission has to be encrypted.
-   * @param pin the PIN data. The PIN is always 4-byte long here, even in the case of an encrypted
-   *     transmission (@see setCipheredPinData).
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardVerifyPin(CalypsoCardAdapter calypsoCard, boolean encryptPinTransmission, byte[] pin) {
-    super(commandRef, 0, calypsoCard, null, null);
-    this.isReadCounterMode = false;
-    this.pin = pin;
-    this.isPinEncryptedMode = false;
-    this.cipheringKif = 0;
-    this.cipheringKvc = 0;
-    if (pin == null
-        || (!encryptPinTransmission && pin.length != 4)
-        || (encryptPinTransmission && pin.length != 8)) {
-      throw new IllegalArgumentException("The PIN must be 4 bytes long");
-    }
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                commandRef.getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0x00,
-                pin,
-                null)));
-    if (logger.isDebugEnabled()) {
-      addSubName(encryptPinTransmission ? "ENCRYPTED" : "PLAIN");
-    }
-  }
-
-  /**
    * Verify the PIN in encrypted mode.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -152,35 +117,6 @@ final class CmdCardVerifyPin extends CardCommand {
     this.isPinEncryptedMode = false;
     this.cipheringKif = 0;
     this.cipheringKvc = 0;
-  }
-
-  /**
-   * Alternate command dedicated to the reading of the wrong presentation counter
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.0.1
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardVerifyPin(CalypsoCardAdapter calypsoCard) {
-    super(commandRef, 0, calypsoCard, null, null);
-    this.isReadCounterMode = true;
-    this.pin = null;
-    this.isPinEncryptedMode = false;
-    this.cipheringKif = 0;
-    this.cipheringKvc = 0;
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCard.getCardClass().getValue(),
-                commandRef.getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0x00,
-                null,
-                null)));
-    if (logger.isDebugEnabled()) {
-      addSubName("Read presentation counter");
-    }
   }
 
   /**
@@ -228,17 +164,6 @@ final class CmdCardVerifyPin extends CardCommand {
         throw e;
       }
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return false
-   * @since 2.0.1
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**

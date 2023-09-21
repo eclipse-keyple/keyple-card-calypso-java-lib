@@ -15,7 +15,6 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -86,16 +85,6 @@ abstract class CardCommand {
     this.transactionContext = transactionContext;
     this.commandContext = commandContext;
   }
-
-  /**
-   * Indicates if the session buffer is used when executing this command.
-   *
-   * <p>Allows the management of the overflow of this buffer.
-   *
-   * @return True if this command uses the session buffer
-   * @since 2.0.1
-   */
-  abstract boolean isSessionBufferUsed();
 
   /**
    * Appends a string to the current name.
@@ -402,7 +391,8 @@ abstract class CardCommand {
   final void setApduResponseAndCheckStatus(
       ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard) throws CardCommandException {
     this.calypsoCard = calypsoCard;
-    setApduResponseAndCheckStatus(apduResponse);
+    //parseResponse(apduResponse);
+    setApduResponseAndCheckStatus(apduResponse); //TODO to remove
   }
 
   /**

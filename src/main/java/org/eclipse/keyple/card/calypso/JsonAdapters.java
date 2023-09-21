@@ -20,9 +20,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import org.eclipse.keypop.calypso.card.card.*;
-
 import java.lang.reflect.Type;
+import org.eclipse.keypop.calypso.card.card.*;
 
 /**
  * Contains all JSON adapters used for serialization and deserialization processes.<br>
@@ -167,8 +166,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link
-   * SvDebitLogRecord}.
+   * JSON serializer/deserializer of a {@link SvDebitLogRecord}.
    *
    * @since 2.0.0
    */

@@ -51,19 +51,6 @@ final class CmdCardGetDataEfList extends CardCommand {
   }
 
   /**
-   * Instantiates a new CmdCardGetDataEfList.
-   *
-   * @param calypsoCard The Calypso card.
-   * @since 2.2.3
-   * @deprecated
-   */
-  @Deprecated
-  CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
-    buildCommand(calypsoCard.getCardClass());
-  }
-
-  /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -115,17 +102,6 @@ final class CmdCardGetDataEfList extends CardCommand {
     for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
       getCalypsoCard().setFileHeader(entry.getValue(), entry.getKey());
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return False
-   * @since 2.1.0
-   */
-  @Override
-  boolean isSessionBufferUsed() {
-    return false;
   }
 
   /**
