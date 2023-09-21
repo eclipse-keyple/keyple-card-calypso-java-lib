@@ -89,6 +89,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
   private final WriteAccessLevel writeAccessLevel;
   private final boolean isExtendedModeAllowed;
   private SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private transient boolean isPreOpenModeOnSelection; // NOSONAR
   private transient boolean isPreOpenMode; // NOSONAR
   private transient byte[] preOpenDataOut; // NOSONAR
   private transient boolean isReadModeConfigured; // NOSONAR
@@ -97,7 +98,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
 
   private transient boolean isPreviousSessionRatified; // NOSONAR
   private byte[] challengeTransactionCounter;
-  private byte[] challengeRandomNumber;
   private Byte kif;
   private Byte kvc;
   private byte[] recordData;
@@ -105,11 +105,17 @@ final class CmdCardOpenSecureSession extends CardCommand {
   /**
    * Constructor for "pre-open" variant (to be used for card selection only).
    *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param writeAccessLevel The write access level.
    * @since 2.3.3
    */
-  CmdCardOpenSecureSession(WriteAccessLevel writeAccessLevel) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, null, null);
+  CmdCardOpenSecureSession(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      WriteAccessLevel writeAccessLevel) {
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
+    isPreOpenModeOnSelection = true;
     isExtendedModeAllowed = true;
     this.writeAccessLevel = writeAccessLevel;
     createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
@@ -363,8 +369,10 @@ final class CmdCardOpenSecureSession extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
     CalypsoCardAdapter card = getTransactionContext().getCard();
-    card.backupFiles();
-    getTransactionContext().setSecureSessionOpen(true);
+    if (!isPreOpenModeOnSelection) {
+      card.backupFiles();
+      getTransactionContext().setSecureSessionOpen(true);
+    }
     byte[] dataOut = getApduResponse().getDataOut();
     switch (card.getProductType()) {
       case PRIME_REVISION_1:
@@ -382,6 +390,11 @@ final class CmdCardOpenSecureSession extends CardCommand {
     card.setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
     if (recordData.length > 0) {
       card.setContent((byte) sfi, recordNumber, recordData);
+    }
+    // If it is a pre-open variant, then we save the pre-open data into the Calypso card image.
+    if (isPreOpenModeOnSelection && apduResponse.getStatusWord() == 0x6200) {
+      card.setPreOpenWriteAccessLevel(writeAccessLevel);
+      card.setPreOpenDataOut(dataOut);
     }
     if (!isCryptoServiceSynchronized()) {
       synchronizeCryptoService(dataOut);
@@ -424,40 +437,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.1
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] dataOut = apduResponse.getDataOut();
-    CalypsoCardAdapter card = getCalypsoCard();
-    switch (card.getProductType()) {
-      case PRIME_REVISION_1:
-        parseRev10(dataOut);
-        break;
-      case PRIME_REVISION_2:
-        parseRev24(dataOut);
-        break;
-      default:
-        parseRev3(dataOut);
-    }
-    // CL-CSS-INFORAT.1
-    card.setDfRatified(isPreviousSessionRatified);
-    // CL-CSS-INFOTCNT.1
-    card.setTransactionCounter(ByteArrayUtil.extractInt(challengeTransactionCounter, 0, 3, false));
-    if (recordData.length > 0) {
-      card.setContent((byte) sfi, recordNumber, recordData);
-    }
-    // If it is a pre-open variant, then we save the pre-open data into the Calypso card image.
-    if (apduResponse.getStatusWord() == 0x6200) {
-      card.setPreOpenWriteAccessLevel(writeAccessLevel);
-      card.setPreOpenDataOut(dataOut);
-    }
-  }
-
-  /**
    * Parse Rev 3
    *
    * @param apduResponseData The response data.
@@ -480,7 +459,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
       card.disableExtendedMode();
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
-    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4 + offset);
     kif = apduResponseData[5 + offset];
     kvc = apduResponseData[6 + offset];
     int dataLength = apduResponseData[7 + offset];
@@ -537,7 +515,6 @@ final class CmdCardOpenSecureSession extends CardCommand {
             "Bad response length to Open Secure Session: " + apduResponseData.length);
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 1, 4);
-    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 4, 5);
     kif = null;
     kvc = apduResponseData[0];
   }
@@ -591,33 +568,8 @@ final class CmdCardOpenSecureSession extends CardCommand {
             "Bad response length to Open Secure Session: " + apduResponseData.length);
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
-    challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4);
     kif = null;
     kvc = null;
-  }
-
-  /**
-   * @return A non empty value.
-   * @since 2.0.1
-   */
-  byte[] getCardChallenge() {
-    return challengeRandomNumber;
-  }
-
-  /**
-   * @return The current KIF.
-   * @since 2.0.1
-   */
-  Byte getKif() {
-    return kif;
-  }
-
-  /**
-   * @return The current KVC.
-   * @since 2.0.1
-   */
-  Byte getKvc() {
-    return kvc;
   }
 
   /**

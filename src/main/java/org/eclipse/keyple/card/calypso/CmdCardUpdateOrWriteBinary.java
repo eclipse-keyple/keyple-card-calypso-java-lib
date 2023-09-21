@@ -131,21 +131,6 @@ final class CmdCardUpdateOrWriteBinary extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
-      getCalypsoCard().setContent(sfi, 1, data, offset);
-    } else {
-      getCalypsoCard().fillContent(sfi, 1, data, offset);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.3.2
    */
   @Override

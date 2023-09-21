@@ -138,37 +138,6 @@ final class CmdCardVerifyPin extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    try {
-      super.setApduResponseAndCheckStatus(apduResponse);
-      getCalypsoCard().setPinAttemptRemaining(3);
-    } catch (CardPinException e) {
-      switch (apduResponse.getStatusWord()) {
-        case 0x63C2:
-          getCalypsoCard().setPinAttemptRemaining(2);
-          break;
-        case 0x63C1:
-          getCalypsoCard().setPinAttemptRemaining(1);
-          break;
-        case 0x6983:
-          getCalypsoCard().setPinAttemptRemaining(0);
-          break;
-        default: // NOP
-      }
-      // Forward the exception if the operation do not target the reading of the attempt counter.
-      // Catch it silently otherwise
-      if (!isReadCounterMode) {
-        throw e;
-      }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.3.2
    */
   @Override

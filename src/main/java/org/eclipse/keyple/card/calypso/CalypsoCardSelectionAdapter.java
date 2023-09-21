@@ -43,6 +43,8 @@ final class CalypsoCardSelectionAdapter
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
   private final List<CardCommand> commands;
+  private final transient TransactionContextDto transactionContext; // NOSONAR
+  private final transient CommandContextDto commandContext; // NOSONAR
   private transient boolean isPreOpenPrepared; // NOSONAR
   private transient boolean isInvalidatedCardAccepted; // NOSONAR
 
@@ -54,6 +56,8 @@ final class CalypsoCardSelectionAdapter
    */
   CalypsoCardSelectionAdapter() {
     commands = new ArrayList<CardCommand>();
+    transactionContext = new TransactionContextDto(null, null);
+    commandContext = new CommandContextDto(false, false);
   }
 
   /**
@@ -82,7 +86,14 @@ final class CalypsoCardSelectionAdapter
             CalypsoCardConstant.NB_REC_MAX,
             "recordNumber");
     commands.add(
-        new CmdCardReadRecords(sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0));
+        new CmdCardReadRecords(
+            transactionContext,
+            commandContext,
+            sfi,
+            recordNumber,
+            CmdCardReadRecords.ReadMode.ONE_RECORD,
+            0,
+            0));
     return this;
   }
 
@@ -100,7 +111,7 @@ final class CalypsoCardSelectionAdapter
         .greaterOrEqual(nbBytesToRead, 1, "nbBytesToRead");
     if (sfi > 0 && offset > 255) { // FFh
       // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-      commands.add(new CmdCardReadBinary(sfi, 0, 1));
+      commands.add(new CmdCardReadBinary(transactionContext, commandContext, sfi, 0, 1));
     }
     int currentLength;
     int currentOffset = offset;
@@ -108,7 +119,9 @@ final class CalypsoCardSelectionAdapter
     do {
       currentLength =
           Math.min(nbBytesRemainingToRead, CalypsoCardConstant.DEFAULT_PAYLOAD_CAPACITY);
-      commands.add(new CmdCardReadBinary(sfi, currentOffset, currentLength));
+      commands.add(
+          new CmdCardReadBinary(
+              transactionContext, commandContext, sfi, currentOffset, currentLength));
       currentOffset += currentLength;
       nbBytesRemainingToRead -= currentLength;
     } while (nbBytesRemainingToRead > 0);
@@ -131,7 +144,13 @@ final class CalypsoCardSelectionAdapter
             "nbCountersToRead");
     commands.add(
         new CmdCardReadRecords(
-            sfi, 1, CmdCardReadRecords.ReadMode.ONE_RECORD, nbCountersToRead * 3));
+            transactionContext,
+            commandContext,
+            sfi,
+            1,
+            CmdCardReadRecords.ReadMode.ONE_RECORD,
+            nbCountersToRead * 3,
+            0));
     return this;
   }
 
@@ -147,7 +166,8 @@ final class CalypsoCardSelectionAdapter
       throw new IllegalStateException("'Pre-Open Secure Session' command already prepared");
     }
     Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
-    commands.add(new CmdCardOpenSecureSession(writeAccessLevel));
+    commands.add(
+        new CmdCardOpenSecureSession(transactionContext, commandContext, writeAccessLevel));
     isPreOpenPrepared = true;
     return this;
   }
@@ -162,16 +182,16 @@ final class CalypsoCardSelectionAdapter
     Assert.getInstance().notNull(tag, "tag");
     switch (tag) {
       case FCI_FOR_CURRENT_DF:
-        commands.add(new CmdCardGetDataFci(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataFci(transactionContext, commandContext));
         break;
       case FCP_FOR_CURRENT_FILE:
-        commands.add(new CmdCardGetDataFcp(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataFcp(transactionContext, commandContext));
         break;
       case EF_LIST:
-        commands.add(new CmdCardGetDataEfList(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataEfList(transactionContext, commandContext));
         break;
       case TRACEABILITY_INFORMATION:
-        commands.add(new CmdCardGetDataTraceabilityInformation(CalypsoCardClass.ISO));
+        commands.add(new CmdCardGetDataTraceabilityInformation(transactionContext, commandContext));
         break;
       default:
         throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
@@ -186,8 +206,7 @@ final class CalypsoCardSelectionAdapter
    */
   @Override
   public CalypsoCardSelectionExtension prepareSelectFile(short lid) {
-    commands.add(
-        new CmdCardSelectFile(CalypsoCardClass.ISO, CalypsoCard.ProductType.PRIME_REVISION_3, lid));
+    commands.add(new CmdCardSelectFile(transactionContext, commandContext, lid));
     return this;
   }
 
@@ -199,7 +218,7 @@ final class CalypsoCardSelectionAdapter
   @Override
   public CalypsoCardSelectionExtension prepareSelectFile(SelectFileControl selectControl) {
     Assert.getInstance().notNull(selectControl, "selectControl");
-    commands.add(new CmdCardSelectFile(CalypsoCardClass.ISO, selectControl));
+    commands.add(new CmdCardSelectFile(transactionContext, commandContext, selectControl));
     return this;
   }
 
@@ -286,7 +305,7 @@ final class CalypsoCardSelectionAdapter
     // exception.
     for (int i = 0; i < apduResponses.size(); i++) {
       try {
-        commands.get(i).setApduResponseAndCheckStatus(apduResponses.get(i), calypsoCard);
+        commands.get(i).parseResponseForSelection(apduResponses.get(i), calypsoCard);
       } catch (CardCommandException e) {
         CardCommandRef commandRef = commands.get(i).getCommandRef();
         if (commandRef == CardCommandRef.READ_RECORDS

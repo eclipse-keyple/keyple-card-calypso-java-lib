@@ -96,64 +96,14 @@ final class CmdCardSelectFile extends CardCommand {
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
+
     super(commandRef, 0, null, transactionContext, commandContext);
-    buildCommand(transactionContext.getCard().getCardClass(), selectFileControl);
-  }
 
-  /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
-   * @since 2.0.1
-   */
-  CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    super(commandRef, 0, null, null, null);
-    buildCommand(calypsoCardClass, selectFileControl);
-  }
+    byte cardClass =
+        transactionContext.getCard() != null
+            ? transactionContext.getCard().getCardClass().getValue()
+            : CalypsoCardClass.ISO.getValue();
 
-  /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
-   *
-   * @param transactionContext The global transaction context common to all commands.
-   * @param commandContext The local command context specific to each command.
-   * @param lid The LID.
-   * @since 2.3.2
-   */
-  CmdCardSelectFile(
-      TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
-    super(commandRef, 0, null, transactionContext, commandContext);
-    CalypsoCardAdapter calypsoCard = transactionContext.getCard();
-    buildCommand(
-        calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
-  }
-
-  /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
-   * DF.
-   *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
-   * @param productType The target product type.
-   * @param lid The LID.
-   * @since 2.0.1
-   */
-  CmdCardSelectFile(
-      CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-    super(commandRef, 0, null, null, null);
-    buildCommand(calypsoCardClass, productType, false, lid);
-  }
-
-  /**
-   * Builds the command.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
-   */
-  private void buildCommand(
-      CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    byte cla = calypsoCardClass.getValue();
     byte p1;
     byte p2;
     byte[] selectData = new byte[] {0x00, 0x00};
@@ -178,7 +128,8 @@ final class CmdCardSelectFile extends CardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
+            ApduUtil.build(
+                cardClass, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName("SELECTIONCONTROL" + selectFileControl);
@@ -186,19 +137,33 @@ final class CmdCardSelectFile extends CardCommand {
   }
 
   /**
-   * Builds the command.
+   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * DF.
    *
-   * @param calypsoCardClass Indicates which CLA byte should be used for the Apdu.
-   * @param productType The target product type.
-   * @param forceRevision1Settings true to enforce "revision 1" settings for all cards with a legacy
-   *     class byte, regardless of their actual revision.
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
    * @param lid The LID.
+   * @since 2.3.2
    */
-  private void buildCommand(
-      CalypsoCardClass calypsoCardClass,
-      CalypsoCard.ProductType productType,
-      boolean forceRevision1Settings,
-      short lid) {
+  CmdCardSelectFile(
+      TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
+    super(commandRef, 0, null, transactionContext, commandContext);
+
+    CalypsoCardClass calypsoCardClass;
+    CalypsoCard.ProductType productType;
+    boolean forceRevision1Settings;
+
+    if (transactionContext.getCard() != null) {
+      CalypsoCardAdapter calypsoCard = transactionContext.getCard();
+      calypsoCardClass = calypsoCard.getCardClass();
+      productType = calypsoCard.getProductType();
+      forceRevision1Settings = calypsoCard.isLegacyCase1();
+    } else {
+      calypsoCardClass = CalypsoCardClass.ISO;
+      productType = CalypsoCard.ProductType.PRIME_REVISION_3;
+      forceRevision1Settings = false;
+    }
+
     // handle the REV1 case
     // CL-KEY-KIFSF.1
     // If legacy and rev2 then 02h else if legacy then 08h else 09h
@@ -228,17 +193,6 @@ final class CmdCardSelectFile extends CardCommand {
     if (logger.isDebugEnabled()) {
       addSubName("LID=" + HexUtil.toHex(dataIn));
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
   }
 
   /**

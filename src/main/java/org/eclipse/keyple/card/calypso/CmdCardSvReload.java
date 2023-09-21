@@ -283,27 +283,6 @@ final class CmdCardSvReload extends CardCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * <p>The permitted lengths are 0 (in session), 3 (not 3.2) or 6 (3.2)
-   *
-   * @throws IllegalStateException If the length is incorrect.
-   * @since 2.0.1
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    if (apduResponse.getDataOut().length != 0
-        && apduResponse.getDataOut().length != 3
-        && apduResponse.getDataOut().length != 6) {
-      throw new IllegalStateException("Bad length in response to SV Reload command.");
-    }
-    CalypsoCardAdapter calypsoCard = getCalypsoCard();
-    calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
-    updateCalypsoCardSvHistory(calypsoCard);
-  }
-
-  /**
    * Updates the Calypso card with the SV Reload data to update the SV balance and the SV reload
    * log.
    *

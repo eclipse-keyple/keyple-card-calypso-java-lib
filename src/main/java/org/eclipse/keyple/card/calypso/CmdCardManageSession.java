@@ -61,7 +61,6 @@ final class CmdCardManageSession extends CardCommand {
 
   private boolean isEncryptionRequested;
   private boolean isMutualAuthenticationRequested;
-  private byte[] cardSessionMac;
 
   /**
    * Constructor.
@@ -184,7 +183,7 @@ final class CmdCardManageSession extends CardCommand {
       }
       throw e;
     }
-    cardSessionMac = getApduResponse().getDataOut();
+    byte[] cardSessionMac = getApduResponse().getDataOut();
     if (isMutualAuthenticationRequested) {
       try {
         if (!getTransactionContext()
@@ -216,28 +215,6 @@ final class CmdCardManageSession extends CardCommand {
     } catch (SymmetricCryptoIOException e) {
       throw (RuntimeException) e.getCause();
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Checks the card response length; the admissible lengths are 0, 4 or 8 bytes.
-   *
-   * @since 2.3.1
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    try {
-      super.setApduResponseAndCheckStatus(apduResponse);
-    } catch (CardSecurityDataException e) {
-      if (apduResponse.getStatusWord() == 0x6985 && !getCalypsoCard().isExtendedModeSupported()) {
-        throw new UnsupportedOperationException(
-            "'Manage Secure Session' command not available for this context"
-                + " (Card and/or SAM does not support extended mode)");
-      }
-      throw e;
-    }
-    cardSessionMac = getApduResponse().getDataOut();
   }
 
   /**

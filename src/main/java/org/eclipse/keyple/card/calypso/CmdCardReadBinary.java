@@ -67,46 +67,8 @@ final class CmdCardReadBinary extends CardCommand {
 
   private final byte sfi;
   private final int offset;
-  private transient boolean isPreOpenMode; // NOSONAR
+  private final transient boolean isPreOpenMode; // NOSONAR
   private transient byte[] anticipatedDataOut; // NOSONAR
-
-  /**
-   * Constructor (to be used for card selection only).
-   *
-   * @param sfi The sfi to select.
-   * @param offset The offset.
-   * @param length The number of bytes to read.
-   * @since 2.3.3
-   */
-  CmdCardReadBinary(byte sfi, int offset, int length) {
-
-    super(CardCommandRef.READ_BINARY, length, null, null, null);
-
-    this.sfi = sfi;
-    this.offset = offset;
-
-    byte msb = (byte) (offset >> Byte.SIZE);
-    byte lsb = (byte) (offset & 0xFF);
-
-    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
-    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
-    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
-
-    setApduRequest(
-        new ApduRequestAdapter(
-            ApduUtil.build(
-                CalypsoCardClass.ISO.getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                lsb,
-                null,
-                (byte) length)));
-
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(MSG_SFI_02_XH_OFFSET_D_LENGTH_D, sfi, offset, length);
-      addSubName(extraInfo);
-    }
-  }
 
   /**
    * Constructor.
@@ -126,7 +88,15 @@ final class CmdCardReadBinary extends CardCommand {
       int length) {
 
     super(CardCommandRef.READ_BINARY, length, null, transactionContext, commandContext);
-    isPreOpenMode = transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
+
+    byte cardClass =
+        transactionContext.getCard() != null
+            ? transactionContext.getCard().getCardClass().getValue()
+            : CalypsoCardClass.ISO.getValue();
+    isPreOpenMode =
+        transactionContext.getCard() != null
+            && transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
+
     this.sfi = sfi;
     this.offset = offset;
 
@@ -140,28 +110,12 @@ final class CmdCardReadBinary extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                transactionContext.getCard().getCardClass().getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                lsb,
-                null,
-                (byte) length)));
+                cardClass, getCommandRef().getInstructionByte(), p1, lsb, null, (byte) length)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo = String.format(MSG_SFI_02_XH_OFFSET_D_LENGTH_D, sfi, offset, length);
       addSubName(extraInfo);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getCalypsoCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
   }
 
   /**
@@ -204,11 +158,12 @@ final class CmdCardReadBinary extends CardCommand {
     if (!isCryptoServiceSynchronized()) {
       byte[] anticipatedApduResponse = buildAnticipatedResponse();
       if (anticipatedApduResponse == null) {
+        String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
             "Unable to determine the anticipated APDU response for the command '{}' (SFI {}h, offset {}, length {})"
                 + " because the record or some records have not been read beforehand.",
             getName(),
-            HexUtil.toHex(sfi),
+            sfiHex,
             offset,
             getLe());
         return false;

@@ -196,24 +196,4 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] dataOut = apduResponse.getDataOut();
-    int nbRecords = dataOut.length / length;
-    for (int i = 0; i < nbRecords; i++) {
-      getCalypsoCard()
-          .setContent(
-              sfi,
-              recordNumber + i,
-              Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
-              offset);
-    }
-  }
 }

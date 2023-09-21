@@ -258,6 +258,18 @@ abstract class CardCommand {
   abstract void parseResponse(ApduResponseApi apduResponse) throws CardCommandException;
 
   /**
+   * Sets the Calypso card and invoke the {@link #setApduResponseAndCheckStatus(ApduResponseApi)}
+   * method.
+   *
+   * @since 2.2.3
+   */
+  final void parseResponseForSelection(ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard)
+      throws CardCommandException {
+    this.calypsoCard = calypsoCard;
+    parseResponse(apduResponse);
+  }
+
+  /**
    * Updates the terminal session MAC using the parsed APDU response if the encryption is not
    * active. If encryption is enabled, then the session MAC has already been updated during
    * decryption.
@@ -348,7 +360,8 @@ abstract class CardCommand {
    *     not equal to the LE field in the request.
    * @since 2.0.1
    */
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
+  final void setApduResponseAndCheckStatus(ApduResponseApi apduResponse)
+      throws CardCommandException {
     this.apduResponse = apduResponse;
     checkStatus();
   }
@@ -383,19 +396,6 @@ abstract class CardCommand {
   }
 
   /**
-   * Sets the Calypso card and invoke the {@link #setApduResponseAndCheckStatus(ApduResponseApi)}
-   * method.
-   *
-   * @since 2.2.3
-   */
-  final void setApduResponseAndCheckStatus(
-      ApduResponseApi apduResponse, CalypsoCardAdapter calypsoCard) throws CardCommandException {
-    this.calypsoCard = calypsoCard;
-    //parseResponse(apduResponse);
-    setApduResponseAndCheckStatus(apduResponse); //TODO to remove
-  }
-
-  /**
    * Returns the internal status table
    *
    * @return A not null reference
@@ -411,20 +411,6 @@ abstract class CardCommand {
    */
   private StatusProperties getStatusWordProperties() {
     return getStatusTable().get(apduResponse.getStatusWord());
-  }
-
-  /**
-   * Gets true if the status is successful from the statusTable according to the current status code
-   * and if the length of the response is equal to the LE field in the request.
-   *
-   * @return A value
-   * @since 2.0.1
-   */
-  final boolean isSuccessful() {
-    StatusProperties props = getStatusWordProperties();
-    return props != null
-        && props.isSuccessful()
-        && (le == 0 || apduResponse.getDataOut().length == le); // CL-CSS-RESPLE.1
   }
 
   /**

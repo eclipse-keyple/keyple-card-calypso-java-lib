@@ -187,56 +187,6 @@ final class CmdCardSvGet extends CardCommand {
    * @since 2.0.1
    */
   @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] cardResponse = apduResponse.getDataOut();
-    byte currentKvc;
-    int transactionNumber;
-    int balance;
-    byte[] loadLog;
-    byte[] debitLog;
-    switch (cardResponse.length) {
-      case 0x21: /* Compatibility mode, Reload */
-      case 0x1E: /* Compatibility mode, Debit or Undebit */
-        currentKvc = cardResponse[0];
-        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 1, 2, false);
-        balance = ByteArrayUtil.extractInt(cardResponse, 8, 3, true);
-        if (cardResponse.length == 0x21) {
-          /* Reload */
-          loadLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
-          debitLog = null;
-        } else {
-          /* Debit */
-          loadLog = null;
-          debitLog = Arrays.copyOfRange(cardResponse, 11, cardResponse.length);
-        }
-        break;
-      case 0x3D: /* Revision 3.2 mode */
-        currentKvc = cardResponse[8];
-        transactionNumber = ByteArrayUtil.extractInt(cardResponse, 9, 2, false);
-        balance = ByteArrayUtil.extractInt(cardResponse, 17, 3, true);
-        loadLog = Arrays.copyOfRange(cardResponse, 20, 42);
-        debitLog = Arrays.copyOfRange(cardResponse, 42, cardResponse.length);
-        break;
-      default:
-        throw new IllegalStateException("Incorrect data length in response to SVGet");
-    }
-    CalypsoCardAdapter calypsoCard = getCalypsoCard();
-    calypsoCard.setSvData(currentKvc, header, apduResponse.getApdu(), balance, transactionNumber);
-    if (loadLog != null) {
-      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_RELOAD_LOG_FILE_SFI, loadLog);
-    }
-    if (debitLog != null) {
-      calypsoCard.addCyclicContent(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI, debitLog);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.1
-   */
-  @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }

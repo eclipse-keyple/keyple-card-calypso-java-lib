@@ -120,17 +120,6 @@ final class CmdCardWriteRecord extends CardCommand {
   /**
    * {@inheritDoc}
    *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getCalypsoCard().fillContent((byte) sfi, recordNumber, data, 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @since 2.3.2
    */
   @Override

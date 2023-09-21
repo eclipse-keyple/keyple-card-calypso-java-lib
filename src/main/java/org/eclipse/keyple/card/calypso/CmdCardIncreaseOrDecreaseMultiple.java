@@ -203,25 +203,6 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    if (apduResponse.getDataOut().length > 0) {
-      byte[] dataOut = apduResponse.getDataOut();
-      int nbCounters = dataOut.length / 4;
-      for (int i = 0; i < nbCounters; i++) {
-        getCalypsoCard()
-            .setCounter(
-                sfi, dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
-      }
-    }
-  }
-
-  /**
    * Builds the anticipated APDU response with the SW.
    *
    * @return A not empty byte array.

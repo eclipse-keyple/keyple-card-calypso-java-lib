@@ -223,26 +223,4 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
   }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] dataOut = apduResponse.getDataOut();
-    int nbRecords = dataOut[0];
-    for (int i = 1; i <= nbRecords; i++) {
-      data.getMatchingRecordNumbers().add((int) dataOut[i]);
-    }
-    if (data.isFetchFirstMatchingResult() && nbRecords > 0) {
-      getCalypsoCard()
-          .setContent(
-              data.getSfi(),
-              data.getMatchingRecordNumbers().get(0),
-              Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length));
-    }
-  }
 }

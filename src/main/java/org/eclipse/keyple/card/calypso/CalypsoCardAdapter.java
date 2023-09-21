@@ -201,8 +201,10 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
-    CmdCardGetDataFci cmdCardGetDataFci = new CmdCardGetDataFci(CalypsoCardClass.ISO);
-    cmdCardGetDataFci.setApduResponseAndCheckStatus(selectApplicationResponse, this);
+    CmdCardGetDataFci cmdCardGetDataFci =
+        new CmdCardGetDataFci(
+            new TransactionContextDto(null, null), new CommandContextDto(false, false));
+    cmdCardGetDataFci.parseResponseForSelection(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
       throw new IllegalArgumentException("Bad FCI format.");

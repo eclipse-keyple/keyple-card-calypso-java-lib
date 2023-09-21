@@ -56,46 +56,19 @@ final class CmdCardGetDataFcp extends CardCommand {
    */
   CmdCardGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
-    buildCommand(transactionContext.getCard().getCardClass());
-  }
-
-  /**
-   * Instantiates a new CmdCardGetDataFci.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.0.1
-   */
-  CmdCardGetDataFcp(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null, null);
-    buildCommand(calypsoCardClass);
-  }
-
-  /**
-   * Builds the command.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   */
-  private void buildCommand(CalypsoCardClass calypsoCardClass) {
+    byte cardClass =
+        transactionContext.getCard() != null
+            ? transactionContext.getCard().getCardClass().getValue()
+            : CalypsoCardClass.ISO.getValue();
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                cardClass,
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x62,
                 null,
                 (byte) 0x00)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    CmdCardSelectFile.parseProprietaryInformation(apduResponse.getDataOut(), getCalypsoCard());
   }
 
   /**

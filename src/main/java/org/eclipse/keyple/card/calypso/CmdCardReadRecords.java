@@ -78,11 +78,11 @@ final class CmdCardReadRecords extends CardCommand {
   }
 
   // Construction arguments used for parsing
-  private int sfi;
-  private int firstRecordNumber;
-  private int recordSize;
-  private ReadMode readMode;
-  private transient boolean isPreOpenMode; // NOSONAR
+  private final int sfi;
+  private final int firstRecordNumber;
+  private final int recordSize;
+  private final ReadMode readMode;
+  private final transient boolean isPreOpenMode; // NOSONAR
   private transient byte[] anticipatedDataOut; // NOSONAR
 
   /**
@@ -106,50 +106,16 @@ final class CmdCardReadRecords extends CardCommand {
       ReadMode readMode,
       int expectedLength,
       int recordSize) {
+
     super(CardCommandRef.READ_RECORDS, expectedLength, null, transactionContext, commandContext);
-    isPreOpenMode = transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
-    buildCommand(
-        transactionContext.getCard().getCardClass(),
-        sfi,
-        firstRecordNumber,
-        readMode,
-        expectedLength,
-        recordSize);
-  }
 
-  /**
-   * Constructor (to be used for card selection only).
-   *
-   * @param sfi the sfi top select.
-   * @param firstRecordNumber the record number to read (or first record to read in case of several.
-   *     records)
-   * @param readMode read mode, requests the reading of one or all the records.
-   * @param expectedLength the expected length of the record(s).
-   * @since 2.0.1
-   */
-  CmdCardReadRecords(int sfi, int firstRecordNumber, ReadMode readMode, int expectedLength) {
-    super(CardCommandRef.READ_RECORDS, expectedLength, null, null, null);
-    buildCommand(CalypsoCardClass.ISO, sfi, firstRecordNumber, readMode, expectedLength, 0);
-  }
-
-  /**
-   * Builds the command.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @param sfi the sfi top select.
-   * @param firstRecordNumber the record number to read (or first record to read in case of several.
-   *     records)
-   * @param readMode read mode, requests the reading of one or all the records.
-   * @param expectedLength the expected length of the record(s).
-   * @param recordSize the size of one record.
-   */
-  private void buildCommand(
-      CalypsoCardClass calypsoCardClass,
-      int sfi,
-      int firstRecordNumber,
-      ReadMode readMode,
-      int expectedLength,
-      int recordSize) {
+    byte cardClass =
+        transactionContext.getCard() != null
+            ? transactionContext.getCard().getCardClass().getValue()
+            : CalypsoCardClass.ISO.getValue();
+    isPreOpenMode =
+        transactionContext.getCard() != null
+            && transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
 
     this.sfi = sfi;
     this.firstRecordNumber = firstRecordNumber;
@@ -164,13 +130,7 @@ final class CmdCardReadRecords extends CardCommand {
     byte le = (byte) expectedLength;
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(
-                calypsoCardClass.getValue(),
-                getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                null,
-                le)));
+            ApduUtil.build(cardClass, getCommandRef().getInstructionByte(), p1, p2, null, le)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
@@ -226,11 +186,12 @@ final class CmdCardReadRecords extends CardCommand {
     if (!isCryptoServiceSynchronized()) {
       byte[] anticipatedApduResponse = buildAnticipatedResponse();
       if (anticipatedApduResponse == null) {
+        String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
             "Unable to determine the anticipated APDU response for the command '{}' (SFI {}h, record {})"
                 + " because the record or some records have not been read beforehand.",
             getName(),
-            HexUtil.toHex(sfi),
+            sfiHex,
             firstRecordNumber);
         return false;
       }
@@ -286,31 +247,6 @@ final class CmdCardReadRecords extends CardCommand {
   @Override
   Map<Integer, StatusProperties> getStatusTable() {
     return STATUS_TABLE;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
-      getCalypsoCard().setContent((byte) sfi, firstRecordNumber, apduResponse.getDataOut());
-    } else {
-      byte[] apdu = apduResponse.getDataOut();
-      int apduLen = apdu.length;
-      int index = 0;
-      while (apduLen > 0) {
-        byte recordNb = apdu[index++];
-        byte len = apdu[index++];
-        getCalypsoCard()
-            .setContent((byte) sfi, recordNb, Arrays.copyOfRange(apdu, index, index + len));
-        index = index + len;
-        apduLen = apduLen - 2 - len;
-      }
-    }
   }
 
   /**

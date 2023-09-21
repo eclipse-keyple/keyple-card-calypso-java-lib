@@ -53,46 +53,19 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   CmdCardGetDataTraceabilityInformation(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
-    buildCommand(getTransactionContext().getCard().getCardClass());
-  }
-
-  /**
-   * Instantiates a new CmdCardGetDataTrace.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   * @since 2.1.0
-   */
-  CmdCardGetDataTraceabilityInformation(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null, null);
-    buildCommand(calypsoCardClass);
-  }
-
-  /**
-   * Builds the command.
-   *
-   * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
-   */
-  private void buildCommand(CalypsoCardClass calypsoCardClass) {
+    byte cardClass =
+        transactionContext.getCard() != null
+            ? transactionContext.getCard().getCardClass().getValue()
+            : CalypsoCardClass.ISO.getValue();
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                calypsoCardClass.getValue(),
+                cardClass,
                 getCommandRef().getInstructionByte(),
                 (byte) 0x01,
                 (byte) 0x85,
                 null,
                 (byte) 0x00)));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    getCalypsoCard().setTraceabilityInformation(apduResponse.getDataOut());
   }
 
   /**

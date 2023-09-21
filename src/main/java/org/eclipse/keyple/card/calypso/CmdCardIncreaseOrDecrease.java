@@ -158,29 +158,6 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @since 2.2.3
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    if (apduResponse.getStatusWord() == SW_POSTPONED_DATA) {
-      if (!getCalypsoCard().isCounterValuePostponed()) {
-        throw new CardUnknownStatusException("Unexpected status word: 6200h", getCommandRef());
-      }
-      getCalypsoCard()
-          .setCounter(
-              (byte) sfi, counterNumber != 0 ? counterNumber : 1, buildAnticipatedDataOut());
-    } else {
-      // Set returned value
-      getCalypsoCard()
-          .setCounter(
-              (byte) sfi, counterNumber != 0 ? counterNumber : 1, apduResponse.getDataOut());
-    }
-  }
-
-  /**
    * Builds the anticipated APDU response with the SW.
    *
    * @return A not empty byte array.

@@ -67,9 +67,6 @@ final class CmdCardCloseSecureSession extends CardCommand {
   private final boolean isAbortSecureSession;
   private final int svPostponedDataIndex;
 
-  /** The signatureLo. */
-  private byte[] signatureLo;
-
   /** The postponed data. */
   private final List<byte[]> postponedData = new ArrayList<byte[]>(0);
 
@@ -228,32 +225,6 @@ final class CmdCardCloseSecureSession extends CardCommand {
       } catch (SymmetricCryptoException e) {
         throw (RuntimeException) e.getCause();
       }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Checks the card response length; the admissible lengths are 0, 4 or 8 bytes.
-   *
-   * @since 2.0.1
-   */
-  @Override
-  void setApduResponseAndCheckStatus(ApduResponseApi apduResponse) throws CardCommandException {
-    super.setApduResponseAndCheckStatus(apduResponse);
-    byte[] responseData = getApduResponse().getDataOut();
-    if (responseData.length > 0) {
-      int signatureLength = getCalypsoCard().isExtendedModeSupported() ? 8 : 4;
-      int i = 0;
-      while (i < responseData.length - signatureLength) {
-        byte[] data = Arrays.copyOfRange(responseData, i + 1, i + responseData[i]);
-        postponedData.add(data);
-        i += responseData[i];
-      }
-      signatureLo = Arrays.copyOfRange(responseData, i, responseData.length);
-    } else {
-      // session abort case
-      signatureLo = new byte[0];
     }
   }
 
