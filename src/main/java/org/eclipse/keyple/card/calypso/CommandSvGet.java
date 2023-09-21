@@ -28,15 +28,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardSvGet extends CardCommand {
+final class CommandSvGet extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardSvGet.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandSvGet.class);
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6982,
         new StatusProperties(
@@ -59,7 +58,7 @@ final class CmdCardSvGet extends CardCommand {
   private final byte[] header;
 
   /**
-   * Instantiates a new CmdCardSvGet.
+   * Instantiates a new CommandSvGet.
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
@@ -68,7 +67,7 @@ final class CmdCardSvGet extends CardCommand {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.3.2
    */
-  CmdCardSvGet(
+  CommandSvGet(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SvOperation svOperation,

@@ -99,7 +99,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private final List<byte[]> transactionAuditData = new ArrayList<byte[]>();
 
   /* Dynamic fields */
-  final List<CardCommand> cardCommands = new ArrayList<CardCommand>();
+  final List<Command> commands = new ArrayList<Command>();
 
   /**
    * Builds a new instance.
@@ -158,7 +158,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    *     size and the multiple session is not allowed.
    * @since 3.0.0
    */
-  abstract void prepareNewSecureSessionIfNeeded(CardCommand command);
+  abstract void prepareNewSecureSessionIfNeeded(Command command);
 
   /**
    * @return True if it is possible to configure the auto read record into the open secure session
@@ -174,7 +174,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @param channelControl The channel control directive.
    * @since 3.0.0
    */
-  final void executeCardCommands(List<CardCommand> commands, ChannelControl channelControl) {
+  final void executeCardCommands(List<Command> commands, ChannelControl channelControl) {
 
     // Retrieve the list of C-APDUs
     List<ApduRequestSpi> apduRequests = getApduRequests(commands);
@@ -204,7 +204,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     // case of an error that occurred in strict mode. In this case the last response will raise an
     // exception.
     for (int i = 0; i < apduResponses.size(); i++) {
-      CardCommand command = commands.get(i);
+      Command command = commands.get(i);
       try {
         command.parseResponse(apduResponses.get(i));
       } catch (CardCommandException e) {
@@ -230,16 +230,16 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   }
 
   /**
-   * Creates a list of {@link ApduRequestSpi} from a list of {@link CardCommand}.
+   * Creates a list of {@link ApduRequestSpi} from a list of {@link Command}.
    *
    * @param commands The list of commands.
    * @return An empty list if there is no command.
    * @since 2.2.0
    */
-  private static List<ApduRequestSpi> getApduRequests(List<CardCommand> commands) {
+  private static List<ApduRequestSpi> getApduRequests(List<Command> commands) {
     List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
     if (commands != null) {
-      for (CardCommand command : commands) {
+      for (Command command : commands) {
         apduRequests.add(command.getApduRequest());
       }
     }
@@ -335,7 +335,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   @Override
   public final T prepareSelectFile(short lid) {
     try {
-      cardCommands.add(new CmdCardSelectFile(getTransactionContext(), getCommandContext(), lid));
+      commands.add(new CommandSelectFile(getTransactionContext(), getCommandContext(), lid));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -352,8 +352,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   public final T prepareSelectFile(SelectFileControl selectFileControl) {
     try {
       Assert.getInstance().notNull(selectFileControl, "selectFileControl");
-      cardCommands.add(
-          new CmdCardSelectFile(getTransactionContext(), getCommandContext(), selectFileControl));
+      commands.add(
+          new CommandSelectFile(getTransactionContext(), getCommandContext(), selectFileControl));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -372,17 +372,17 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       Assert.getInstance().notNull(tag, "tag");
       switch (tag) {
         case FCI_FOR_CURRENT_DF:
-          cardCommands.add(new CmdCardGetDataFci(getTransactionContext(), getCommandContext()));
+          commands.add(new CommandGetDataFci(getTransactionContext(), getCommandContext()));
           break;
         case FCP_FOR_CURRENT_FILE:
-          cardCommands.add(new CmdCardGetDataFcp(getTransactionContext(), getCommandContext()));
+          commands.add(new CommandGetDataFcp(getTransactionContext(), getCommandContext()));
           break;
         case EF_LIST:
-          cardCommands.add(new CmdCardGetDataEfList(getTransactionContext(), getCommandContext()));
+          commands.add(new CommandGetDataEfList(getTransactionContext(), getCommandContext()));
           break;
         case TRACEABILITY_INFORMATION:
-          cardCommands.add(
-              new CmdCardGetDataTraceabilityInformation(
+          commands.add(
+              new CommandGetDataTraceabilityInformation(
                   getTransactionContext(), getCommandContext()));
           break;
         default:
@@ -417,7 +417,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
 
       // Try to group the first read record command with the open secure session command.
       if (canConfigureReadOnOpenSecureSession()) {
-        ((CmdCardOpenSecureSession) cardCommands.get(cardCommands.size() - 1))
+        ((CommandOpenSecureSession) commands.get(commands.size() - 1))
             .configureReadMode(sfi, recordNumber);
       } else {
         CommandContextDto commandContext = getCommandContext();
@@ -425,13 +425,13 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
           throw new IllegalStateException(
               "Explicit record size is expected inside a secure session in contact mode.");
         }
-        cardCommands.add(
-            new CmdCardReadRecords(
+        commands.add(
+            new CommandReadRecords(
                 getTransactionContext(),
                 commandContext,
                 sfi,
                 recordNumber,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
+                CommandReadRecords.ReadMode.ONE_RECORD,
                 recordSize,
                 recordSize));
       }
@@ -468,18 +468,18 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
         // Creates N unitary "Read Records" commands.
         // Try to group the first read record command with the open secure session command.
         if (canConfigureReadOnOpenSecureSession()) {
-          ((CmdCardOpenSecureSession) cardCommands.get(cardCommands.size() - 1))
+          ((CommandOpenSecureSession) commands.get(commands.size() - 1))
               .configureReadMode(sfi, fromRecordNumber);
           fromRecordNumber++;
         }
         for (int i = fromRecordNumber; i <= toRecordNumber; i++) {
-          cardCommands.add(
-              new CmdCardReadRecords(
+          commands.add(
+              new CommandReadRecords(
                   getTransactionContext(),
                   getCommandContext(),
                   sfi,
                   i,
-                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  CommandReadRecords.ReadMode.ONE_RECORD,
                   recordSize,
                   recordSize));
         }
@@ -501,13 +501,13 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
                   ? nbRecordsRemainingToRead * nbBytesPerRecord
                   : dataSizeMaxPerApdu;
 
-          cardCommands.add(
-              new CmdCardReadRecords(
+          commands.add(
+              new CommandReadRecords(
                   getTransactionContext(),
                   getCommandContext(),
                   sfi,
                   currentRecordNumber,
-                  CmdCardReadRecords.ReadMode.MULTIPLE_RECORD,
+                  CommandReadRecords.ReadMode.MULTIPLE_RECORD,
                   currentLength,
                   recordSize));
 
@@ -517,13 +517,13 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
 
         // Optimization: prepare a read "one record" if possible for last iteration.
         if (currentRecordNumber == toRecordNumber) {
-          cardCommands.add(
-              new CmdCardReadRecords(
+          commands.add(
+              new CommandReadRecords(
                   getTransactionContext(),
                   getCommandContext(),
                   sfi,
                   currentRecordNumber,
-                  CmdCardReadRecords.ReadMode.ONE_RECORD,
+                  CommandReadRecords.ReadMode.ONE_RECORD,
                   recordSize,
                   recordSize));
         }
@@ -572,8 +572,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       int currentRecordNumber = fromRecordNumber;
 
       while (currentRecordNumber <= toRecordNumber) {
-        cardCommands.add(
-            new CmdCardReadRecordMultiple(
+        commands.add(
+            new CommandReadRecordMultiple(
                 getTransactionContext(),
                 getCommandContext(),
                 sfi,
@@ -616,8 +616,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
 
       if (sfi > 0 && offset > 255) { // FFh
         // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-        cardCommands.add(
-            new CmdCardReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
+        commands.add(
+            new CommandReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
       }
 
       int currentLength;
@@ -626,8 +626,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       do {
         currentLength = Math.min(nbBytesRemainingToRead, getPayloadCapacity());
 
-        cardCommands.add(
-            new CmdCardReadBinary(
+        commands.add(
+            new CommandReadBinary(
                 getTransactionContext(), getCommandContext(), sfi, currentOffset, currentLength));
 
         currentOffset += currentLength;
@@ -703,8 +703,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
                 "mask");
       }
 
-      cardCommands.add(
-          new CmdCardSearchRecordMultiple(
+      commands.add(
+          new CommandSearchRecordMultiple(
               getTransactionContext(), getCommandContext(), dataAdapter));
 
     } catch (RuntimeException e) {
@@ -725,7 +725,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
-      cardCommands.add(new CmdCardVerifyPin(getTransactionContext(), getCommandContext()));
+      commands.add(new CommandVerifyPin(getTransactionContext(), getCommandContext()));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -745,10 +745,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .notNull(recordData, MSG_RECORD_DATA)
           .isInRange(recordData.length, 0, getPayloadCapacity(), MSG_RECORD_DATA_LENGTH);
-      CmdCardAppendRecord command =
-          new CmdCardAppendRecord(getTransactionContext(), getCommandContext(), sfi, recordData);
+      CommandAppendRecord command =
+          new CommandAppendRecord(getTransactionContext(), getCommandContext(), sfi, recordData);
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -773,11 +773,11 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               RECORD_NUMBER)
           .notNull(recordData, MSG_RECORD_DATA)
           .isInRange(recordData.length, 0, getPayloadCapacity(), MSG_RECORD_DATA_LENGTH);
-      CmdCardUpdateRecord command =
-          new CmdCardUpdateRecord(
+      CommandUpdateRecord command =
+          new CommandUpdateRecord(
               getTransactionContext(), getCommandContext(), sfi, recordNumber, recordData);
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -802,11 +802,11 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               RECORD_NUMBER)
           .notNull(recordData, MSG_RECORD_DATA)
           .isInRange(recordData.length, 0, getPayloadCapacity(), MSG_RECORD_DATA_LENGTH);
-      CmdCardWriteRecord command =
-          new CmdCardWriteRecord(
+      CommandWriteRecord command =
+          new CommandWriteRecord(
               getTransactionContext(), getCommandContext(), sfi, recordNumber, recordData);
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -864,8 +864,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
 
       if (sfi > 0 && offset > 255) { // FFh
         // Tips to select the file: add a "Read Binary" command (read one byte at offset 0).
-        cardCommands.add(
-            new CmdCardReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
+        commands.add(
+            new CommandReadBinary(getTransactionContext(), getCommandContext(), sfi, 0, 1));
       }
 
       int dataLength = data.length;
@@ -876,8 +876,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       do {
         currentLength = Math.min(dataLength - currentIndex, getPayloadCapacity());
 
-        CmdCardUpdateOrWriteBinary command =
-            new CmdCardUpdateOrWriteBinary(
+        CommandUpdateOrWriteBinary command =
+            new CommandUpdateOrWriteBinary(
                 isUpdateCommand,
                 getTransactionContext(),
                 getCommandContext(),
@@ -885,7 +885,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
                 currentOffset,
                 Arrays.copyOfRange(data, currentIndex, currentIndex + currentLength));
         prepareNewSecureSessionIfNeeded(command);
-        cardCommands.add(command);
+        commands.add(command);
 
         currentOffset += currentLength;
         currentIndex += currentLength;
@@ -1019,8 +1019,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               CalypsoCardConstant.CNT_VALUE_MIN,
               CalypsoCardConstant.CNT_VALUE_MAX,
               "incDecValue");
-      CmdCardIncreaseOrDecrease command =
-          new CmdCardIncreaseOrDecrease(
+      CommandIncreaseOrDecrease command =
+          new CommandIncreaseOrDecrease(
               isDecreaseCommand,
               getTransactionContext(),
               getCommandContext(),
@@ -1028,7 +1028,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               counterNumber,
               incDecValue);
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -1080,15 +1080,15 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       } else {
         int nbCountersPerApdu = getPayloadCapacity() / 4;
         if (counterNumberToIncDecValueMap.size() <= nbCountersPerApdu) {
-          CmdCardIncreaseOrDecreaseMultiple command =
-              new CmdCardIncreaseOrDecreaseMultiple(
+          CommandIncreaseOrDecreaseMultiple command =
+              new CommandIncreaseOrDecreaseMultiple(
                   isDecreaseCommand,
                   getTransactionContext(),
                   getCommandContext(),
                   sfi,
                   new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap));
           prepareNewSecureSessionIfNeeded(command);
-          cardCommands.add(command);
+          commands.add(command);
         } else {
           // the number of counters exceeds the payload capacity, let's split into several apdu
           // commands
@@ -1098,25 +1098,25 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
             i++;
             map.put(entry.getKey(), entry.getValue());
             if (i == nbCountersPerApdu) {
-              CmdCardIncreaseOrDecreaseMultiple command =
-                  new CmdCardIncreaseOrDecreaseMultiple(
+              CommandIncreaseOrDecreaseMultiple command =
+                  new CommandIncreaseOrDecreaseMultiple(
                       isDecreaseCommand,
                       getTransactionContext(),
                       getCommandContext(),
                       sfi,
                       new TreeMap<Integer, Integer>(map));
               prepareNewSecureSessionIfNeeded(command);
-              cardCommands.add(command);
+              commands.add(command);
               i = 0;
               map.clear();
             }
           }
           if (!map.isEmpty()) {
-            CmdCardIncreaseOrDecreaseMultiple command =
-                new CmdCardIncreaseOrDecreaseMultiple(
+            CommandIncreaseOrDecreaseMultiple command =
+                new CommandIncreaseOrDecreaseMultiple(
                     isDecreaseCommand, getTransactionContext(), getCommandContext(), sfi, map);
             prepareNewSecureSessionIfNeeded(command);
-            cardCommands.add(command);
+            commands.add(command);
           }
         }
       }

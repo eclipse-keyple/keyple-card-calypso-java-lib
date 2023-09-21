@@ -27,17 +27,16 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.1.0
  */
-final class CmdCardIncreaseOrDecrease extends CardCommand {
+final class CommandIncreaseOrDecrease extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardIncreaseOrDecrease.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandIncreaseOrDecrease.class);
 
   private static final int SW_POSTPONED_DATA = 0x6200;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -95,7 +94,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
    *     16777215 [FFFFFFh])
    * @since 2.3.2
    */
-  CmdCardIncreaseOrDecrease(
+  CommandIncreaseOrDecrease(
       boolean isDecreaseCommand,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,

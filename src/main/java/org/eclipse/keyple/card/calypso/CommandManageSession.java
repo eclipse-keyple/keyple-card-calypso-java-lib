@@ -26,15 +26,14 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.3.1
  */
-final class CmdCardManageSession extends CardCommand {
+final class CommandManageSession extends Command {
 
   private static final CardCommandRef commandRef = CardCommandRef.MANAGE_SECURE_SESSION;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -69,7 +68,7 @@ final class CmdCardManageSession extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardManageSession(
+  CommandManageSession(
       DtoAdapters.TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(commandRef, 0, transactionContext, commandContext);
   }
@@ -79,7 +78,7 @@ final class CmdCardManageSession extends CardCommand {
    * @return The current instance.
    * @since 2.3.2
    */
-  CmdCardManageSession setEncryptionRequested(boolean isEncryptionRequested) {
+  CommandManageSession setEncryptionRequested(boolean isEncryptionRequested) {
     this.isEncryptionRequested = isEncryptionRequested;
     return this;
   }
@@ -89,7 +88,7 @@ final class CmdCardManageSession extends CardCommand {
    * @return The current instance.
    * @since 2.3.2
    */
-  CmdCardManageSession setMutualAuthenticationRequested(boolean isMutualAuthenticationRequested) {
+  CommandManageSession setMutualAuthenticationRequested(boolean isMutualAuthenticationRequested) {
     this.isMutualAuthenticationRequested = isMutualAuthenticationRequested;
     return this;
   }

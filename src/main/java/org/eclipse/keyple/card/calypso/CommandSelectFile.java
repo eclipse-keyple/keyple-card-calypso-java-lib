@@ -62,17 +62,16 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardSelectFile extends CardCommand {
+final class CommandSelectFile extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardSelectFile.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandSelectFile.class);
 
   private static final CardCommandRef commandRef = CardCommandRef.SELECT_FILE;
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -84,7 +83,7 @@ final class CmdCardSelectFile extends CardCommand {
   private static final int TAG_PROPRIETARY_INFORMATION = 0x85;
 
   /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * Instantiates a new CommandSelectFile to select the first, next or current file in the current
    * DF.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -92,7 +91,7 @@ final class CmdCardSelectFile extends CardCommand {
    * @param selectFileControl the selection mode control: FIRST, NEXT or CURRENT.
    * @since 2.3.2
    */
-  CmdCardSelectFile(
+  CommandSelectFile(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
@@ -137,7 +136,7 @@ final class CmdCardSelectFile extends CardCommand {
   }
 
   /**
-   * Instantiates a new CmdCardSelectFile to select the first, next or current file in the current
+   * Instantiates a new CommandSelectFile to select the first, next or current file in the current
    * DF.
    *
    * @param transactionContext The global transaction context common to all commands.
@@ -145,7 +144,7 @@ final class CmdCardSelectFile extends CardCommand {
    * @param lid The LID.
    * @since 2.3.2
    */
-  CmdCardSelectFile(
+  CommandSelectFile(
       TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
     super(commandRef, 0, transactionContext, commandContext);
 

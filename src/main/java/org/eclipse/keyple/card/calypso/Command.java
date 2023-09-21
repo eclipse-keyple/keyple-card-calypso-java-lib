@@ -33,7 +33,7 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-abstract class CardCommand {
+abstract class Command {
 
   static final byte[] APDU_RESPONSE_9000 = new byte[] {(byte) 0x90, 0x00};
 
@@ -69,7 +69,7 @@ abstract class CardCommand {
    * @param commandContext The local command context specific to each command
    * @since 2.0.1
    */
-  CardCommand(
+  Command(
       CardCommandRef commandRef,
       int le,
       TransactionContextDto transactionContext,

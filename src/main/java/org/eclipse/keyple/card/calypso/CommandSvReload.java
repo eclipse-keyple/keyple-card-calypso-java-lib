@@ -53,7 +53,7 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-final class CmdCardSvReload extends CardCommand {
+final class CommandSvReload extends Command {
 
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
       "Unable to verify the card SV MAC associated to the SV operation.";
@@ -63,8 +63,7 @@ final class CmdCardSvReload extends CardCommand {
   private final int amount;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -93,7 +92,7 @@ final class CmdCardSvReload extends CardCommand {
   private final byte[] dataIn;
 
   /**
-   * Instantiates a new CmdCardSvReload.
+   * Instantiates a new CommandSvReload.
    *
    * <p>The process is carried out in two steps: first to check and store the card and application
    * data, then to create the final APDU with the data from the SAM (see finalizeCommand).
@@ -108,7 +107,7 @@ final class CmdCardSvReload extends CardCommand {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.3.2
    */
-  CmdCardSvReload(
+  CommandSvReload(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       int amount,

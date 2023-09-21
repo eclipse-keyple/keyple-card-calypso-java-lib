@@ -26,15 +26,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.1.0
  */
-final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
+final class CommandIncreaseOrDecreaseMultiple extends Command {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(CmdCardIncreaseOrDecreaseMultiple.class);
+      LoggerFactory.getLogger(CommandIncreaseOrDecreaseMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -88,7 +87,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
    *     and their associated increment values.
    * @since 2.1.0
    */
-  CmdCardIncreaseOrDecreaseMultiple(
+  CommandIncreaseOrDecreaseMultiple(
       boolean isDecreaseCommand,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,

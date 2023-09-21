@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -13,35 +13,15 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
- * Builds the Get data APDU commands for the TRACEABILITY INFORMATION tag.
+ * Builds the Get Challenge APDU command.
  *
- * <p>In contact mode, this command can not be sent in a secure session because it would generate a
- * 6Cxx status and thus make calculation of the digest impossible.
- *
- * @since 2.1.0
+ * @since 2.0.1
  */
-final class CmdCardGetDataTraceabilityInformation extends CardCommand {
-
-  private static final Map<Integer, StatusProperties> STATUS_TABLE;
-
-  static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
-    m.put(
-        0x6A88,
-        new StatusProperties(
-            "Data object not found (optional mode not available).", CardDataAccessException.class));
-    m.put(
-        0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
-    STATUS_TABLE = m;
-  }
+final class CommandGetChallenge extends Command {
 
   /**
    * Constructor.
@@ -50,22 +30,17 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataTraceabilityInformation(
-      TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
-    byte cardClass =
-        transactionContext.getCard() != null
-            ? transactionContext.getCard().getCardClass().getValue()
-            : CalypsoCardClass.ISO.getValue();
+  CommandGetChallenge(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GET_CHALLENGE, 0x08, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cardClass,
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
-                (byte) 0x01,
-                (byte) 0x85,
+                (byte) 0x00,
+                (byte) 0x00,
                 null,
-                (byte) 0x00)));
+                (byte) 0x08)));
   }
 
   /**
@@ -95,7 +70,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return false; // Need to synchronize the card image with the challenge.
   }
 
   /**
@@ -107,17 +82,7 @@ final class CmdCardGetDataTraceabilityInformation extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
+    getTransactionContext().getCard().setChallenge(getApduResponse().getDataOut());
     updateTerminalSessionMacIfNeeded();
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.1.0
-   */
-  @Override
-  Map<Integer, StatusProperties> getStatusTable() {
-    return STATUS_TABLE;
   }
 }

@@ -31,17 +31,16 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardOpenSecureSession extends CardCommand {
+final class CommandOpenSecureSession extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardOpenSecureSession.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandOpenSecureSession.class);
   private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
   private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -110,7 +109,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @param writeAccessLevel The write access level.
    * @since 2.3.3
    */
-  CmdCardOpenSecureSession(
+  CommandOpenSecureSession(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       WriteAccessLevel writeAccessLevel) {
@@ -134,7 +133,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @param isExtendedModeAllowed Is the extended mode allowed?
    * @since 2.3.2
    */
-  CmdCardOpenSecureSession(
+  CommandOpenSecureSession(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,

@@ -29,13 +29,12 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-final class CmdCardGetDataFcp extends CardCommand {
+final class CommandGetDataFcp extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
@@ -54,7 +53,7 @@ final class CmdCardGetDataFcp extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+  CommandGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
@@ -110,7 +109,7 @@ final class CmdCardGetDataFcp extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    CmdCardSelectFile.parseProprietaryInformation(
+    CommandSelectFile.parseProprietaryInformation(
         apduResponse.getDataOut(), getTransactionContext().getCard());
     updateTerminalSessionMacIfNeeded();
   }

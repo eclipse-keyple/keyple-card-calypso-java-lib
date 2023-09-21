@@ -27,14 +27,13 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.1.0
  */
-final class CmdCardSearchRecordMultiple extends CardCommand {
+final class CommandSearchRecordMultiple extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardSearchRecordMultiple.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandSearchRecordMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -90,7 +89,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
    * @param data The search command input/output data.
    * @since 2.3.2
    */
-  CmdCardSearchRecordMultiple(
+  CommandSearchRecordMultiple(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SearchCommandDataAdapter data) {

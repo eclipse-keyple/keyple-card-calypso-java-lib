@@ -84,7 +84,7 @@ abstract class SecureTransactionManagerAdapter<T extends SecureTransactionManage
   @Override
   public final T prepareCancelSecureSession() {
     try {
-      cardCommands.add(new CmdCardCloseSecureSession(getTransactionContext(), getCommandContext()));
+      commands.add(new CommandCloseSecureSession(getTransactionContext(), getCommandContext()));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;

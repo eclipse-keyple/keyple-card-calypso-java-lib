@@ -23,13 +23,12 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-final class CmdCardRehabilitate extends CardCommand {
+final class CommandRehabilitate extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -54,7 +53,7 @@ final class CmdCardRehabilitate extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+  CommandRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.REHABILITATE, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(

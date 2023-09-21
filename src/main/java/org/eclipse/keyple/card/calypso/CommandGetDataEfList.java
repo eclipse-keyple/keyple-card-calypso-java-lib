@@ -28,7 +28,7 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.1.0
  */
-final class CmdCardGetDataEfList extends CardCommand {
+final class CommandGetDataEfList extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
   private static final int DESCRIPTORS_OFFSET = 2;
@@ -38,8 +38,7 @@ final class CmdCardGetDataEfList extends CardCommand {
   private static final int DESCRIPTOR_DATA_LENGTH = 6;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
@@ -57,7 +56,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+  CommandGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null

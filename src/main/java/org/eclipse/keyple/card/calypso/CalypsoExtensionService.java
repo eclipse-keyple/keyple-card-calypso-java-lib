@@ -38,7 +38,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension { // N
     JsonUtil.registerTypeAdapter(FileHeader.class, new FileHeaderJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvLoadLogRecord.class, new SvLoadLogRecordJsonAdapter(), false);
     JsonUtil.registerTypeAdapter(SvDebitLogRecord.class, new SvDebitLogRecordJsonAdapter(), false);
-    JsonUtil.registerTypeAdapter(CardCommand.class, new AbstractCardCommandJsonAdapter(), false);
+    JsonUtil.registerTypeAdapter(Command.class, new AbstractCardCommandJsonAdapter(), false);
   }
 
   /**

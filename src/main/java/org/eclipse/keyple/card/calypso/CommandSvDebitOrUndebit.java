@@ -66,7 +66,7 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.0.1
  */
-final class CmdCardSvDebitOrUndebit extends CardCommand {
+final class CommandSvDebitOrUndebit extends Command {
 
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
       "Unable to verify the card SV MAC associated to the SV operation.";
@@ -75,8 +75,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -108,7 +107,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   private final byte[] dataIn;
 
   /**
-   * Instantiates a new CmdCardSvDebitOrUndebit.
+   * Instantiates a new CommandSvDebitOrUndebit.
    *
    * @param isDebitCommand True if it is an "SV Debit" command, false if it is a "SV Undebit"
    *     command.
@@ -122,7 +121,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
    * @throws IllegalArgumentException If the command is inconsistent
    * @since 2.3.2
    */
-  CmdCardSvDebitOrUndebit( // NOSONAR
+  CommandSvDebitOrUndebit( // NOSONAR
       boolean isDebitCommand,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,

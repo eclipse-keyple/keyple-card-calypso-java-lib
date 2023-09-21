@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -21,33 +21,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Builds the Update Record APDU command.
+ * Builds the "Update/Write Binary" APDU command.
  *
- * @since 2.0.1
+ * @since 2.1.0
  */
-final class CmdCardUpdateRecord extends CardCommand {
+final class CommandUpdateOrWriteBinary extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardUpdateRecord.class);
-
+  private static final Logger logger = LoggerFactory.getLogger(CommandUpdateOrWriteBinary.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
             "Too many modifications in session", CardSessionBufferOverflowException.class));
-    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
+    m.put(
+        0x6700,
+        new StatusProperties(
+            "Lc value not supported, or Offset+Lc > file size", CardDataAccessException.class));
     m.put(
         0x6981,
-        new StatusProperties(
-            "Command forbidden on cyclic files when the record exists and is not record 01h and on binary files",
-            CardDataAccessException.class));
+        new StatusProperties("Incorrect EF type: not a Binary EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no session, wrong key, encryption required)",
+            "Security conditions not fulfilled (no secure session, incorrect key, encryption required, PKI mode and not Always access mode)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
@@ -56,63 +55,73 @@ final class CmdCardUpdateRecord extends CardCommand {
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
-        new StatusProperties("Command not allowed (no current EF)", CardDataAccessException.class));
+        new StatusProperties(
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
+            CardDataAccessException.class));
     m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record is not found (record index is 0 or above NumRec)",
-            CardDataAccessException.class));
+            "Offset not in the file (offset overflow)", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P2 value not supported", CardIllegalParameterException.class));
+        new StatusProperties("P1 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
-  /* Construction arguments */
-  private final int sfi;
-  private final int recordNumber;
+  private final byte sfi;
+  private final int offset;
   private final byte[] data;
 
   /**
-   * Instantiates a new CmdCardUpdateRecord.
+   * Constructor.
    *
+   * @param isUpdateCommand True if it is an "Update Binary" command, false if it is a "Write
+   *     Binary" command.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param sfi the sfi to select.
-   * @param recordNumber the record number to update.
-   * @param newRecordData the new record data to write.
-   * @throws IllegalArgumentException If record number is &lt; 1
-   * @throws IllegalArgumentException If the request is inconsistent
+   * @param offset the offset.
+   * @param data the data to write.
    * @since 2.3.2
    */
-  CmdCardUpdateRecord(
+  CommandUpdateOrWriteBinary(
+      boolean isUpdateCommand,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       byte sfi,
-      int recordNumber,
-      byte[] newRecordData) {
+      int offset,
+      byte[] data) {
 
-    super(CardCommandRef.UPDATE_RECORD, 0, transactionContext, commandContext);
+    super(
+        isUpdateCommand ? CardCommandRef.UPDATE_BINARY : CardCommandRef.WRITE_BINARY,
+        0,
+        transactionContext,
+        commandContext);
 
     this.sfi = sfi;
-    this.recordNumber = recordNumber;
-    this.data = newRecordData;
+    this.offset = offset;
+    this.data = data;
 
-    byte p2 = (sfi == 0) ? (byte) 0x04 : (byte) ((byte) (sfi * 8) + 4);
+    byte msb = (byte) (offset >> Byte.SIZE);
+    byte lsb = (byte) (offset & 0xFF);
+
+    // 100xxxxx : 'xxxxx' = SFI of the EF to select.
+    // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
+    byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
 
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
                 transactionContext.getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
-                (byte) recordNumber,
-                p2,
-                newRecordData,
+                p1,
+                lsb,
+                data,
                 null)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh, REC:%d", sfi, recordNumber);
+      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d", sfi, offset);
       addSubName(extraInfo);
     }
   }
@@ -160,14 +169,18 @@ final class CmdCardUpdateRecord extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().getCard().setContent((byte) sfi, recordNumber, data);
+    if (getCommandRef() == CardCommandRef.UPDATE_BINARY) {
+      getTransactionContext().getCard().setContent(sfi, 1, data, offset);
+    } else {
+      getTransactionContext().getCard().fillContent(sfi, 1, data, offset);
+    }
     updateTerminalSessionMacIfNeeded();
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 2.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

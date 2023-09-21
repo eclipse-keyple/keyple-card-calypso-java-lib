@@ -51,14 +51,14 @@ final class SecureExtendedModeTransactionManagerAdapter
       }
       checkSecureSession();
       // Add a new command or update the last command if it is an MSS command.
-      if (!cardCommands.isEmpty()
-          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+      if (!commands.isEmpty()
+          && commands.get(commands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
-        ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
+        ((CommandManageSession) commands.get(commands.size() - 1))
             .setMutualAuthenticationRequested(true);
       } else {
-        cardCommands.add(
-            new CmdCardManageSession(transactionContext, getCommandContext())
+        commands.add(
+            new CommandManageSession(transactionContext, getCommandContext())
                 .setMutualAuthenticationRequested(true)
                 .setEncryptionRequested(isEncryptionActive));
       }
@@ -85,14 +85,13 @@ final class SecureExtendedModeTransactionManagerAdapter
         throw new IllegalStateException(MSG_ENCRYPTION_ALREADY_ACTIVE);
       }
       // Add a new command or update the last command if it is an MSS command.
-      if (!cardCommands.isEmpty()
-          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+      if (!commands.isEmpty()
+          && commands.get(commands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
-        ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
-            .setEncryptionRequested(true);
+        ((CommandManageSession) commands.get(commands.size() - 1)).setEncryptionRequested(true);
       } else {
-        cardCommands.add(
-            new CmdCardManageSession(transactionContext, getCommandContext())
+        commands.add(
+            new CommandManageSession(transactionContext, getCommandContext())
                 .setEncryptionRequested(true));
       }
       isEncryptionActive = true;
@@ -119,14 +118,13 @@ final class SecureExtendedModeTransactionManagerAdapter
         throw new IllegalStateException(MSG_ENCRYPTION_NOT_ACTIVE);
       }
       // Add a new command or update the last command if it is an MSS command.
-      if (!cardCommands.isEmpty()
-          && cardCommands.get(cardCommands.size() - 1).getCommandRef()
+      if (!commands.isEmpty()
+          && commands.get(commands.size() - 1).getCommandRef()
               == CardCommandRef.MANAGE_SECURE_SESSION) {
-        ((CmdCardManageSession) cardCommands.get(cardCommands.size() - 1))
-            .setEncryptionRequested(false);
+        ((CommandManageSession) commands.get(commands.size() - 1)).setEncryptionRequested(false);
       } else {
-        cardCommands.add(
-            new CmdCardManageSession(transactionContext, getCommandContext())
+        commands.add(
+            new CommandManageSession(transactionContext, getCommandContext())
                 .setEncryptionRequested(false));
       }
       isEncryptionActive = false;

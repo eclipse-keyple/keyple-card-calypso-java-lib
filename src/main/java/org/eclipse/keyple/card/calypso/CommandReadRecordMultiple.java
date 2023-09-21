@@ -26,14 +26,13 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.1.0
  */
-final class CmdCardReadRecordMultiple extends CardCommand {
+final class CommandReadRecordMultiple extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardReadRecordMultiple.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandReadRecordMultiple.class);
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
@@ -95,7 +94,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
    * @param length The number of bytes to read in each record.
    * @since 2.3.2
    */
-  CmdCardReadRecordMultiple(
+  CommandReadRecordMultiple(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       byte sfi,

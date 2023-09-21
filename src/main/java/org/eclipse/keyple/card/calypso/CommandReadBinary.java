@@ -28,15 +28,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.1.0
  */
-final class CmdCardReadBinary extends CardCommand {
+final class CommandReadBinary extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardReadBinary.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandReadBinary.class);
   private static final String MSG_SFI_02_XH_OFFSET_D_LENGTH_D = "SFI:%02Xh, OFFSET:%d, LENGTH:%d";
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Incorrect EF type: not a Binary EF.", CardDataAccessException.class));
@@ -80,7 +79,7 @@ final class CmdCardReadBinary extends CardCommand {
    * @param length The number of bytes to read.
    * @since 2.3.2
    */
-  CmdCardReadBinary(
+  CommandReadBinary(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       byte sfi,

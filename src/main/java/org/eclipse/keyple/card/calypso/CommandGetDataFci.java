@@ -30,15 +30,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardGetDataFci extends CardCommand {
+final class CommandGetDataFci extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardGetDataFci.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandGetDataFci.class);
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
@@ -70,7 +69,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @param commandContext The local command context specific to each command.
    * @since 2.3.2
    */
-  CmdCardGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+  CommandGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null

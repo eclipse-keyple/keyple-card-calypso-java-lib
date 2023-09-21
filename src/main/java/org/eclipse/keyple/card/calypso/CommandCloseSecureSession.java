@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardCloseSecureSession extends CardCommand {
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardCloseSecureSession.class);
+final class CommandCloseSecureSession extends Command {
+  private static final Logger logger = LoggerFactory.getLogger(CommandCloseSecureSession.class);
 
   private static final String MSG_CARD_SESSION_MAC_NOT_VERIFIABLE =
       "Unable to verify the card session MAC associated to the successfully closed secure session.";
@@ -46,8 +46,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
@@ -80,7 +79,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
    *     postponed data.
    * @since 2.3.2
    */
-  CmdCardCloseSecureSession(
+  CommandCloseSecureSession(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       boolean isAutoRatificationAsked,
@@ -99,7 +98,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
    * @param context The command context.
    * @since 2.3.2
    */
-  CmdCardCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
+  CommandCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
     super(commandRef, 0, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.isAbortSecureSession = true;

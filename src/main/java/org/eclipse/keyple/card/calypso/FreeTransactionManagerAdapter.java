@@ -81,7 +81,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    */
   @Override
   void resetTransaction() {
-    cardCommands.clear();
+    commands.clear();
   }
 
   /**
@@ -90,7 +90,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    * @since 3.0.0
    */
   @Override
-  void prepareNewSecureSessionIfNeeded(CardCommand command) {
+  void prepareNewSecureSessionIfNeeded(Command command) {
     // NOP
   }
 
@@ -115,12 +115,12 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    */
   @Override
   public FreeTransactionManager processCommands(ChannelControl channelControl) {
-    if (cardCommands.isEmpty()) {
+    if (commands.isEmpty()) {
       return this;
     }
     try {
-      List<CardCommand> cardRequestCommands = new ArrayList<CardCommand>();
-      for (CardCommand command : cardCommands) {
+      List<Command> cardRequestCommands = new ArrayList<Command>();
+      for (Command command : commands) {
         command.finalizeRequest();
         cardRequestCommands.add(command);
       }
@@ -129,7 +129,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
       resetTransaction();
       throw e;
     } finally {
-      cardCommands.clear();
+      commands.clear();
     }
     return currentInstance;
   }
@@ -148,7 +148,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
-      cardCommands.add(new CmdCardVerifyPin(getTransactionContext(), getCommandContext(), pin));
+      commands.add(new CommandVerifyPin(getTransactionContext(), getCommandContext(), pin));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -171,7 +171,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
       // CL-PIN-MENCRYPT.1
-      cardCommands.add(new CmdCardChangePin(getTransactionContext(), getCommandContext(), newPin));
+      commands.add(new CommandChangePin(getTransactionContext(), getCommandContext(), newPin));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;

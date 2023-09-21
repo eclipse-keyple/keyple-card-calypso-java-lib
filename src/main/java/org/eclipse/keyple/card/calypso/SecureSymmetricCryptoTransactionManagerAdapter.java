@@ -160,13 +160,13 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     svOperation = null;
     isSvOperationInSecureSession = false;
     disablePreOpenMode();
-    cardCommands.clear();
+    commands.clear();
     if (getTransactionContext().isSecureSessionOpen()) {
       try {
-        CmdCardCloseSecureSession cancelSecureSessionCommand =
-            new CmdCardCloseSecureSession(getTransactionContext(), getCommandContext());
+        CommandCloseSecureSession cancelSecureSessionCommand =
+            new CommandCloseSecureSession(getTransactionContext(), getCommandContext());
         cancelSecureSessionCommand.finalizeRequest();
-        List<CardCommand> commands = new ArrayList<CardCommand>(1);
+        List<Command> commands = new ArrayList<Command>(1);
         commands.add(cancelSecureSessionCommand);
         executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
@@ -184,27 +184,27 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    * @since 3.0.0
    */
   @Override
-  final void prepareNewSecureSessionIfNeeded(CardCommand command) {
+  final void prepareNewSecureSessionIfNeeded(Command command) {
     if (!isSecureSessionOpen) {
       return;
     }
     modificationsCounter -= computeCommandSessionBufferSize(command);
     if (modificationsCounter < 0) {
       checkMultipleSessionEnabled(command);
-      cardCommands.add(
-          new CmdCardCloseSecureSession(
+      commands.add(
+          new CommandCloseSecureSession(
               transactionContext, getCommandContext(), true, svPostponedDataIndex));
       disablePreOpenMode();
-      cardCommands.add(
-          new CmdCardOpenSecureSession(
+      commands.add(
+          new CommandOpenSecureSession(
               transactionContext,
               getCommandContext(),
               symmetricCryptoSecuritySetting,
               writeAccessLevel,
               isExtendedMode));
       if (isEncryptionActive) {
-        cardCommands.add(
-            new CmdCardManageSession(transactionContext, getCommandContext())
+        commands.add(
+            new CommandManageSession(transactionContext, getCommandContext())
                 .setEncryptionRequested(true));
       }
       modificationsCounter = card.getModificationsCounter();
@@ -222,7 +222,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    * @param command The command.
    * @return A positive value.
    */
-  private int computeCommandSessionBufferSize(CardCommand command) {
+  private int computeCommandSessionBufferSize(Command command) {
     return card.isModificationsCounterInBytes()
         ? command.getApduRequest().getApdu().length
             + SESSION_BUFFER_CMD_ADDITIONAL_COST
@@ -236,7 +236,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    * @param command The command.
    * @throws SessionBufferOverflowException If the multiple session is not allowed.
    */
-  private void checkMultipleSessionEnabled(CardCommand command) {
+  private void checkMultipleSessionEnabled(Command command) {
     // CL-CSS-REQUEST.1
     // CL-CSS-SMEXCEED.1
     // CL-CSS-INFOCSS.1
@@ -258,11 +258,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     return isSecureSessionOpen
         && !symmetricCryptoSecuritySetting.isReadOnSessionOpeningDisabled()
         && card.getPreOpenWriteAccessLevel() == null // No pre-open mode
-        && !cardCommands.isEmpty()
-        && cardCommands.get(cardCommands.size() - 1).getCommandRef()
-            == CardCommandRef.OPEN_SECURE_SESSION
-        && !((CmdCardOpenSecureSession) cardCommands.get(cardCommands.size() - 1))
-            .isReadModeConfigured();
+        && !commands.isEmpty()
+        && commands.get(commands.size() - 1).getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION
+        && !((CommandOpenSecureSession) commands.get(commands.size() - 1)).isReadModeConfigured();
   }
 
   /**
@@ -291,13 +289,13 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    */
   @Override
   public final T processCommands(ChannelControl channelControl) {
-    if (cardCommands.isEmpty()) {
+    if (commands.isEmpty()) {
       processCryptoPreparedCommands();
       return currentInstance;
     }
     try {
-      List<CardCommand> cardRequestCommands = new ArrayList<CardCommand>();
-      for (CardCommand command : cardCommands) {
+      List<Command> cardRequestCommands = new ArrayList<Command>();
+      for (Command command : commands) {
         if (command.isCryptoServiceRequiredToFinalizeRequest()
             && (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands))) {
           executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
@@ -312,7 +310,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       resetTransaction();
       throw e;
     } finally {
-      cardCommands.clear();
+      commands.clear();
       if (isExtendedMode && !card.isExtendedModeSupported()) {
         isExtendedMode = false;
       }
@@ -328,8 +326,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    * @return "false" if the crypto service could not be synchronized before transmitting the
    *     commands to the card.
    */
-  private boolean synchronizeCryptoServiceBeforeCardProcessing(List<CardCommand> commands) {
-    for (CardCommand command : commands) {
+  private boolean synchronizeCryptoServiceBeforeCardProcessing(List<Command> commands) {
+    for (Command command : commands) {
       if (!command.synchronizeCryptoServiceBeforeCardProcessing()) {
         return false;
       }
@@ -366,13 +364,13 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       }
       if (symmetricCryptoSecuritySetting == null
           || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-        cardCommands.add(new CmdCardVerifyPin(getTransactionContext(), getCommandContext(), pin));
+        commands.add(new CommandVerifyPin(getTransactionContext(), getCommandContext(), pin));
       } else {
         // CL-PIN-PENCRYPT.1
         // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(getTransactionContext(), getCommandContext()));
-        cardCommands.add(
-            new CmdCardVerifyPin(
+        commands.add(new CommandGetChallenge(getTransactionContext(), getCommandContext()));
+        commands.add(
+            new CommandVerifyPin(
                 getTransactionContext(),
                 getCommandContext(),
                 pin,
@@ -404,13 +402,12 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       // CL-PIN-MENCRYPT.1
       if (symmetricCryptoSecuritySetting == null
           || symmetricCryptoSecuritySetting.isPinPlainTransmissionEnabled()) {
-        cardCommands.add(
-            new CmdCardChangePin(getTransactionContext(), getCommandContext(), newPin));
+        commands.add(new CommandChangePin(getTransactionContext(), getCommandContext(), newPin));
       } else {
         // CL-PIN-GETCHAL.1
-        cardCommands.add(new CmdCardGetChallenge(getTransactionContext(), getCommandContext()));
-        cardCommands.add(
-            new CmdCardChangePin(
+        commands.add(new CommandGetChallenge(getTransactionContext(), getCommandContext()));
+        commands.add(
+            new CommandChangePin(
                 getTransactionContext(),
                 getCommandContext(),
                 newPin,
@@ -454,8 +451,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
             card.getPreOpenWriteAccessLevel());
         disablePreOpenMode();
       }
-      cardCommands.add(
-          new CmdCardOpenSecureSession(
+      commands.add(
+          new CommandOpenSecureSession(
               transactionContext,
               getCommandContext(),
               symmetricCryptoSecuritySetting,
@@ -489,13 +486,13 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         // CL-RAT-CMD.1
         // CL-RAT-DELAY.1
         // CL-RAT-NXTCLOSE.1
-        cardCommands.add(
-            new CmdCardCloseSecureSession(
+        commands.add(
+            new CommandCloseSecureSession(
                 getTransactionContext(), getCommandContext(), false, svPostponedDataIndex));
-        cardCommands.add(new CmdCardRatification(getTransactionContext(), getCommandContext()));
+        commands.add(new CommandRatification(getTransactionContext(), getCommandContext()));
       } else {
-        cardCommands.add(
-            new CmdCardCloseSecureSession(
+        commands.add(
+            new CommandCloseSecureSession(
                 getTransactionContext(), getCommandContext(), true, svPostponedDataIndex));
       }
     } catch (RuntimeException e) {
@@ -528,11 +525,10 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         // CL-SV-GETNUMBER.1
         SvOperation operation1 =
             svOperation == SvOperation.RELOAD ? SvOperation.DEBIT : SvOperation.RELOAD;
-        cardCommands.add(
-            new CmdCardSvGet(transactionContext, getCommandContext(), operation1, false));
+        commands.add(new CommandSvGet(transactionContext, getCommandContext(), operation1, false));
       }
-      cardCommands.add(
-          new CmdCardSvGet(transactionContext, getCommandContext(), svOperation, isExtendedMode));
+      commands.add(
+          new CommandSvGet(transactionContext, getCommandContext(), svOperation, isExtendedMode));
       isSvGet = true;
       this.svOperation = svOperation;
       this.svAction = svAction;
@@ -566,11 +562,11 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
 
       checkSvModifyingCommandPreconditions(SvOperation.RELOAD);
 
-      CmdCardSvReload command =
-          new CmdCardSvReload(
+      CommandSvReload command =
+          new CommandSvReload(
               transactionContext, getCommandContext(), amount, date, time, free, isExtendedMode);
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
 
     } catch (RuntimeException e) {
       resetTransaction();
@@ -642,8 +638,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
 
       checkSvModifyingCommandPreconditions(SvOperation.DEBIT);
 
-      CmdCardSvDebitOrUndebit command =
-          new CmdCardSvDebitOrUndebit(
+      CommandSvDebitOrUndebit command =
+          new CommandSvDebitOrUndebit(
               svAction == SvAction.DO,
               transactionContext,
               getCommandContext(),
@@ -653,7 +649,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
               isExtendedMode,
               symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized());
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
 
     } catch (RuntimeException e) {
       resetTransaction();
@@ -685,9 +681,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       if (card.isDfInvalidated()) {
         throw new IllegalStateException("Card already invalidated");
       }
-      CmdCardInvalidate command = new CmdCardInvalidate(transactionContext, getCommandContext());
+      CommandInvalidate command = new CommandInvalidate(transactionContext, getCommandContext());
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -706,10 +702,10 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       if (!card.isDfInvalidated()) {
         throw new IllegalStateException("Card not invalidated");
       }
-      CmdCardRehabilitate command =
-          new CmdCardRehabilitate(transactionContext, getCommandContext());
+      CommandRehabilitate command =
+          new CommandRehabilitate(transactionContext, getCommandContext());
       prepareNewSecureSessionIfNeeded(command);
-      cardCommands.add(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -732,9 +728,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       checkNoSecureSession();
       Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");
       // CL-KEY-CHANGE.1
-      cardCommands.add(new CmdCardGetChallenge(transactionContext, getCommandContext()));
-      cardCommands.add(
-          new CmdCardChangeKey(
+      commands.add(new CommandGetChallenge(transactionContext, getCommandContext()));
+      commands.add(
+          new CommandChangeKey(
               transactionContext,
               getCommandContext(),
               (byte) keyIndex,
@@ -756,7 +752,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    */
   @Override
   public final void initCryptoContextForNextTransaction() {
-    if (!cardCommands.isEmpty()) {
+    if (!commands.isEmpty()) {
       throw new IllegalStateException("Unprocessed card commands are pending");
     }
     try {

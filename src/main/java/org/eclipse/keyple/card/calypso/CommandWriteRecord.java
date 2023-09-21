@@ -25,15 +25,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardWriteRecord extends CardCommand {
+final class CommandWriteRecord extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardWriteRecord.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandWriteRecord.class);
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -75,7 +74,7 @@ final class CmdCardWriteRecord extends CardCommand {
   private final byte[] data;
 
   /**
-   * Instantiates a new CmdCardWriteRecord.
+   * Instantiates a new CommandWriteRecord.
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
@@ -86,7 +85,7 @@ final class CmdCardWriteRecord extends CardCommand {
    * @throws IllegalArgumentException If the request is inconsistent
    * @since 2.3.2
    */
-  CmdCardWriteRecord(
+  CommandWriteRecord(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       byte sfi,

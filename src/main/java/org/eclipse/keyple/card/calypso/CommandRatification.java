@@ -28,14 +28,14 @@ import org.eclipse.keypop.card.ApduResponseApi;
  *
  * @since 2.3.2
  */
-final class CmdCardRatification extends CardCommand {
+final class CommandRatification extends Command {
 
   /**
    * Constructor.
    *
    * @since 2.3.2
    */
-  CmdCardRatification(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+  CommandRatification(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.RATIFICATION, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(

@@ -28,15 +28,14 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.1
  */
-final class CmdCardReadRecords extends CardCommand {
+final class CommandReadRecords extends Command {
 
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardReadRecords.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandReadRecords.class);
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Command forbidden on binary files", CardDataAccessException.class));
@@ -98,7 +97,7 @@ final class CmdCardReadRecords extends CardCommand {
    * @param recordSize the size of one record.
    * @since 2.3.2
    */
-  CmdCardReadRecords(
+  CommandReadRecords(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       int sfi,
@@ -214,7 +213,7 @@ final class CmdCardReadRecords extends CardCommand {
       return;
     }
     byte[] dataOut = apduResponse.getDataOut();
-    if (readMode == CmdCardReadRecords.ReadMode.ONE_RECORD) {
+    if (readMode == CommandReadRecords.ReadMode.ONE_RECORD) {
       getTransactionContext().getCard().setContent((byte) sfi, firstRecordNumber, dataOut);
     } else {
       int apduLen = dataOut.length;
@@ -259,7 +258,7 @@ final class CmdCardReadRecords extends CardCommand {
     if (ef == null) {
       return null; // NOSONAR
     }
-    return readMode == CmdCardReadRecords.ReadMode.ONE_RECORD
+    return readMode == CommandReadRecords.ReadMode.ONE_RECORD
         ? buildAnticipatedResponseForOneRecordMode(ef)
         : buildAnticipatedResponseForMultipleRecordsMode(ef);
   }

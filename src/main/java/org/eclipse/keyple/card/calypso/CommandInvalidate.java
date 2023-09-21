@@ -1,5 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2018 Calypso Networks Association https://calypsonet.org/
+ * Copyright (c) 2020 Calypso Networks Association https://calypsonet.org/
  *
  * See the NOTICE file(s) distributed with this work for additional information
  * regarding copyright ownership.
@@ -17,34 +17,23 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Builds the "Append Record" APDU command.
+ * Builds the Invalidate command.
  *
  * @since 2.0.1
  */
-final class CmdCardAppendRecord extends CardCommand {
-
-  private static final Logger logger = LoggerFactory.getLogger(CmdCardAppendRecord.class);
+final class CommandInvalidate extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m =
-        new HashMap<Integer, StatusProperties>(CardCommand.STATUS_TABLE);
-    m.put(
-        0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
-    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
+    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
             "Too many modifications in session.", CardSessionBufferOverflowException.class));
-    m.put(
-        0x6981,
-        new StatusProperties("The current EF is not a Cyclic EF.", CardDataAccessException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
@@ -53,52 +42,28 @@ final class CmdCardAppendRecord extends CardCommand {
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, DF is invalidated, etc..).",
-            CardAccessForbiddenException.class));
-    m.put(
-        0x6986,
-        new StatusProperties(
-            "Command not allowed (no current EF).", CardDataAccessException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+            "Access forbidden (DF context is invalid).", CardAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
-
-  /* Construction arguments */
-  private final int sfi;
-  private final byte[] data;
 
   /**
    * Constructor.
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
-   * @param sfi The sfi to select.
-   * @param data The new record data to write.
    * @since 2.3.2
    */
-  CmdCardAppendRecord(
-      TransactionContextDto transactionContext,
-      CommandContextDto commandContext,
-      byte sfi,
-      byte[] data) {
-    super(CardCommandRef.APPEND_RECORD, 0, transactionContext, commandContext);
-    this.sfi = sfi;
-    this.data = data;
-    byte p1 = (byte) 0x00;
-    byte p2 = (sfi == 0) ? (byte) 0x00 : (byte) (sfi * 8);
+  CommandInvalidate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.INVALIDATE, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                transactionContext.getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
-                p1,
-                p2,
-                data,
+                (byte) 0x00,
+                (byte) 0x00,
+                null,
                 null)));
-    if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh", sfi);
-      addSubName(extraInfo);
-    }
   }
 
   /**
@@ -144,8 +109,9 @@ final class CmdCardAppendRecord extends CardCommand {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().getCard().addCyclicContent((byte) sfi, data);
     updateTerminalSessionMacIfNeeded();
+    // The DF has been successfully invalidated, update the DF status in the card object
+    getTransactionContext().getCard().setDfInvalidated(true);
   }
 
   /**
