@@ -36,7 +36,7 @@ import org.eclipse.keypop.card.spi.*;
  *
  * @since 2.0.0
  */
-final class CalypsoCardSelectionAdapter
+final class CalypsoCardSelectionExtensionAdapter
     implements CalypsoCardSelectionExtension, CardSelectionExtensionSpi {
 
   private static final int SW_CARD_INVALIDATED = 0x6283;
@@ -54,7 +54,7 @@ final class CalypsoCardSelectionAdapter
    * @since 2.0.0
    * @throws IllegalArgumentException If cardSelector is null.
    */
-  CalypsoCardSelectionAdapter() {
+  CalypsoCardSelectionExtensionAdapter() {
     commands = new ArrayList<Command>();
     transactionContext = new TransactionContextDto(null, null);
     commandContext = new CommandContextDto(false, false);

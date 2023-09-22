@@ -45,7 +45,7 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
    */
   @Override
   public CalypsoCardSelectionExtension createCalypsoCardSelectionExtension() {
-    return new CalypsoCardSelectionAdapter();
+    return new CalypsoCardSelectionExtensionAdapter();
   }
 
   /**
