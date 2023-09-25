@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.shouldHaveThrown;
 import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -21,9 +22,7 @@ import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
-import org.eclipse.keypop.calypso.card.card.CalypsoCard;
-import org.eclipse.keypop.calypso.card.card.ElementaryFile;
-import org.eclipse.keypop.calypso.card.card.FileHeader;
+import org.eclipse.keypop.calypso.card.card.*;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
 import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoTransactionManagerFactory;
@@ -110,7 +109,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     when(symmetricCryptoTransactionManagerFactory.getMaxCardApduLengthSupported()).thenReturn(250);
     when(symmetricCryptoTransactionManagerFactory.isExtendedModeSupported()).thenReturn(true);
     when(symmetricCryptoTransactionManagerFactory.createTransactionManager(
-            eq(CARD_SERIAL_NUMBER), eq(false), ArgumentMatchers.<byte[]>anyList()))
+            eq(CARD_SERIAL_NUMBER), any(Boolean.class), ArgumentMatchers.<byte[]>anyList()))
         .thenReturn(symmetricCryptoTransactionManager);
 
     cardSecuritySetting =
@@ -1016,7 +1015,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
       throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -1638,7 +1637,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     cardSecuritySetting.enablePinPlainTransmission();
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -1676,7 +1675,6 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
       throws Exception {
     cardSecuritySetting.setPinModificationCipheringKey(
         PIN_CIPHERING_KEY_KIF, PIN_CIPHERING_KEY_KVC);
-    ;
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
     CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
@@ -1694,7 +1692,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
         createCardRequest(
             SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD, SAM_CARD_CIPHER_PIN_UPDATE_CMD);
     CardResponseApi samCardResponse =
-        createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_CIPHER_PIN_UPDATE_RSP);
+        createCardResponse(SW1SW2_OK_HEX, SW1SW2_OK_HEX, SAM_CARD_CIPHER_PIN_UPDATE_RSP);
 
     CardRequestSpi cardChangePinCardRequest = createCardRequest(CARD_CHANGE_PIN_CMD);
     CardResponseApi cardChangePinCardResponse = createCardResponse(CARD_CHANGE_PIN_RSP);
@@ -1907,7 +1905,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
   public void prepareCancelSecureSession_whenNoSessionIsOpen_shouldDoBestEffortMode()
       throws Exception {
     CardRequestSpi cardCardRequest = createCardRequest(CARD_ABORT_SECURE_SESSION_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -1947,7 +1945,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     inOrder.verify(symmetricCryptoTransactionManager).synchronize();
 
     cardCardRequest = createCardRequest(CARD_ABORT_SECURE_SESSION_CMD);
-    cardCardResponse = createCardResponse(SW1SW2_OK);
+    cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -2154,6 +2152,12 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
+
     when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(SAM_CHALLENGE_EXTENDED);
 
@@ -2210,6 +2214,12 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.LOAD);
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
 
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
+
     when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(SAM_CHALLENGE);
 
@@ -2246,6 +2256,12 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
 
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
 
     when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(SAM_CHALLENGE_EXTENDED);
@@ -2284,11 +2300,20 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
 
   @Test
   public void
-      prepareOpenSecureSession_whenPreOpenVariantButExtendedModeNotSupported_shouldProcessInRegularMode()
+      prepareOpenSecureSession_whenPreOpenVariantButExtendedModeNotSupportedByCryptoModule_shouldProcessInRegularMode()
           throws Exception {
+
+    when(symmetricCryptoTransactionManagerFactory.isExtendedModeSupported()).thenReturn(false);
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
 
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
 
     when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(SAM_CHALLENGE);
@@ -2318,14 +2343,23 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
   }
 
   @Test
-  public void prepareOpenSecureSession_whenPreOpenVariant_shouldBeSuccessful() throws Exception {
+  public void
+      prepareOpenSecureSession_whenPreOpenVariantAndExtendedModeSupportedByCryptoModule_shouldBeSuccessful()
+          throws Exception {
 
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
 
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
     calypsoCard.setPreOpenDataOut(
         HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_HEX));
-    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
+
+    cardTransactionManager =
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
+
+    calypsoCard.setContent(FILE7, 1, FILE7_REC1_29B);
 
     when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(SAM_CHALLENGE_EXTENDED);
@@ -2355,7 +2389,6 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
     inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(symmetricCryptoTransactionManager)
@@ -2372,240 +2405,120 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(cardReader)
-        .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    inOrder
         .verify(symmetricCryptoTransactionManager)
         .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
     inOrder.verify(symmetricCryptoTransactionManager).synchronize();
     verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   @Test(expected = UnexpectedCommandStatusException.class)
   public void prepareOpenSecureSession_whenPreOpenVariantWithDifferentDataOut_shouldThrowUCSE()
-          throws Exception {
+      throws Exception {
 
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
 
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
-    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2));
-    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
+    calypsoCard.setPreOpenDataOut(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2);
+    calypsoCard.setContent(FILE7, 1, FILE7_REC1_29B);
 
     cardTransactionManager =
-            CalypsoExtensionService.getInstance()
-                    .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest1 = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
-                    SAM_DIGEST_CLOSE_EXTENDED_CMD);
-    CardResponseApi samCardResponse2 =
-            createCardResponse(
-                    SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    CardRequestSpi samCardRequest3 = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
-    CardResponseApi samCardResponse3 = createCardResponse(SW1SW2_OK_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse3);
+    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(SAM_CHALLENGE_EXTENDED);
+    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+        .thenReturn(SAM_SIGNATURE_EXTENDED);
+    when(symmetricCryptoTransactionManager.isCardSessionMacValid(CARD_SIGNATURE_EXTENDED))
+        .thenReturn(true);
 
     CardRequestSpi cardCardRequest =
-            createCardRequest(
-                    CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
-                    CARD_READ_REC_SFI7_REC1_L29_CMD_HEX,
-                    CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD_HEX,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardCardResponse =
-            createCardResponse(
-                    CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
-                    CARD_READ_REC_SFI7_REC1_RSP_HEX,
-                    CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP_HEX,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
+        .thenReturn(cardCardResponse);
 
-    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
-    cardTransactionManager.prepareCloseSecureSession();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareCloseSecureSession()
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
   }
 
   @Test(expected = UnexpectedCommandStatusException.class)
   public void
-  prepareOpenSecureSession_whenPreOpenVariantWithDifferentRecordContent_shouldThrowUCSE()
+      prepareOpenSecureSession_whenPreOpenVariantWithDifferentRecordContent_shouldThrowUCSE()
           throws Exception {
 
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
 
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
-    calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2));
-    calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC2_29B));
+    calypsoCard.setPreOpenDataOut(CARD_OPEN_SECURE_SESSION_EXTENDED_DATAOUT_2);
+    calypsoCard.setContent(FILE7, 1, FILE7_REC2_29B);
 
     cardTransactionManager =
-            CalypsoExtensionService.getInstance()
-                    .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+        CalypsoExtensionService.getInstance()
+            .getCalypsoCardApiFactory()
+            .createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, cardSecuritySetting);
 
-    CardRequestSpi samCardRequest1 = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD_2,
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC2_L29_CMD,
-                    SAM_DIGEST_CLOSE_EXTENDED_CMD);
-    CardResponseApi samCardResponse2 =
-            createCardResponse(
-                    SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_EXTENDED_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    CardRequestSpi samCardRequest3 = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
-    CardResponseApi samCardResponse3 = createCardResponse(SW1SW2_OK_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest3)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse3);
+    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(SAM_CHALLENGE_EXTENDED);
+    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+        .thenReturn(SAM_SIGNATURE_EXTENDED);
+    when(symmetricCryptoTransactionManager.isCardSessionMacValid(CARD_SIGNATURE_EXTENDED))
+        .thenReturn(true);
 
     CardRequestSpi cardCardRequest =
-            createCardRequest(
-                    CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
-                    CARD_READ_REC_SFI7_REC1_L29_CMD_HEX,
-                    CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
+        createCardRequest(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD_HEX,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardCardResponse =
-            createCardResponse(
-                    CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
-                    CARD_READ_REC_SFI7_REC1_RSP_HEX,
-                    CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
+        createCardResponse(
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_READ_REC_SFI7_REC1_RSP_HEX,
+            CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
+        .thenReturn(cardCardResponse);
 
-    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 29);
-    cardTransactionManager.prepareCloseSecureSession();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareCloseSecureSession()
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
   }
 
   @Test(expected = UnauthorizedKeyException.class)
   public void prepareOpenSecureSession_whenKeyNotAuthorized_shouldThrowUnauthorizedKeyException()
-          throws Exception {
+      throws Exception {
     // force the checking of the session key to fail
-    cardSecuritySetting =
-            CalypsoExtensionService.getInstance()
-                    .createCardSecuritySetting()
-                    .setControlSamResource(samReader, calypsoSam)
-                    .addAuthorizedSessionKey((byte) 0x00, (byte) 0x00);
-    cardTransactionManager =
-            CalypsoExtensionService.getInstance()
-                    .createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
+    cardSecuritySetting.addAuthorizedSessionKey((byte) 0x00, (byte) 0x00);
+
+    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(SAM_CHALLENGE);
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
-  }
-
-
-  @Test
-  public void prepareChangeKey_shouldSendApdusToTheCardAndTheSAM() throws Exception {
-    cardSecuritySetting =
-            CalypsoExtensionService.getInstance()
-                    .createCardSecuritySetting()
-                    .setControlSamResource(samReader, calypsoSam)
-                    .enablePinPlainTransmission();
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
-
-    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
-    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
-
-    CardRequestSpi samCardRequest =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD, SAM_GIVE_RANDOM_CMD, SAM_CARD_GENERATE_KEY_CMD);
-    CardResponseApi samCardResponse =
-            createCardResponse(SW1SW2_OK, SW1SW2_OK, SAM_CARD_GENERATE_KEY_RSP);
-
-    CardRequestSpi cardChangeKeyCardRequest = createCardRequest(CARD_CHANGE_KEY_CMD);
-    CardResponseApi cardChangeKeyCardResponse = createCardResponse(SW1SW2_OK);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
-            any(ChannelControl.class)))
-            .thenReturn(cardGetChallengeCardResponse);
-
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardChangeKeyCardResponse);
+        .thenReturn(cardCardResponse);
 
     cardTransactionManager
-            .prepareChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5)
-            . processCommands(CHANNEL_CONTROL_KEEP_OPEN);
-
-    InOrder inOrder = inOrder(cardReader, samReader);
-
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
-                    any(ChannelControl.class));
-    inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
-
-    verifyNoMoreInteractions(samReader, cardReader);
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
   }
-
 
   @Test(expected = IllegalArgumentException.class)
   public void prepareSvGet_whenSvOperationNull_shouldThrowIAE() {
@@ -2625,93 +2538,86 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
   @Test
   public void prepareSvGet_whenSvOperationDebit_shouldPrepareSvGetDebitApdu() throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_DEBIT_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_DEBIT_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO);
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
     verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
   @Test
   public void prepareSvGet_whenSvOperationReload_shouldPrepareSvGetReloadApdu() throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO);
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager
+        .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
     verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
   @Test
   public void prepareSvGet_whenSvOperationReloadWithPrimeRev2_shouldPrepareSvGetReloadApdu()
-          throws Exception {
+      throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2_WITH_STORED_VALUE);
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_PRIME_REV2_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO);
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager
+        .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
     verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws Exception {
-    CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
+  public void prepareSvReload_whenNoSvGetPreviouslyExecuted_shouldThrowISE() {
     cardTransactionManager.prepareSvReload(1);
   }
 
   @Test
   public void prepareSvReload_whenOutOfSession_InRegularMode_shouldUpdateReloadLog()
-          throws Exception {
+      throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
 
     CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_RELOAD_CMD);
     CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_RELOAD_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse1);
+        .thenReturn(cardCardResponse1);
 
-    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_RELOAD_CMD);
-    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_RELOAD_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse2);
-
-    CardRequestSpi samCardRequest1 =
-            createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_LOAD_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_LOAD_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_R_BALANCE));
     assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_R_TNUM));
@@ -2721,81 +2627,27 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     assertThat(loadLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_R_LOG_BALANCE));
     assertThat(loadLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_R_LOG_AMOUNT));
     assertThat(loadLog1.getFreeData())
-            .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
+        .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
     assertThat(loadLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_R_LOG_KVC));
     assertThat(loadLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_SAM_ID));
     assertThat(loadLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SAM_TNUM));
     assertThat(loadLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SV_TNUM));
-
-    cardTransactionManager
-            .prepareSvReload(
-                    HexUtil.toInt(SV_R_AMOUNT),
-                    HexUtil.toByteArray(SV_R_DATE),
-                    HexUtil.toByteArray(SV_R_TIME),
-                    HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2))
-            . processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
-
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-
-    assertThat(calypsoCard.getSvBalance())
-            .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
-    SvLoadLogRecord loadLog2 = calypsoCard.getSvLoadLogRecord();
-    assertThat(loadLog2.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_DATE));
-    assertThat(loadLog2.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_TIME));
-    assertThat(loadLog2.getBalance())
-            .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(loadLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(loadLog2.getFreeData()).isEqualTo(HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2));
-    assertThat(loadLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_R_CURRENT_KVC));
-    assertThat(loadLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_SAM_ID));
-    assertThat(loadLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
-    assertThat(loadLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
   }
 
   @Test
   public void prepareSvReload_whenOutOfSession_InExtendedMode_shouldUpdateReloadLog()
-          throws Exception {
+      throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED_WITH_STORED_VALUE);
 
     CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_RELOAD_EXT_CMD);
     CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_RELOAD_EXT_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse1);
+        .thenReturn(cardCardResponse1);
 
-    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_RELOAD_EXT_CMD);
-    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_RELOAD_EXT_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse2);
-
-    CardRequestSpi samCardRequest1 =
-            createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_LOAD_EXT_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_LOAD_EXT_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_EXT_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_R_BALANCE));
     assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_R_TNUM));
@@ -2805,7 +2657,7 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     assertThat(loadLog1.getBalance()).isEqualTo(HexUtil.toInt(SV_R_LOG_BALANCE));
     assertThat(loadLog1.getAmount()).isEqualTo(HexUtil.toInt(SV_R_LOG_AMOUNT));
     assertThat(loadLog1.getFreeData())
-            .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
+        .isEqualTo(HexUtil.toByteArray(SV_R_LOG_FREE1 + SV_R_LOG_FREE2));
     assertThat(loadLog1.getKvc()).isEqualTo(HexUtil.toByte(SV_R_LOG_KVC));
     assertThat(loadLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_LOG_SAM_ID));
     assertThat(loadLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_R_LOG_SAM_TNUM));
@@ -2819,85 +2671,27 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
     assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
     assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+  }
 
-    cardTransactionManager
-            .prepareSvReload(
-                    HexUtil.toInt(SV_R_AMOUNT),
-                    HexUtil.toByteArray(SV_R_DATE),
-                    HexUtil.toByteArray(SV_R_TIME),
-                    HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2))
-            . processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
-
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-
-    assertThat(calypsoCard.getSvBalance())
-            .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
-    SvLoadLogRecord loadLog2 = calypsoCard.getSvLoadLogRecord();
-    assertThat(loadLog2.getLoadDate()).isEqualTo(HexUtil.toByteArray(SV_R_DATE));
-    assertThat(loadLog2.getLoadTime()).isEqualTo(HexUtil.toByteArray(SV_R_TIME));
-    assertThat(loadLog2.getBalance())
-            .isEqualTo(HexUtil.toInt(SV_R_BALANCE) + HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(loadLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_R_AMOUNT));
-    assertThat(loadLog2.getFreeData()).isEqualTo(HexUtil.toByteArray(SV_R_FREE1 + SV_R_FREE2));
-    assertThat(loadLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_R_CURRENT_KVC));
-    assertThat(loadLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_R_SAM_ID));
-    assertThat(loadLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
-    assertThat(loadLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_R_TNUM) + 1);
-    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
-    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_DATE));
-    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_TIME));
-    assertThat(debitLog2.getBalance()).isEqualTo(HexUtil.toInt(SV_D_LOG_BALANCE));
-    assertThat(debitLog2.getAmount()).isEqualTo(HexUtil.toInt(SV_D_LOG_AMOUNT));
-    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_LOG_KVC));
-    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
-    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
-    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE() {
+    cardTransactionManager.prepareSvDebit(1);
   }
 
   @Test
   public void prepareSvDebit_whenOutOfSession_InRegularMode_shouldUpdateReloadLog()
-          throws Exception {
+      throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
 
     CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_DEBIT_CMD);
     CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_DEBIT_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse1);
+        .thenReturn(cardCardResponse1);
 
-    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_DEBIT_CMD);
-    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_DEBIT_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse2);
-
-    CardRequestSpi samCardRequest1 =
-            createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_DEBIT_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_DEBIT_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_D_BALANCE));
     assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_D_TNUM));
@@ -2910,74 +2704,22 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
     assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
     assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
-
-    cardTransactionManager
-            .prepareSvDebit(
-                    HexUtil.toInt(SV_D_AMOUNT),
-                    HexUtil.toByteArray(SV_D_DATE),
-                    HexUtil.toByteArray(SV_D_TIME))
-            . processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
-
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-
-    assertThat(calypsoCard.getSvBalance())
-            .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
-    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
-    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_DATE));
-    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_TIME));
-    assertThat(debitLog2.getBalance())
-            .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(debitLog2.getAmount()).isEqualTo(-HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_CURRENT_KVC));
-    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_SAM_ID));
-    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
-    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
   }
 
   @Test
   public void prepareSvDebit_whenOutOfSession_InExtendedMode_shouldUpdateReloadLog()
-          throws Exception {
+      throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED_WITH_STORED_VALUE);
 
     CardRequestSpi cardCardRequest1 = createCardRequest(CARD_SV_GET_DEBIT_EXT_CMD);
     CardResponseApi cardCardResponse1 = createCardResponse(CARD_SV_GET_DEBIT_EXT_RSP);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse1);
+        .thenReturn(cardCardResponse1);
 
-    CardRequestSpi cardCardRequest2 = createCardRequest(CARD_SV_DEBIT_EXT_CMD);
-    CardResponseApi cardCardResponse2 = createCardResponse(CARD_SV_DEBIT_EXT_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse2);
-
-    CardRequestSpi samCardRequest1 =
-            createCardRequest(SAM_SELECT_DIVERSIFIER_CMD, SAM_PREPARE_DEBIT_EXT_CMD);
-    CardResponseApi samCardResponse1 = createCardResponse(SW1SW2_OK, SAM_PREPARE_DEBIT_EXT_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse1);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_SV_CHECK_EXT_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     assertThat(calypsoCard.getSvBalance()).isEqualTo(HexUtil.toInt(SV_D_BALANCE));
     assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toShort(SV_D_TNUM));
@@ -2990,51 +2732,6 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
     assertThat(debitLog1.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_LOG_SAM_ID));
     assertThat(debitLog1.getSamTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SAM_TNUM));
     assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
-
-    cardTransactionManager
-            .prepareSvDebit(
-                    HexUtil.toInt(SV_D_AMOUNT),
-                    HexUtil.toByteArray(SV_D_DATE),
-                    HexUtil.toByteArray(SV_D_TIME))
-            . processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
-
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest1)), any(ChannelControl.class));
-    verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest2)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest1)), any(ChannelControl.class));
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
-
-    assertThat(calypsoCard.getSvBalance())
-            .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(calypsoCard.getSvLastTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
-    SvDebitLogRecord debitLog2 = calypsoCard.getSvDebitLogLastRecord();
-    assertThat(debitLog2.getDebitDate()).isEqualTo(HexUtil.toByteArray(SV_D_DATE));
-    assertThat(debitLog2.getDebitTime()).isEqualTo(HexUtil.toByteArray(SV_D_TIME));
-    assertThat(debitLog2.getBalance())
-            .isEqualTo(HexUtil.toInt(SV_D_BALANCE) - HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(debitLog2.getAmount()).isEqualTo(-HexUtil.toInt(SV_D_AMOUNT));
-    assertThat(debitLog2.getKvc()).isEqualTo(HexUtil.toByte(SV_D_CURRENT_KVC));
-    assertThat(debitLog2.getSamId()).isEqualTo(HexUtil.toByteArray(SV_D_SAM_ID));
-    assertThat(debitLog2.getSamTNum()).isEqualTo(HexUtil.toInt(SAM_PREPARE_LOAD_RSP_TNUM));
-    assertThat(debitLog2.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_TNUM) + 1);
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void prepareSvDebit_whenNoSvGetPreviouslyExecuted_shouldThrowISE() throws Exception {
-    CardRequestSpi samCardRequest = createCardRequest(SAM_SV_CHECK_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SW1SW2_OK);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
-    cardTransactionManager.prepareSvDebit(1);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -3045,17 +2742,20 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
 
   @Test
   public void prepareInvalidate_whenCardIsNotInvalidated_prepareInvalidateApdu() throws Exception {
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_INVALIDATE_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareInvalidate();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareInvalidate().processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
     verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -3065,119 +2765,174 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
 
   @Test
   public void prepareRehabilitate_whenCardIsInvalidated_prepareInvalidateApdu() throws Exception {
+
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED);
+
     CardRequestSpi cardCardRequest = createCardRequest(CARD_REHABILITATE_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareRehabilitate();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .thenReturn(cardCardResponse);
+
+    cardTransactionManager.prepareRehabilitate().processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
     verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+    verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void prepareEarlyMutualAuthentication_whenExtendedModeIsNotSupported_shouldThrowUOE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
-    cardTransactionManager.prepareEarlyMutualAuthentication();
-  }
+  @Test
+  public void prepareChangeKey_shouldSendApdusToTheCardAndTheSAM() throws Exception {
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void prepareActivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
-    cardTransactionManager.prepareActivateEncryption();
-  }
+    cardSecuritySetting.enablePinPlainTransmission();
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void prepareDeactivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
-    cardTransactionManager.prepareDeactivateEncryption();
-  }
+    CardRequestSpi cardGetChallengeCardRequest = createCardRequest(CARD_GET_CHALLENGE_CMD);
+    CardResponseApi cardGetChallengeCardResponse = createCardResponse(CARD_GET_CHALLENGE_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class)))
+        .thenReturn(cardGetChallengeCardResponse);
 
-  // @Test(expected = IllegalStateException.class) TODO activate on API version 2
-  public void prepareEarlyMutualAuthentication_whenProcessedOutsideSession_shouldThrowISE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
-    cardTransactionManager.prepareEarlyMutualAuthentication();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
-  }
+    when(symmetricCryptoTransactionManager.generateCipheredCardKey(
+            CARD_CHALLENGE, (byte) 4, (byte) 5, (byte) 2, (byte) 3))
+        .thenReturn(CIPHERED_KEY);
 
-  // @Test(expected = IllegalStateException.class) TODO activate on API version 2
-  public void prepareActivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
-    cardTransactionManager.prepareActivateEncryption();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    CardRequestSpi cardChangeKeyCardRequest = createCardRequest(CARD_CHANGE_KEY_CMD);
+    CardResponseApi cardChangeKeyCardResponse = createCardResponse(SW1SW2_OK_HEX);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class)))
+        .thenReturn(cardChangeKeyCardResponse);
+
+    cardTransactionManager
+        .prepareChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
+            any(ChannelControl.class));
+    inOrder
+        .verify(symmetricCryptoTransactionManager)
+        .generateCipheredCardKey(CARD_CHALLENGE, (byte) 4, (byte) 5, (byte) 2, (byte) 3);
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
+    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
   @Test(expected = IllegalStateException.class)
-  public void prepareDeactivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
-          throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
-    cardTransactionManager.prepareDeactivateEncryption();
-    cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+  public void initCryptoContextForNextTransaction_whenCommandsArePending_shouldThrowISE() {
+    cardTransactionManager.prepareReadRecord(FILE7, 1).initCryptoContextForNextTransaction();
+  }
+
+  @Test
+  public void initCryptoContextForNextTransaction_shouldUpdateChallengeInCryptoService()
+      throws Exception {
+
+    cardTransactionManager.initCryptoContextForNextTransaction();
+
+    verify(symmetricCryptoTransactionManager).preInitTerminalSecureSessionContext();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager);
   }
 
   @Test
   public void
-  prepareEarlyMutualAuthenticationAndEncryption_whenExtendedModeIsNotSupportedAfterOpening_shouldThrowUOE()
+      initCryptoContextForNextTransaction_whenANewSessionIsOpen_shouldInteractWithCardAndCryptoManagerWithoutGetChallenge()
+          throws Exception {
+
+    cardTransactionManager.initCryptoContextForNextTransaction();
+
+    verify(symmetricCryptoTransactionManager).preInitTerminalSecureSessionContext();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareEarlyMutualAuthentication_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareEarlyMutualAuthentication();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareEarlyMutualAuthentication_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareEarlyMutualAuthentication();
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareActivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareActivateEncryption();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareActivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareActivateEncryption();
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void prepareDeactivateEncryption_whenExtendedModeIsNotSupported_shouldThrowUOE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    cardTransactionManager.prepareDeactivateEncryption();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareDeactivateEncryption_whenProcessedOutsideSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+    cardTransactionManager.prepareDeactivateEncryption();
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+  }
+
+  @Test
+  public void
+      prepareEarlyMutualAuthenticationAndEncryption_whenExtendedModeIsNotSupportedAfterOpening_shouldThrowUOE()
           throws Exception {
 
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
 
     // Mock
-    CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-            createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samSelectDiversifierAndGetChallengeResp =
-            createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
+    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(SAM_CHALLENGE_EXTENDED);
+    when(symmetricCryptoTransactionManager.generateTerminalSessionMac()).thenReturn(SAM_SIGNATURE_EXTENDED);
 
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp =
-            createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_NOT_SUPPORTED_RSP);
-
-    CardRequestSpi samDigestInitAndInternalAuthReq =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_EXTENDED_NOT_SUPPORTED_OPEN_SECURE_SESSION_CMD,
-                    SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
-    CardResponseApi samDigestInitAndInternalAuthResp =
-            createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+        createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_NOT_SUPPORTED_RSP);
+    when(cardReader.transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class)))
+        .thenReturn(cardOssResp);
 
     CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
     CardResponseApi cardMssAuthResp = createCardResponse(SW1SW2_6985);
-
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
-            any(ChannelControl.class)))
-            .thenReturn(samSelectDiversifierAndGetChallengeResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
-            any(ChannelControl.class)))
-            .thenReturn(samDigestInitAndInternalAuthResp);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardOssReq)), any(ChannelControl.class)))
-            .thenReturn(cardOssResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardMssAuthReq)), any(ChannelControl.class)))
-            .thenReturn(cardMssAuthResp);
+        .thenReturn(cardMssAuthResp);
 
     // Scenario
     assertThat(calypsoCard.isExtendedModeSupported()).isTrue();
 
     cardTransactionManager
-            .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-            .prepareEarlyMutualAuthentication()
-            .prepareActivateEncryption()
-            .prepareDeactivateEncryption();
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareEarlyMutualAuthentication()
+        .prepareActivateEncryption()
+        .prepareDeactivateEncryption();
     try {
-      cardTransactionManager. processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+      cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
       shouldHaveThrown(UnsupportedOperationException.class);
     } catch (UnsupportedOperationException ignored) {
     }
@@ -3204,612 +2959,345 @@ public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTra
 
   @Test
   public void
-  prepareEarlyMutualAuthenticationAndEncryption_whenExtendedAndSession_shouldBeSuccessful()
+      prepareEarlyMutualAuthenticationAndEncryption_whenExtendedAndSession_shouldBeSuccessful()
           throws Exception {
 
     cardSecuritySetting.enableMultipleSession();
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED, 7);
 
     /** Process opening */
-    CardRequestSpi samSelectDiversifierAndGetChallengeReq =
-            createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samSelectDiversifierAndGetChallengeResp =
-            createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
-
     CardRequestSpi cardOssReq = createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardOssResp = createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP);
 
     // Digest Init + Mutual Authentication with encryption activation
-    CardRequestSpi samDigestInitAndInternalAuthReq =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
-                    SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
-    CardResponseApi samDigestInitAndInternalAuthResp =
-            createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
-
     CardRequestSpi cardMssAuthEncryptReq =
-            createCardRequest(CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD);
+        createCardRequest(CARD_MSS_AUTHENTICATION_ENCRYPTION_CMD);
     CardResponseApi cardMssAuthEncryptResp =
-            createCardResponse(CARD_MSS_AUTHENTICATION_ENCRYPTION_RSP);
-
-    CardRequestSpi samDigestAuthReq = createCardRequest(SAM_DIGEST_AUTHENTICATE_EXTENDED_CMD);
-    CardResponseApi samDigestAuthResp = createCardResponse(SW1SW2_OK_RSP);
+        createCardResponse(CARD_MSS_AUTHENTICATION_ENCRYPTION_RSP);
 
     // Encrypted read record
-    CardRequestSpi samDigestEncryptReqReq1 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_CMD);
-    CardResponseApi samDigestEncryptReqResp1 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_RSP);
-
-    CardRequestSpi cardEncryptReq1 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD);
-    CardResponseApi cardEncryptResp1 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP);
-
-    CardRequestSpi samDigestDecryptRespReq1 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_CMD);
-    CardResponseApi samDigestDecryptRespResp1 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_RSP);
+    CardRequestSpi cardEncryptReq1 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD_HEX);
+    CardResponseApi cardEncryptResp1 =
+        createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP_HEX);
 
     // Mutual Authentication with encryption deactivation
-    CardRequestSpi samDigestInternalAuthReq =
-            createCardRequest(SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
-    CardResponseApi samDigestInternalAuthResp =
-            createCardResponse(SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
-
     CardRequestSpi cardMssAuthReq = createCardRequest(CARD_MSS_AUTHENTICATION_CMD);
     CardResponseApi cardMssAuthResp = createCardResponse(CARD_MSS_AUTHENTICATION_RSP);
 
     // Plain read + encryption activation
     CardRequestSpi cardMssAuthReqAndReadRec2AndMssEncryptReq =
-            createCardRequest(
-                    CARD_MSS_AUTHENTICATION_CMD, CARD_READ_REC_SFI1_REC2_CMD, CARD_MSS_ENCRYPTION_CMD);
+        createCardRequest(
+            CARD_MSS_AUTHENTICATION_CMD, CARD_READ_REC_SFI1_REC2_CMD_HEX, CARD_MSS_ENCRYPTION_CMD);
     CardResponseApi cardMssAuthReqReadRec2AndMssEncryptResp =
-            createCardResponse(CARD_MSS_AUTHENTICATION_RSP, CARD_READ_REC_SFI1_REC2_RSP, SW1SW2_OK_RSP);
+        createCardResponse(
+            CARD_MSS_AUTHENTICATION_RSP, CARD_READ_REC_SFI1_REC2_RSP_HEX, SW1SW2_OK_RSP);
 
     /** Process commands */
 
     // Mutual Authentication with encryption activation
-    CardRequestSpi samDigestUpdateAndInternalAuthReq1 =
-            createCardRequest(
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC2_CMD,
-                    SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
-    CardResponseApi samDigestUpdateAndInternalAuthResp1 =
-            createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
-
     // Encrypted read record
-    CardRequestSpi samDigestEncryptReqReq2 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_CMD);
-    CardResponseApi samDigestEncryptReqResp2 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_RSP);
-
-    CardRequestSpi cardEncryptReq2 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD);
-    CardResponseApi cardEncryptResp2 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP);
-
-    CardRequestSpi samDigestDecryptRespReq2 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_CMD);
-    CardResponseApi samDigestDecryptRespResp2 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_RSP);
+    CardRequestSpi cardEncryptReq2 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD_HEX);
+    CardResponseApi cardEncryptResp2 =
+        createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP_HEX);
 
     // Encrypted update record
-    CardRequestSpi samDigestEncryptReqReq3 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_CMD);
-    CardResponseApi samDigestEncryptReqResp3 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_CMD_RSP);
-
-    CardRequestSpi cardEncryptReq3 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD);
+    CardRequestSpi cardEncryptReq3 = createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD_HEX);
     CardResponseApi cardEncryptResp3 = createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_RSP);
 
-    CardRequestSpi samDigestDecryptRespReq3 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_CMD);
-    CardResponseApi samDigestDecryptRespResp3 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC1_RSP_RSP);
-
     // Atomic closing
-    CardRequestSpi samDigestCloseReq = createCardRequest(SAM_DIGEST_CLOSE_EXTENDED_CMD);
-    CardResponseApi samDigestCloseResp = createCardResponse(SAM_DIGEST_CLOSE_EXTENDED_RSP);
-
     CardRequestSpi cardCssReq = createCardRequest(CARD_CLOSE_SECURE_SESSION_EXTENDED_CMD);
     CardResponseApi cardCssResp = createCardResponse(CARD_CLOSE_SECURE_SESSION_EXTENDED_RSP);
 
     // Atomic opening
-    CardRequestSpi samGetChallengeReq = createCardRequest(SAM_GET_CHALLENGE_EXTENDED_CMD);
-    CardResponseApi samGetChallengeResp = createCardResponse(SAM_GET_CHALLENGE_EXTENDED_RSP);
-
     CardRequestSpi cardOssAndMssEncryptReq =
-            createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD, CARD_MSS_ENCRYPTION_CMD);
+        createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD, CARD_MSS_ENCRYPTION_CMD);
     CardResponseApi cardOssAndMssEncryptResp =
-            createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP, SW1SW2_OK_RSP);
+        createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP, SW1SW2_OK_RSP);
 
     // Encrypted update record
-    CardRequestSpi samDigestInitAndEncryptReqReq4 =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_EXTENDED_OPEN_SECURE_SESSION_CMD,
-                    SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_CMD);
-    CardResponseApi samDigestInitAndEncryptReqResp4 =
-            createCardResponse(
-                    SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_CMD_RSP);
-
-    CardRequestSpi samDigestDecryptRespReq4 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_CMD);
-    CardResponseApi samDigestDecryptRespResp4 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_UPDATE_REC_SFI1_REC2_RSP_RSP);
 
     // MSS deactivate encryption
     CardRequestSpi cardEncryptReq4AndMssReq =
-            createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD, CARD_MSS_CMD);
+        createCardRequest(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD_HEX, CARD_MSS_CMD);
     CardResponseApi cardEncryptReq4AndMssResp =
-            createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP, SW1SW2_OK_RSP);
+        createCardResponse(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_RSP, SW1SW2_OK_RSP);
 
     /** Process closing */
 
     // Plain read
-    CardRequestSpi cardReadRec4Req = createCardRequest(CARD_READ_REC_SFI1_REC4_CMD);
-    CardResponseApi cardReadRec4Resp = createCardResponse(CARD_READ_REC_SFI1_REC4_RSP);
-
-    // Mutual Authentication with not encryption
-    CardRequestSpi samDigestUpdateAndInternalAuthReq2 =
-            createCardRequest(
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC4_CMD,
-                    SAM_DIGEST_INTERNAL_AUTHENTICATE_CMD);
-    CardResponseApi samDigestUpdateAndInternalAuthResp2 =
-            createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_INTERNAL_AUTHENTICATE_RSP);
+    CardRequestSpi cardReadRec4Req = createCardRequest(CARD_READ_REC_SFI1_REC4_CMD_HEX);
+    CardResponseApi cardReadRec4Resp = createCardResponse(CARD_READ_REC_SFI1_REC4_RSP_HEX);
 
     // Plain read + encryption activation
     CardRequestSpi cardMssAuthAndReadRec5AndMssEncryptReq =
-            createCardRequest(
-                    CARD_MSS_AUTHENTICATION_CMD, CARD_READ_REC_SFI1_REC5_CMD, CARD_MSS_ENCRYPTION_CMD);
+        createCardRequest(
+            CARD_MSS_AUTHENTICATION_CMD, CARD_READ_REC_SFI1_REC5_CMD_HEX, CARD_MSS_ENCRYPTION_CMD);
     CardResponseApi cardMssAuthAndReadRec5AndMssEncryptResp =
-            createCardResponse(CARD_MSS_AUTHENTICATION_RSP, CARD_READ_REC_SFI1_REC5_RSP, SW1SW2_OK_RSP);
+        createCardResponse(
+            CARD_MSS_AUTHENTICATION_RSP, CARD_READ_REC_SFI1_REC5_RSP_HEX, SW1SW2_OK_RSP);
 
     // Encrypted read record
-    CardRequestSpi samDigestInitAndEncryptReqReq5 =
-            createCardRequest(
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC5_CMD,
-                    SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_CMD);
-    CardResponseApi samDigestInitAndEncryptReqResp5 =
-            createCardResponse(SW1SW2_OK_RSP, SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_RSP);
 
-    CardRequestSpi cardEncryptReq5 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD);
-    CardResponseApi cardEncryptResp5 = createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP);
-
-    CardRequestSpi samDigestDecryptRespReq5 =
-            createCardRequest(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_CMD);
-    CardResponseApi samDigestDecryptRespResp5 =
-            createCardResponse(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_RSP);
+    CardRequestSpi cardEncryptReq5 = createCardRequest(CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD_HEX);
+    CardResponseApi cardEncryptResp5 =
+        createCardResponse(CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP_HEX);
 
     /** Mock commands */
     when(cardReader.isContactless()).thenReturn(true);
 
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samSelectDiversifierAndGetChallengeResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestInitAndInternalAuthResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestAuthResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestEncryptReqResp1);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq1)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestDecryptRespResp1);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInternalAuthReq)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestInternalAuthResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestUpdateAndInternalAuthResp1);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestEncryptReqResp2);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq2)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestDecryptRespResp2);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestEncryptReqResp3);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq3)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestDecryptRespResp3);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestCloseResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samGetChallengeReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samGetChallengeResp);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestInitAndEncryptReqResp4);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq4)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestDecryptRespResp4);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestUpdateAndInternalAuthResp2);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestInitAndEncryptReqResp5);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samDigestDecryptRespReq5)),
-            eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(samDigestDecryptRespResp5);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardOssResp);
+        .thenReturn(cardOssResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardMssAuthEncryptResp);
+        .thenReturn(cardMssAuthEncryptResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardEncryptReq1)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardEncryptResp1);
+        .thenReturn(cardEncryptResp1);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardMssAuthReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardMssAuthResp);
+        .thenReturn(cardMssAuthResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardMssAuthReqAndReadRec2AndMssEncryptReq)),
             eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardMssAuthReqReadRec2AndMssEncryptResp);
+        .thenReturn(cardMssAuthReqReadRec2AndMssEncryptResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardEncryptReq2)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardEncryptResp2);
+        .thenReturn(cardEncryptResp2);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardEncryptReq3)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardEncryptResp3);
+        .thenReturn(cardEncryptResp3);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCssReq)), any(ChannelControl.class)))
-            .thenReturn(cardCssResp);
+        .thenReturn(cardCssResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardOssAndMssEncryptReq)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardOssAndMssEncryptResp);
+        .thenReturn(cardOssAndMssEncryptResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardEncryptReq4AndMssReq)),
             eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardEncryptReq4AndMssResp);
+        .thenReturn(cardEncryptReq4AndMssResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardReadRec4Req)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardReadRec4Resp);
+        .thenReturn(cardReadRec4Resp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardMssAuthAndReadRec5AndMssEncryptReq)),
             eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardMssAuthAndReadRec5AndMssEncryptResp);
+        .thenReturn(cardMssAuthAndReadRec5AndMssEncryptResp);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardEncryptReq5)), eq(ChannelControl.KEEP_OPEN)))
-            .thenReturn(cardEncryptResp5);
+        .thenReturn(cardEncryptResp5);
+
+    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(SAM_CHALLENGE_EXTENDED);
+    when(symmetricCryptoTransactionManager.generateTerminalSessionMac())
+        .thenReturn(SAM_SIGNATURE_EXTENDED);
+    when(symmetricCryptoTransactionManager.isCardSessionMacValid(CARD_SIGNATURE_EXTENDED))
+        .thenReturn(true);
+
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD))
+        .thenReturn(CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP))
+        .thenReturn(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_RSP);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD))
+        .thenReturn(CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP))
+        .thenReturn(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_RSP);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(CARD_UPDATE_REC_SFI1_REC1_CMD))
+        .thenReturn(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC1_CMD);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(SW1SW2_OK))
+        .thenReturn(SW1SW2_OK);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(CARD_UPDATE_REC_SFI1_REC2_CMD))
+        .thenReturn(CARD_UPDATE_REC_ENCRYPTED_SFI1_REC2_CMD);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD))
+        .thenReturn(CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD);
+    when(symmetricCryptoTransactionManager.updateTerminalSessionMac(
+            CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP))
+        .thenReturn(SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_RSP_RSP);
+
+    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+        .thenReturn(SAM_SIGNATURE_EXTENDED);
+    when(symmetricCryptoTransactionManager.isCardSessionMacValid(CARD_SIGNATURE_EXTENDED))
+        .thenReturn(true);
 
     /** Scenario */
     cardTransactionManager
-            .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-            .prepareEarlyMutualAuthentication() // Authentication
-            .prepareActivateEncryption() // + encryption
-            .prepareReadRecord((byte) 1, 1)
-            .prepareEarlyMutualAuthentication() // Authentication
-            .prepareDeactivateEncryption() // - encryption
-            .prepareReadRecord((byte) 1, 2)
-            .prepareActivateEncryption() // + encryption
-            . processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareActivateEncryption() // + encryption
+        .prepareReadRecord((byte) 1, 1)
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareDeactivateEncryption() // - encryption
+        .prepareReadRecord((byte) 1, 2)
+        .prepareActivateEncryption() // + encryption
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     cardTransactionManager
-            .prepareEarlyMutualAuthentication() // Authentication
-            .prepareEarlyMutualAuthentication() // Authentication (Twice consecutive call)
-            .prepareReadRecord((byte) 1, 3)
-            .prepareUpdateRecord((byte) 1, 1, new byte[] {(byte) 0xAA})
-            .prepareUpdateRecord((byte) 1, 2, new byte[] {(byte) 0xBB}) // 2nd session
-            .prepareDeactivateEncryption() // - encryption
-            . processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareEarlyMutualAuthentication() // Authentication (Twice consecutive call)
+        .prepareReadRecord((byte) 1, 3)
+        .prepareUpdateRecord((byte) 1, 1, new byte[] {(byte) 0xAA})
+        .prepareUpdateRecord((byte) 1, 2, new byte[] {(byte) 0xBB}) // 2nd session
+        .prepareDeactivateEncryption() // - encryption
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     cardTransactionManager
-            .prepareReadRecord((byte) 1, 4)
-            .prepareEarlyMutualAuthentication() // Authentication
-            .prepareReadRecord((byte) 1, 5)
-            .prepareActivateEncryption() // + encryption
-            .prepareReadRecord((byte) 1, 6)
-            .prepareCloseSecureSession()
-            . processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
+        .prepareReadRecord((byte) 1, 4)
+        .prepareEarlyMutualAuthentication() // Authentication
+        .prepareReadRecord((byte) 1, 5)
+        .prepareActivateEncryption() // + encryption
+        .prepareReadRecord((byte) 1, 6)
+        .prepareCloseSecureSession()
+        .processCommands(CHANNEL_CONTROL_CLOSE_AFTER);
 
     /** Check result */
-    InOrder inOrder = inOrder(cardReader, samReader);
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
+    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samSelectDiversifierAndGetChallengeReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardOssReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .initTerminalSessionMac(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT, KIF, KVC);
+    inOrder.verify(symmetricCryptoTransactionManager).generateTerminalSessionMac();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestInitAndInternalAuthReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
+    inOrder.verify(symmetricCryptoTransactionManager).activateEncryption();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestEncryptReqReq1)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq1)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardEncryptReq1)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP);
+    inOrder.verify(symmetricCryptoTransactionManager).generateTerminalSessionMac();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestDecryptRespReq1)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthReqAndReadRec2AndMssEncryptReq)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestInternalAuthReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
+    inOrder.verify(symmetricCryptoTransactionManager).deactivateEncryption();
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardMssAuthReqAndReadRec2AndMssEncryptReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC2_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC2_RSP);
+    inOrder.verify(symmetricCryptoTransactionManager).activateEncryption();
+    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
+    inOrder.verify(symmetricCryptoTransactionManager).generateTerminalSessionMac();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq1)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardMssAuthEncryptReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestEncryptReqReq2)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq2)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardEncryptReq2)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestDecryptRespReq2)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_UPDATE_REC_SFI1_REC1_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestEncryptReqReq3)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq3)), eq(ChannelControl.KEEP_OPEN));
+    inOrder.verify(symmetricCryptoTransactionManager).updateTerminalSessionMac(SW1SW2_OK);
+    inOrder.verify(symmetricCryptoTransactionManager).finalizeTerminalSessionMac();
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardEncryptReq3)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestDecryptRespReq3)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
+    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOssAndMssEncryptReq)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .initTerminalSessionMac(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT, KIF, KVC);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_UPDATE_REC_SFI1_REC2_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samGetChallengeReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq4AndMssReq)),
+            eq(ChannelControl.KEEP_OPEN));
+    inOrder.verify(symmetricCryptoTransactionManager).updateTerminalSessionMac(SW1SW2_OK);
+    inOrder.verify(symmetricCryptoTransactionManager).deactivateEncryption();
+    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardOssAndMssEncryptReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardReadRec4Req)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq4)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC4_CMD);
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardEncryptReq4AndMssReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC4_RSP);
+    inOrder.verify(symmetricCryptoTransactionManager).generateTerminalSessionMac();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestDecryptRespReq4)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardMssAuthAndReadRec5AndMssEncryptReq)),
+            eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardReadRec4Req)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestUpdateAndInternalAuthReq2)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC5_CMD);
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardMssAuthAndReadRec5AndMssEncryptReq)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_SFI1_REC5_RSP);
+    inOrder.verify(symmetricCryptoTransactionManager).activateEncryption();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD);
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestInitAndEncryptReqReq5)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardEncryptReq5)), eq(ChannelControl.KEEP_OPEN));
     inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardEncryptReq5)), eq(ChannelControl.KEEP_OPEN));
+        .verify(symmetricCryptoTransactionManager)
+        .updateTerminalSessionMac(CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP);
+    inOrder.verify(symmetricCryptoTransactionManager).finalizeTerminalSessionMac();
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestDecryptRespReq5)),
-                    eq(ChannelControl.KEEP_OPEN));
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.CLOSE_AFTER));
     inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestCloseReq)), eq(ChannelControl.KEEP_OPEN));
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCssReq)), eq(ChannelControl.CLOSE_AFTER));
-    inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samDigestAuthReq)), eq(ChannelControl.KEEP_OPEN));
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void initSamContextForNextTransaction_whenNoSecuritySettings_shouldThrowISE() {
-    cardTransactionManager =
-            CalypsoExtensionService.getInstance()
-                    .createCardTransactionWithoutSecurity(cardReader, calypsoCard);
-    cardTransactionManager.initSamContextForNextTransaction();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void initSamContextForNextTransaction_whenCommandsArePending_shouldThrowISE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
-    cardTransactionManager.initSamContextForNextTransaction();
-  }
-
-  @Test
-  public void initSamContextForNextTransaction_shouldUpdateChallengeInCryptoService()
-          throws Exception {
-
-    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
-
-    cardTransactionManager.initSamContextForNextTransaction();
-
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader);
-
-    assertThat(HexUtil.toHex(calypsoSam.popChallenge())).isEqualTo(SAM_CHALLENGE_HEX);
-    assertThat(calypsoSam.popChallenge()).isNull();
-  }
-
-  @Test
-  public void
-  initSamContextForNextTransaction_whenANewSessionIsOpen_shouldInteractWithCardAndCryptoManagerWithoutGetChallenge()
-          throws Exception {
-
-    // Init context
-    CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
-    CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
-
-    cardTransactionManager.initSamContextForNextTransaction();
-
-    verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader);
-
-    // Next session
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_OPEN_SECURE_SESSION_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_OPEN_SECURE_SESSION_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponse);
-
-    cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT). processCommands(CHANNEL_CONTROL_KEEP_OPEN);
-
-    InOrder inOrder = inOrder(samReader, cardReader);
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
-
-    samCardRequest =
-            createCardRequest(
-                    SAM_SELECT_DIVERSIFIER_CMD,
-                    SAM_DIGEST_INIT_OPEN_SECURE_SESSION_CMD,
-                    SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC1_L29_CMD,
-                    SAM_DIGEST_CLOSE_CMD);
-    CardRequestSpi cardCardRequestRead = createCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD_HEX);
-    CardRequestSpi cardCardRequestClose = createCardRequest(CARD_CLOSE_SECURE_SESSION_CMD);
-
-    samCardResponse =
-            createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP, SAM_DIGEST_CLOSE_RSP);
-    CardResponseApi cardCardResponseRead = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP_HEX);
-    CardResponseApi cardCardResponseClose = createCardResponse(CARD_CLOSE_SECURE_SESSION_RSP);
-
-    CardRequestSpi samCardRequest2 = createCardRequest(SAM_DIGEST_AUTHENTICATE_CMD);
-    CardResponseApi samCardResponse2 = createCardResponse(SW1SW2_OK_RSP);
-
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponseRead);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class)))
-            .thenReturn(cardCardResponseClose);
-    when(samReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class)))
-            .thenReturn(samCardResponse2);
-
-    cardTransactionManager
-            .prepareReadRecords(FILE7, 1, 1, 29)
-            .prepareCloseSecureSession()
-            . processCommands(CHANNEL_CONTROL_KEEP_OPEN);
-
-    inOrder = inOrder(samReader, cardReader);
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequestRead)), any(ChannelControl.class));
-    inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest)), any(ChannelControl.class));
-    inOrder
-            .verify(cardReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(cardCardRequestClose)), any(ChannelControl.class));
-    inOrder
-            .verify(samReader)
-            .transmitCardRequest(
-                    argThat(new CardRequestMatcher(samCardRequest2)), any(ChannelControl.class));
-    verifyNoMoreInteractions(samReader, cardReader);
+        .verify(symmetricCryptoTransactionManager)
+        .isCardSessionMacValid(CARD_SIGNATURE_EXTENDED);
+    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 }

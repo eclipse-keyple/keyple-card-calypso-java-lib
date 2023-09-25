@@ -983,7 +983,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
@@ -1624,7 +1624,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
     CardRequestSpi cardCardRequest = createCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK);
+    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
