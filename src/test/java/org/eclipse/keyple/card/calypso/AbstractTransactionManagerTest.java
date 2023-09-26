@@ -27,7 +27,7 @@ import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.eclipse.keypop.reader.CardReader;
 import org.mockito.ArgumentMatcher;
 
-abstract class AbstractTransactionManager {
+abstract class AbstractTransactionManagerTest {
 
   static org.eclipse.keypop.calypso.card.transaction.ChannelControl CHANNEL_CONTROL_KEEP_OPEN =
       org.eclipse.keypop.calypso.card.transaction.ChannelControl.KEEP_OPEN;

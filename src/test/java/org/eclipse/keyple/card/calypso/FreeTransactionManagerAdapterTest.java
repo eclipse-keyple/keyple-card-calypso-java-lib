@@ -30,7 +30,7 @@ import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FreeTransactionManagerAdapterTest extends AbstractTransactionManager {
+public class FreeTransactionManagerAdapterTest extends AbstractTransactionManagerTest {
 
   private FreeTransactionManager cardTransactionManager;
 

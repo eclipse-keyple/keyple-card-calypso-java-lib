@@ -37,7 +37,8 @@ import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InOrder;
 
-public class SecureExtendedModeTransactionManagerAdapterTest extends AbstractTransactionManager {
+public class SecureExtendedModeTransactionManagerAdapterTest
+    extends AbstractTransactionManagerTest {
 
   private SecureExtendedModeTransactionManager cardTransactionManager;
   private SymmetricCryptoSecuritySetting cardSecuritySetting;
