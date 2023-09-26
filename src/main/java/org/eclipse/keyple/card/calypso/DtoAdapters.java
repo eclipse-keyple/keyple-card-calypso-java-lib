@@ -11,10 +11,7 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
@@ -218,6 +215,8 @@ final class DtoAdapters {
    * @since 2.0.0
    */
   static final class CardSelectionRequestAdapter implements CardSelectionRequestSpi {
+
+    private static final int SW_DEFAULT_SUCCESSFUL = 0x9000;
     private final CardRequestSpi cardRequest;
     private final Set<Integer> successfulSelectionStatusWords;
 
@@ -229,7 +228,8 @@ final class DtoAdapters {
      */
     CardSelectionRequestAdapter(CardRequestSpi cardRequest) {
       this.cardRequest = cardRequest;
-      successfulSelectionStatusWords = new HashSet<Integer>();
+      successfulSelectionStatusWords = new LinkedHashSet<Integer>(2);
+      successfulSelectionStatusWords.add(SW_DEFAULT_SUCCESSFUL);
     }
 
     /**

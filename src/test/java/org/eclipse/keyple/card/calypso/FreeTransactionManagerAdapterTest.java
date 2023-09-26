@@ -25,29 +25,17 @@ import org.eclipse.keypop.calypso.card.card.ElementaryFile;
 import org.eclipse.keypop.calypso.card.card.FileHeader;
 import org.eclipse.keypop.calypso.card.transaction.FreeTransactionManager;
 import org.eclipse.keypop.calypso.card.transaction.SearchCommandData;
-import org.eclipse.keypop.card.CardResponseApi;
 import org.eclipse.keypop.card.ChannelControl;
-import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
-import org.eclipse.keypop.reader.CardReader;
 import org.junit.Before;
 import org.junit.Test;
 
 public class FreeTransactionManagerAdapterTest extends AbstractTransactionManager {
 
   private FreeTransactionManager cardTransactionManager;
-  private ReaderMock cardReader;
-  private CalypsoCardAdapter calypsoCard;
 
-  interface ReaderMock extends CardReader, ProxyReaderApi {}
-
-  private void initCalypsoCard(String selectApplicationResponse) throws Exception {
-    calypsoCard =
-        spy(
-            new CalypsoCardAdapter(
-                new TestDtoAdapters.CardSelectionResponseAdapter(
-                    new TestDtoAdapters.ApduResponseAdapter(
-                        HexUtil.toByteArray(selectApplicationResponse)))));
+  @Override
+  void initTransactionManager() {
     cardTransactionManager =
         CalypsoExtensionService.getInstance()
             .getCalypsoCardApiFactory()
@@ -57,7 +45,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Before
   public void setUp() throws Exception {
     cardReader = mock(ReaderMock.class);
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
   }
 
   @Test
@@ -65,16 +53,13 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareSelectFile_whenLidIs1234AndCardIsPrimeRevision3_shouldPrepareSelectFileApduWith1234()
           throws Exception {
     short lid = 0x1234;
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_SELECT_FILE_1234_CMD, CARD_SELECT_FILE_1234_RSP);
     cardTransactionManager.prepareSelectFile(lid);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
@@ -82,65 +67,54 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareSelectFile_whenLidIs1234AndCardIsPrimeRevision2_shouldPrepareSelectFileApduWith1234()
           throws Exception {
     short lid = 0x1234;
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_1234_CMD_PRIME_REV2);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP_PRIME_REV2);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SELECT_FILE_1234_CMD_PRIME_REV2, CARD_SELECT_FILE_1234_RSP_PRIME_REV2);
     cardTransactionManager.prepareSelectFile(lid);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsFirstEF_shouldPrepareSelectFileApduWithP2_02_P1_00()
           throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_FIRST_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_SELECT_FILE_FIRST_CMD, CARD_SELECT_FILE_1234_RSP);
     cardTransactionManager.prepareSelectFile(SelectFileControl.FIRST_EF);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsNextEF_shouldPrepareSelectFileApduWithP2_02_P1_02()
           throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_NEXT_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_SELECT_FILE_NEXT_CMD, CARD_SELECT_FILE_1234_RSP);
     cardTransactionManager.prepareSelectFile(SelectFileControl.NEXT_EF);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
   public void
       prepareSelectFile_whenSelectFileControlIsCurrentEF_shouldPrepareSelectFileApduWithP2_09_P1_00()
           throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_SELECT_FILE_CURRENT_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_SELECT_FILE_1234_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_SELECT_FILE_CURRENT_CMD, CARD_SELECT_FILE_1234_RSP);
     cardTransactionManager.prepareSelectFile(SelectFileControl.CURRENT_DF);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -151,16 +125,13 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareGetData_whenGetDataTagIsFCP_shouldPrepareSelectFileApduWithTagFCP()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCP_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCP_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_GET_DATA_FCP_CMD, CARD_GET_DATA_FCP_RSP);
     cardTransactionManager.prepareGetData(GetDataTag.FCP_FOR_CURRENT_FILE);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
@@ -172,11 +143,8 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
     // C106 F123 10 04 F3 F4
     // C106 F124 11 08 F3 F4
     // C106 F125 1F 09 F3 F4
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_EF_LIST_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_EF_LIST_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_GET_DATA_EF_LIST_CMD, CARD_GET_DATA_EF_LIST_RSP);
 
     assertThat(calypsoCard.getFiles()).isEmpty();
 
@@ -184,7 +152,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFiles()).hasSize(5);
 
@@ -225,12 +193,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareGetData_whenGetDataTagIsTRACEABILITY_INFORMATION_shouldPopulateCalypsoCard()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_TRACEABILITY_INFORMATION_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_GET_DATA_TRACEABILITY_INFORMATION_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_GET_DATA_TRACEABILITY_INFORMATION_CMD, CARD_GET_DATA_TRACEABILITY_INFORMATION_RSP);
+
     cardTransactionManager.prepareGetData(GetDataTag.TRACEABILITY_INFORMATION);
 
     assertThat(calypsoCard.getTraceabilityInformation()).isEmpty();
@@ -238,7 +204,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getTraceabilityInformation())
         .isEqualTo(HexUtil.toByteArray("00112233445566778899"));
@@ -247,16 +213,13 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareGetData_whenGetDataTagIsFCI_shouldPrepareSelectFileApduWithTagFCI()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_GET_DATA_FCI_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_GET_DATA_FCI_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_GET_DATA_FCI_CMD, CARD_GET_DATA_FCI_RSP);
     cardTransactionManager.prepareGetData(GetDataTag.FCI_FOR_CURRENT_DF);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -277,16 +240,13 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareReadRecord_whenSfi07RecNumber1_shouldPrepareReadRecordApduWithSfi07RecNumber1()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_REC_SFI7_REC1_CMD_HEX);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_REC_SFI7_REC1_RSP_HEX);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_READ_REC_SFI7_REC1_CMD, CARD_READ_REC_SFI7_REC1_RSP);
     cardTransactionManager.prepareReadRecord(FILE7, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -319,25 +279,17 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadRecords_whenNbRecordsToReadMultipliedByRecSize2IsLessThanPayLoad_shouldPrepareOneCommand()
           throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_RECORDS_FROM1_TO2_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_RECORDS_FROM1_TO2_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_READ_RECORDS_FROM1_TO2_CMD, CARD_READ_RECORDS_FROM1_TO2_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(7);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareReadRecords((byte) 1, 1, 2, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
         .isEqualTo(HexUtil.toByteArray("11"));
@@ -350,33 +302,20 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadRecords_whenNbRecordsToReadMultipliedByRecSize2IsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_RECORDS_FROM1_TO2_CMD,
-            CARD_READ_RECORDS_FROM3_TO4_CMD,
-            CARD_READ_RECORDS_FROM5_TO5_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_READ_RECORDS_FROM1_TO2_RSP,
-            CARD_READ_RECORDS_FROM3_TO4_RSP,
-            CARD_READ_RECORDS_FROM5_TO5_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_RECORDS_FROM1_TO2_CMD, CARD_READ_RECORDS_FROM1_TO2_RSP,
+            CARD_READ_RECORDS_FROM3_TO4_CMD, CARD_READ_RECORDS_FROM3_TO4_RSP,
+            CARD_READ_RECORDS_FROM5_TO5_CMD, CARD_READ_RECORDS_FROM5_TO5_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(7);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareReadRecords((byte) 1, 1, 5, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
         .isEqualTo(HexUtil.toByteArray("11"));
@@ -393,7 +332,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test(expected = UnsupportedOperationException.class)
   public void prepareReadRecordsPartially_whenProductTypeIsNotPrimeRev3OrLight_shouldThrowUOE()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 1, 1, 1);
   }
 
@@ -455,27 +394,19 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadRecordsPartially_whenNbRecordsToReadMultipliedByNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NB_BYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NB_BYTE1_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(3);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 2, 3, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
         .isEqualTo(HexUtil.toByteArray("00000011"));
@@ -488,33 +419,23 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadRecordsPartially_whenNbRecordsToReadMultipliedByNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_CMD,
-            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_CMD,
-            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NBBYTE1_RSP,
-            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NBBYTE1_RSP,
-            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NBBYTE1_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NB_BYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC1_OFFSET3_NB_BYTE1_RSP,
+            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NB_BYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC3_OFFSET3_NB_BYTE1_RSP,
+            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NB_BYTE1_CMD,
+            CARD_READ_RECORD_MULTIPLE_REC5_OFFSET3_NB_BYTE1_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareReadRecordsPartially((byte) 1, 1, 5, 3, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent(1))
         .isEqualTo(HexUtil.toByteArray("00000011"));
@@ -558,23 +479,19 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, CARD_READ_BINARY_SFI0_OFFSET256_1B_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD,
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP,
+            CARD_READ_BINARY_SFI0_OFFSET256_1B_CMD,
+            CARD_READ_BINARY_SFI0_OFFSET256_1B_RSP);
 
     cardTransactionManager.prepareReadBinary((byte) 1, 256, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .startsWith(HexUtil.toByteArray("1100"))
@@ -586,24 +503,18 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareReadBinary_whenNbBytesToReadIsLessThanPayLoad_shouldPrepareOneCommand()
       throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
+    initTransactionManager();
 
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
     cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("11"));
@@ -614,25 +525,18 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareReadBinary_whenNbBytesToReadIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareReadBinary((byte) 1, 0, 1);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("11"));
@@ -645,7 +549,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareSearchRecords_whenProductTypeIsNotPrimeRev3_shouldThrowUOE() throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_2);
     cardTransactionManager.prepareSearchRecords(null);
   }
 
@@ -831,14 +735,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareSearchRecords_whenUsingDefaultParameters_shouldPrepareDefaultCommand()
       throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_FFFF_CMD,
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_FFFF_RSP);
 
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
@@ -850,7 +750,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
   }
@@ -859,14 +759,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareSearchRecords_whenSetAllParameters_shouldPrepareCustomCommand()
       throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_CMD,
+            CARD_SEARCH_RECORD_MULTIPLE_SFI4_REC2_OFFSET3_FROM_FETCH_1234_FFFF_RSP);
 
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
@@ -883,7 +779,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
     assertThat(calypsoCard.getFileBySfi((byte) 4).getData().getContent(4))
@@ -893,14 +789,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareSearchRecords_whenNoMask_shouldFillMaskWithFFh() throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_FFFF_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_FFFF_CMD,
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_FFFF_RSP);
 
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
@@ -912,7 +804,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
   }
@@ -920,14 +812,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareSearchRecords_whenPartialMask_shouldRightPadMaskWithFFh() throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_56FF_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_56FF_CMD,
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_56FF_RSP);
 
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
@@ -940,7 +828,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
   }
@@ -948,14 +836,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareSearchRecords_whenFullMask_shouldUseCompleteMask() throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NOFETCH_1234_5677_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_5677_CMD,
+            CARD_SEARCH_RECORD_MULTIPLE_SFI1_REC1_OFFSET0_AT_NO_FETCH_1234_5677_RSP);
 
     SearchCommandData data =
         CalypsoExtensionService.getInstance()
@@ -968,7 +852,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(data.getMatchingRecordNumbers()).containsExactly(4, 6);
   }
@@ -981,17 +865,13 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareCheckPinStatus_whenPinFeatureIsAvailable_shouldPrepareCheckPinStatusApdu()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_CHECK_PIN_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
+    CardRequestSpi cardRequest = mockTransmitCardRequest(CARD_CHECK_PIN_CMD, SW_9000);
     cardTransactionManager.prepareCheckPinStatus();
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1032,7 +912,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test(expected = UnsupportedOperationException.class)
   public void prepareUpdateBinary_whenProductTypeIsNotPrimeRev2OrRev3_shouldThrowUOE()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_LIGHT);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_LIGHT);
     cardTransactionManager.prepareUpdateBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -1071,47 +951,36 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareUpdateBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD,
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP,
+            CARD_UPDATE_BINARY_SFI0_OFFSET256_1B_CMD,
+            SW_9000);
 
     cardTransactionManager.prepareUpdateBinary((byte) 1, 256, HexUtil.toByteArray("66"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
   public void prepareUpdateBinary_whenDataLengthIsLessThanPayLoad_shouldPrepareOneCommand()
       throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD, SW_9000);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareUpdateBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("0000000055"));
@@ -1121,30 +990,20 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareUpdateBinary_whenDataLengthIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
       throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_UPDATE_BINARY_SFI1_OFFSET0_2B_CMD,
-            CARD_UPDATE_BINARY_SFI1_OFFSET2_2B_CMD,
-            CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_UPDATE_BINARY_SFI1_OFFSET0_2B_CMD, SW_9000,
+            CARD_UPDATE_BINARY_SFI1_OFFSET2_2B_CMD, SW_9000,
+            CARD_UPDATE_BINARY_SFI1_OFFSET4_1B_CMD, SW_9000);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareUpdateBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("1122334455"));
@@ -1153,7 +1012,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test(expected = UnsupportedOperationException.class)
   public void prepareWriteBinary_whenProductTypeIsNotPrimeRev2OrRev3_shouldThrowUOE()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_LIGHT);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_LIGHT);
     cardTransactionManager.prepareWriteBinary((byte) 1, 1, new byte[1]);
   }
 
@@ -1192,47 +1051,36 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       prepareWriteBinary_whenSfiIsNot0AndOffsetIsGreaterThan255_shouldAddFirstAReadBinaryCommand()
           throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD, CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP, SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_CMD,
+            CARD_READ_BINARY_SFI1_OFFSET0_1B_RSP,
+            CARD_WRITE_BINARY_SFI0_OFFSET256_1B_CMD,
+            SW_9000);
 
     cardTransactionManager.prepareWriteBinary((byte) 1, 256, HexUtil.toByteArray("66"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
   @Test
   public void prepareWriteBinary_whenDataLengthIsLessThanPayLoad_shouldPrepareOneCommand()
       throws Exception {
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD, SW_9000);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareWriteBinary((byte) 1, 4, HexUtil.toByteArray("55"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("0000000055"));
@@ -1242,30 +1090,20 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareWriteBinary_whenDataLengthIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
       throws Exception {
 
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_WRITE_BINARY_SFI1_OFFSET0_2B_CMD,
-            CARD_WRITE_BINARY_SFI1_OFFSET2_2B_CMD,
-            CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(SW1SW2_OK_RSP, SW1SW2_OK_RSP, SW1SW2_OK_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_WRITE_BINARY_SFI1_OFFSET0_2B_CMD, SW_9000,
+            CARD_WRITE_BINARY_SFI1_OFFSET2_2B_CMD, SW_9000,
+            CARD_WRITE_BINARY_SFI1_OFFSET4_1B_CMD, SW_9000);
     when(calypsoCard.getPayloadCapacity()).thenReturn(2);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     cardTransactionManager.prepareWriteBinary((byte) 1, 0, HexUtil.toByteArray("1122334455"));
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContent())
         .isEqualTo(HexUtil.toByteArray("1122334455"));
@@ -1294,19 +1132,16 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareIncreaseCounter_whenParametersAreCorrect_shouldAddDecreaseCommand()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_INCREASE_SFI11_CNT1_100U_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_INCREASE_SFI11_CNT1_8821U_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_SFI11_CNT1_100U_CMD, CARD_INCREASE_SFI11_CNT1_8821U_RSP);
 
     cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(8821);
@@ -1328,12 +1163,9 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
       throws Exception {
     when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_INCREASE_SFI11_CNT1_100U_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_INCREASE_SFI11_CNT1_8821U_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_SFI11_CNT1_100U_CMD, CARD_INCREASE_SFI11_CNT1_8821U_RSP);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToIncValueMap.put(1, 100);
@@ -1343,7 +1175,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(8821);
@@ -1380,14 +1212,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareIncreaseCounters_whenParametersAreCorrect_shouldAddIncreaseMultipleCommand()
       throws Exception {
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_C3_3_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_C3_3_CMD,
+            CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(3, 3);
@@ -1398,7 +1226,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(0x11);
@@ -1412,22 +1240,14 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void
       prepareIncreaseCounters_whenDataLengthIsGreaterThanPayLoad_shouldPrepareMultipleCommands()
           throws Exception {
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD, CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP, CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_CMD,
+            CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_RSP,
+            CARD_INCREASE_MULTIPLE_SFI1_C3_3_CMD,
+            CARD_INCREASE_MULTIPLE_SFI1_C3_33_RSP);
     when(calypsoCard.getPayloadCapacity()).thenReturn(9);
-
-    cardTransactionManager =
-        CalypsoExtensionService.getInstance()
-            .getCalypsoCardApiFactory()
-            .createFreeTransactionManager(cardReader, calypsoCard);
+    initTransactionManager();
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(1, 1);
@@ -1438,7 +1258,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(0x11);
@@ -1482,19 +1302,16 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareDecreaseCounter_whenParametersAreCorrect_shouldAddDecreaseMultipleCommand()
       throws Exception {
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_DECREASE_SFI10_CNT1_100U_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_DECREASE_SFI10_CNT1_4286U_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_DECREASE_SFI10_CNT1_100U_CMD, CARD_DECREASE_SFI10_CNT1_4286U_RSP);
 
     cardTransactionManager.prepareDecreaseCounter((byte) 1, 1, 100);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(4286);
@@ -1504,12 +1321,9 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void prepareDecreaseCounters_whenCardIsLowerThanPrime3_shouldThrowUOE() throws Exception {
     when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
 
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_DECREASE_SFI10_CNT1_100U_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(CARD_DECREASE_SFI10_CNT1_4286U_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_DECREASE_SFI10_CNT1_100U_CMD, CARD_DECREASE_SFI10_CNT1_4286U_RSP);
 
     Map<Integer, Integer> counterNumberToDecValueMap = new HashMap<Integer, Integer>(1);
     counterNumberToDecValueMap.put(1, 100);
@@ -1519,7 +1333,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(4286);
@@ -1556,14 +1370,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareDecreaseCounters_whenParametersAreCorrect_shouldAddDecreaseMultipleCommand()
       throws Exception {
-    CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_DECREASE_MULTIPLE_SFI1_C1_11_C2_22_C8_88_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(CARD_DECREASE_MULTIPLE_SFI1_C1_111_C2_222_C8_888_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_DECREASE_MULTIPLE_SFI1_C1_11_C2_22_C8_88_CMD,
+            CARD_DECREASE_MULTIPLE_SFI1_C1_111_C2_222_C8_888_RSP);
 
     Map<Integer, Integer> counterNumberToIncValueMap = new HashMap<Integer, Integer>(3);
     counterNumberToIncValueMap.put(2, 0x22);
@@ -1574,7 +1384,7 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
 
     assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
         .isEqualTo(0x111);
@@ -1596,7 +1406,8 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
   @Test(expected = UnsupportedOperationException.class)
   public void prepareSvReadAllLogs_whenNotAnSVApplication_shouldThrowISE() throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
     cardTransactionManager.prepareSvReadAllLogs();
   }
 
@@ -1622,34 +1433,26 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   @Test
   public void prepareVerifyPin_whenPINTransmittedInPlainText_shouldSendApduVerifyPIN()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
-    CardRequestSpi cardCardRequest = createCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD);
-    CardResponseApi cardCardResponse = createCardResponse(SW1SW2_OK_HEX);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
+    CardRequestSpi cardRequest = mockTransmitCardRequest(CARD_VERIFY_PIN_PLAIN_OK_CMD, SW_9000);
     cardTransactionManager
         .prepareVerifyPin(PIN_OK.getBytes())
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     verifyNoMoreInteractions(cardReader);
   }
 
   @Test
   public void prepareChangePin_whenTransmissionIsPlain_shouldSendApdusToTheCardAndTheSAM()
       throws Exception {
-    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
 
     calypsoCard.setPinAttemptRemaining(3);
 
-    CardRequestSpi cardChangePinCardRequest = createCardRequest(CARD_CHANGE_PIN_PLAIN_CMD);
-    CardResponseApi cardChangePinCardResponse = createCardResponse(CARD_CHANGE_PIN_PLAIN_RSP);
-
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardChangePinCardResponse);
+    CardRequestSpi cardChangePinCardRequest =
+        mockTransmitCardRequest(CARD_CHANGE_PIN_PLAIN_CMD, CARD_CHANGE_PIN_PLAIN_RSP);
 
     cardTransactionManager
         .prepareChangePin(NEW_PIN.getBytes())
@@ -1664,19 +1467,14 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
   @Test
   public void processCommands_whenOutOfSession_shouldExchangeApduWithCardOnly() throws Exception {
-    CardRequestSpi cardCardRequest =
-        createCardRequest(
-            CARD_READ_REC_SFI7_REC1_CMD_HEX,
-            CARD_READ_REC_SFI8_REC1_CMD_HEX,
-            CARD_READ_REC_SFI10_REC1_CMD);
-    CardResponseApi cardCardResponse =
-        createCardResponse(
-            CARD_READ_REC_SFI7_REC1_RSP_HEX,
-            CARD_READ_REC_SFI8_REC1_RSP_HEX,
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_RSP,
+            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_RSP,
+            CARD_READ_REC_SFI10_REC1_CMD,
             CARD_READ_REC_SFI10_REC1_RSP);
-    when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
-        .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareReadRecord(FILE7, 1);
     cardTransactionManager.prepareReadRecord(FILE8, 1);
@@ -1685,6 +1483,6 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
 
     verify(cardReader)
         .transmitCardRequest(
-            argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class));
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 }

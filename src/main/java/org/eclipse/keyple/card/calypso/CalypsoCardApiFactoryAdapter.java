@@ -36,6 +36,8 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   private static final String
       MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
           "The provided 'securitySetting' must be an instance of 'SymmetricCryptoSecuritySettingAdapter'";
+  private static final String MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE =
+      "The provided 'card' has an undefined product type";
   private static final String MSG_CARD_READER = "cardReader";
 
   /**
@@ -83,6 +85,9 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
     }
+    if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
+      throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
+    }
     return new FreeTransactionManagerAdapter(
         (ProxyReaderApi) cardReader, (CalypsoCardAdapter) card);
   }
@@ -110,6 +115,9 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+    }
+    if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
+      throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
     }
     return new SecureRegularModeTransactionManagerAdapter(
         (ProxyReaderApi) cardReader,
@@ -140,6 +148,9 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+    }
+    if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
+      throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
     }
     return new SecureExtendedModeTransactionManagerAdapter(
         (ProxyReaderApi) cardReader,
