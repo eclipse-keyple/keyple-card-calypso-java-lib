@@ -259,7 +259,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       }
       calypsoCardClass = CalypsoCardClass.ISO;
       isModificationCounterInBytes = false;
-      modificationsCounterMax = 3; // TODO Verify this
+      modificationsCounterMax = 4; // 3 generic + 1 counter modification
     } else {
       calypsoCardClass = CalypsoCardClass.ISO;
       // session buffer size
