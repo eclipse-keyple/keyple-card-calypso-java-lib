@@ -1,2 +1,2 @@
-/** Contains the factories and builders to create the public elements of the extension. */
+/** Contains the service that offers the public entry points to the library. */
 package org.eclipse.keyple.card.calypso;

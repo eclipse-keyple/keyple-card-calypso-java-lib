@@ -57,7 +57,7 @@ public final class CalypsoExtensionService implements KeypleCardExtension { // N
    * @return A not null reference.
    * @since 3.0.0
    */
-  CalypsoCardApiFactory getCalypsoCardApiFactory() {
+  public CalypsoCardApiFactory getCalypsoCardApiFactory() {
     return new CalypsoCardApiFactoryAdapter();
   }
 

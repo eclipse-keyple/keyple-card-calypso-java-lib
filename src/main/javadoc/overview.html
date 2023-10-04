@@ -10,28 +10,10 @@
 </p>
 <ul>
     <li>
-        Creation of a selection case targeting a specific card to be provided to the <strong>Keyple Selection
-        Service</strong>.<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardSelection()}<br>
-        A selection case targets a specific card defined by various parameters
-        and possibly supplemented with commands to be executed after the selection (see methods of {@link
-        org.calypsonet.terminal.calypso.card.CalypsoCardSelection}).
-    </li>
-    <li>
-        Card transaction manager to perform non-secure operations with a card.<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransactionWithoutSecurity(CardReader
-        reader, CalypsoCard calypsoCard)}
-    </li>
-    <li>
-        Card transaction manager to perform secure operations with a card (<strong>Calypso Secure Session</strong>).<br>
-        {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#createCardTransaction(CardReader reader,
-        CalypsoCard calypsoCard, CardSecuritySetting cardSecuritySetting)}<br>
-        The {@link org.calypsonet.terminal.calypso.transaction.CardSecuritySetting} POJO is used to define the security
-        elements of the transaction.
+        Use {@link org.eclipse.keyple.card.calypso.CalypsoExtensionService#getCalypsoCardApiFactory()} to retrieve the
+        factory to create the various instance of classes used to manage Calypso cards.
     </li>
 </ul>
-<p>The card data collected at each step (selection, transaction) are stored in dedicated POJOs whose interfaces are
-    available in the {@link org.calypsonet.terminal.calypso.card} package.</p>
 </body>
 
 </html>
