@@ -43,10 +43,10 @@ final class CalypsoCardSelectionExtensionAdapter
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
   private final List<Command> commands;
-  private final transient TransactionContextDto transactionContext; // NOSONAR
-  private final transient CommandContextDto commandContext; // NOSONAR
-  private transient boolean isPreOpenPrepared; // NOSONAR
-  private transient boolean isInvalidatedCardAccepted; // NOSONAR
+  private final TransactionContextDto transactionContext;
+  private final CommandContextDto commandContext;
+  private boolean isPreOpenPrepared;
+  private boolean isInvalidatedCardAccepted;
 
   /**
    * Creates an instance of {@link CalypsoCardSelectionExtension}.

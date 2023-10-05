@@ -52,8 +52,8 @@ abstract class Command {
   }
 
   private final CardCommandRef commandRef;
-  private final transient TransactionContextDto transactionContext; // NOSONAR
-  private final transient CommandContextDto commandContext; // NOSONAR
+  private final CommandContextDto commandContext;
+  private TransactionContextDto transactionContext;
   private int le;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
