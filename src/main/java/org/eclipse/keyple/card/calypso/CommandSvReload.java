@@ -18,6 +18,8 @@ import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
@@ -218,9 +220,9 @@ final class CommandSvReload extends Command {
           .getSymmetricCryptoTransactionManagerSpi()
           .computeSvCommandSecurityData(svCommandSecurityData);
     } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoException(e.getMessage(), e);
     } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoIOException(e.getMessage(), e);
     }
     finalizeCommand(svCommandSecurityData);
     encryptRequestAndUpdateTerminalSessionMacIfNeeded();
@@ -274,7 +276,7 @@ final class CommandSvReload extends Command {
       } catch (SymmetricCryptoIOException e) {
         throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
   }

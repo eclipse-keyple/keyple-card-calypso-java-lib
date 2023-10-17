@@ -15,6 +15,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -284,9 +286,9 @@ abstract class Command {
             .getSymmetricCryptoTransactionManagerSpi()
             .updateTerminalSessionMac(apduResponse);
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
     isCryptoServiceSynchronized = true;
@@ -306,9 +308,9 @@ abstract class Command {
                 .getSymmetricCryptoTransactionManagerSpi()
                 .updateTerminalSessionMac(apduRequest.getApdu()));
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
   }
@@ -329,9 +331,9 @@ abstract class Command {
                 .updateTerminalSessionMac(apduResponse.getApdu());
         System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
       isCryptoServiceSynchronized = true;
     }

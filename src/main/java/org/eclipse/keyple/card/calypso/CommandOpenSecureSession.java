@@ -19,6 +19,8 @@ import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.UnauthorizedKeyException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
@@ -280,9 +282,9 @@ final class CommandOpenSecureSession extends Command {
               .getSymmetricCryptoTransactionManagerSpi()
               .initTerminalSecureSessionContext();
     } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoException(e.getMessage(), e);
     } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoIOException(e.getMessage(), e);
     }
     byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
     switch (getTransactionContext().getCard().getProductType()) {
@@ -352,9 +354,9 @@ final class CommandOpenSecureSession extends Command {
           .getSymmetricCryptoTransactionManagerSpi()
           .initTerminalSessionMac(dataOut, computedKif, computedKvc);
     } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoException(e.getMessage(), e);
     } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoIOException(e.getMessage(), e);
     }
     confirmCryptoServiceSuccessfullySynchronized();
   }

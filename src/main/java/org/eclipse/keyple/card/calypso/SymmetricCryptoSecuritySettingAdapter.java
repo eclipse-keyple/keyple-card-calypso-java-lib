@@ -18,7 +18,11 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
 
 /**
@@ -30,7 +34,7 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi;
+  private final SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
@@ -214,6 +218,22 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     this.pinModificationCipheringKif = kif;
     this.pinModificationCipheringKvc = kvc;
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  public void initCryptoContextForNextTransaction() {
+    try {
+      cryptoTransactionManagerFactorySpi.preInitTerminalSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw new CryptoException(e.getMessage(), e);
+    } catch (SymmetricCryptoIOException e) {
+      throw new CryptoIOException(e.getMessage(), e);
+    }
   }
 
   /**

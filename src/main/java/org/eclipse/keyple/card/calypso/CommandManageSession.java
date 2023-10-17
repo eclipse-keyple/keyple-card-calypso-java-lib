@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.ApduRequestAdapter;
 import java.util.*;
 import org.eclipse.keyple.card.calypso.DtoAdapters.CommandContextDto;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
@@ -114,9 +116,9 @@ final class CommandManageSession extends Command {
                 .getSymmetricCryptoTransactionManagerSpi()
                 .generateTerminalSessionMac();
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
       le = 0;
     } else {
@@ -191,9 +193,9 @@ final class CommandManageSession extends Command {
           throw new InvalidCardMacException("Invalid card (authentication failed!)");
         }
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
     if (!isCryptoServiceSynchronized()) {
@@ -210,9 +212,9 @@ final class CommandManageSession extends Command {
         getTransactionContext().getSymmetricCryptoTransactionManagerSpi().deactivateEncryption();
       }
     } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoException(e.getMessage(), e);
     } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoIOException(e.getMessage(), e);
     }
   }
 

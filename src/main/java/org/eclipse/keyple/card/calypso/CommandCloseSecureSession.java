@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
@@ -133,9 +135,9 @@ final class CommandCloseSecureSession extends Command {
                 .getSymmetricCryptoTransactionManagerSpi()
                 .finalizeTerminalSessionMac();
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
       setApduRequest(
           new ApduRequestAdapter(
@@ -209,7 +211,7 @@ final class CommandCloseSecureSession extends Command {
     } catch (SymmetricCryptoIOException e) {
       throw new CardMacNotVerifiableException(MSG_CARD_SESSION_MAC_NOT_VERIFIABLE, e);
     } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
+      throw new CryptoException(e.getMessage(), e);
     }
     if (svPostponedDataIndex != -1) {
       // CL-SV-POSTPON.1
@@ -222,7 +224,7 @@ final class CommandCloseSecureSession extends Command {
       } catch (SymmetricCryptoIOException e) {
         throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       }
     }
   }

@@ -16,6 +16,8 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -152,9 +154,9 @@ final class CommandVerifyPin extends Command {
                     cipheringKif,
                     cipheringKvc);
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
     setApduRequest(

@@ -2481,32 +2481,6 @@ public class SecureExtendedModeTransactionManagerAdapterTest
     verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void initCryptoContextForNextTransaction_whenCommandsArePending_shouldThrowISE() {
-    cardTransactionManager.prepareReadRecord(FILE7, 1).initCryptoContextForNextTransaction();
-  }
-
-  @Test
-  public void initCryptoContextForNextTransaction_shouldUpdateChallengeInCryptoService()
-      throws Exception {
-
-    cardTransactionManager.initCryptoContextForNextTransaction();
-
-    verify(symmetricCryptoTransactionManager).preInitTerminalSecureSessionContext();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager);
-  }
-
-  @Test
-  public void
-      initCryptoContextForNextTransaction_whenANewSessionIsOpen_shouldInteractWithCardAndCryptoManagerWithoutGetChallenge()
-          throws Exception {
-
-    cardTransactionManager.initCryptoContextForNextTransaction();
-
-    verify(symmetricCryptoTransactionManager).preInitTerminalSecureSessionContext();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager);
-  }
-
   @Test(expected = UnsupportedOperationException.class)
   public void prepareEarlyMutualAuthentication_whenExtendedModeIsNotSupported_shouldThrowUOE()
       throws Exception {

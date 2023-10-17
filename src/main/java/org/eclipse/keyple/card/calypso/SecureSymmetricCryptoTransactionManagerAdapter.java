@@ -342,9 +342,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       try {
         symmetricCryptoTransactionManagerSpi.synchronize();
       } catch (SymmetricCryptoException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {
-        throw (RuntimeException) e.getCause();
+        throw new CryptoIOException(e.getMessage(), e);
       }
     }
   }
@@ -744,24 +744,5 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       throw e;
     }
     return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.4
-   */
-  @Override
-  public final void initCryptoContextForNextTransaction() {
-    if (!commands.isEmpty()) {
-      throw new IllegalStateException("Unprocessed card commands are pending");
-    }
-    try {
-      symmetricCryptoTransactionManagerSpi.preInitTerminalSecureSessionContext();
-    } catch (SymmetricCryptoException e) {
-      throw (RuntimeException) e.getCause();
-    } catch (SymmetricCryptoIOException e) {
-      throw (RuntimeException) e.getCause();
-    }
   }
 }
