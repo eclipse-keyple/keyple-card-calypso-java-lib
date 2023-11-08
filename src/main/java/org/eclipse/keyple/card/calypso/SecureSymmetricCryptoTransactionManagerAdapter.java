@@ -23,8 +23,8 @@ import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerSpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.reader.CardReader;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   private static final int APDU_HEADER_LENGTH = 5;
 
   private final SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
-  private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+  private final SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi;
   private final CardTransactionCryptoExtension cryptoExtension;
   private WriteAccessLevel writeAccessLevel;
   private final int payloadCapacity;
@@ -83,8 +83,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
 
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
 
-    SymmetricCryptoTransactionManagerFactorySpi cryptoFactory =
-        symmetricCryptoSecuritySetting.getCryptoTransactionManagerFactorySpi();
+    SymmetricCryptoCardTransactionManagerFactorySpi cryptoFactory =
+        symmetricCryptoSecuritySetting.getCryptoCardTransactionManagerFactorySpi();
     // Extended mode flag
     isExtendedMode = card.isExtendedModeSupported() && cryptoFactory.isExtendedModeSupported();
     if (!isExtendedMode) {
@@ -96,12 +96,12 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
             card.getPayloadCapacity(),
             cryptoFactory.getMaxCardApduLengthSupported() - APDU_HEADER_LENGTH);
     // CL-SAM-CSN.1
-    symmetricCryptoTransactionManagerSpi =
-        cryptoFactory.createTransactionManager(
+    symmetricCryptoCardTransactionManagerSpi =
+        cryptoFactory.createCardTransactionManager(
             card.getCalypsoSerialNumberFull(), isExtendedMode, getTransactionAuditData());
-    cryptoExtension = (CardTransactionCryptoExtension) symmetricCryptoTransactionManagerSpi;
+    cryptoExtension = (CardTransactionCryptoExtension) symmetricCryptoCardTransactionManagerSpi;
 
-    transactionContext = new TransactionContextDto(card, symmetricCryptoTransactionManagerSpi);
+    transactionContext = new TransactionContextDto(card, symmetricCryptoCardTransactionManagerSpi);
     modificationsCounter = card.getModificationsCounter();
   }
 
@@ -338,9 +338,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
 
   /** Process any prepared crypto commands. */
   private void processCryptoPreparedCommands() {
-    if (symmetricCryptoTransactionManagerSpi != null) {
+    if (symmetricCryptoCardTransactionManagerSpi != null) {
       try {
-        symmetricCryptoTransactionManagerSpi.synchronize();
+        symmetricCryptoCardTransactionManagerSpi.synchronize();
       } catch (SymmetricCryptoException e) {
         throw new CryptoException(e.getMessage(), e);
       } catch (SymmetricCryptoIOException e) {

@@ -147,7 +147,7 @@ final class CommandVerifyPin extends Command {
       try {
         pin =
             getTransactionContext()
-                .getSymmetricCryptoTransactionManagerSpi()
+                .getSymmetricCryptoCardTransactionManagerSpi()
                 .cipherPinForPresentation(
                     getTransactionContext().getCard().getChallenge(),
                     pin,

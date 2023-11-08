@@ -16,33 +16,35 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
-import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoTransactionManagerFactory;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoCardTransactionManagerFactory;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SymmetricCryptoSecuritySettingAdapterTest {
 
   private SymmetricCryptoSecuritySetting cardSecuritySetting;
-  private SymmetricCryptoTransactionManagerFactoryMock symmetricCryptoTransactionManagerFactory;
+  private SymmetricCryptoCardTransactionManagerFactoryMock
+      symmetricCryptoCardTransactionManagerFactory;
 
-  interface SymmetricCryptoTransactionManagerFactoryMock
-      extends SymmetricCryptoTransactionManagerFactory,
-          SymmetricCryptoTransactionManagerFactorySpi {}
+  interface SymmetricCryptoCardTransactionManagerFactoryMock
+      extends SymmetricCryptoCardTransactionManagerFactory,
+          SymmetricCryptoCardTransactionManagerFactorySpi {}
 
   @Before
   public void setUp() throws Exception {
     // Mock crypto factory
-    symmetricCryptoTransactionManagerFactory =
-        mock(SymmetricCryptoTransactionManagerFactoryMock.class);
-    when(symmetricCryptoTransactionManagerFactory.getMaxCardApduLengthSupported()).thenReturn(250);
-    when(symmetricCryptoTransactionManagerFactory.isExtendedModeSupported()).thenReturn(true);
+    symmetricCryptoCardTransactionManagerFactory =
+        mock(SymmetricCryptoCardTransactionManagerFactoryMock.class);
+    when(symmetricCryptoCardTransactionManagerFactory.getMaxCardApduLengthSupported())
+        .thenReturn(250);
+    when(symmetricCryptoCardTransactionManagerFactory.isExtendedModeSupported()).thenReturn(true);
 
     // Mock security setting
     cardSecuritySetting =
         CalypsoExtensionService.getInstance()
             .getCalypsoCardApiFactory()
-            .createSymmetricCryptoSecuritySetting(symmetricCryptoTransactionManagerFactory);
+            .createSymmetricCryptoSecuritySetting(symmetricCryptoCardTransactionManagerFactory);
   }
 
   @Test
@@ -50,7 +52,7 @@ public class SymmetricCryptoSecuritySettingAdapterTest {
 
     cardSecuritySetting.initCryptoContextForNextTransaction();
 
-    verify(symmetricCryptoTransactionManagerFactory).preInitTerminalSessionContext();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManagerFactory);
+    verify(symmetricCryptoCardTransactionManagerFactory).preInitTerminalSessionContext();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManagerFactory);
   }
 }

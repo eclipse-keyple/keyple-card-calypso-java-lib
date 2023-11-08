@@ -23,7 +23,7 @@ import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 
 /**
  * Adapter of {@link SymmetricCryptoSecuritySetting}.
@@ -34,7 +34,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private final SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi;
+  private final SymmetricCryptoCardTransactionManagerFactorySpi
+      cryptoCardTransactionManagerFactorySpi;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
@@ -60,8 +61,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private Byte pinModificationCipheringKvc;
 
   SymmetricCryptoSecuritySettingAdapter(
-      SymmetricCryptoTransactionManagerFactorySpi cryptoTransactionManagerFactorySpi) {
-    this.cryptoTransactionManagerFactorySpi = cryptoTransactionManagerFactorySpi;
+      SymmetricCryptoCardTransactionManagerFactorySpi cryptoCardTransactionManagerFactorySpi) {
+    this.cryptoCardTransactionManagerFactorySpi = cryptoCardTransactionManagerFactorySpi;
   }
 
   /**
@@ -228,7 +229,7 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   @Override
   public void initCryptoContextForNextTransaction() {
     try {
-      cryptoTransactionManagerFactorySpi.preInitTerminalSessionContext();
+      cryptoCardTransactionManagerFactorySpi.preInitTerminalSessionContext();
     } catch (SymmetricCryptoException e) {
       throw new CryptoException(e.getMessage(), e);
     } catch (SymmetricCryptoIOException e) {
@@ -414,8 +415,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return pinModificationCipheringKvc;
   }
 
-  SymmetricCryptoTransactionManagerFactorySpi getCryptoTransactionManagerFactorySpi() {
-    return cryptoTransactionManagerFactorySpi;
+  SymmetricCryptoCardTransactionManagerFactorySpi getCryptoCardTransactionManagerFactorySpi() {
+    return cryptoCardTransactionManagerFactorySpi;
   }
 
   Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {

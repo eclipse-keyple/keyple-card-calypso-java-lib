@@ -17,8 +17,8 @@ import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.CalypsoCardSelectionExtension;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
-import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoTransactionManagerFactory;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoCardTransactionManagerFactory;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.reader.CardReader;
 
@@ -57,15 +57,16 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
    */
   @Override
   public SymmetricCryptoSecuritySetting createSymmetricCryptoSecuritySetting(
-      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
+      SymmetricCryptoCardTransactionManagerFactory cryptoCardTransactionManagerFactory) {
     Assert.getInstance()
-        .notNull(cryptoTransactionManagerFactory, "cryptoTransactionManagerFactory");
-    if (!(cryptoTransactionManagerFactory instanceof SymmetricCryptoTransactionManagerFactorySpi)) {
+        .notNull(cryptoCardTransactionManagerFactory, "cryptoTransactionManagerFactory");
+    if (!(cryptoCardTransactionManagerFactory
+        instanceof SymmetricCryptoCardTransactionManagerFactorySpi)) {
       throw new IllegalArgumentException(
-          "The provided 'factory' must implement 'SymmetricCryptoTransactionManagerFactorySpi'");
+          "The provided 'factory' must implement 'SymmetricCryptoCardTransactionManagerFactorySpi'");
     }
     return new SymmetricCryptoSecuritySettingAdapter(
-        (SymmetricCryptoTransactionManagerFactorySpi) cryptoTransactionManagerFactory);
+        (SymmetricCryptoCardTransactionManagerFactorySpi) cryptoCardTransactionManagerFactory);
   }
 
   /**

@@ -19,7 +19,7 @@ import org.eclipse.keypop.calypso.card.card.SvDebitLogRecord;
 import org.eclipse.keypop.calypso.card.card.SvLoadLogRecord;
 import org.eclipse.keypop.calypso.card.transaction.SearchCommandData;
 import org.eclipse.keypop.calypso.crypto.symmetric.SvCommandSecurityDataApi;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerSpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.eclipse.keypop.card.spi.CardSelectionRequestSpi;
@@ -915,21 +915,21 @@ final class DtoAdapters {
   static final class TransactionContextDto {
 
     private CalypsoCardAdapter card;
-    private final SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi;
+    private final SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi;
     private boolean isSecureSessionOpen;
 
     /**
      * Constructor.
      *
      * @param card The Calypso card.
-     * @param symmetricCryptoTransactionManagerSpi The symmetric crypto service SPI.
+     * @param symmetricCryptoCardTransactionManagerSpi The symmetric crypto service SPI.
      * @since 2.3.2
      */
     TransactionContextDto(
         CalypsoCardAdapter card,
-        SymmetricCryptoTransactionManagerSpi symmetricCryptoTransactionManagerSpi) {
+        SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi) {
       this.card = card;
-      this.symmetricCryptoTransactionManagerSpi = symmetricCryptoTransactionManagerSpi;
+      this.symmetricCryptoCardTransactionManagerSpi = symmetricCryptoCardTransactionManagerSpi;
       isSecureSessionOpen = false;
     }
 
@@ -945,8 +945,8 @@ final class DtoAdapters {
      * @return The symmetric crypto service or "null" if not set.
      * @since 2.3.2
      */
-    SymmetricCryptoTransactionManagerSpi getSymmetricCryptoTransactionManagerSpi() {
-      return symmetricCryptoTransactionManagerSpi;
+    SymmetricCryptoCardTransactionManagerSpi getSymmetricCryptoCardTransactionManagerSpi() {
+      return symmetricCryptoCardTransactionManagerSpi;
     }
 
     /**

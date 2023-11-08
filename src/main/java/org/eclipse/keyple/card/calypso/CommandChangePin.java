@@ -118,7 +118,7 @@ final class CommandChangePin extends Command {
       try {
         pin =
             getTransactionContext()
-                .getSymmetricCryptoTransactionManagerSpi()
+                .getSymmetricCryptoCardTransactionManagerSpi()
                 .cipherPinForModification(
                     getTransactionContext().getCard().getChallenge(),
                     new byte[4],

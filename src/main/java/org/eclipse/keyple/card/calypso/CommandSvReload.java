@@ -17,10 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.eclipse.keypop.calypso.card.transaction.CardMacNotVerifiableException;
+import org.eclipse.keypop.calypso.card.transaction.CardSignatureNotVerifiableException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
-import org.eclipse.keypop.calypso.card.transaction.InvalidCardMacException;
+import org.eclipse.keypop.calypso.card.transaction.InvalidCardSignatureException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -217,7 +217,7 @@ final class CommandSvReload extends Command {
     svCommandSecurityData.setSvCommandPartialRequest(getSvReloadData());
     try {
       getTransactionContext()
-          .getSymmetricCryptoTransactionManagerSpi()
+          .getSymmetricCryptoCardTransactionManagerSpi()
           .computeSvCommandSecurityData(svCommandSecurityData);
     } catch (SymmetricCryptoException e) {
       throw new CryptoException(e.getMessage(), e);
@@ -269,12 +269,12 @@ final class CommandSvReload extends Command {
     if (!getCommandContext().isSecureSessionOpen()) {
       try {
         if (!getTransactionContext()
-            .getSymmetricCryptoTransactionManagerSpi()
+            .getSymmetricCryptoCardTransactionManagerSpi()
             .isCardSvMacValid(getTransactionContext().getCard().getSvOperationSignature())) {
-          throw new InvalidCardMacException(MSG_INVALID_CARD_SESSION_MAC);
+          throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_MAC);
         }
       } catch (SymmetricCryptoIOException e) {
-        throw new CardMacNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
+        throw new CardSignatureNotVerifiableException(MSG_CARD_SV_MAC_NOT_VERIFIABLE, e);
       } catch (SymmetricCryptoException e) {
         throw new CryptoIOException(e.getMessage(), e);
       }

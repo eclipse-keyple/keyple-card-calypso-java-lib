@@ -107,7 +107,7 @@ final class CommandChangeKey extends Command {
     try {
       cipheredKey =
           getTransactionContext()
-              .getSymmetricCryptoTransactionManagerSpi()
+              .getSymmetricCryptoCardTransactionManagerSpi()
               .generateCipheredCardKey(
                   getTransactionContext().getCard().getChallenge(),
                   issuerKif,

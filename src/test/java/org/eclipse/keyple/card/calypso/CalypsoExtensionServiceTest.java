@@ -19,9 +19,9 @@ import org.eclipse.keyple.core.common.CommonApiProperties;
 import org.eclipse.keypop.calypso.card.transaction.FreeTransactionManager;
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
-import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoTransactionManagerFactory;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerSpi;
+import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoCardTransactionManagerFactory;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.CardApiProperties;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.card.spi.CardSelectionExtensionSpi;
@@ -39,17 +39,18 @@ public class CalypsoExtensionServiceTest {
   private ReaderMock reader;
   private CalypsoCardAdapter calypsoCard;
   private SymmetricCryptoSecuritySetting cardSecuritySetting;
-  private SymmetricCryptoTransactionManagerFactoryMock symmetricCryptoTransactionManagerFactory;
-  private SymmetricCryptoTransactionManagerMock symmetricCryptoTransactionManager;
+  private SymmetricCryptoCardTransactionManagerFactoryMock
+      symmetricCryptoCardTransactionManagerFactory;
+  private SymmetricCryptoCardTransactionManagerMock symmetricCryptoCardTransactionManager;
 
   interface ReaderMock extends CardReader, ProxyReaderApi {}
 
-  interface SymmetricCryptoTransactionManagerFactoryMock
-      extends SymmetricCryptoTransactionManagerFactory,
-          SymmetricCryptoTransactionManagerFactorySpi {}
+  interface SymmetricCryptoCardTransactionManagerFactoryMock
+      extends SymmetricCryptoCardTransactionManagerFactory,
+          SymmetricCryptoCardTransactionManagerFactorySpi {}
 
-  interface SymmetricCryptoTransactionManagerMock
-      extends SymmetricCryptoTransactionManagerSpi, CardTransactionCryptoExtension {}
+  interface SymmetricCryptoCardTransactionManagerMock
+      extends SymmetricCryptoCardTransactionManagerSpi, CardTransactionCryptoExtension {}
 
   @BeforeClass
   public static void beforeClass() {
@@ -59,9 +60,9 @@ public class CalypsoExtensionServiceTest {
   @Before
   public void setUp() throws Exception {
     reader = mock(ReaderMock.class);
-    symmetricCryptoTransactionManagerFactory =
-        mock(SymmetricCryptoTransactionManagerFactoryMock.class);
-    symmetricCryptoTransactionManager = mock(SymmetricCryptoTransactionManagerMock.class);
+    symmetricCryptoCardTransactionManagerFactory =
+        mock(SymmetricCryptoCardTransactionManagerFactoryMock.class);
+    symmetricCryptoCardTransactionManager = mock(SymmetricCryptoCardTransactionManagerMock.class);
     calypsoCard = new CalypsoCardAdapter(null);
     cardSecuritySetting = mock(SymmetricCryptoSecuritySettingAdapter.class);
   }
@@ -112,12 +113,12 @@ public class CalypsoExtensionServiceTest {
     SymmetricCryptoSecuritySetting cardSecuritySetting =
         service
             .getCalypsoCardApiFactory()
-            .createSymmetricCryptoSecuritySetting(symmetricCryptoTransactionManagerFactory);
+            .createSymmetricCryptoSecuritySetting(symmetricCryptoCardTransactionManagerFactory);
     assertThat(cardSecuritySetting).isNotNull();
     assertThat(
             service
                 .getCalypsoCardApiFactory()
-                .createSymmetricCryptoSecuritySetting(symmetricCryptoTransactionManagerFactory))
+                .createSymmetricCryptoSecuritySetting(symmetricCryptoCardTransactionManagerFactory))
         .isNotEqualTo(cardSecuritySetting);
   }
 
@@ -126,7 +127,7 @@ public class CalypsoExtensionServiceTest {
     assertThat(
             service
                 .getCalypsoCardApiFactory()
-                .createSymmetricCryptoSecuritySetting(symmetricCryptoTransactionManagerFactory))
+                .createSymmetricCryptoSecuritySetting(symmetricCryptoCardTransactionManagerFactory))
         .isInstanceOf(SymmetricCryptoSecuritySettingAdapter.class);
   }
 

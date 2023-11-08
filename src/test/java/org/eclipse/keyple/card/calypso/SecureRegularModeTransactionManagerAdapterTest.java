@@ -23,11 +23,11 @@ import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.*;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
-import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoTransactionManagerFactory;
+import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoCardTransactionManagerFactory;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerFactorySpi;
-import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoTransactionManagerSpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.card.ChannelControl;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
@@ -40,15 +40,16 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
   private SecureRegularModeTransactionManager cardTransactionManager;
   private SymmetricCryptoSecuritySetting cardSecuritySetting;
-  private SymmetricCryptoTransactionManagerFactoryMock symmetricCryptoTransactionManagerFactory;
-  private SymmetricCryptoTransactionManagerMock symmetricCryptoTransactionManager;
+  private SymmetricCryptoCardTransactionManagerFactoryMock
+      symmetricCryptoCardTransactionManagerFactory;
+  private SymmetricCryptoCardTransactionManagerMock symmetricCryptoCardTransactionManager;
 
-  interface SymmetricCryptoTransactionManagerFactoryMock
-      extends SymmetricCryptoTransactionManagerFactory,
-          SymmetricCryptoTransactionManagerFactorySpi {}
+  interface SymmetricCryptoCardTransactionManagerFactoryMock
+      extends SymmetricCryptoCardTransactionManagerFactory,
+          SymmetricCryptoCardTransactionManagerFactorySpi {}
 
-  interface SymmetricCryptoTransactionManagerMock
-      extends SymmetricCryptoTransactionManagerSpi, CardTransactionCryptoExtension {}
+  interface SymmetricCryptoCardTransactionManagerMock
+      extends SymmetricCryptoCardTransactionManagerSpi, CardTransactionCryptoExtension {}
 
   @Override
   void initTransactionManager() {
@@ -62,13 +63,13 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
   private void verifyInteractionsForSingleCardCommand(CardRequestSpi cardRequest)
       throws ReaderBrokenCommunicationException, CardBrokenCommunicationException,
           UnexpectedStatusWordException, SymmetricCryptoException, SymmetricCryptoIOException {
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Before
@@ -77,31 +78,32 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     cardReader = mock(ReaderMock.class);
 
     // Mock crypto manager
-    symmetricCryptoTransactionManager = mock(SymmetricCryptoTransactionManagerMock.class);
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    symmetricCryptoCardTransactionManager = mock(SymmetricCryptoCardTransactionManagerMock.class);
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE)))
         .thenReturn(true);
 
     // Mock crypto factory
-    symmetricCryptoTransactionManagerFactory =
-        mock(SymmetricCryptoTransactionManagerFactoryMock.class);
-    when(symmetricCryptoTransactionManagerFactory.getMaxCardApduLengthSupported()).thenReturn(250);
-    when(symmetricCryptoTransactionManagerFactory.isExtendedModeSupported()).thenReturn(true);
-    when(symmetricCryptoTransactionManagerFactory.createTransactionManager(
+    symmetricCryptoCardTransactionManagerFactory =
+        mock(SymmetricCryptoCardTransactionManagerFactoryMock.class);
+    when(symmetricCryptoCardTransactionManagerFactory.getMaxCardApduLengthSupported())
+        .thenReturn(250);
+    when(symmetricCryptoCardTransactionManagerFactory.isExtendedModeSupported()).thenReturn(true);
+    when(symmetricCryptoCardTransactionManagerFactory.createCardTransactionManager(
             eq(HexUtil.toByteArray(CARD_SERIAL_NUMBER)),
             any(Boolean.class),
             ArgumentMatchers.<byte[]>anyList()))
-        .thenReturn(symmetricCryptoTransactionManager);
+        .thenReturn(symmetricCryptoCardTransactionManager);
 
     // Mock security setting
     cardSecuritySetting =
         CalypsoExtensionService.getInstance()
             .getCalypsoCardApiFactory()
-            .createSymmetricCryptoSecuritySetting(symmetricCryptoTransactionManagerFactory);
+            .createSymmetricCryptoSecuritySetting(symmetricCryptoCardTransactionManagerFactory);
 
     initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3);
   }
@@ -1481,7 +1483,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     CardRequestSpi cardGetChallengeCardRequest =
         mockTransmitCardRequest(CARD_GET_CHALLENGE_CMD, CARD_GET_CHALLENGE_RSP);
 
-    when(symmetricCryptoTransactionManager.cipherPinForModification(
+    when(symmetricCryptoCardTransactionManager.cipherPinForModification(
             HexUtil.toByteArray(CARD_CHALLENGE),
             new byte[4],
             NEW_PIN.getBytes(),
@@ -1496,7 +1498,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareChangePin(NEW_PIN.getBytes())
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
 
     inOrder
         .verify(cardReader)
@@ -1504,7 +1506,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
             any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .cipherPinForModification(
             HexUtil.toByteArray(CARD_CHALLENGE),
             new byte[4],
@@ -1516,8 +1518,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardChangePinCardRequest)), any(ChannelControl.class));
 
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1541,8 +1543,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
   @Test
   public void getCryptoExtension_shouldReturnANonNullReference() {
-    SymmetricCryptoTransactionManagerMock cryptoExtension =
-        cardTransactionManager.getCryptoExtension(SymmetricCryptoTransactionManagerMock.class);
+    SymmetricCryptoCardTransactionManagerMock cryptoExtension =
+        cardTransactionManager.getCryptoExtension(SymmetricCryptoCardTransactionManagerMock.class);
     assertThat(cryptoExtension).isNotNull();
   }
 
@@ -1573,39 +1575,39 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareCloseSecureSession()
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequestRead)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_L29_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).finalizeTerminalSessionMac();
+    inOrder.verify(symmetricCryptoCardTransactionManager).finalizeTerminalSessionMac();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequestClose)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .isCardSessionMacValid(HexUtil.toByteArray(CARD_SIGNATURE));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test(expected = UnexpectedCommandStatusException.class)
@@ -1618,8 +1620,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
@@ -1630,10 +1632,10 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     cardTransactionManager.prepareCloseSecureSession().processCommands(CHANNEL_CONTROL_KEEP_OPEN);
   }
 
-  @Test(expected = InvalidCardMacException.class)
+  @Test(expected = InvalidCardSignatureException.class)
   public void prepareCloseSecureSession_whenCardAuthenticationFails_shouldThrowICME()
       throws Exception {
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE)))
         .thenReturn(false);
 
@@ -1644,8 +1646,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
@@ -1679,31 +1681,31 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
 
     cardRequest = mockTransmitCardRequest(CARD_ABORT_SECURE_SESSION_CMD, SW_9000);
 
     cardTransactionManager.prepareCancelSecureSession().processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
+    inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1718,20 +1720,20 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1763,20 +1765,20 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecord(FILE7, 1)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_SFI7_REC1_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1797,26 +1799,26 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecords(FILE8, 1, 1, 0)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_SFI7_REC1_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1841,32 +1843,32 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecords(FILE8, 1, 1, 0)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1879,11 +1881,11 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP));
     initTransactionManager();
 
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE_EXTENDED));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED)))
         .thenReturn(true);
 
@@ -1902,32 +1904,32 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecords(FILE8, 1, 1, 0)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1949,20 +1951,20 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecord(FILE7, 1)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_SFI7_REC1_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -1975,11 +1977,11 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     calypsoCard.setPreOpenDataOut(HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_RSP));
     initTransactionManager();
 
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE_EXTENDED));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED)))
         .thenReturn(true);
 
@@ -1995,26 +1997,26 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecords(FILE7, 1, 1, 0)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -2022,7 +2024,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
       prepareOpenSecureSession_whenPreOpenVariantButExtendedModeNotSupportedByCryptoModule_shouldProcessInRegularMode()
           throws Exception {
 
-    when(symmetricCryptoTransactionManagerFactory.isExtendedModeSupported()).thenReturn(false);
+    when(symmetricCryptoCardTransactionManagerFactory.isExtendedModeSupported()).thenReturn(false);
 
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
     calypsoCard.setPreOpenWriteAccessLevel(WriteAccessLevel.DEBIT);
@@ -2038,20 +2040,20 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareReadRecords(FILE7, 1, 1, 0)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_SFI7_REC1_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -2066,11 +2068,11 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
     calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
 
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE_EXTENDED));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED)))
         .thenReturn(true);
 
@@ -2089,30 +2091,30 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareCloseSecureSession()
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(symmetricCryptoTransactionManager, cardReader);
-    inOrder.verify(symmetricCryptoTransactionManager).initTerminalSecureSessionContext();
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .initTerminalSessionMac(
             HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT),
             HexUtil.toByte(KIF),
             HexUtil.toByte(KVC));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_L29_CMD));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
-    inOrder.verify(symmetricCryptoTransactionManager).finalizeTerminalSessionMac();
+    inOrder.verify(symmetricCryptoCardTransactionManager).finalizeTerminalSessionMac();
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .isCardSessionMacValid(HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test(expected = UnexpectedCommandStatusException.class)
@@ -2126,11 +2128,11 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC1_29B));
     initTransactionManager();
 
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE_EXTENDED));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED)))
         .thenReturn(true);
 
@@ -2161,11 +2163,11 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     calypsoCard.setContent(FILE7, 1, HexUtil.toByteArray(FILE7_REC2_29B));
     initTransactionManager();
 
-    when(symmetricCryptoTransactionManager.initTerminalSecureSessionContext())
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
         .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
-    when(symmetricCryptoTransactionManager.finalizeTerminalSessionMac())
+    when(symmetricCryptoCardTransactionManager.finalizeTerminalSessionMac())
         .thenReturn(HexUtil.toByteArray(SAM_SIGNATURE_EXTENDED));
-    when(symmetricCryptoTransactionManager.isCardSessionMacValid(
+    when(symmetricCryptoCardTransactionManager.isCardSessionMacValid(
             HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED)))
         .thenReturn(true);
 
@@ -2228,8 +2230,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -2248,8 +2250,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -2269,8 +2271,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -2416,8 +2418,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -2437,8 +2439,8 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
-    verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
   @Test
@@ -2451,7 +2453,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     CardRequestSpi cardGetChallengeCardRequest =
         mockTransmitCardRequest(CARD_GET_CHALLENGE_CMD, CARD_GET_CHALLENGE_RSP);
 
-    when(symmetricCryptoTransactionManager.generateCipheredCardKey(
+    when(symmetricCryptoCardTransactionManager.generateCipheredCardKey(
             HexUtil.toByteArray(CARD_CHALLENGE), (byte) 4, (byte) 5, (byte) 2, (byte) 3))
         .thenReturn(HexUtil.toByteArray(CIPHERED_KEY));
 
@@ -2461,21 +2463,21 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .prepareChangeKey(1, (byte) 2, (byte) 3, (byte) 4, (byte) 5)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
-    InOrder inOrder = inOrder(cardReader, symmetricCryptoTransactionManager);
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardGetChallengeCardRequest)),
             any(ChannelControl.class));
     inOrder
-        .verify(symmetricCryptoTransactionManager)
+        .verify(symmetricCryptoCardTransactionManager)
         .generateCipheredCardKey(
             HexUtil.toByteArray(CARD_CHALLENGE), (byte) 4, (byte) 5, (byte) 2, (byte) 3);
     inOrder
         .verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
-    inOrder.verify(symmetricCryptoTransactionManager).synchronize();
-    verifyNoMoreInteractions(symmetricCryptoTransactionManager, cardReader);
+    inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
+    verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 }

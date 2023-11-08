@@ -280,10 +280,10 @@ abstract class Command {
     if (commandContext.isSecureSessionOpen()) {
       try {
         transactionContext
-            .getSymmetricCryptoTransactionManagerSpi()
+            .getSymmetricCryptoCardTransactionManagerSpi()
             .updateTerminalSessionMac(apduRequest.getApdu());
         transactionContext
-            .getSymmetricCryptoTransactionManagerSpi()
+            .getSymmetricCryptoCardTransactionManagerSpi()
             .updateTerminalSessionMac(apduResponse);
       } catch (SymmetricCryptoException e) {
         throw new CryptoException(e.getMessage(), e);
@@ -305,7 +305,7 @@ abstract class Command {
       try {
         apduRequest.setApdu(
             transactionContext
-                .getSymmetricCryptoTransactionManagerSpi()
+                .getSymmetricCryptoCardTransactionManagerSpi()
                 .updateTerminalSessionMac(apduRequest.getApdu()));
       } catch (SymmetricCryptoException e) {
         throw new CryptoException(e.getMessage(), e);
@@ -327,7 +327,7 @@ abstract class Command {
       try {
         byte[] decryptedApdu =
             transactionContext
-                .getSymmetricCryptoTransactionManagerSpi()
+                .getSymmetricCryptoCardTransactionManagerSpi()
                 .updateTerminalSessionMac(apduResponse.getApdu());
         System.arraycopy(decryptedApdu, 0, apduResponse.getApdu(), 0, decryptedApdu.length);
       } catch (SymmetricCryptoException e) {

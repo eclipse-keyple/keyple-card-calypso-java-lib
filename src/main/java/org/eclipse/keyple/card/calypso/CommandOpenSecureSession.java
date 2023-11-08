@@ -279,7 +279,7 @@ final class CommandOpenSecureSession extends Command {
     try {
       samChallenge =
           getTransactionContext()
-              .getSymmetricCryptoTransactionManagerSpi()
+              .getSymmetricCryptoCardTransactionManagerSpi()
               .initTerminalSecureSessionContext();
     } catch (SymmetricCryptoException e) {
       throw new CryptoException(e.getMessage(), e);
@@ -351,7 +351,7 @@ final class CommandOpenSecureSession extends Command {
     }
     try {
       getTransactionContext()
-          .getSymmetricCryptoTransactionManagerSpi()
+          .getSymmetricCryptoCardTransactionManagerSpi()
           .initTerminalSessionMac(dataOut, computedKif, computedKvc);
     } catch (SymmetricCryptoException e) {
       throw new CryptoException(e.getMessage(), e);
