@@ -130,7 +130,7 @@ final class CommandSearchRecordMultiple extends Command {
       }
     }
 
-    setApduRequest(
+    setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
                 transactionContext.getCard().getCardClass().getValue(),

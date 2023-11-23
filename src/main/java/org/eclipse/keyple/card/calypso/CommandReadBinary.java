@@ -106,7 +106,7 @@ final class CommandReadBinary extends Command {
     // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
     byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
 
-    setApduRequest(
+    setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
                 cardClass, getCommandRef().getInstructionByte(), p1, lsb, null, (byte) length)));

@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SW_FILE_NOT_FOUND;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.SW_RECORD_NOT_FOUND;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.HashMap;
@@ -127,6 +129,21 @@ abstract class Command {
   final void setApduRequest(ApduRequestAdapter apduRequest) {
     this.apduRequest = apduRequest;
     this.apduRequest.setInfo(this.name);
+  }
+
+  /**
+   * Sets the command {@link ApduRequestAdapter} in "best effort" mode.
+   *
+   * @param apduRequest The APDU request.
+   * @since 3.0.0
+   */
+  final void setApduRequestInBestEffortMode(ApduRequestAdapter apduRequest) {
+    setApduRequest(apduRequest);
+    if (commandContext.isSecureSessionOpen()) {
+      apduRequest
+          .addSuccessfulStatusWord(SW_FILE_NOT_FOUND)
+          .addSuccessfulStatusWord(SW_RECORD_NOT_FOUND);
+    }
   }
 
   /**
@@ -373,8 +390,9 @@ abstract class Command {
     try {
       checkStatus();
     } catch (CardDataAccessException e) {
-      if (getCommandContext().isSecureSessionOpen()
-          || (apduResponse.getStatusWord() != 0x6A82 && apduResponse.getStatusWord() != 0x6A83)) {
+      if (commandContext.isSecureSessionOpen()
+          || (apduResponse.getStatusWord() != SW_FILE_NOT_FOUND
+              && apduResponse.getStatusWord() != SW_RECORD_NOT_FOUND)) {
         throw e;
       }
       return false;

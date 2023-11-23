@@ -127,7 +127,7 @@ final class CommandReadRecords extends Command {
       p2 = (byte) (p2 - (byte) 0x01);
     }
     byte le = (byte) expectedLength;
-    setApduRequest(
+    setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(cardClass, getCommandRef().getInstructionByte(), p1, p2, null, le)));
 

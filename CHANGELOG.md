@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 :warning: Major version! Following the migration of the "Calypsonet Terminal" APIs to the
 [Eclipse Keypop project](https://keypop.org), this library now implements Keypop interfaces.
+### Fixed
+- Fixed the crash that occurred when using "Read" commands in best-effort mode during a free card transaction.
 ### Added
 - Added dependency to "Keypop Calypso Crypto Symmetric API" `0.1.0`
 - Added the method `CalypsoCardApiFactory getCalypsoCardApiFactory()` to the `CalypsoCardExtensionService` class to

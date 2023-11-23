@@ -112,7 +112,7 @@ final class CommandReadRecordMultiple extends Command {
     byte p2 = (byte) (sfi * 8 + 5);
     byte[] dataIn = {0x54, 0x02, offset, length};
 
-    setApduRequest(
+    setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
                 transactionContext.getCard().getCardClass().getValue(),

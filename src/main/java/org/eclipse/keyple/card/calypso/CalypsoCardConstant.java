@@ -18,6 +18,10 @@ package org.eclipse.keyple.card.calypso;
  */
 final class CalypsoCardConstant {
 
+  // SW
+  static final int SW_FILE_NOT_FOUND = 0x6A82;
+  static final int SW_RECORD_NOT_FOUND = 0x6A83;
+
   static final int MASK_15_BITS = 0x7FFF; // 32 767
 
   static final int MASK_3_BYTES = 0xFFFFFF; // 16 777 215
