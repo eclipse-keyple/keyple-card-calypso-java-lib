@@ -14,9 +14,9 @@ package org.eclipse.keyple.card.calypso;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.keyple.card.calypso.TestDtoAdapters.*;
 
-import org.calypsonet.terminal.calypso.card.CalypsoCard;
-import org.calypsonet.terminal.card.ApduResponseApi;
 import org.eclipse.keyple.core.util.HexUtil;
+import org.eclipse.keypop.calypso.card.card.CalypsoCard;
+import org.eclipse.keypop.card.ApduResponseApi;
 import org.junit.Test;
 
 public class CalypsoCardAdapterTest {

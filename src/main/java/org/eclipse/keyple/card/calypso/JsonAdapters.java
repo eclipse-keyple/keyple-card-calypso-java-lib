@@ -21,6 +21,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
+import org.eclipse.keypop.calypso.card.card.*;
 
 /**
  * Contains all JSON adapters used for serialization and deserialization processes.<br>
@@ -37,7 +38,7 @@ final class JsonAdapters {
   private JsonAdapters() {}
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.DirectoryHeader}.
+   * JSON serializer/deserializer of a {@link DirectoryHeader}.
    *
    * @since 2.0.0
    */
@@ -69,7 +70,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.ElementaryFile}.
+   * JSON serializer/deserializer of a {@link ElementaryFile}.
    *
    * @since 2.0.0
    */
@@ -101,7 +102,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.FileHeader}.
+   * JSON serializer/deserializer of a {@link FileHeader}.
    *
    * @since 2.0.0
    */
@@ -133,7 +134,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link org.calypsonet.terminal.calypso.card.SvLoadLogRecord}.
+   * JSON serializer/deserializer of a {@link SvLoadLogRecord}.
    *
    * @since 2.0.0
    */
@@ -165,8 +166,7 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link
-   * org.calypsonet.terminal.calypso.card.SvDebitLogRecord}.
+   * JSON serializer/deserializer of a {@link SvDebitLogRecord}.
    *
    * @since 2.0.0
    */
@@ -199,12 +199,12 @@ final class JsonAdapters {
   }
 
   /**
-   * JSON serializer/deserializer of a {@link CardCommand}.
+   * JSON serializer/deserializer of a {@link Command}.
    *
    * @since 2.2.3
    */
   static final class AbstractCardCommandJsonAdapter
-      implements JsonSerializer<CardCommand>, JsonDeserializer<CardCommand> {
+      implements JsonSerializer<Command>, JsonDeserializer<Command> {
 
     /**
      * {@inheritDoc}
@@ -212,8 +212,7 @@ final class JsonAdapters {
      * @since 2.2.3
      */
     @Override
-    public JsonElement serialize(
-        CardCommand src, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(Command src, Type typeOfSrc, JsonSerializationContext context) {
       JsonObject jsonObject = new JsonObject();
       jsonObject.addProperty(TYPE, src.getClass().getName());
       jsonObject.add(DATA, context.serialize(src));
@@ -226,20 +225,19 @@ final class JsonAdapters {
      * @since 2.2.3
      */
     @Override
-    public CardCommand deserialize(
-        JsonElement json, Type typeOfT, JsonDeserializationContext context)
+    public Command deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
       JsonObject jsonObject = json.getAsJsonObject();
       String type = jsonObject.get(TYPE).getAsString();
       JsonObject data = jsonObject.get(DATA).getAsJsonObject();
-      CardCommand cardCommand;
+      Command command;
       try {
         Class<?> classOfData = Class.forName(type);
-        cardCommand = context.deserialize(data, classOfData);
+        command = context.deserialize(data, classOfData);
       } catch (ClassNotFoundException e) {
         throw new JsonParseException(String.format(UNKNOWN_TYPE_TEMPLATE, type));
       }
-      return cardCommand;
+      return command;
     }
   }
 }

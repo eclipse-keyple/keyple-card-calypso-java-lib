@@ -16,8 +16,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
+import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
+import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 
 /**
  * Adapter of {@link SymmetricCryptoSecuritySetting}.
@@ -28,12 +34,14 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
 
   private static final String WRITE_ACCESS_LEVEL = "writeAccessLevel";
 
-  private SymmetricCryptoTransactionManagerFactoryAdapter cryptoTransactionManagerFactory;
+  private final SymmetricCryptoCardTransactionManagerFactorySpi
+      cryptoCardTransactionManagerFactorySpi;
   private boolean isMultipleSessionEnabled;
   private boolean isRatificationMechanismEnabled;
   private boolean isPinPlainTransmissionEnabled;
   private boolean isSvLoadAndDebitLogEnabled;
   private boolean isSvNegativeBalanceAuthorized;
+  private boolean isReadOnSessionOpeningDisabled;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
       new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
@@ -52,15 +60,9 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private Byte pinModificationCipheringKif;
   private Byte pinModificationCipheringKvc;
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.1
-   */
-  @Override
-  public SymmetricCryptoSecuritySetting enableMultipleSession() {
-    isMultipleSessionEnabled = true;
-    return this;
+  SymmetricCryptoSecuritySettingAdapter(
+      SymmetricCryptoCardTransactionManagerFactorySpi cryptoCardTransactionManagerFactorySpi) {
+    this.cryptoCardTransactionManagerFactorySpi = cryptoCardTransactionManagerFactorySpi;
   }
 
   /**
@@ -69,10 +71,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
    * @since 2.3.1
    */
   @Override
-  public SymmetricCryptoSecuritySetting setCryptoTransactionManager(
-      SymmetricCryptoTransactionManagerFactory cryptoTransactionManagerFactory) {
-    this.cryptoTransactionManagerFactory =
-        (SymmetricCryptoTransactionManagerFactoryAdapter) cryptoTransactionManagerFactory;
+  public SymmetricCryptoSecuritySetting enableMultipleSession() {
+    isMultipleSessionEnabled = true;
     return this;
   }
 
@@ -117,6 +117,17 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   @Override
   public SymmetricCryptoSecuritySetting authorizeSvNegativeBalance() {
     isSvNegativeBalanceAuthorized = true;
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 2.3.2
+   */
+  @Override
+  public SymmetricCryptoSecuritySetting disableReadOnSessionOpening() {
+    isReadOnSessionOpeningDisabled = true;
     return this;
   }
 
@@ -211,6 +222,22 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * @since 3.0.0
+   */
+  @Override
+  public void initCryptoContextForNextTransaction() {
+    try {
+      cryptoCardTransactionManagerFactorySpi.preInitTerminalSessionContext();
+    } catch (SymmetricCryptoException e) {
+      throw new CryptoException(e.getMessage(), e);
+    } catch (SymmetricCryptoIOException e) {
+      throw new CryptoIOException(e.getMessage(), e);
+    }
+  }
+
+  /**
    * Indicates if the multiple session mode is enabled.
    *
    * @return True if the multiple session mode is enabled.
@@ -258,6 +285,15 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
    */
   boolean isSvNegativeBalanceAuthorized() {
     return isSvNegativeBalanceAuthorized;
+  }
+
+  /**
+   * @return True if the auto-read optimization feature in the "Open Secure Session" command is
+   *     disabled.
+   * @since 2.3.2
+   */
+  boolean isReadOnSessionOpeningDisabled() {
+    return isReadOnSessionOpeningDisabled;
   }
 
   /**
@@ -379,8 +415,8 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     return pinModificationCipheringKvc;
   }
 
-  SymmetricCryptoTransactionManagerFactoryAdapter getCryptoTransactionManagerFactory() {
-    return cryptoTransactionManagerFactory;
+  SymmetricCryptoCardTransactionManagerFactorySpi getCryptoCardTransactionManagerFactorySpi() {
+    return cryptoCardTransactionManagerFactorySpi;
   }
 
   Map<WriteAccessLevel, Map<Byte, Byte>> getKifMap() {

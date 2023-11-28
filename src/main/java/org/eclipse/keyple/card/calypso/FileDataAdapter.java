@@ -12,10 +12,10 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.*;
-import org.calypsonet.terminal.calypso.card.FileData;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.card.FileData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -12,10 +12,10 @@
 package org.eclipse.keyple.card.calypso;
 
 import java.util.EnumMap;
-import org.calypsonet.terminal.calypso.WriteAccessLevel;
-import org.calypsonet.terminal.calypso.card.DirectoryHeader;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.WriteAccessLevel;
+import org.eclipse.keypop.calypso.card.card.DirectoryHeader;
 
 /**
  * Implementation of {@link DirectoryHeader}.

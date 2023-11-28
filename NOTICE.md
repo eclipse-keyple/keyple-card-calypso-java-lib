@@ -31,20 +31,20 @@ SPDX-License-Identifier: EPL-2.0
    
 ## Third-party Content
 
-Calypsonet Terminal Reader API
+Keypop Reader API
 
-* License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
-* Sources: https://github.com/calypsonet/calypsonet-terminal-reader-java-api
+* License: [MIT License](https://opensource.org/licenses/MIT)
+* Sources: https://github.com/eclipse-keypop/keypop-reader-java-api
 
-Calypsonet Terminal Calypso API
+Keypop Card API
 
-* License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
-* Sources: https://github.com/calypsonet/calypsonet-terminal-calypso-java-api
+* License: [MIT License](https://opensource.org/licenses/MIT)
+* Sources: https://github.com/eclipse-keypop/keypop-card-java-api
 
-Calypsonet Terminal Card API
+Keypop Calypso Card API
 
-* License: [Eclipse Public License 2.0](http://www.eclipse.org/legal/epl-2.0)
-* Sources: https://github.com/calypsonet/calypsonet-terminal-card-java-api
+* License: [MIT License](https://opensource.org/licenses/MIT)
+* Sources: https://github.com/eclipse-keypop/keypop-calypso-card-java-api
 
 SLF4J API
 

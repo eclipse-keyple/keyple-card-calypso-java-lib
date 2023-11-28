@@ -5,6 +5,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+:warning: Major version! Following the migration of the "Calypsonet Terminal" APIs to the
+[Eclipse Keypop project](https://keypop.org), this library now implements Keypop interfaces.
+### Fixed
+- Fixed the crash that occurred when using "Read" commands in best-effort mode during a free card transaction.
+### Added
+- Added dependency to "Keypop Calypso Crypto Symmetric API" `0.1.0`
+- Added the method `CalypsoCardApiFactory getCalypsoCardApiFactory()` to the `CalypsoCardExtensionService` class to
+  get an implementation of the `CalypsoCardApiFactory` Keypop interface.
+### Changed
+- Refactoring:
+  - Class `CalypsoExtensionService` -> `CalypsoCardExtensionService`
+### Removed
+- Removed dependency to "Keyple Service Resource Library".
+- Removed methods from `CalypsoExtensionService`:
+  - `getContextSetting()` (now provided by specific Calypso crypto module)
+  - `createSearchCommandData()` (now provided by the `CalypsoCardApiFactory` Keypop interface)
+  - `createBasicSignatureComputationData()` (now provided by specific Calypso crypto module)
+  - `createTraceableSignatureComputationData()` (now provided by specific Calypso crypto module)
+  - `createBasicSignatureVerificationData()` (now provided by specific Calypso crypto module)
+  - `createTraceableSignatureVerificationData()` (now provided by specific Calypso crypto module)
+  - `createCardSelection()` (now provided by the `CalypsoCardApiFactory` Keypop interface)
+  - `createSamSelection()` (now provided by specific Calypso crypto module)
+  - `createSamResourceProfileExtension(...)` (now provided by specific Calypso crypto module)
+  - `createCardSecuritySetting()` (now provided by the `CalypsoCardApiFactory` Keypop interface)
+  - `createCardTransaction(...)` (now provided by the `CalypsoCardApiFactory` Keypop interface)
+  - `createCardTransactionWithoutSecurity(...)` (now provided by the `CalypsoCardApiFactory` Keypop interface)
+  - `createSamSecuritySetting()` (now provided by specific Calypso crypto module)
+  - `createSamTransaction(...)` (now provided by specific Calypso crypto module)
+  - `createSamTransactionWithoutSecurity(...)` (now provided by specific Calypso crypto module)
+- Removed interface `ContextSetting` (now provided by specific Calypso crypto module)
+### Upgraded
+- Calypsonet Terminal Reader API `1.3.0` -> Keypop Reader API `2.0.0`
+- Calypsonet Terminal Card API `1.0.0` -> Keypop Card API `2.0.0`
+- Calypsonet Terminal Calypso API `1.8.0` -> Keypop Calypso Card API `2.0.0`
+- Keyple Util Library `2.3.0` -> `2.3.1` (source code not impacted)
 
 ## [2.3.8] - 2023-09-11
 ### Added

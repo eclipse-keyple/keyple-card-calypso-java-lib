@@ -11,8 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
-import org.calypsonet.terminal.calypso.card.ElementaryFile;
 import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keypop.calypso.card.card.ElementaryFile;
 
 /**
  * Implementation of {@link ElementaryFile}.
