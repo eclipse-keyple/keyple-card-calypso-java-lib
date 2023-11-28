@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.0.0] - 2023-11-28
 :warning: Major version! Following the migration of the "Calypsonet Terminal" APIs to the
 [Eclipse Keypop project](https://keypop.org), this library now implements Keypop interfaces.
 ### Fixed
@@ -40,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calypsonet Terminal Card API `1.0.0` -> Keypop Card API `2.0.0`
 - Calypsonet Terminal Calypso API `1.8.0` -> Keypop Calypso Card API `2.0.0`
 - Keyple Util Library `2.3.0` -> `2.3.1` (source code not impacted)
+- Removed dependency to "Keyple Service Resource Library" (used only by crypto components)
 
 ## [2.3.8] - 2023-09-11
 ### Added
@@ -229,7 +232,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse/key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.8...HEAD
+[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.8...3.0.0
 [2.3.8]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.7...2.3.8
 [2.3.7]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.6...2.3.7
 [2.3.6]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.5...2.3.6
