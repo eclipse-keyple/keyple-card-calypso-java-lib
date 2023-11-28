@@ -46,6 +46,11 @@ Keypop Calypso Card API
 * License: [MIT License](https://opensource.org/licenses/MIT)
 * Sources: https://github.com/eclipse-keypop/keypop-calypso-card-java-api
 
+Keypop Calypso Crypto Symmetric API
+
+* License: [MIT License](https://opensource.org/licenses/MIT)
+* Sources: https://github.com/eclipse-keypop/keypop-calypso-crypto-symmetric-java-api
+
 SLF4J API
 
 * License: [MIT](https://spdx.org/licenses/MIT.html)
