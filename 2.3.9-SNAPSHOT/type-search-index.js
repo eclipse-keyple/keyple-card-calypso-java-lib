@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.eclipse.keyple.card.calypso","l":"CalypsoExtensionService"},{"p":"org.eclipse.keyple.card.calypso","l":"ContextSetting"}]
