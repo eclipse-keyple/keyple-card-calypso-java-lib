@@ -13,11 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the crash that occurred when using "Read" commands in best-effort mode during a free card transaction.
 ### Added
 - Added dependency to "Keypop Calypso Crypto Symmetric API" `0.1.0`
-- Added the method `CalypsoCardApiFactory getCalypsoCardApiFactory()` to the `CalypsoCardExtensionService` class to
+- Added the method `CalypsoCardApiFactory getCalypsoCardApiFactory()` to the `CalypsoExtensionService` class to
   get an implementation of the `CalypsoCardApiFactory` Keypop interface.
-### Changed
-- Refactoring:
-  - Class `CalypsoExtensionService` -> `CalypsoCardExtensionService`
 ### Removed
 - Removed dependency to "Keyple Service Resource Library".
 - Removed methods from `CalypsoExtensionService`:

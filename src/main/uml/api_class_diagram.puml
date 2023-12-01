@@ -59,9 +59,9 @@ legend top
 end legend
 
 package "org.eclipse.keyple.card.calypso" as calypso {
-    +class "<<<back:cyan>KeypleCardExtension</back>>>\n<color:blue>**final** CalypsoCardExtensionService" as CalypsoCardExtensionService <<green>> {
+    +class "<<<back:cyan>KeypleCardExtension</back>>>\n**final** CalypsoExtensionService" as CalypsoExtensionService <<green>> {
         --
-        +{static} CalypsoCardExtensionService getInstance ()
+        +{static} CalypsoExtensionService getInstance ()
 
         +<color:blue><back:pink>CalypsoCardApiFactory</back> getCalypsoCardApiFactory ()
 
