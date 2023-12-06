@@ -18,6 +18,7 @@ import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
+import org.eclipse.keypop.calypso.card.transaction.InvalidPinException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -225,10 +226,13 @@ final class CommandVerifyPin extends Command {
           break;
         default: // NOP
       }
-      // Forward the exception if the operation do not target the reading of the attempt counter.
-      // Catch it silently otherwise
+      // Throw a functional exception if the operation do not target the reading of the attempt
+      // counter. Catch it silently otherwise
       if (!isReadCounterMode) {
-        throw e;
+        throw new InvalidPinException(
+            "Invalid PIN. Remaining "
+                + getTransactionContext().getCard().getPinAttemptRemaining()
+                + " attempt(s)");
       }
     }
     updateTerminalSessionMacIfNeeded();
