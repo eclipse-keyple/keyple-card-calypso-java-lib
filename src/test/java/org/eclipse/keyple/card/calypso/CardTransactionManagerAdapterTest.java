@@ -353,7 +353,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String SV_D_LOG_SAM_TNUM = "543210";
   private static final String SV_D_LOG_BALANCE = "7890AB";
   private static final String SV_D_LOG_SV_TNUM = "5678";
-  private static final String CARD_SV_GET_DEBIT_CMD = "007C000900";
+  private static final String CARD_SV_GET_DEBIT_CMD = "007C00091E";
 
   private static final String SAM_SERIAL_NUMBER = "0000000011223344";
   private static final String C_SELECT_DIVERSIFIER = "8014000008" + SAM_SERIAL_NUMBER;
@@ -363,7 +363,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String CIPHER_MESSAGE_SIGNATURE = "C1C2C3C4C5C6C7C8";
   private static final String R_DATA_CIPHER_DEFAULT = CIPHER_MESSAGE_SIGNATURE + R_9000;
 
-  private static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C010900";
+  private static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C01093D";
   private static final String CARD_SV_GET_DEBIT_RSP =
       SV_D_CURRENT_KVC
           + SV_D_TNUM
@@ -404,9 +404,9 @@ public class CardTransactionManagerAdapterTest {
           + SV_D_LOG_BALANCE
           + SV_D_LOG_SV_TNUM
           + SW1SW2_OK;
-  private static final String CARD_SV_GET_RELOAD_CMD = "007C000700";
-  private static final String CARD_SV_GET_RELOAD_EXT_CMD = "007C010700";
-  private static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000700";
+  private static final String CARD_SV_GET_RELOAD_CMD = "007C000721";
+  private static final String CARD_SV_GET_RELOAD_EXT_CMD = "007C01073D";
+  private static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000721";
   private static final String CARD_SV_GET_RELOAD_RSP =
       SV_R_CURRENT_KVC
           + SV_R_TNUM
@@ -627,7 +627,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_GIVE_RANDOM_CMD = "8086000008" + CARD_CHALLENGE;
   private static final String SAM_GIVE_RANDOM_RSP = SW1SW2_OK;
   private static final String SAM_PREPARE_LOAD_CMD =
-      "805601FF367C000700"
+      "805601FF367C000721"
           + CARD_SV_GET_RELOAD_RSP
           + "B800001700"
           + SV_R_DATE
@@ -637,7 +637,7 @@ public class CardTransactionManagerAdapterTest {
           + SV_R_AMOUNT
           + SV_R_TIME;
   private static final String SAM_PREPARE_LOAD_EXT_CMD =
-      "805601FF527C010700"
+      "805601FF527C01073D"
           + CARD_SV_GET_RELOAD_EXT_RSP
           + "B800001C00"
           + SV_R_DATE
@@ -659,7 +659,7 @@ public class CardTransactionManagerAdapterTest {
           + SAM_PREPARE_LOAD_EXT_RSP_CRYPTOHI
           + SW1SW2_OK;
   private static final String SAM_PREPARE_DEBIT_CMD =
-      "805401FF307C000900"
+      "805401FF307C00091E"
           + CARD_SV_GET_DEBIT_RSP
           + "BA00001400"
           + SV_D_AMOUNT_NEG
@@ -673,7 +673,7 @@ public class CardTransactionManagerAdapterTest {
           + SAM_PREPARE_DEBIT_RSP_CRYPTOHI
           + SW1SW2_OK;
   private static final String SAM_PREPARE_DEBIT_EXT_CMD =
-      "805401FF4F7C010900"
+      "805401FF4F7C01093D"
           + CARD_SV_GET_DEBIT_EXT_RSP
           + "BA00001900"
           + SV_D_AMOUNT_NEG

@@ -71,7 +71,7 @@ final class CmdCardSvGet extends CardCommand {
   @Deprecated
   CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, calypsoCard, null, null);
+    super(CardCommandRef.SV_GET, computeLe(svOperation, useExtendedMode), calypsoCard, null, null);
 
     byte cla =
         calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
@@ -83,7 +83,8 @@ final class CmdCardSvGet extends CardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
+            ApduUtil.build(
+                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
@@ -93,7 +94,7 @@ final class CmdCardSvGet extends CardCommand {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) 0x00;
+    header[3] = (byte) getLe();
   }
 
   /**
@@ -112,7 +113,12 @@ final class CmdCardSvGet extends CardCommand {
       SvOperation svOperation,
       boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, null, transactionContext, commandContext);
+    super(
+        CardCommandRef.SV_GET,
+        computeLe(svOperation, useExtendedMode),
+        null,
+        transactionContext,
+        commandContext);
 
     byte cla =
         transactionContext.getCard().getCardClass() == CalypsoCardClass.LEGACY
@@ -124,7 +130,8 @@ final class CmdCardSvGet extends CardCommand {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
+            ApduUtil.build(
+                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
@@ -134,7 +141,15 @@ final class CmdCardSvGet extends CardCommand {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) 0x00;
+    header[3] = (byte) getLe();
+  }
+
+  private static int computeLe(SvOperation svOperation, boolean useExtendedMode) {
+    if (useExtendedMode) {
+      return 0x3D;
+    } else {
+      return svOperation == SvOperation.RELOAD ? 0x21 : 0x1E;
+    }
   }
 
   /**
