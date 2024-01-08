@@ -246,8 +246,8 @@ abstract class AbstractTransactionManagerTest {
   static final String SV_D_LOG_SAM_TNUM = "543210";
   static final String SV_D_LOG_BALANCE = "7890AB";
   static final String SV_D_LOG_SV_TNUM = "5678";
-  static final String CARD_SV_GET_DEBIT_CMD = "007C000900";
-  static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C010900";
+  static final String CARD_SV_GET_DEBIT_CMD = "007C00091E";
+  static final String CARD_SV_GET_DEBIT_EXT_CMD = "007C01093D";
   static final String CARD_SV_GET_DEBIT_RSP =
       SV_D_CURRENT_KVC
           + SV_D_TNUM
@@ -288,9 +288,9 @@ abstract class AbstractTransactionManagerTest {
           + SV_D_LOG_BALANCE
           + SV_D_LOG_SV_TNUM
           + SW_9000;
-  static final String CARD_SV_GET_RELOAD_CMD = "007C000700";
-  static final String CARD_SV_GET_RELOAD_EXT_CMD = "007C010700";
-  static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000700";
+  static final String CARD_SV_GET_RELOAD_CMD = "007C000721";
+  static final String CARD_SV_GET_RELOAD_EXT_CMD = "007C01073D";
+  static final String CARD_PRIME_REV2_SV_GET_RELOAD_CMD = "FA7C000721";
   static final String CARD_SV_GET_RELOAD_RSP =
       SV_R_CURRENT_KVC
           + SV_R_TNUM

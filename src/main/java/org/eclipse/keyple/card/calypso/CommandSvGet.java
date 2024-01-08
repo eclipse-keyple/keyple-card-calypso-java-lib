@@ -73,7 +73,11 @@ final class CommandSvGet extends Command {
       SvOperation svOperation,
       boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, 0, transactionContext, commandContext);
+    super(
+        CardCommandRef.SV_GET,
+        computeLe(svOperation, useExtendedMode),
+        transactionContext,
+        commandContext);
 
     byte cla =
         transactionContext.getCard().getCardClass() == CalypsoCardClass.LEGACY
@@ -85,7 +89,8 @@ final class CommandSvGet extends Command {
 
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build(cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
+            ApduUtil.build(
+                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
@@ -95,7 +100,15 @@ final class CommandSvGet extends Command {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) 0x00;
+    header[3] = (byte) getLe();
+  }
+
+  private static int computeLe(SvOperation svOperation, boolean useExtendedMode) {
+    if (useExtendedMode) {
+      return 0x3D;
+    } else {
+      return svOperation == SvOperation.RELOAD ? 0x21 : 0x1E;
+    }
   }
 
   /**
