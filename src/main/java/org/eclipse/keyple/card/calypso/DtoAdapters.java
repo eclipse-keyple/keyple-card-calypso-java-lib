@@ -919,7 +919,6 @@ final class DtoAdapters {
     private final SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi;
     private final AsymmetricCryptoCardTransactionManagerSpi
         asymmetricCryptoCardTransactionManagerSpi;
-    private boolean isSecureSessionOpen;
 
     /**
      * Constructor for symmetric crypto operations.
@@ -934,7 +933,6 @@ final class DtoAdapters {
       this.card = card;
       this.symmetricCryptoCardTransactionManagerSpi = symmetricCryptoCardTransactionManagerSpi;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
-      isSecureSessionOpen = false;
     }
 
     /**
@@ -950,7 +948,6 @@ final class DtoAdapters {
       this.card = card;
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = asymmetricCryptoCardTransactionManagerSpi;
-      isSecureSessionOpen = false;
     }
 
     /**
@@ -963,7 +960,6 @@ final class DtoAdapters {
       this.card = card;
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
-      isSecureSessionOpen = false;
     }
 
     /**
@@ -975,7 +971,6 @@ final class DtoAdapters {
       this.card = null;
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
-      isSecureSessionOpen = false;
     }
 
     /**
@@ -1003,14 +998,6 @@ final class DtoAdapters {
     }
 
     /**
-     * @return "true" if the secure session is open.
-     * @since 2.3.2
-     */
-    boolean isSecureSessionOpen() {
-      return isSecureSessionOpen;
-    }
-
-    /**
      * @return "true" if the PKI mode is active.
      * @since 3.1.0
      */
@@ -1026,14 +1013,6 @@ final class DtoAdapters {
      */
     void setCard(CalypsoCardAdapter card) {
       this.card = card;
-    }
-
-    /**
-     * @param isSecureSessionOpen Is secure session open?
-     * @since 2.3.2
-     */
-    void setSecureSessionOpen(boolean isSecureSessionOpen) {
-      this.isSecureSessionOpen = isSecureSessionOpen;
     }
   }
 }

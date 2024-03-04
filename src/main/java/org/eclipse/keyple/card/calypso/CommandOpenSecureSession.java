@@ -22,7 +22,7 @@ import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.UnauthorizedKeyException;
-import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.InvalidCardPublicKeyException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -449,7 +449,6 @@ final class CommandOpenSecureSession extends Command {
     if (!getTransactionContext().isPkiMode()) {
       if (!isPreOpenModeOnSelection) {
         card.backupFiles();
-        getTransactionContext().setSecureSessionOpen(true);
       }
       switch (card.getProductType()) {
         case PRIME_REVISION_1:
@@ -504,8 +503,8 @@ final class CommandOpenSecureSession extends Command {
         getTransactionContext()
             .getAsymmetricCryptoCardTransactionManagerSpi()
             .updateTerminalPkiSession(getApduResponse().getApdu());
-      } catch (InvalidCardPublicKeyException e) {
-        throw new RuntimeException(e);
+      } catch (AsymmetricCryptoException e) {
+        throw new CardSecurityContextException(e.getMessage(), CardCommandRef.OPEN_SECURE_SESSION);
       }
     }
   }

@@ -23,6 +23,7 @@ import org.eclipse.keypop.calypso.card.transaction.CardSignatureNotVerifiableExc
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCardSignatureException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -203,7 +204,6 @@ final class CommandCloseSecureSession extends Command {
       return;
     }
     super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().setSecureSessionOpen(false);
     byte[] responseData = getApduResponse().getDataOut();
     if (getTransactionContext().isPkiMode()) {
       parseResponseInAsymmetricMode(responseData);
@@ -218,7 +218,6 @@ final class CommandCloseSecureSession extends Command {
    * @param apduResponse The response from the APDU command.
    */
   private void processAbort(ApduResponseApi apduResponse) {
-    getTransactionContext().setSecureSessionOpen(false);
     try {
       super.setApduResponseAndCheckStatus(apduResponse);
       logger.info("Secure session successfully aborted");
@@ -277,9 +276,16 @@ final class CommandCloseSecureSession extends Command {
    * @param responseData The byte array containing the response data.
    */
   private void parseResponseInAsymmetricMode(byte[] responseData) {
-    if (!getTransactionContext()
-        .getAsymmetricCryptoCardTransactionManagerSpi()
-        .isCardPkiSessionValid(responseData)) {
+    boolean isSessionValid;
+    try {
+      isSessionValid =
+          getTransactionContext()
+              .getAsymmetricCryptoCardTransactionManagerSpi()
+              .isCardPkiSessionValid(responseData);
+    } catch (AsymmetricCryptoException e) {
+      throw new InvalidCardSignatureException(MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED, e);
+    }
+    if (!isSessionValid) {
       throw new InvalidCardSignatureException(MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED);
     }
   }

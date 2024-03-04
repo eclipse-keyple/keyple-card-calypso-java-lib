@@ -124,7 +124,7 @@ final class SecurePkiModeTransactionManagerAdapter
     resetCommandContext();
     disablePreOpenMode();
     commands.clear();
-    if (getTransactionContext().isSecureSessionOpen()) {
+    if (getCommandContext().isSecureSessionOpen()) {
       try {
         CommandCloseSecureSession cancelSecureSessionCommand =
             new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), true);
@@ -136,7 +136,6 @@ final class SecurePkiModeTransactionManagerAdapter
         logger.debug("Secure session abortion error: {}", e.getMessage());
       } finally {
         card.restoreFiles();
-        getTransactionContext().setSecureSessionOpen(false);
       }
     }
   }

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
@@ -300,15 +301,19 @@ abstract class Command {
 
     if (commandContext.isSecureSessionOpen()) {
       if (transactionContext.isPkiMode()) {
+        // asymmetric crypto mode
         AsymmetricCryptoCardTransactionManagerSpi asymmetricCryptoCardTransactionManagerSpi =
             transactionContext.getAsymmetricCryptoCardTransactionManagerSpi();
-        // asymmetric crypto mode
-        asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduRequest.getApdu());
-        asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduResponse);
+        try {
+          asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduRequest.getApdu());
+          asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduResponse);
+        } catch (AsymmetricCryptoException e) {
+          throw new CryptoException(e.getMessage(), e);
+        }
       } else {
+        // symmetric crypto mode
         SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManager =
             transactionContext.getSymmetricCryptoCardTransactionManagerSpi();
-        // symmetric crypto mode
         try {
           symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduRequest.getApdu());
           symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduResponse);
