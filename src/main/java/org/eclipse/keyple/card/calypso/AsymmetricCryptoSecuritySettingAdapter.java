@@ -22,10 +22,7 @@ import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificateParser;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardCertificateParser;
 import org.eclipse.keypop.calypso.card.transaction.spi.PcaCertificate;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateException;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.CaCertificateContentSpi;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.CaCertificateParserSpi;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.CaCertificateSpi;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.CardCertificateParserSpi;
+import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerFactorySpi;
 
 /**
@@ -34,13 +31,23 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCr
  * @since 3.1.0
  */
 class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecuritySetting {
-  private final AsymmetricCryptoCardTransactionManagerFactorySpi transactionManagerFactorySpi;
-  private final Map<String, CaCertificateContentSpi> certificates =
+
+  private static final String MSG_THE_PROVIDED_PCA_CERTIFICATE_MUST_IMPLEMENT_PCA_CERTIFICATE_SPI =
+      "The provided 'pcaCertificate' must implement 'PcaCertificateSpi'";
+  private static final String MSG_THE_PROVIDED_CA_CERTIFICATE_MUST_IMPLEMENT_CA_CERTIFICATE_SPI =
+      "The provided 'caCertificate' must implement 'CaCertificateSpi'";
+  private static final String
+      MSG_THE_PROVIDED_CA_CERTIFICATE_PARSER_MUST_IMPLEMENT_CA_CERTIFICATE_PARSER_SPI =
+          "The provided 'caCertificateParser' must implement 'CaCertificateParserSpi'";
+
+  private final AsymmetricCryptoCardTransactionManagerFactorySpi
+      cryptoCardTransactionManagerFactorySpi;
+  private final Map<String, CaCertificateContentSpi> caCertificates =
       new HashMap<String, CaCertificateContentSpi>();
-  private final Map<Byte, CardCertificateParser> cardCertificateParsers =
-      new HashMap<Byte, CardCertificateParser>();
-  private final Map<Byte, CaCertificateParser> caCertificateParsers =
-      new HashMap<Byte, CaCertificateParser>();
+  private final Map<Byte, CaCertificateParserSpi> caCertificateParsers =
+      new HashMap<Byte, CaCertificateParserSpi>();
+  private final Map<Byte, CardCertificateParserSpi> cardCertificateParsers =
+      new HashMap<Byte, CardCertificateParserSpi>();
 
   /**
    * Constructor.
@@ -50,7 +57,7 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
    */
   AsymmetricCryptoSecuritySettingAdapter(
       AsymmetricCryptoCardTransactionManagerFactorySpi cryptoCardTransactionManagerFactorySpi) {
-    this.transactionManagerFactorySpi = cryptoCardTransactionManagerFactorySpi;
+    this.cryptoCardTransactionManagerFactorySpi = cryptoCardTransactionManagerFactorySpi;
   }
 
   /**
@@ -58,7 +65,7 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
    * @since 3.1.0
    */
   AsymmetricCryptoCardTransactionManagerFactorySpi getCryptoCardTransactionManagerFactorySpi() {
-    return transactionManagerFactorySpi;
+    return cryptoCardTransactionManagerFactorySpi;
   }
 
   /**
@@ -68,14 +75,28 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
    */
   @Override
   public AsymmetricCryptoSecuritySetting addPcaCertificate(PcaCertificate pcaCertificate) {
+
     Assert.getInstance().notNull(pcaCertificate, "pcaCertificate");
-    CaCertificateContentSpi certificateContent = (CaCertificateContentSpi) pcaCertificate;
-    String publicKeyRefHex = HexUtil.toHex(certificateContent.getPublicKeyReference());
-    if (certificates.containsKey(publicKeyRefHex)) {
-      throw new IllegalStateException(
-          "The provided public key reference already exists: " + publicKeyRefHex);
+    if (!(pcaCertificate instanceof PcaCertificateSpi)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_PCA_CERTIFICATE_MUST_IMPLEMENT_PCA_CERTIFICATE_SPI);
     }
-    certificates.put(publicKeyRefHex, certificateContent);
+    PcaCertificateSpi pcaCertificateSpi = (PcaCertificateSpi) pcaCertificate;
+
+    CaCertificateContentSpi certificateContent;
+    try {
+      certificateContent = pcaCertificateSpi.checkCertificateAndGetContent();
+    } catch (CertificateException e) {
+      throw new InvalidCertificateException(
+          "An error occurs during the check of the certificate: " + e.getMessage(), e);
+    }
+
+    String keyRef = HexUtil.toHex(certificateContent.getPublicKeyReference());
+    if (caCertificates.containsKey(keyRef)) {
+      throw new IllegalStateException(
+          "The provided public key reference already exists: " + keyRef);
+    }
+    caCertificates.put(keyRef, certificateContent);
     return this;
   }
 
@@ -86,23 +107,40 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
    */
   @Override
   public AsymmetricCryptoSecuritySetting addCaCertificate(CaCertificate caCertificate) {
+
     Assert.getInstance().notNull(caCertificate, "caCertificate");
-    CaCertificateContentSpi certificateContent = (CaCertificateContentSpi) caCertificate;
-    String publicKeyRefHex = HexUtil.toHex(certificateContent.getPublicKeyReference());
-    if (certificates.containsKey(publicKeyRefHex)) {
-      throw new IllegalStateException(
-          "The provided public key reference already exists: " + publicKeyRefHex);
+    if (!(caCertificate instanceof CaCertificateSpi)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_CA_CERTIFICATE_MUST_IMPLEMENT_CA_CERTIFICATE_SPI);
     }
     CaCertificateSpi caCertificateSpi = (CaCertificateSpi) caCertificate;
-    byte[] issuerPublicKeyReference = caCertificateSpi.getIssuerPublicKeyReference();
-    try {
-      certificates.put(
-          publicKeyRefHex,
-          caCertificateSpi.checkCertificateAndGetContent(
-              certificates.get(HexUtil.toHex(issuerPublicKeyReference))));
-    } catch (CertificateException e) {
-      throw new InvalidCertificateException("CA Certificate signature verification failed.", e);
+
+    // Get the issuer public key reference
+    String issuerKeyRef = HexUtil.toHex(caCertificateSpi.getIssuerPublicKeyReference());
+
+    // Search the issuer certificate
+    CaCertificateContentSpi issuerCertificateContent = caCertificates.get(issuerKeyRef);
+    if (issuerCertificateContent == null) {
+      throw new IllegalStateException("The issuer certificate is not loaded: " + issuerKeyRef);
     }
+
+    // Check the CA certificate using the issuer's public key
+    CaCertificateContentSpi caCertificateContent;
+    try {
+      caCertificateContent =
+          caCertificateSpi.checkCertificateAndGetContent(issuerCertificateContent);
+    } catch (CertificateException e) {
+      throw new InvalidCertificateException(
+          "An error occurs during the check of the certificate: " + e.getMessage(), e);
+    }
+
+    // Try to save the certificate into the store
+    String caKeyRef = HexUtil.toHex(caCertificateContent.getPublicKeyReference());
+    if (caCertificates.containsKey(caKeyRef)) {
+      throw new IllegalStateException("The certificate is already loaded: " + caKeyRef);
+    }
+
+    caCertificates.put(caKeyRef, caCertificateContent);
     return this;
   }
 
@@ -115,8 +153,18 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
   public AsymmetricCryptoSecuritySetting addCaCertificateParser(
       CaCertificateParser caCertificateParser) {
     Assert.getInstance().notNull(caCertificateParser, "caCertificateParser");
-    byte certificateType = ((CaCertificateParserSpi) caCertificateParser).getCertificateType();
-    this.caCertificateParsers.put(certificateType, caCertificateParser);
+    if (!(caCertificateParser instanceof CaCertificateParserSpi)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_CA_CERTIFICATE_PARSER_MUST_IMPLEMENT_CA_CERTIFICATE_PARSER_SPI);
+    }
+    CaCertificateParserSpi caCertificateParserSpi = (CaCertificateParserSpi) caCertificateParser;
+    byte certificateType = caCertificateParserSpi.getCertificateType();
+    if (caCertificateParsers.containsKey(certificateType)) {
+      throw new IllegalStateException(
+          "A parser is already registered for the certificate type "
+              + HexUtil.toHex(certificateType));
+    }
+    this.caCertificateParsers.put(certificateType, caCertificateParserSpi);
     return this;
   }
 
@@ -142,7 +190,7 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
    * @since 3.1.0
    */
   CaCertificateContentSpi getCertificate(byte[] publicKeyReference) {
-    return certificates.get(HexUtil.toHex(publicKeyReference));
+    return caCertificates.get(HexUtil.toHex(publicKeyReference));
   }
 
   /**

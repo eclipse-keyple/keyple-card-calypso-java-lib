@@ -225,21 +225,24 @@ abstract class Command {
   }
 
   /**
-   * Finalize the construction of the APDU request if needed.
+   * Finalize the construction of the APDU request if needed (used only with symmetric crypto
+   * transactions).
    *
    * @since 2.3.2
    */
   abstract void finalizeRequest();
 
   /**
-   * @return "true" if the crypto service is required to finalize the construction of the request.
+   * @return "true" if the crypto service is required to finalize the construction of the request
+   *     (used only with symmetric crypto transactions).
    * @since 2.3.2
    */
   abstract boolean isCryptoServiceRequiredToFinalizeRequest();
 
   /**
    * Attempts to synchronize the crypto service before executing the finalized command on the card
-   * and returns "true" in any of the following cases:
+   * and returns "true" in any of the following cases (used only with symmetric crypto
+   * transactions):
    *
    * <ul>
    *   <li>the crypto service is not involved in the process

@@ -130,37 +130,13 @@ final class CommandGetDataCertificate extends Command {
     byte[] dataOut = apduResponse.getDataOut();
     byte[] certificateBytes;
 
-    byte[] expectedTagBytes =
-        isCardCertificate
-            ? new byte[] {
-              CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB,
-              CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB
-            }
-            : new byte[] {
-              CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB, CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
-            };
-
     if (isFirstPart) {
-      // Check if the first 2 bytes of the response match the expected tag.
-      if (dataOut.length >= 5
-          && dataOut[0] == expectedTagBytes[0]
-          && dataOut[1] == expectedTagBytes[1]) {
-        // Extract the certificate bytes, skipping the 5-byte tag and length prefix.
-        certificateBytes = new byte[dataOut.length - 5];
-        System.arraycopy(dataOut, 5, certificateBytes, 0, dataOut.length - 5);
-      } else {
-        throw new CardDataAccessException(
-            "Unexpected tag or length for " + (isCardCertificate ? "card" : "CA") + " certificate",
-            getCommandRef());
-      }
+      // Extract the certificate bytes, skipping the 5-byte tag and length prefix.
+      certificateBytes = new byte[dataOut.length - 5];
+      System.arraycopy(dataOut, 5, certificateBytes, 0, dataOut.length - 5);
     } else {
       // For subsequent parts, the entire dataOut is assumed to be the certificate data.
       certificateBytes = dataOut;
-    }
-
-    if (certificateBytes == null) {
-      throw new CardDataAccessException(
-          "Invalid " + (isCardCertificate ? "card" : "CA") + " certificate", getCommandRef());
     }
 
     if (isCardCertificate) {

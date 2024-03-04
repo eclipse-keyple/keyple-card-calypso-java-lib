@@ -246,7 +246,7 @@ final class SecurePkiModeTransactionManagerAdapter
    * @since 3.1.0
    */
   @Override
-  void parseCommand(Command command, ApduResponseApi apduResponse) throws CardCommandException {
+  void parseCommandResponse(Command command, ApduResponseApi apduResponse) throws CardCommandException {
     if (command.getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION) {
       extractPublicKeyThroughChainOfTrust();
     }

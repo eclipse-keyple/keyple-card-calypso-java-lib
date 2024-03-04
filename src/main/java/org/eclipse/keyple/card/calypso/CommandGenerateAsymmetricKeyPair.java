@@ -47,7 +47,7 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
         new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
     m.put(
         0x6D00,
-        new StatusProperties("PKI mode not available.", CardSecurityContextException.class));
+        new StatusProperties("PKI mode not available.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

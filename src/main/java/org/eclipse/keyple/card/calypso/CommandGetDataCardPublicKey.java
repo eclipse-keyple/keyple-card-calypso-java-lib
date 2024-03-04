@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -106,7 +107,10 @@ final class CommandGetDataCardPublicKey extends Command {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     super.setApduResponseAndCheckStatus(apduResponse);
-    getTransactionContext().getCard().setCardPublicKey(apduResponse.getDataOut());
+    getTransactionContext()
+        .getCard()
+        .setCardPublicKey(
+            Arrays.copyOfRange(apduResponse.getDataOut(), 3, apduResponse.getDataOut().length));
     updateTerminalSessionIfNeeded();
   }
 

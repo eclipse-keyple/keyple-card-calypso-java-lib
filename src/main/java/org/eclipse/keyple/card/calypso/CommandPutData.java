@@ -16,7 +16,6 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
-import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -44,15 +43,15 @@ final class CommandPutData extends Command {
         0x6A80,
         new StatusProperties("Lc not compatible with P1P2.", CardIllegalParameterException.class));
     m.put(
-        0x6A87, new StatusProperties("Incorrect incoming data.", CardSecurityDataException.class));
+        0x6A87, new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
     m.put(
-        0x6A88, new StatusProperties("Data object not found.", CardSecurityContextException.class));
-    m.put(0x6A8A, new StatusProperties("Incorrect AID.", CardSecurityContextException.class));
+        0x6A88, new StatusProperties("Data object not found.", CardDataAccessException.class));
+    m.put(0x6A8A, new StatusProperties("Incorrect AID.", CardIllegalParameterException.class));
     m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
     m.put(
         0x6D00,
         new StatusProperties(
-            "Command Put Data not supported.", CardSecurityContextException.class));
+            "Command Put Data not supported.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -66,37 +65,10 @@ final class CommandPutData extends Command {
   CommandPutData(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
-      PutDataTag tag,
-      boolean isFirstPart,
+      byte tagMsb,
+      byte tagLsb,
       byte[] data) {
     super(CardCommandRef.PUT_DATA, 0, transactionContext, commandContext);
-    byte tagMsb;
-    byte tagLsb;
-    switch (tag) {
-      case CA_CERTIFICATE:
-        tagMsb = CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB;
-        tagLsb =
-            isFirstPart
-                ? CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
-                : CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB + 1;
-        break;
-      case CARD_CERTIFICATE:
-        tagMsb = CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB;
-        tagLsb =
-            isFirstPart
-                ? CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB
-                : CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB + 1;
-        break;
-      case CARD_KEY_PAIR:
-        tagMsb = CalypsoCardConstant.TAG_ECC_KEY_PAIR_MSB;
-        tagLsb =
-            isFirstPart
-                ? CalypsoCardConstant.TAG_ECC_KEY_PAIR_LSB
-                : CalypsoCardConstant.TAG_ECC_KEY_PAIR_LSB + 1;
-        break;
-      default:
-        throw new UnsupportedOperationException("Unsupported tag");
-    }
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -115,7 +87,7 @@ final class CommandPutData extends Command {
    */
   @Override
   void finalizeRequest() {
-    /* nothing to do */
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
   }
 
   /**
@@ -135,7 +107,11 @@ final class CommandPutData extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return false; // Need to synchronize the card image
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
+    return true;
   }
 
   /**
@@ -145,7 +121,10 @@ final class CommandPutData extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
+    // TODO update card image
+    updateTerminalSessionIfNeeded();
   }
 
   /**
