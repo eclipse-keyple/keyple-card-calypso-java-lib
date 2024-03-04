@@ -39,6 +39,9 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
   private static final String
       MSG_THE_PROVIDED_CA_CERTIFICATE_PARSER_MUST_IMPLEMENT_CA_CERTIFICATE_PARSER_SPI =
           "The provided 'caCertificateParser' must implement 'CaCertificateParserSpi'";
+  private static final String
+      MSG_THE_PROVIDED_CARD_CERTIFICATE_PARSER_MUST_IMPLEMENT_CARD_CERTIFICATE_PARSER_SPI =
+          "The provided 'cardCertificateParser' must implement 'CardCertificateParserSpi'";
 
   private final AsymmetricCryptoCardTransactionManagerFactorySpi
       cryptoCardTransactionManagerFactorySpi;
@@ -177,41 +180,47 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
   public AsymmetricCryptoSecuritySetting addCardCertificateParser(
       CardCertificateParser cardCertificateParser) {
     Assert.getInstance().notNull(cardCertificateParser, "cardCertificateParser");
-    byte certificateType = ((CardCertificateParserSpi) cardCertificateParser).getCertificateType();
-    this.cardCertificateParsers.put(certificateType, cardCertificateParser);
+    if (!(cardCertificateParser instanceof CardCertificateParserSpi)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_CARD_CERTIFICATE_PARSER_MUST_IMPLEMENT_CARD_CERTIFICATE_PARSER_SPI);
+    }
+    CardCertificateParserSpi cardCertificateParserSpi =
+        (CardCertificateParserSpi) cardCertificateParser;
+    byte certificateType = cardCertificateParserSpi.getCertificateType();
+    this.cardCertificateParsers.put(certificateType, cardCertificateParserSpi);
     return this;
   }
 
   /**
-   * Retrieves the certificate based on the provided public key reference.
+   * Retrieves the CA certificate from the provided public key reference.
    *
    * @param publicKeyReference The public key reference as a 29-byte byte array.
    * @return null if no certificate certificate matches the provided reference.
    * @since 3.1.0
    */
-  CaCertificateContentSpi getCertificate(byte[] publicKeyReference) {
+  CaCertificateContentSpi getCaCertificate(byte[] publicKeyReference) {
     return caCertificates.get(HexUtil.toHex(publicKeyReference));
   }
 
   /**
-   * Retrieves the CA certificate parser.
+   * Retrieves the CA certificate parser for the provided type.
    *
    * @param certificateType The type of certificate.
-   * @return The CA certificate parser.
+   * @return The CA certificate parser SPI.
    * @since 3.1.0
    */
-  CaCertificateParser getCaCertificateParser(byte certificateType) {
+  CaCertificateParserSpi getCaCertificateParser(byte certificateType) {
     return caCertificateParsers.get(certificateType);
   }
 
   /**
-   * Retrieves the card certificate parser.
+   * Retrieves the card certificate parser for the provided type.
    *
    * @param certificateType The type of certificate.
-   * @return The card certificate parser.
+   * @return The card certificate parser SPI.
    * @since 3.1.0
    */
-  CardCertificateParser getCardCertificateParser(byte certificateType) {
+  CardCertificateParserSpi getCardCertificateParser(byte certificateType) {
     return cardCertificateParsers.get(certificateType);
   }
 }

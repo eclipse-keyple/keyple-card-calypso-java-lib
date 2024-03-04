@@ -43,9 +43,9 @@ final class CommandPutData extends Command {
         0x6A80,
         new StatusProperties("Lc not compatible with P1P2.", CardIllegalParameterException.class));
     m.put(
-        0x6A87, new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
-    m.put(
-        0x6A88, new StatusProperties("Data object not found.", CardDataAccessException.class));
+        0x6A87,
+        new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
+    m.put(0x6A88, new StatusProperties("Data object not found.", CardDataAccessException.class));
     m.put(0x6A8A, new StatusProperties("Incorrect AID.", CardIllegalParameterException.class));
     m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
     m.put(

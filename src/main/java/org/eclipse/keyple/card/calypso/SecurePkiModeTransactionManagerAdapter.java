@@ -246,7 +246,8 @@ final class SecurePkiModeTransactionManagerAdapter
    * @since 3.1.0
    */
   @Override
-  void parseCommandResponse(Command command, ApduResponseApi apduResponse) throws CardCommandException {
+  void parseCommandResponse(Command command, ApduResponseApi apduResponse)
+      throws CardCommandException {
     if (command.getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION) {
       extractPublicKeyThroughChainOfTrust();
     }
@@ -259,7 +260,7 @@ final class SecurePkiModeTransactionManagerAdapter
     CardCertificateSpi cardCertificateSpi = parseCardCertificate();
     // search the current settings to see if the corresponding CA certificate is available.
     CaCertificateContentSpi caCertificate =
-        asymmetricCryptoSecuritySetting.getCertificate(
+        asymmetricCryptoSecuritySetting.getCaCertificate(
             cardCertificateSpi.getIssuerPublicKeyReference());
     if (caCertificate == null) {
       // the certificate is not available, execute Get Data commands to get the missing CA
@@ -333,7 +334,7 @@ final class SecurePkiModeTransactionManagerAdapter
   private CaCertificateContentSpi verifyAndAddCaCertificate(CaCertificateSpi caCertificateSpi) {
     // search the current settings to see if the corresponding PCA certificate is available.
     CaCertificateContentSpi pcaCertificate =
-        asymmetricCryptoSecuritySetting.getCertificate(
+        asymmetricCryptoSecuritySetting.getCaCertificate(
             caCertificateSpi.getIssuerPublicKeyReference());
     if (pcaCertificate == null) {
       // TODO throw exception

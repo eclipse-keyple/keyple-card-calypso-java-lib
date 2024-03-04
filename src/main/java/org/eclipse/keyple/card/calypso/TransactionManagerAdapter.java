@@ -230,7 +230,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @throws CardCommandException If there is an error in the card command.
    * @since 3.1.0
    */
-  void parseCommandResponse(Command command, ApduResponseApi apduResponse) throws CardCommandException {
+  void parseCommandResponse(Command command, ApduResponseApi apduResponse)
+      throws CardCommandException {
     command.parseResponse(apduResponse);
   }
 
