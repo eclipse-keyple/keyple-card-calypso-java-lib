@@ -920,7 +920,6 @@ final class DtoAdapters {
     private final AsymmetricCryptoCardTransactionManagerSpi
         asymmetricCryptoCardTransactionManagerSpi;
     private boolean isSecureSessionOpen;
-    private final boolean isPkiMode;
 
     /**
      * Constructor for symmetric crypto operations.
@@ -936,7 +935,6 @@ final class DtoAdapters {
       this.symmetricCryptoCardTransactionManagerSpi = symmetricCryptoCardTransactionManagerSpi;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
       isSecureSessionOpen = false;
-      isPkiMode = false;
     }
 
     /**
@@ -953,7 +951,6 @@ final class DtoAdapters {
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = asymmetricCryptoCardTransactionManagerSpi;
       isSecureSessionOpen = false;
-      isPkiMode = true;
     }
 
     /**
@@ -962,12 +959,11 @@ final class DtoAdapters {
      * @param card The Calypso card.
      * @since 3.1.0
      */
-    public TransactionContextDto(CalypsoCardAdapter card) {
+    TransactionContextDto(CalypsoCardAdapter card) {
       this.card = card;
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
       isSecureSessionOpen = false;
-      isPkiMode = false;
     }
 
     /**
@@ -975,12 +971,11 @@ final class DtoAdapters {
      *
      * @since 3.1.0
      */
-    public TransactionContextDto() {
+    TransactionContextDto() {
       this.card = null;
       this.symmetricCryptoCardTransactionManagerSpi = null;
       this.asymmetricCryptoCardTransactionManagerSpi = null;
       isSecureSessionOpen = false;
-      isPkiMode = false;
     }
 
     /**
@@ -1020,7 +1015,7 @@ final class DtoAdapters {
      * @since 3.1.0
      */
     boolean isPkiMode() {
-      return isPkiMode;
+      return asymmetricCryptoCardTransactionManagerSpi != null;
     }
 
     /**

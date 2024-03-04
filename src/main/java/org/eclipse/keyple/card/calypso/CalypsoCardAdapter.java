@@ -68,8 +68,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         220435, 262144, 311743, 370727, 440871, 524288, 623487, 741455, 881743, 1048576
       };
 
-  private static final int CARD_CERTIFICATE_SIZE = 316;
-  private static final int CA_CERTIFICATE_SIZE = 384;
   private ApduResponseApi selectApplicationResponse;
   private String powerOnData;
   private boolean isExtendedModeSupported;
@@ -1137,7 +1135,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void setCardPublicKeySpi(CardPublicKeySpi cardPublicKeySpi) {
     this.cardPublicKeySpi = cardPublicKeySpi;
-    this.cardPublicKey = cardPublicKeySpi.getRawValue();
   }
 
   /**
@@ -1163,10 +1160,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void addCardCertificateBytes(byte[] cardCertificateBytes, boolean isFirstPart) {
     if (isFirstPart) {
-      this.cardCertificate = ByteBuffer.allocate(CARD_CERTIFICATE_SIZE);
-    }
-    if (cardCertificate.remaining() < cardCertificateBytes.length) {
-      throw new IllegalArgumentException("Overflow while adding card certificate data");
+      this.cardCertificate = ByteBuffer.allocate(CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
     }
     cardCertificate.put(cardCertificateBytes);
   }
@@ -1181,10 +1175,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void addCaCertificateBytes(byte[] caCertificateBytes, boolean isFirstPart) {
     if (isFirstPart) {
-      this.caCertificate = ByteBuffer.allocate(CA_CERTIFICATE_SIZE);
-    }
-    if (caCertificate.remaining() < caCertificateBytes.length) {
-      throw new IllegalArgumentException("Overflow while adding ca certificate data");
+      this.caCertificate = ByteBuffer.allocate(CalypsoCardConstant.CA_CERTIFICATE_SIZE);
     }
     caCertificate.put(caCertificateBytes);
   }

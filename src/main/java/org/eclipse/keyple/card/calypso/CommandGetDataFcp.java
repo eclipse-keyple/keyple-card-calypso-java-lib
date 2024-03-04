@@ -64,8 +64,8 @@ final class CommandGetDataFcp extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                BerTlvTag.FCP_FOR_CURRENT_FILE_MSB,
-                BerTlvTag.FCP_FOR_CURRENT_FILE_LSB,
+                CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_MSB,
+                CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("FCP_FOR_CURRENT_FILE");

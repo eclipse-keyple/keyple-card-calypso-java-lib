@@ -36,15 +36,15 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
         0x6985,
         new StatusProperties(
             "Conditions of use not satisfied: a secure session is running or a card key pair already available.",
-            CardSecurityContextException.class));
+            CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
             "Incorrect file type: the current DF is not an autonomous PKI application.",
-            CardSecurityContextException.class));
+            CardDataAccessException.class));
     m.put(
         0x6A80,
-        new StatusProperties("Incorrect incoming data.", CardSecurityContextException.class));
+        new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
     m.put(
         0x6D00,
         new StatusProperties("PKI mode not available.", CardSecurityContextException.class));
@@ -89,7 +89,7 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**

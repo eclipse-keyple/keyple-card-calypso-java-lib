@@ -1276,6 +1276,9 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     if (!card.isPkiModeSupported()) {
       throw new UnsupportedOperationException("PKI mode is not available for this card.");
     }
+    if (getCommandContext().isSecureSessionOpen()) {
+      throw new IllegalStateException("Secure session open");
+    }
     commands.add(
         new CommandGenerateAsymmetricKeyPair(getTransactionContext(), getCommandContext()));
     return currentInstance;

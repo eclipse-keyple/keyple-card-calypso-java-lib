@@ -165,7 +165,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     if (getTransactionContext().isSecureSessionOpen()) {
       try {
         CommandCloseSecureSession cancelSecureSessionCommand =
-            new CommandCloseSecureSession(getTransactionContext(), getCommandContext());
+            new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), true);
         cancelSecureSessionCommand.finalizeRequest();
         List<Command> commands = new ArrayList<Command>(1);
         commands.add(cancelSecureSessionCommand);

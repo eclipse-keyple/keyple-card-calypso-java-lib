@@ -66,8 +66,7 @@ final class CommandVerifyPin extends Command {
         0x6983,
         new StatusProperties("Presentation rejected (PIN is blocked).", CardPinException.class));
     m.put(
-        0x6D00,
-        new StatusProperties("PIN function not present.", CardIllegalParameterException.class));
+        0x6D00, new StatusProperties("PIN function not present.", CardSecurityDataException.class));
     STATUS_TABLE = m;
   }
 

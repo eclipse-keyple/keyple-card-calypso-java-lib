@@ -61,8 +61,8 @@ final class CommandGetDataCardPublicKey extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                BerTlvTag.ECC_PUBLIC_KEY_MSB,
-                BerTlvTag.ECC_PUBLIC_KEY_LSB,
+                CalypsoCardConstant.TAG_ECC_PUBLIC_KEY_MSB,
+                CalypsoCardConstant.TAG_ECC_PUBLIC_KEY_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("ECC_PUBLIC_KEY");

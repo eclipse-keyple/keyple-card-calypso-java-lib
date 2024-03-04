@@ -127,7 +127,7 @@ final class SecurePkiModeTransactionManagerAdapter
     if (getTransactionContext().isSecureSessionOpen()) {
       try {
         CommandCloseSecureSession cancelSecureSessionCommand =
-            new CommandCloseSecureSession(getTransactionContext(), getCommandContext());
+            new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), true);
         cancelSecureSessionCommand.finalizeRequest();
         List<Command> commands = new ArrayList<Command>(1);
         commands.add(cancelSecureSessionCommand);
@@ -413,7 +413,8 @@ final class SecurePkiModeTransactionManagerAdapter
   public SecurePkiModeTransactionManager prepareCloseSecureSession() {
     try {
       checkSecureSession();
-      commands.add(new CommandCloseSecureSession(getTransactionContext(), getCommandContext()));
+      commands.add(
+          new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), false));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;

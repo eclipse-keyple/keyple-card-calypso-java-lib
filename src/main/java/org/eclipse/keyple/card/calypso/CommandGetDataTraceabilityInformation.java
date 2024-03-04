@@ -61,8 +61,8 @@ final class CommandGetDataTraceabilityInformation extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                BerTlvTag.TRACEABILITY_INFORMATION_MSB,
-                BerTlvTag.TRACEABILITY_INFORMATION_LSB,
+                CalypsoCardConstant.TAG_TRACEABILITY_INFORMATION_MSB,
+                CalypsoCardConstant.TAG_TRACEABILITY_INFORMATION_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("TRACEABILITY_INFORMATION");

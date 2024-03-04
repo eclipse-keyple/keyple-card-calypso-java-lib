@@ -293,34 +293,36 @@ abstract class Command {
    */
   final void updateTerminalSessionIfNeeded(byte[] apduResponse) {
 
-    if (isCryptoServiceSynchronized || !commandContext.isSecureSessionOpen()) {
+    if (isCryptoServiceSynchronized) {
       return;
     }
 
-    if (transactionContext.isPkiMode()) {
-      // asymmetric crypto mode
-      transactionContext
-          .getAsymmetricCryptoCardTransactionManagerSpi()
-          .updateTerminalPkiSession(apduRequest.getApdu());
-      transactionContext
-          .getAsymmetricCryptoCardTransactionManagerSpi()
-          .updateTerminalPkiSession(apduResponse);
-    } else {
-      SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManager =
-          transactionContext.getSymmetricCryptoCardTransactionManagerSpi();
+    if (commandContext.isSecureSessionOpen()) {
+      if (transactionContext.isPkiMode()) {
+        // asymmetric crypto mode
+        transactionContext
+            .getAsymmetricCryptoCardTransactionManagerSpi()
+            .updateTerminalPkiSession(apduRequest.getApdu());
+        transactionContext
+            .getAsymmetricCryptoCardTransactionManagerSpi()
+            .updateTerminalPkiSession(apduResponse);
+      } else {
+        SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManager =
+            transactionContext.getSymmetricCryptoCardTransactionManagerSpi();
 
-      if (symmetricCryptoCardTransactionManager == null) {
-        return;
-      }
+        if (symmetricCryptoCardTransactionManager == null) {
+          return;
+        }
 
-      // symmetric crypto mode
-      try {
-        symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduRequest.getApdu());
-        symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduResponse);
-      } catch (SymmetricCryptoException e) {
-        throw new CryptoException(e.getMessage(), e);
-      } catch (SymmetricCryptoIOException e) {
-        throw new CryptoIOException(e.getMessage(), e);
+        // symmetric crypto mode
+        try {
+          symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduRequest.getApdu());
+          symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduResponse);
+        } catch (SymmetricCryptoException e) {
+          throw new CryptoException(e.getMessage(), e);
+        } catch (SymmetricCryptoIOException e) {
+          throw new CryptoIOException(e.getMessage(), e);
+        }
       }
     }
 

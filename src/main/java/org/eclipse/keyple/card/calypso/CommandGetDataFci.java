@@ -80,8 +80,8 @@ final class CommandGetDataFci extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                BerTlvTag.FCI_FOR_CURRENT_DF_MSB,
-                BerTlvTag.FCI_FOR_CURRENT_DF_LSB,
+                CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_MSB,
+                CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("FCI_FOR_CURRENT_DF");

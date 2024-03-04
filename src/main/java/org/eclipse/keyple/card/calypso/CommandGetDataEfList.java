@@ -67,8 +67,8 @@ final class CommandGetDataEfList extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                BerTlvTag.EF_LIST_MSB,
-                BerTlvTag.EF_LIST_LSB,
+                CalypsoCardConstant.TAG_EF_LIST_MSB,
+                CalypsoCardConstant.TAG_EF_LIST_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("EF_LIST");

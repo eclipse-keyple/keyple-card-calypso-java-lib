@@ -41,7 +41,9 @@ final class CommandCloseSecureSession extends Command {
       "Unable to verify the card session MAC associated to the successfully closed secure session.";
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
       "Unable to verify the card SV MAC associated to the SV operation.";
-  public static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
+  private static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
+  private static final String MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED =
+      "The card signature verification failed";
 
   private static final CardCommandRef commandRef = CardCommandRef.CLOSE_SECURE_SESSION;
 
@@ -93,21 +95,22 @@ final class CommandCloseSecureSession extends Command {
   }
 
   /**
-   * Instantiates a new command based on the product type of the card to generate an abort session
-   * command (Close Secure Session with p1 = p2 = lc = 0).
+   * Instantiates a new command based on the product type of the card to generate either an "Abort
+   * Secure Session" command or a "Close Secure Session" in PKI mode.
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param context The command context.
+   * @param isAbort true for creating an abort session command.
    * @since 2.3.2
    */
-  CommandCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
+  CommandCloseSecureSession(
+      TransactionContextDto transactionContext, CommandContextDto context, boolean isAbort) {
     super(commandRef, 0, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.svPostponedDataIndex = -1;
     if (transactionContext.isPkiMode()) {
-      this.isAbortSecureSession = false;
       // this a close in PKI mode.
-      // set the APDU earlier since there is no call to finalizeRequest
+      // in this case, set the APDU earlier since there is no call to finalizeRequest
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -116,9 +119,10 @@ final class CommandCloseSecureSession extends Command {
                   (byte) 0x00,
                   (byte) 0x00,
                   null,
-                  (byte) 0x40)));
+                  isAbort ? (byte) 0 : (byte) 0x40)));
+      this.isAbortSecureSession = isAbort;
     } else {
-      // this is a session abort
+      // this is a non PKI session abort
       this.isAbortSecureSession = true;
     }
   }
@@ -202,9 +206,9 @@ final class CommandCloseSecureSession extends Command {
     getTransactionContext().setSecureSessionOpen(false);
     byte[] responseData = getApduResponse().getDataOut();
     if (getTransactionContext().isPkiMode()) {
-      parseResponseInPkiMode(responseData);
+      parseResponseInAsymmetricMode(responseData);
     } else {
-      parseResponseInSymmetricCryptoMode(responseData);
+      parseResponseInSymmetricMode(responseData);
     }
   }
 
@@ -229,7 +233,7 @@ final class CommandCloseSecureSession extends Command {
    *
    * @param responseData The byte array containing the response data.
    */
-  private void parseResponseInSymmetricCryptoMode(byte[] responseData) {
+  private void parseResponseInSymmetricMode(byte[] responseData) {
     // Retrieve the postponed data
     int cardSessionMacLength = getTransactionContext().getCard().isExtendedModeSupported() ? 8 : 4;
     int i = 0;
@@ -272,11 +276,11 @@ final class CommandCloseSecureSession extends Command {
    *
    * @param responseData The byte array containing the response data.
    */
-  private void parseResponseInPkiMode(byte[] responseData) {
+  private void parseResponseInAsymmetricMode(byte[] responseData) {
     if (!getTransactionContext()
         .getAsymmetricCryptoCardTransactionManagerSpi()
         .isCardPkiSessionValid(responseData)) {
-      throw new InvalidCardSignatureException("The card signature verification failed");
+      throw new InvalidCardSignatureException(MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED);
     }
   }
 

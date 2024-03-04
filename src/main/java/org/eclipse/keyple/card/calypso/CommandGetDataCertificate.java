@@ -67,11 +67,11 @@ final class CommandGetDataCertificate extends Command {
     byte p1;
     byte p2;
     if (isCardCertificate) {
-      p1 = BerTlvTag.CARD_CERTIFICATE_MSB;
-      p2 = BerTlvTag.CARD_CERTIFICATE_LSB;
+      p1 = CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB;
+      p2 = CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB;
     } else {
-      p1 = BerTlvTag.CA_CERTIFICATE_MSB;
-      p2 = BerTlvTag.CA_CERTIFICATE_LSB;
+      p1 = CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB;
+      p2 = CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB;
     }
     if (!isFirstPart) {
       p2++;
@@ -132,8 +132,13 @@ final class CommandGetDataCertificate extends Command {
 
     byte[] expectedTagBytes =
         isCardCertificate
-            ? new byte[] {BerTlvTag.CARD_CERTIFICATE_MSB, BerTlvTag.CARD_CERTIFICATE_LSB}
-            : new byte[] {BerTlvTag.CA_CERTIFICATE_MSB, BerTlvTag.CA_CERTIFICATE_LSB};
+            ? new byte[] {
+              CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB,
+              CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB
+            }
+            : new byte[] {
+              CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB, CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
+            };
 
     if (isFirstPart) {
       // Check if the first 2 bytes of the response match the expected tag.
