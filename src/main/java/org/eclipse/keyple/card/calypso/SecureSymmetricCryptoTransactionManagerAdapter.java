@@ -162,7 +162,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     isSvOperationInSecureSession = false;
     disablePreOpenMode();
     commands.clear();
-    if (getCommandContext().isSecureSessionOpen()) {
+    if (getTransactionContext().isSecureSessionOpen()) {
       try {
         CommandCloseSecureSession cancelSecureSessionCommand =
             new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), true);
@@ -174,6 +174,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         logger.debug("Secure session abortion error: {}", e.getMessage());
       } finally {
         card.restoreFiles();
+        getTransactionContext().setSecureSessionOpen(false);
       }
     }
   }

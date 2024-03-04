@@ -204,6 +204,7 @@ final class CommandCloseSecureSession extends Command {
       return;
     }
     super.setApduResponseAndCheckStatus(apduResponse);
+    getTransactionContext().setSecureSessionOpen(false);
     byte[] responseData = getApduResponse().getDataOut();
     if (getTransactionContext().isPkiMode()) {
       parseResponseInAsymmetricMode(responseData);
@@ -218,6 +219,7 @@ final class CommandCloseSecureSession extends Command {
    * @param apduResponse The response from the APDU command.
    */
   private void processAbort(ApduResponseApi apduResponse) {
+    getTransactionContext().setSecureSessionOpen(false);
     try {
       super.setApduResponseAndCheckStatus(apduResponse);
       logger.info("Secure session successfully aborted");

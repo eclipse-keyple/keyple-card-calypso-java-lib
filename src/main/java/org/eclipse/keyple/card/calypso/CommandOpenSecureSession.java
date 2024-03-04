@@ -449,6 +449,7 @@ final class CommandOpenSecureSession extends Command {
     if (!getTransactionContext().isPkiMode()) {
       if (!isPreOpenModeOnSelection) {
         card.backupFiles();
+        getTransactionContext().setSecureSessionOpen(true);
       }
       switch (card.getProductType()) {
         case PRIME_REVISION_1:
