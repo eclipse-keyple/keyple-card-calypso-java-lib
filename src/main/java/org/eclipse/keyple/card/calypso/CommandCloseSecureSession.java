@@ -103,8 +103,24 @@ final class CommandCloseSecureSession extends Command {
   CommandCloseSecureSession(TransactionContextDto transactionContext, CommandContextDto context) {
     super(commandRef, 0, transactionContext, context);
     this.isAutoRatificationAsked = true;
-    this.isAbortSecureSession = true;
     this.svPostponedDataIndex = -1;
+    if (transactionContext.isPkiMode()) {
+      this.isAbortSecureSession = false;
+      // this a close in PKI mode.
+      // set the APDU earlier since there is no call to finalizeRequest
+      setApduRequest(
+          new ApduRequestAdapter(
+              ApduUtil.build(
+                  getTransactionContext().getCard().getCardClass().getValue(),
+                  commandRef.getInstructionByte(),
+                  (byte) 0x00,
+                  (byte) 0x00,
+                  null,
+                  (byte) 0x40)));
+    } else {
+      // this is a session abort
+      this.isAbortSecureSession = true;
+    }
   }
 
   /**
@@ -179,19 +195,41 @@ final class CommandCloseSecureSession extends Command {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     if (isAbortSecureSession) {
-      getTransactionContext().setSecureSessionOpen(false);
-      try {
-        super.setApduResponseAndCheckStatus(apduResponse);
-        logger.info("Secure session successfully aborted");
-        getTransactionContext().getCard().restoreFiles();
-      } catch (CardCommandException e) {
-        logger.debug("Secure session abortion error: {}", e.getMessage());
-      }
+      processAbort(apduResponse);
       return;
     }
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().setSecureSessionOpen(false);
     byte[] responseData = getApduResponse().getDataOut();
+    if (getTransactionContext().isPkiMode()) {
+      parseResponseInPkiMode(responseData);
+    } else {
+      parseResponseInSymmetricCryptoMode(responseData);
+    }
+  }
+
+  /**
+   * Aborts the secure session.
+   *
+   * @param apduResponse The response from the APDU command.
+   */
+  private void processAbort(ApduResponseApi apduResponse) {
+    getTransactionContext().setSecureSessionOpen(false);
+    try {
+      super.setApduResponseAndCheckStatus(apduResponse);
+      logger.info("Secure session successfully aborted");
+      getTransactionContext().getCard().restoreFiles();
+    } catch (CardCommandException e) {
+      logger.debug("Secure session abortion error: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * Parses the response in symmetric crypto mode to verify the card MAC.
+   *
+   * @param responseData The byte array containing the response data.
+   */
+  private void parseResponseInSymmetricCryptoMode(byte[] responseData) {
     // Retrieve the postponed data
     int cardSessionMacLength = getTransactionContext().getCard().isExtendedModeSupported() ? 8 : 4;
     int i = 0;
@@ -226,6 +264,19 @@ final class CommandCloseSecureSession extends Command {
       } catch (SymmetricCryptoException e) {
         throw new CryptoException(e.getMessage(), e);
       }
+    }
+  }
+
+  /**
+   * Parses the response in PKI mode to verify the card signature.
+   *
+   * @param responseData The byte array containing the response data.
+   */
+  private void parseResponseInPkiMode(byte[] responseData) {
+    if (!getTransactionContext()
+        .getAsymmetricCryptoCardTransactionManagerSpi()
+        .isCardPkiSessionValid(responseData)) {
+      throw new InvalidCardSignatureException("The card signature verification failed");
     }
   }
 

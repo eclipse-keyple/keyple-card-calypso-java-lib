@@ -18,6 +18,7 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.card.SvDebitLogRecord;
 import org.eclipse.keypop.calypso.card.card.SvLoadLogRecord;
 import org.eclipse.keypop.calypso.card.transaction.SearchCommandData;
+import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.SvCommandSecurityDataApi;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
@@ -916,10 +917,13 @@ final class DtoAdapters {
 
     private CalypsoCardAdapter card;
     private final SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi;
+    private final AsymmetricCryptoCardTransactionManagerSpi
+        asymmetricCryptoCardTransactionManagerSpi;
     private boolean isSecureSessionOpen;
+    private final boolean isPkiMode;
 
     /**
-     * Constructor.
+     * Constructor for symmetric crypto operations.
      *
      * @param card The Calypso card.
      * @param symmetricCryptoCardTransactionManagerSpi The symmetric crypto service SPI.
@@ -930,7 +934,53 @@ final class DtoAdapters {
         SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManagerSpi) {
       this.card = card;
       this.symmetricCryptoCardTransactionManagerSpi = symmetricCryptoCardTransactionManagerSpi;
+      this.asymmetricCryptoCardTransactionManagerSpi = null;
       isSecureSessionOpen = false;
+      isPkiMode = false;
+    }
+
+    /**
+     * Constructor for asymmetric crypto operations.
+     *
+     * @param card The Calypso card.
+     * @param asymmetricCryptoCardTransactionManagerSpi The asymmetric crypto service SPI.
+     * @since 3.1.0
+     */
+    TransactionContextDto(
+        CalypsoCardAdapter card,
+        AsymmetricCryptoCardTransactionManagerSpi asymmetricCryptoCardTransactionManagerSpi) {
+      this.card = card;
+      this.symmetricCryptoCardTransactionManagerSpi = null;
+      this.asymmetricCryptoCardTransactionManagerSpi = asymmetricCryptoCardTransactionManagerSpi;
+      isSecureSessionOpen = false;
+      isPkiMode = true;
+    }
+
+    /**
+     * Constructor for operations without cryptographic processes.
+     *
+     * @param card The Calypso card.
+     * @since 3.1.0
+     */
+    public TransactionContextDto(CalypsoCardAdapter card) {
+      this.card = card;
+      this.symmetricCryptoCardTransactionManagerSpi = null;
+      this.asymmetricCryptoCardTransactionManagerSpi = null;
+      isSecureSessionOpen = false;
+      isPkiMode = false;
+    }
+
+    /**
+     * Constructor for operations outside an existing transaction.
+     *
+     * @since 3.1.0
+     */
+    public TransactionContextDto() {
+      this.card = null;
+      this.symmetricCryptoCardTransactionManagerSpi = null;
+      this.asymmetricCryptoCardTransactionManagerSpi = null;
+      isSecureSessionOpen = false;
+      isPkiMode = false;
     }
 
     /**
@@ -950,11 +1000,27 @@ final class DtoAdapters {
     }
 
     /**
+     * @return The asymmetric crypto service or "null" if not set.
+     * @since 3.1.0
+     */
+    AsymmetricCryptoCardTransactionManagerSpi getAsymmetricCryptoCardTransactionManagerSpi() {
+      return asymmetricCryptoCardTransactionManagerSpi;
+    }
+
+    /**
      * @return "true" if the secure session is open.
      * @since 2.3.2
      */
     boolean isSecureSessionOpen() {
       return isSecureSessionOpen;
+    }
+
+    /**
+     * @return "true" if the PKI mode is active.
+     * @since 3.1.0
+     */
+    boolean isPkiMode() {
+      return isPkiMode;
     }
 
     /**

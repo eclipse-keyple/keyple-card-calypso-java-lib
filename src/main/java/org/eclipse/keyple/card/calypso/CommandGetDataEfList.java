@@ -67,10 +67,11 @@ final class CommandGetDataEfList extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0xC0,
+                BerTlvTag.EF_LIST_MSB,
+                BerTlvTag.EF_LIST_LSB,
                 null,
                 (byte) 0x00)));
+    addSubName("EF_LIST");
   }
 
   /**
@@ -116,7 +117,7 @@ final class CommandGetDataEfList extends Command {
     for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
       getTransactionContext().getCard().setFileHeader(entry.getValue(), entry.getKey());
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

@@ -17,6 +17,7 @@ import java.util.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.ElementaryFile;
@@ -198,7 +199,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     for (int i = 0; i < apduResponses.size(); i++) {
       Command command = commands.get(i);
       try {
-        command.parseResponse(apduResponses.get(i));
+        parseCommand(command, apduResponses.get(i));
       } catch (CardCommandException e) {
         throw new UnexpectedCommandStatusException(
             MSG_CARD_COMMAND_ERROR
@@ -219,6 +220,18 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               + apduResponses.size()
               + getTransactionAuditDataAsString());
     }
+  }
+
+  /**
+   * Parses the command's response.
+   *
+   * @param command The command.
+   * @param apduResponse The response from the card.
+   * @throws CardCommandException If there is an error in the card command.
+   * @since 3.1.0
+   */
+  void parseCommand(Command command, ApduResponseApi apduResponse) throws CardCommandException {
+    command.parseResponse(apduResponse);
   }
 
   /**
@@ -377,6 +390,26 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               new CommandGetDataTraceabilityInformation(
                   getTransactionContext(), getCommandContext()));
           break;
+        case CARD_PUBLIC_KEY:
+          commands.add(
+              new CommandGetDataCardPublicKey(getTransactionContext(), getCommandContext()));
+          break;
+        case CARD_CERTIFICATE:
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), true, true));
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), true, false));
+          break;
+        case CA_CERTIFICATE:
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), false, true));
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), false, false));
+          break;
         default:
           throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
       }
@@ -384,6 +417,79 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       resetTransaction();
       throw e;
     }
+    return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public T preparePutData(PutDataTag putDataTag, byte[] data) {
+
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(
+          "Unsupported tag since PKI mode is not available for this card.");
+    }
+
+    Assert.getInstance().notNull(putDataTag, "putDataTag").notNull(data, "data");
+    int payloadCapacity = getTransactionContext().getCard().getPayloadCapacity();
+
+    byte tagH = (byte) 0xDF;
+    byte tagLFirst;
+    byte tagLNext;
+
+    // check lengths and set card tag values for each case
+    switch (putDataTag) {
+      case CARD_KEY_PAIR:
+        if (data.length != 96) {
+          throw new IllegalArgumentException(
+              "Bad length for CARD_KEY_PAIR. Expected: 96, but was: " + data.length);
+        }
+        tagLFirst = 0x3C;
+        tagLNext = 0;
+        break;
+      case CA_CERTIFICATE:
+        if (data.length != 384) {
+          throw new IllegalArgumentException(
+              "Bad length for CA_CERTIFICATE. Expected: 384, but was: " + data.length);
+        }
+        tagLFirst = 0x4A;
+        tagLNext = 0x4B;
+        break;
+      case CARD_CERTIFICATE:
+        if (data.length != 316) {
+          throw new IllegalArgumentException(
+              "Bad length for CARD_CERTIFICATE. Expected: 316, but was: " + data.length);
+        }
+        tagLFirst = 0x4C;
+        tagLNext = 0x4D;
+        break;
+      default:
+        throw new IllegalStateException("Unsupported tag: " + putDataTag.name());
+    }
+
+    // Create the needed put data commands.
+    // Note: For the CARD_KEY_PAIR case, data length won't exceed payload capacity, hence it would
+    // never generate more than one command.
+    for (int start = 0; start < data.length; start += payloadCapacity) {
+      int chunkSize = Math.min(payloadCapacity, data.length - start);
+
+      byte[] chunk = new byte[chunkSize];
+      System.arraycopy(data, start, chunk, 0, chunkSize);
+
+      if (start == 0) {
+        commands.add(
+            new CommandPutData(
+                getTransactionContext(), getCommandContext(), tagH, tagLFirst, chunk));
+      } else {
+        commands.add(
+            new CommandPutData(
+                getTransactionContext(), getCommandContext(), tagH, tagLNext, chunk));
+      }
+    }
+
     return currentInstance;
   }
 
@@ -1157,6 +1263,21 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       resetTransaction();
       throw e;
     }
+    return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public T prepareGenerateAsymmetricKeyPair() {
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException("PKI mode is not available for this card.");
+    }
+    commands.add(
+        new CommandGenerateAsymmetricKeyPair(getTransactionContext(), getCommandContext()));
     return currentInstance;
   }
 

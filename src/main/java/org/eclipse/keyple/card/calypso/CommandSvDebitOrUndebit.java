@@ -290,7 +290,7 @@ final class CommandSvDebitOrUndebit extends Command {
     CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
     calypsoCard.setSvOperationSignature(apduResponse.getDataOut());
     updateCalypsoCardSvHistory(calypsoCard);
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
     if (!getCommandContext().isSecureSessionOpen()) {
       try {
         if (!getTransactionContext()

@@ -19,11 +19,11 @@ import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
- * Builds the Rehabilitate command.
+ * Builds the Put Data command.
  *
- * @since 2.0.1
+ * @since 3.1.0
  */
-final class CommandRehabilitate extends Command {
+final class CommandPutData extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
@@ -37,12 +37,21 @@ final class CommandRehabilitate extends Command {
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no session, wrong key).",
-            CardSecurityContextException.class));
+            "Security conditions not fulfilled.", CardSecurityContextException.class));
+    m.put(0x6985, new StatusProperties("Access forbidden.", CardAccessForbiddenException.class));
     m.put(
-        0x6985,
+        0x6A80,
+        new StatusProperties("Lc not compatible with P1P2.", CardIllegalParameterException.class));
+    m.put(
+        0x6A87, new StatusProperties("Incorrect incoming data.", CardSecurityDataException.class));
+    m.put(
+        0x6A88, new StatusProperties("Data object not found.", CardSecurityContextException.class));
+    m.put(0x6A8A, new StatusProperties("Incorrect AID.", CardSecurityContextException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
+    m.put(
+        0x6D00,
         new StatusProperties(
-            "Access forbidden (DF context is invalid).", CardAccessForbiddenException.class));
+            "Command Put Data not supported.", CardSecurityContextException.class));
     STATUS_TABLE = m;
   }
 
@@ -51,35 +60,40 @@ final class CommandRehabilitate extends Command {
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
-   * @since 2.3.2
+   * @since 3.1.0
    */
-  CommandRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.REHABILITATE, 0, transactionContext, commandContext);
+  CommandPutData(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte tagH,
+      byte tagL,
+      byte[] data) {
+    super(CardCommandRef.PUT_DATA, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                transactionContext.getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0x00,
-                null,
+                tagH,
+                tagL,
+                data,
                 null)));
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    /* nothing to do */
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
@@ -89,35 +103,27 @@ final class CommandRehabilitate extends Command {
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getCommandContext().isEncryptionActive()) {
-      return false;
-    }
-    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
-    return true;
+    return false; // Need to synchronize the card image
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    updateTerminalSessionIfNeeded();
-    // The DF has been successfully invalidated, update the DF status in the card object
-    getTransactionContext().getCard().setDfInvalidated(false);
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 3.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

@@ -210,7 +210,7 @@ final class CommandSearchRecordMultiple extends Command {
               data.getMatchingRecordNumbers().get(0),
               Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length));
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

@@ -61,10 +61,11 @@ final class CommandGetDataTraceabilityInformation extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                (byte) 0x01,
-                (byte) 0x85,
+                BerTlvTag.TRACEABILITY_INFORMATION_MSB,
+                BerTlvTag.TRACEABILITY_INFORMATION_LSB,
                 null,
                 (byte) 0x00)));
+    addSubName("TRACEABILITY_INFORMATION");
   }
 
   /**
@@ -107,7 +108,7 @@ final class CommandGetDataTraceabilityInformation extends Command {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**
