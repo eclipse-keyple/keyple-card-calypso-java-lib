@@ -43,8 +43,7 @@ final class CommandCloseSecureSession extends Command {
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
       "Unable to verify the card SV MAC associated to the SV operation.";
   private static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
-  private static final String MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED =
-      "The card signature verification failed";
+  private static final String MSG_INVALID_CARD_SESSION_SIGNATURE = "Invalid card session signature";
 
   private static final CardCommandRef commandRef = CardCommandRef.CLOSE_SECURE_SESSION;
 
@@ -278,17 +277,14 @@ final class CommandCloseSecureSession extends Command {
    * @param responseData The byte array containing the response data.
    */
   private void parseResponseInAsymmetricMode(byte[] responseData) {
-    boolean isSessionValid;
     try {
-      isSessionValid =
-          getTransactionContext()
-              .getAsymmetricCryptoCardTransactionManagerSpi()
-              .isCardPkiSessionValid(responseData);
+      if (!getTransactionContext()
+          .getAsymmetricCryptoCardTransactionManagerSpi()
+          .isCardPkiSessionValid(responseData)) {
+        throw new InvalidCardSignatureException(MSG_INVALID_CARD_SESSION_SIGNATURE);
+      }
     } catch (AsymmetricCryptoException e) {
-      throw new InvalidCardSignatureException(MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED, e);
-    }
-    if (!isSessionValid) {
-      throw new InvalidCardSignatureException(MSG_THE_CARD_SIGNATURE_VERIFICATION_FAILED);
+      throw new CryptoException(e.getMessage(), e);
     }
   }
 
