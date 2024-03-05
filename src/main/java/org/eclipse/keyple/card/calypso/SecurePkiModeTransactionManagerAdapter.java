@@ -15,15 +15,17 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificate;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CardIdentifierApi;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
+import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.slf4j.Logger;
@@ -44,10 +46,13 @@ final class SecurePkiModeTransactionManagerAdapter
   private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
   private final TransactionContextDto transactionContext;
   private final AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting;
-  private final CardTransactionCryptoExtension cryptoExtension = null;
-  private final SecureRandom rand = new SecureRandom();
-  private boolean isGetCaCertificatePrepared; // TODO find where to set this flag?
+  private final CardTransactionCryptoExtension cryptoExtension;
+  private final SecureRandom secureRandom = new SecureRandom();
+  private final int payloadCapacity;
+
   private ChannelControl originalChannelControl;
+  private boolean isGetDataCardCertificatePrepared;
+  private boolean isGetDataCaCertificatePrepared;
 
   /**
    * Builds a new instance.
@@ -65,12 +70,16 @@ final class SecurePkiModeTransactionManagerAdapter
 
     this.asymmetricCryptoSecuritySetting = asymmetricCryptoSecuritySetting;
 
-    transactionContext =
-        new TransactionContextDto(
-            card,
-            asymmetricCryptoSecuritySetting
-                .getCryptoCardTransactionManagerFactorySpi()
-                .createCardTransactionManager());
+    payloadCapacity = card.getPayloadCapacity();
+
+    AsymmetricCryptoCardTransactionManagerSpi asymmetricCryptoCardTransactionManagerSpi =
+        asymmetricCryptoSecuritySetting
+            .getCryptoCardTransactionManagerFactorySpi()
+            .createCardTransactionManager();
+
+    cryptoExtension = (CardTransactionCryptoExtension) asymmetricCryptoCardTransactionManagerSpi;
+
+    transactionContext = new TransactionContextDto(card, asymmetricCryptoCardTransactionManagerSpi);
   }
 
   /**
@@ -110,7 +119,7 @@ final class SecurePkiModeTransactionManagerAdapter
    */
   @Override
   int getPayloadCapacity() {
-    return card.getPayloadCapacity();
+    return payloadCapacity;
   }
 
   /**
@@ -120,14 +129,15 @@ final class SecurePkiModeTransactionManagerAdapter
    */
   @Override
   void resetTransaction() {
-
     resetCommandContext();
+    isGetDataCardCertificatePrepared = false;
+    isGetDataCaCertificatePrepared = false;
     disablePreOpenMode();
     commands.clear();
-    if (getTransactionContext().isSecureSessionOpen()) {
+    if (transactionContext.isSecureSessionOpen()) {
       try {
         CommandCloseSecureSession cancelSecureSessionCommand =
-            new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), true);
+            new CommandCloseSecureSession(transactionContext, getCommandContext(), true);
         cancelSecureSessionCommand.finalizeRequest();
         List<Command> commands = new ArrayList<Command>(1);
         commands.add(cancelSecureSessionCommand);
@@ -136,7 +146,7 @@ final class SecurePkiModeTransactionManagerAdapter
         logger.debug("Secure session abortion error: {}", e.getMessage());
       } finally {
         card.restoreFiles();
-        getTransactionContext().setSecureSessionOpen(false);
+        transactionContext.setSecureSessionOpen(false);
       }
     }
   }
@@ -158,7 +168,8 @@ final class SecurePkiModeTransactionManagerAdapter
    */
   @Override
   boolean canConfigureReadOnOpenSecureSession() {
-    return !commands.isEmpty()
+    return isSecureSessionOpen
+        && !commands.isEmpty()
         && commands.get(commands.size() - 1).getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION
         && !((CommandOpenSecureSession) commands.get(commands.size() - 1)).isReadModeConfigured();
   }
@@ -177,7 +188,7 @@ final class SecurePkiModeTransactionManagerAdapter
       if (!card.isPinFeatureAvailable()) {
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
-      commands.add(new CommandVerifyPin(getTransactionContext(), getCommandContext(), pin));
+      commands.add(new CommandVerifyPin(transactionContext, getCommandContext(), pin));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -200,7 +211,7 @@ final class SecurePkiModeTransactionManagerAdapter
         throw new UnsupportedOperationException(MSG_PIN_NOT_AVAILABLE);
       }
       // CL-PIN-MENCRYPT.1
-      commands.add(new CommandChangePin(getTransactionContext(), getCommandContext(), newPin));
+      commands.add(new CommandChangePin(transactionContext, getCommandContext(), newPin));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -214,19 +225,37 @@ final class SecurePkiModeTransactionManagerAdapter
    * @since 3.1.0
    */
   @Override
+  public SecurePkiModeTransactionManager prepareGetData(GetDataTag tag) {
+    super.prepareGetData(tag);
+    if (tag == GetDataTag.CARD_CERTIFICATE) {
+      isGetDataCardCertificatePrepared = true;
+    } else if (tag == GetDataTag.CA_CERTIFICATE) {
+      isGetDataCaCertificatePrepared = true;
+    }
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
   public SecurePkiModeTransactionManager processCommands(ChannelControl channelControl) {
+    if (commands.isEmpty()) {
+      return this;
+    }
     try {
-      List<Command> cardRequestCommands = new ArrayList<Command>(commands);
-      // In the event that the CA certificate is missing before the parsing of the response to
+      // In the case that the CA certificate is missing before the parsing of the response to
       // the "open secure session" command, we seamlessly trigger the execution of Get Data commands
       // to fetch it. Depending on the current status of the session, these commands might also be
       // integrated to the session hash. We need to keep the channel open and close or keep it open
       // as expected after the execution of the Get Data commands (role of originalChannelControl).
       originalChannelControl = channelControl;
-      if (card.getCaCertificate().length == 0 && !isGetCaCertificatePrepared) {
-        executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
+      if (card.getCaCertificate().length == 0 && !isGetDataCaCertificatePrepared) {
+        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } else {
-        executeCardCommands(cardRequestCommands, channelControl);
+        executeCardCommands(commands, channelControl);
       }
     } catch (RuntimeException e) {
       resetTransaction();
@@ -249,128 +278,101 @@ final class SecurePkiModeTransactionManagerAdapter
   void parseCommandResponse(Command command, ApduResponseApi apduResponse)
       throws CardCommandException {
     if (command.getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION) {
-      extractPublicKeyThroughChainOfTrust();
+      checkCardCertificateAndGetCardPublicKey();
     }
     command.parseResponse(apduResponse);
   }
 
-  /** Get the card public key using the PKI chain of trust and place it into the card image. */
-  private void extractPublicKeyThroughChainOfTrust() {
-    // converts the raw data into a usable object
+  /** Extracts the card public key using the PKI chain of trust and place it into the card image. */
+  private void checkCardCertificateAndGetCardPublicKey() {
+
+    // Parse the card certificate raw data
     CardCertificateSpi cardCertificateSpi = parseCardCertificate();
-    // search the current settings to see if the corresponding CA certificate is available.
-    CaCertificateContentSpi caCertificate =
+
+    // Try to retrieve the issuer certificate content from the store
+    CaCertificateContentSpi caCertificateContentSpi =
         asymmetricCryptoSecuritySetting.getCaCertificate(
             cardCertificateSpi.getIssuerPublicKeyReference());
-    if (caCertificate == null) {
-      // the certificate is not available, execute Get Data commands to get the missing CA
-      // certificate
-      caCertificate = fetchAndParseCaCertificate();
+
+    // If the issuer certificate content is not already registered, then retrieve it from the card
+    if (caCertificateContentSpi == null) {
+      // Read the CA certificate from the card using the original channel control
+      readCaCertificate();
+      // Parse the CA certificate raw data
+      CaCertificateSpi caCertificateSpi = parseCaCertificate();
+      // Register the CA certificate into the store
+      asymmetricCryptoSecuritySetting.addCaCertificate((CaCertificate) caCertificateSpi);
+      // Retrieve the CA certificate content from the store
+      caCertificateContentSpi =
+          asymmetricCryptoSecuritySetting.getCaCertificate(
+              cardCertificateSpi.getIssuerPublicKeyReference());
+    } else {
+      // Force the closing of the channel if originally requested
+      if (originalChannelControl == ChannelControl.CLOSE_AFTER) {
+        executeCardCommands(Collections.<Command>emptyList(), ChannelControl.CLOSE_AFTER);
+      }
     }
-    // retrieve the card public key from the card certificate using the CA certificate
-    CardPublicKeySpi cardPublicKeySpi =
-        extractAndVerifyCardPublicKey(cardCertificateSpi, caCertificate);
+
+    // Check the card certificate using the issuer certificate content and extract the public key
+    CardPublicKeySpi cardPublicKeySpi;
+    try {
+      cardPublicKeySpi =
+          cardCertificateSpi.checkCertificateAndGetPublicKey(
+              caCertificateContentSpi,
+              new CardIdentifierApiAdapter(card.getDfName(), card.getCalypsoSerialNumberFull()));
+    } catch (CertificateException e) {
+      throw new InvalidCertificateException("Invalid card certificate: " + e.getMessage(), e);
+    }
+
+    // Save the card public key into the card image
     card.setCardPublicKeySpi(cardPublicKeySpi);
   }
 
   /**
-   * Create a {@link CardPublicKeySpi} from the raw certificate placed into the card image when
-   * parsing the response of the previously executed Get Data commands.
+   * Parses the card certificate placed into the card image.
    *
-   * @return The card certificate.
+   * @return A non-null reference.
+   * @throws IllegalStateException If the certificate parser is not registered.
    */
   private CardCertificateSpi parseCardCertificate() {
     byte[] cardCertificateBytes = card.getCardCertificate();
     CardCertificateParserSpi cardCertificateParser =
-        (CardCertificateParserSpi)
-            asymmetricCryptoSecuritySetting.getCardCertificateParser(cardCertificateBytes[0]);
+        asymmetricCryptoSecuritySetting.getCardCertificateParser(cardCertificateBytes[0]);
+    if (cardCertificateParser == null) {
+      throw new IllegalStateException(
+          "No certificate parser registered for type " + HexUtil.toHex(cardCertificateBytes[0]));
+    }
     return cardCertificateParser.parseCertificate(cardCertificateBytes);
   }
 
   /**
-   * Executes additional Get Data commands to get the CA certificate from the card when not already
-   * available.
+   * Parses the CA certificate placed into the card image.
    *
-   * @return The CA certificate.
+   * @return A non-null reference.
+   * @throws IllegalStateException If the certificate parser is not registered.
    */
-  private CaCertificateContentSpi fetchAndParseCaCertificate() {
-    executeGetCaCertificateCommands();
+  private CaCertificateSpi parseCaCertificate() {
     byte[] caCertificateBytes = card.getCaCertificate();
     CaCertificateParserSpi caCertificateParser =
-        (CaCertificateParserSpi)
-            asymmetricCryptoSecuritySetting.getCaCertificateParser(caCertificateBytes[0]);
-    CaCertificateSpi caCertificateSpi = caCertificateParser.parseCertificate(caCertificateBytes);
-
-    return verifyAndAddCaCertificate(caCertificateSpi);
+        asymmetricCryptoSecuritySetting.getCaCertificateParser(caCertificateBytes[0]);
+    if (caCertificateParser == null) {
+      throw new IllegalStateException(
+          "No certificate parser registered for type " + HexUtil.toHex(caCertificateBytes[0]));
+    }
+    return caCertificateParser.parseCertificate(caCertificateBytes);
   }
 
   /**
    * Executes Get Data commands to retrieve the CA certificate from the card. The result will
    * available in the card image.
    */
-  private void executeGetCaCertificateCommands() {
-    List<Command> getCaCertificateCommands = new ArrayList<Command>(2);
-    getCaCertificateCommands.add(
-        new CommandGetDataCertificate(getTransactionContext(), getCommandContext(), false, true));
-    getCaCertificateCommands.add(
-        new CommandGetDataCertificate(getTransactionContext(), getCommandContext(), false, false));
-    try {
-      executeCardCommands(getCaCertificateCommands, originalChannelControl);
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    }
-  }
-
-  /**
-   * Parses the certificate, authenticate it against the parent certificate, which is expected to be
-   * available in the settings' certificate store, and retrieves the CA certificate's public key.
-   *
-   * <p>Add the resulting CA certificate to the settings' store.
-   *
-   * @param caCertificateSpi The certificate to process.
-   * @return The
-   */
-  private CaCertificateContentSpi verifyAndAddCaCertificate(CaCertificateSpi caCertificateSpi) {
-    // search the current settings to see if the corresponding PCA certificate is available.
-    CaCertificateContentSpi pcaCertificate =
-        asymmetricCryptoSecuritySetting.getCaCertificate(
-            caCertificateSpi.getIssuerPublicKeyReference());
-    if (pcaCertificate == null) {
-      // TODO throw exception
-    }
-    try {
-      // invoke the PKI library to execute the cryptographic operations
-      CaCertificateContentSpi caCertificate =
-          caCertificateSpi.checkCertificateAndGetContent(pcaCertificate);
-      asymmetricCryptoSecuritySetting.addCaCertificate((CaCertificate) caCertificateSpi);
-      return caCertificate;
-    } catch (CertificateException e) {
-      // TODO change exception type
-      throw new RuntimeException(
-          "The extraction of the card public key from the card certificate failed", e);
-    }
-  }
-
-  /**
-   * Verifies the card certificate and get the card public key.
-   *
-   * @param cardCertificateSpi The card certificate to process.
-   * @param caCertificate The parent CA certificate.
-   * @return The card public key.
-   */
-  private CardPublicKeySpi extractAndVerifyCardPublicKey(
-      CardCertificateSpi cardCertificateSpi, CaCertificateContentSpi caCertificate) {
-    try {
-      // invoke the PKI library to execute the cryptographic operations
-      return cardCertificateSpi.checkCertificateAndGetPublicKey(
-          caCertificate,
-          new CardIdentifierApiAdapter(card.getDfName(), card.getCalypsoSerialNumberFull()));
-    } catch (CertificateException e) {
-      // TODO change exception type
-      throw new RuntimeException(
-          "The extraction of the card public key from the card certificate failed", e);
-    }
+  private void readCaCertificate() {
+    List<Command> commands = new ArrayList<Command>(2);
+    commands.add(
+        new CommandGetDataCertificate(transactionContext, getCommandContext(), false, true));
+    commands.add(
+        new CommandGetDataCertificate(transactionContext, getCommandContext(), false, false));
+    executeCardCommands(commands, originalChannelControl);
   }
 
   /**
@@ -381,8 +383,7 @@ final class SecurePkiModeTransactionManagerAdapter
   @Override
   public <E extends CardTransactionCryptoExtension> E getCryptoExtension(
       Class<E> cryptoExtensionClass) {
-    // TODO Check if this is needed
-    return (E) cryptoExtension;
+    return cryptoExtensionClass.cast(cryptoExtension);
   }
 
   /**
@@ -392,9 +393,12 @@ final class SecurePkiModeTransactionManagerAdapter
    */
   @Override
   public SecurePkiModeTransactionManager prepareOpenSecureSession() {
-    prepareGetData(GetDataTag.CARD_CERTIFICATE);
+    checkNoSecureSession();
+    if (card.getCardCertificate().length == 0 && !isGetDataCardCertificatePrepared) {
+      prepareGetData(GetDataTag.CARD_CERTIFICATE);
+    }
     byte[] terminalChallenge = new byte[8];
-    rand.nextBytes(terminalChallenge);
+    secureRandom.nextBytes(terminalChallenge);
     commands.add(
         new CommandOpenSecureSession(
             transactionContext,
@@ -414,8 +418,7 @@ final class SecurePkiModeTransactionManagerAdapter
   public SecurePkiModeTransactionManager prepareCloseSecureSession() {
     try {
       checkSecureSession();
-      commands.add(
-          new CommandCloseSecureSession(getTransactionContext(), getCommandContext(), false));
+      commands.add(new CommandCloseSecureSession(transactionContext, getCommandContext(), false));
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -424,47 +427,5 @@ final class SecurePkiModeTransactionManagerAdapter
       disablePreOpenMode();
     }
     return this;
-  }
-
-  /**
-   * Adapter of {@link CardIdentifierApi}.
-   *
-   * <p>Provides methods to retrieve the AID and the serial number of a card.
-   */
-  static class CardIdentifierApiAdapter implements CardIdentifierApi {
-
-    private final byte[] aid;
-    private final byte[] serialNumber;
-
-    /**
-     * Constructs a new instance.
-     *
-     * @param aid The AID of the card.
-     * @param serialNumber The serial number of the card.
-     */
-    CardIdentifierApiAdapter(byte[] aid, byte[] serialNumber) {
-      this.aid = aid;
-      this.serialNumber = serialNumber;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 3.1.0
-     */
-    @Override
-    public byte[] getAid() {
-      return aid;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 3.1.0
-     */
-    @Override
-    public byte[] getSerialNumber() {
-      return serialNumber;
-    }
   }
 }

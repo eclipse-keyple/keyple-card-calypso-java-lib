@@ -124,6 +124,7 @@ final class CommandGetDataCertificate extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
 
@@ -132,8 +133,13 @@ final class CommandGetDataCertificate extends Command {
 
     if (isFirstPart) {
       // Extract the certificate bytes, skipping the 5-byte tag and length prefix.
-      certificateBytes = new byte[dataOut.length - 5];
-      System.arraycopy(dataOut, 5, certificateBytes, 0, dataOut.length - 5);
+      certificateBytes = new byte[dataOut.length - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE];
+      System.arraycopy(
+          dataOut,
+          CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE,
+          certificateBytes,
+          0,
+          dataOut.length - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE);
     } else {
       // For subsequent parts, the entire dataOut is assumed to be the certificate data.
       certificateBytes = dataOut;

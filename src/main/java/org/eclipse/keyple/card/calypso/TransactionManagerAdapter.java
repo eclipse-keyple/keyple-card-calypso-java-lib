@@ -87,6 +87,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_SECURE_SESSION_OPEN = "Secure session open";
   private static final String MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD =
       "PKI mode is not available for this card.";
+  private static final String MSG_DATA_LENGTH = "data length";
 
   /* Final fields */
   T currentInstance = (T) this;
@@ -376,7 +377,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @since 2.0.0
    */
   @Override
-  public final T prepareGetData(GetDataTag tag) {
+  public T prepareGetData(GetDataTag tag) {
     try {
       Assert.getInstance().notNull(tag, "tag");
       switch (tag) {
@@ -431,69 +432,70 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    */
   @Override
   public T preparePutData(PutDataTag putDataTag, byte[] data) {
-
-    if (!card.isPkiModeSupported()) {
-      throw new UnsupportedOperationException(
-          "Unsupported tag since PKI mode is not available for this card.");
-    }
-
     Assert.getInstance().notNull(putDataTag, "putDataTag").notNull(data, "data");
-    int payloadCapacity = getTransactionContext().getCard().getPayloadCapacity();
-
-    // check lengths and set card tag values for each case
     switch (putDataTag) {
       case CARD_KEY_PAIR:
-        if (!card.isPkiModeSupported()) {
-          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
-        }
-        Assert.getInstance()
-            .isEqual(data.length, CalypsoCardConstant.CARD_KEY_PAIR_SIZE, "data length");
-        break;
-      case CA_CERTIFICATE:
-        if (!card.isPkiModeSupported()) {
-          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
-        }
-        if (getCommandContext().isSecureSessionOpen()) {
-          throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
-        }
-        Assert.getInstance()
-            .isEqual(data.length, CalypsoCardConstant.CA_CERTIFICATE_SIZE, "data length");
+        preparePutDataCardKeyPair(putDataTag, data);
         break;
       case CARD_CERTIFICATE:
-        if (!card.isPkiModeSupported()) {
-          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
-        }
-        if (getCommandContext().isSecureSessionOpen()) {
-          throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
-        }
-        Assert.getInstance()
-            .isEqual(data.length, CalypsoCardConstant.CARD_CERTIFICATE_SIZE, "data length");
+        preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
+        break;
+      case CA_CERTIFICATE:
+        preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CA_CERTIFICATE_SIZE);
         break;
       default:
-        throw new UnsupportedOperationException("Unsupported tag: " + putDataTag.name());
+        throw new UnsupportedOperationException("Unsupported tag: " + putDataTag);
     }
-
-    // Create the needed put data commands.
-    // Note: For the CARD_KEY_PAIR case, data length won't exceed payload capacity, hence it would
-    // never generate more than one command.
-    for (int start = 0; start < data.length; start += payloadCapacity) {
-      int chunkSize = Math.min(payloadCapacity, data.length - start);
-
-      byte[] chunk = new byte[chunkSize];
-      System.arraycopy(data, start, chunk, 0, chunkSize);
-
-      if (start == 0) {
-        commands.add(
-            new CommandPutData(
-                getTransactionContext(), getCommandContext(), putDataTag, true, chunk));
-      } else {
-        commands.add(
-            new CommandPutData(
-                getTransactionContext(), getCommandContext(), putDataTag, false, chunk));
-      }
-    }
-
     return currentInstance;
+  }
+
+  private void preparePutDataCardKeyPair(PutDataTag putDataTag, byte[] data) {
+
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
+    }
+
+    Assert.getInstance()
+        .isEqual(data.length, CalypsoCardConstant.CARD_KEY_PAIR_SIZE, MSG_DATA_LENGTH);
+
+    commands.add(
+        new CommandPutData(getTransactionContext(), getCommandContext(), putDataTag, true, data));
+  }
+
+  private void preparePutDataCertificate(PutDataTag putDataTag, byte[] data, int certificateSize) {
+
+    TransactionContextDto transactionContext = getTransactionContext();
+    CommandContextDto commandContext = getCommandContext();
+    int payloadCapacity = getTransactionContext().getCard().getPayloadCapacity();
+
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
+    }
+
+    if (commandContext.isSecureSessionOpen()) {
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+    }
+
+    Assert.getInstance().isEqual(data.length, certificateSize, MSG_DATA_LENGTH);
+
+    commands.add(
+        new CommandPutData(
+            transactionContext,
+            commandContext,
+            putDataTag,
+            true,
+            Arrays.copyOf(
+                data, payloadCapacity - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE)));
+    commands.add(
+        new CommandPutData(
+            transactionContext,
+            commandContext,
+            putDataTag,
+            false,
+            Arrays.copyOfRange(
+                data,
+                payloadCapacity - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE,
+                data.length)));
   }
 
   /**

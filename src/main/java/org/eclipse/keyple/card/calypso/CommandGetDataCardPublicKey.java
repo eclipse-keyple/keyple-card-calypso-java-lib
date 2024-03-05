@@ -62,8 +62,8 @@ final class CommandGetDataCardPublicKey extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                CalypsoCardConstant.TAG_ECC_PUBLIC_KEY_MSB,
-                CalypsoCardConstant.TAG_ECC_PUBLIC_KEY_LSB,
+                CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_MSB,
+                CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_LSB,
                 null,
                 (byte) 0x00)));
     addSubName("ECC_PUBLIC_KEY");
@@ -110,7 +110,10 @@ final class CommandGetDataCardPublicKey extends Command {
     getTransactionContext()
         .getCard()
         .setCardPublicKey(
-            Arrays.copyOfRange(apduResponse.getDataOut(), 3, apduResponse.getDataOut().length));
+            Arrays.copyOfRange(
+                apduResponse.getDataOut(),
+                CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_HEADER_SIZE,
+                apduResponse.getDataOut().length));
     updateTerminalSessionIfNeeded();
   }
 

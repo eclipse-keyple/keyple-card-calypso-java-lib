@@ -11,8 +11,11 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.CARD_PUBLIC_KEY_SIZE;
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
@@ -56,6 +59,10 @@ final class CommandPutData extends Command {
     STATUS_TABLE = m;
   }
 
+  private final PutDataTag tag;
+  private final byte[] data;
+  private final boolean isFirstPart;
+
   /**
    * Constructor.
    *
@@ -70,15 +77,17 @@ final class CommandPutData extends Command {
       boolean isFirstPart,
       byte[] data) {
     super(CardCommandRef.PUT_DATA, 0, transactionContext, commandContext);
+    this.tag = tag;
+    this.data = data;
+    this.isFirstPart = isFirstPart;
     byte tagMsb;
     byte tagLsb;
+    ByteBuffer dataIn;
     switch (tag) {
-      case CA_CERTIFICATE:
-        tagMsb = CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB;
-        tagLsb =
-            isFirstPart
-                ? CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
-                : CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB + 1;
+      case CARD_KEY_PAIR:
+        tagMsb = CalypsoCardConstant.TAG_CARD_KEY_PAIR_MSB;
+        tagLsb = CalypsoCardConstant.TAG_CARD_KEY_PAIR_LSB;
+        dataIn = ByteBuffer.wrap(data);
         break;
       case CARD_CERTIFICATE:
         tagMsb = CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB;
@@ -86,13 +95,32 @@ final class CommandPutData extends Command {
             isFirstPart
                 ? CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB
                 : CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB + 1;
+        if (isFirstPart) {
+          dataIn =
+              ByteBuffer.allocate(data.length + CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE);
+          dataIn.put(CalypsoCardConstant.TAG_CARD_CERTIFICATE_HEADER);
+          dataIn.put(data);
+        } else {
+          dataIn = ByteBuffer.wrap(data);
+        }
         break;
-      case CARD_KEY_PAIR:
-        tagMsb = CalypsoCardConstant.TAG_ECC_KEY_PAIR_MSB;
-        tagLsb = CalypsoCardConstant.TAG_ECC_KEY_PAIR_LSB;
+      case CA_CERTIFICATE:
+        tagMsb = CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB;
+        tagLsb =
+            isFirstPart
+                ? CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
+                : CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB + 1;
+        if (isFirstPart) {
+          dataIn =
+              ByteBuffer.allocate(data.length + CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE);
+          dataIn.put(CalypsoCardConstant.TAG_CA_CERTIFICATE_HEADER);
+          dataIn.put(data);
+        } else {
+          dataIn = ByteBuffer.wrap(data);
+        }
         break;
       default:
-        throw new UnsupportedOperationException("Unsupported tag");
+        throw new UnsupportedOperationException("Unsupported tag: " + tag);
     }
     setApduRequest(
         new ApduRequestAdapter(
@@ -101,7 +129,7 @@ final class CommandPutData extends Command {
                 getCommandRef().getInstructionByte(),
                 tagMsb,
                 tagLsb,
-                data,
+                dataIn.array(),
                 null)));
   }
 
@@ -148,7 +176,13 @@ final class CommandPutData extends Command {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    // TODO update card image
+    if (tag == PutDataTag.CARD_KEY_PAIR) {
+      getTransactionContext().getCard().setCardPublicKey(Arrays.copyOf(data, CARD_PUBLIC_KEY_SIZE));
+    } else if (tag == PutDataTag.CARD_CERTIFICATE) {
+      getTransactionContext().getCard().addCardCertificateBytes(data, isFirstPart);
+    } else if (tag == PutDataTag.CA_CERTIFICATE) {
+      getTransactionContext().getCard().addCaCertificateBytes(data, isFirstPart);
+    }
     updateTerminalSessionIfNeeded();
   }
 

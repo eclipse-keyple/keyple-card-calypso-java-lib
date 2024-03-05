@@ -11,6 +11,8 @@
  ************************************************************************************** */
 package org.eclipse.keyple.card.calypso;
 
+import org.eclipse.keyple.core.util.HexUtil;
+
 /**
  * Constants related to Calypso cards.
  *
@@ -98,6 +100,7 @@ final class CalypsoCardConstant {
 
   static final int LEGACY_REC_LENGTH = 29;
 
+  static final int CARD_PUBLIC_KEY_SIZE = 64;
   static final int CARD_KEY_PAIR_SIZE = 96;
   static final int CARD_CERTIFICATE_SIZE = 316;
   static final int CA_CERTIFICATE_SIZE = 384;
@@ -117,18 +120,22 @@ final class CalypsoCardConstant {
   static final byte TAG_TRACEABILITY_INFORMATION_LSB = (byte) (TAG_TRACEABILITY_INFORMATION & 0xFF);
   static final byte TAG_TRACEABILITY_INFORMATION_MSB =
       (byte) ((TAG_TRACEABILITY_INFORMATION & 0xFF00) >> 8);
-  static final int TAG_ECC_PUBLIC_KEY = 0xDF2C;
-  static final byte TAG_ECC_PUBLIC_KEY_LSB = (byte) (TAG_ECC_PUBLIC_KEY & 0xFF);
-  static final byte TAG_ECC_PUBLIC_KEY_MSB = (byte) ((TAG_ECC_PUBLIC_KEY & 0xFF00) >> 8);
-  static final int TAG_ECC_KEY_PAIR = 0xDF3C;
-  static final byte TAG_ECC_KEY_PAIR_LSB = (byte) (TAG_ECC_KEY_PAIR & 0xFF);
-  static final byte TAG_ECC_KEY_PAIR_MSB = (byte) ((TAG_ECC_KEY_PAIR & 0xFF00) >> 8);
-  static final int TAG_CA_CERTIFICATE = 0xDF4A;
-  static final byte TAG_CA_CERTIFICATE_LSB = (byte) (TAG_CA_CERTIFICATE & 0xFF);
-  static final byte TAG_CA_CERTIFICATE_MSB = (byte) ((TAG_CA_CERTIFICATE & 0xFF00) >> 8);
+  static final int TAG_CARD_PUBLIC_KEY_HEADER_SIZE = 3;
+  static final int TAG_CARD_PUBLIC_KEY = 0xDF2C;
+  static final byte TAG_CARD_PUBLIC_KEY_LSB = (byte) (TAG_CARD_PUBLIC_KEY & 0xFF);
+  static final byte TAG_CARD_PUBLIC_KEY_MSB = (byte) ((TAG_CARD_PUBLIC_KEY & 0xFF00) >> 8);
+  static final int TAG_CARD_KEY_PAIR = 0xDF3C;
+  static final byte TAG_CARD_KEY_PAIR_LSB = (byte) (TAG_CARD_KEY_PAIR & 0xFF);
+  static final byte TAG_CARD_KEY_PAIR_MSB = (byte) ((TAG_CARD_KEY_PAIR & 0xFF00) >> 8);
+  static final int TAG_CERTIFICATE_HEADER_SIZE = 5;
   static final int TAG_CARD_CERTIFICATE = 0xDF4C;
+  static final byte[] TAG_CARD_CERTIFICATE_HEADER = HexUtil.toByteArray("DF4C82013C");
   static final byte TAG_CARD_CERTIFICATE_LSB = (byte) (TAG_CARD_CERTIFICATE & 0xFF);
   static final byte TAG_CARD_CERTIFICATE_MSB = (byte) ((TAG_CARD_CERTIFICATE & 0xFF00) >> 8);
+  static final int TAG_CA_CERTIFICATE = 0xDF4A;
+  static final byte[] TAG_CA_CERTIFICATE_HEADER = HexUtil.toByteArray("DF4A820180");
+  static final byte TAG_CA_CERTIFICATE_LSB = (byte) (TAG_CA_CERTIFICATE & 0xFF);
+  static final byte TAG_CA_CERTIFICATE_MSB = (byte) ((TAG_CA_CERTIFICATE & 0xFF00) >> 8);
 
   /** (private) */
   private CalypsoCardConstant() {}
