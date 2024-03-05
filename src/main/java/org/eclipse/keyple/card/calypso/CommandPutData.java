@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -65,10 +66,34 @@ final class CommandPutData extends Command {
   CommandPutData(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
-      byte tagMsb,
-      byte tagLsb,
+      PutDataTag tag,
+      boolean isFirstPart,
       byte[] data) {
     super(CardCommandRef.PUT_DATA, 0, transactionContext, commandContext);
+    byte tagMsb;
+    byte tagLsb;
+    switch (tag) {
+      case CA_CERTIFICATE:
+        tagMsb = CalypsoCardConstant.TAG_CA_CERTIFICATE_MSB;
+        tagLsb =
+            isFirstPart
+                ? CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB
+                : CalypsoCardConstant.TAG_CA_CERTIFICATE_LSB + 1;
+        break;
+      case CARD_CERTIFICATE:
+        tagMsb = CalypsoCardConstant.TAG_CARD_CERTIFICATE_MSB;
+        tagLsb =
+            isFirstPart
+                ? CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB
+                : CalypsoCardConstant.TAG_CARD_CERTIFICATE_LSB + 1;
+        break;
+      case CARD_KEY_PAIR:
+        tagMsb = CalypsoCardConstant.TAG_ECC_KEY_PAIR_MSB;
+        tagLsb = CalypsoCardConstant.TAG_ECC_KEY_PAIR_LSB;
+        break;
+      default:
+        throw new UnsupportedOperationException("Unsupported tag");
+    }
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

@@ -84,6 +84,9 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_OFFSET = "offset";
   private static final String MSG_RECORD_DATA = "record data";
   private static final String MSG_RECORD_DATA_LENGTH = "record data length";
+  private static final String MSG_SECURE_SESSION_OPEN = "Secure session open";
+  private static final String MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD =
+      "PKI mode is not available for this card.";
 
   /* Final fields */
   T currentInstance = (T) this;
@@ -437,38 +440,37 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     Assert.getInstance().notNull(putDataTag, "putDataTag").notNull(data, "data");
     int payloadCapacity = getTransactionContext().getCard().getPayloadCapacity();
 
-    final byte tagMsb = (byte) 0xDF; // TODO set tag and flag to command
-    byte tagLsbFirst;
-    byte tagLsbNext;
-
     // check lengths and set card tag values for each case
     switch (putDataTag) {
       case CARD_KEY_PAIR:
-        if (data.length != 96) {
-          throw new IllegalArgumentException(
-              "Bad length for CARD_KEY_PAIR. Expected: 96, but was: " + data.length);
+        if (!card.isPkiModeSupported()) {
+          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
         }
-        tagLsbFirst = 0x3C;
-        tagLsbNext = 0;
+        Assert.getInstance()
+            .isEqual(data.length, CalypsoCardConstant.CARD_KEY_PAIR_SIZE, "data length");
         break;
       case CA_CERTIFICATE:
-        if (data.length != 384) {
-          throw new IllegalArgumentException(
-              "Bad length for CA_CERTIFICATE. Expected: 384, but was: " + data.length);
+        if (!card.isPkiModeSupported()) {
+          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
         }
-        tagLsbFirst = 0x4A;
-        tagLsbNext = 0x4B;
+        if (getCommandContext().isSecureSessionOpen()) {
+          throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+        }
+        Assert.getInstance()
+            .isEqual(data.length, CalypsoCardConstant.CA_CERTIFICATE_SIZE, "data length");
         break;
       case CARD_CERTIFICATE:
-        if (data.length != 316) {
-          throw new IllegalArgumentException(
-              "Bad length for CARD_CERTIFICATE. Expected: 316, but was: " + data.length);
+        if (!card.isPkiModeSupported()) {
+          throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
         }
-        tagLsbFirst = 0x4C;
-        tagLsbNext = 0x4D;
+        if (getCommandContext().isSecureSessionOpen()) {
+          throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+        }
+        Assert.getInstance()
+            .isEqual(data.length, CalypsoCardConstant.CARD_CERTIFICATE_SIZE, "data length");
         break;
       default:
-        throw new IllegalStateException("Unsupported tag: " + putDataTag.name());
+        throw new UnsupportedOperationException("Unsupported tag: " + putDataTag.name());
     }
 
     // Create the needed put data commands.
@@ -483,11 +485,11 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       if (start == 0) {
         commands.add(
             new CommandPutData(
-                getTransactionContext(), getCommandContext(), tagMsb, tagLsbFirst, chunk));
+                getTransactionContext(), getCommandContext(), putDataTag, true, chunk));
       } else {
         commands.add(
             new CommandPutData(
-                getTransactionContext(), getCommandContext(), tagMsb, tagLsbNext, chunk));
+                getTransactionContext(), getCommandContext(), putDataTag, false, chunk));
       }
     }
 
@@ -1275,10 +1277,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   @Override
   public T prepareGenerateAsymmetricKeyPair() {
     if (!card.isPkiModeSupported()) {
-      throw new UnsupportedOperationException("PKI mode is not available for this card.");
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
     }
-    if (getCommandContext().isSecureSessionOpen()) {
-      throw new IllegalStateException("Secure session open");
+    if (getTransactionContext().isSecureSessionOpen()) {
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
     }
     commands.add(
         new CommandGenerateAsymmetricKeyPair(getTransactionContext(), getCommandContext()));
