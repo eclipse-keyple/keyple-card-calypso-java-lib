@@ -46,6 +46,8 @@ final class SecurePkiModeTransactionManagerAdapter
       LoggerFactory.getLogger(SecurePkiModeTransactionManagerAdapter.class);
 
   private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+  private static final String MSG_INVALID_CARD_CERTIFICATE = "Invalid card certificate: ";
+  private static final String MSG_INVALID_CA_CERTIFICATE = "Invalid CA certificate: ";
   private final TransactionContextDto transactionContext;
   private final AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting;
   private final CardTransactionCryptoExtension cryptoExtension;
@@ -327,7 +329,7 @@ final class SecurePkiModeTransactionManagerAdapter
       cardPublicKeySpi =
           cardCertificateSpi.checkCertificateAndGetPublicKey(caCertificateContentSpi);
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException("Invalid card certificate: " + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE + e.getMessage(), e);
     } catch (AsymmetricCryptoException e) {
       throw new CryptoException(
           "An error occurred while checking the card certificate: " + e.getMessage(), e);
@@ -351,7 +353,11 @@ final class SecurePkiModeTransactionManagerAdapter
       throw new IllegalStateException(
           "No certificate parser registered for type " + HexUtil.toHex(cardCertificateBytes[0]));
     }
-    return cardCertificateParser.parseCertificate(cardCertificateBytes);
+    try {
+      return cardCertificateParser.parseCertificate(cardCertificateBytes);
+    } catch (CertificateValidationException e) {
+      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE + e.getMessage(), e);
+    }
   }
 
   /**
@@ -368,7 +374,11 @@ final class SecurePkiModeTransactionManagerAdapter
       throw new IllegalStateException(
           "No certificate parser registered for type " + HexUtil.toHex(caCertificateBytes[0]));
     }
-    return caCertificateParser.parseCertificate(caCertificateBytes);
+    try {
+      return caCertificateParser.parseCertificate(caCertificateBytes);
+    } catch (CertificateValidationException e) {
+      throw new InvalidCertificateException(MSG_INVALID_CA_CERTIFICATE + e.getMessage(), e);
+    }
   }
 
   /**
