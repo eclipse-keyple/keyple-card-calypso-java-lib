@@ -18,7 +18,6 @@ import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.card.SvDebitLogRecord;
 import org.eclipse.keypop.calypso.card.card.SvLoadLogRecord;
 import org.eclipse.keypop.calypso.card.transaction.SearchCommandData;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CardIdentifierApi;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.SvCommandSecurityDataApi;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
@@ -1035,51 +1034,6 @@ final class DtoAdapters {
      */
     void setSecureSessionOpen(boolean isSecureSessionOpen) {
       this.isSecureSessionOpen = isSecureSessionOpen;
-    }
-  }
-
-  /**
-   * Adapter of {@link CardIdentifierApi}.
-   *
-   * <p>Provides methods to retrieve the AID and the serial number of a card.
-   *
-   * @since 3.1.0
-   */
-  static class CardIdentifierApiAdapter implements CardIdentifierApi {
-
-    private final byte[] aid;
-    private final byte[] serialNumber;
-
-    /**
-     * Constructs a new instance.
-     *
-     * @param aid The AID of the card.
-     * @param serialNumber The serial number of the card.
-     * @since 3.1.0
-     */
-    CardIdentifierApiAdapter(byte[] aid, byte[] serialNumber) {
-      this.aid = aid;
-      this.serialNumber = serialNumber;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 3.1.0
-     */
-    @Override
-    public byte[] getAid() {
-      return aid;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 3.1.0
-     */
-    @Override
-    public byte[] getSerialNumber() {
-      return serialNumber;
     }
   }
 }

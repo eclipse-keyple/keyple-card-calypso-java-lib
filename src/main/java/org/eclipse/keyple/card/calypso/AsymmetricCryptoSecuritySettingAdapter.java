@@ -16,12 +16,14 @@ import java.util.Map;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.transaction.AsymmetricCryptoSecuritySetting;
+import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.InvalidCertificateException;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificate;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificateParser;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardCertificateParser;
 import org.eclipse.keypop.calypso.card.transaction.spi.PcaCertificate;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateValidationException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerFactorySpi;
 
@@ -30,7 +32,7 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCr
  *
  * @since 3.1.0
  */
-class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecuritySetting {
+final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecuritySetting {
 
   private static final String MSG_THE_PROVIDED_PCA_CERTIFICATE_MUST_IMPLEMENT_PCA_CERTIFICATE_SPI =
       "The provided 'pcaCertificate' must implement 'PcaCertificateSpi'";
@@ -42,6 +44,7 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
   private static final String
       MSG_THE_PROVIDED_CARD_CERTIFICATE_PARSER_MUST_IMPLEMENT_CARD_CERTIFICATE_PARSER_SPI =
           "The provided 'cardCertificateParser' must implement 'CardCertificateParserSpi'";
+  private static final String MSG_INVALID_CERTIFICATE = "Invalid certificate: ";
   private static final String MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE =
       "An error occurs during the check of the certificate: ";
   private static final String
@@ -99,8 +102,10 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
     CaCertificateContentSpi certificateContent;
     try {
       certificateContent = pcaCertificateSpi.checkCertificateAndGetContent();
-    } catch (CertificateException e) {
-      throw new InvalidCertificateException(
+    } catch (CertificateValidationException e) {
+      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE + e.getMessage(), e);
+    } catch (AsymmetricCryptoException e) {
+      throw new CryptoException(
           MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE + e.getMessage(), e);
     }
 
@@ -144,8 +149,10 @@ class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecurity
     try {
       caCertificateContent =
           caCertificateSpi.checkCertificateAndGetContent(issuerCertificateContent);
-    } catch (CertificateException e) {
-      throw new InvalidCertificateException(
+    } catch (CertificateValidationException e) {
+      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE + e.getMessage(), e);
+    } catch (AsymmetricCryptoException e) {
+      throw new CryptoException(
           MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE + e.getMessage(), e);
     }
 

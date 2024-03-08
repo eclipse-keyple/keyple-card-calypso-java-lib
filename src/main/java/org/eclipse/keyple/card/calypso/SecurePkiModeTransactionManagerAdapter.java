@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
@@ -23,7 +24,8 @@ import org.eclipse.keypop.calypso.card.GetDataTag;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificate;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
-import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateValidationException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -289,6 +291,12 @@ final class SecurePkiModeTransactionManagerAdapter
     // Parse the card certificate raw data
     CardCertificateSpi cardCertificateSpi = parseCardCertificate();
 
+    if (!Arrays.equals(
+        card.getApplicationSerialNumber(), cardCertificateSpi.getCardSerialNumber())) {
+      throw new InvalidCertificateException(
+          "Card serial number and certificate card serial number mismatch.");
+    }
+
     // Try to retrieve the issuer certificate content from the store
     CaCertificateContentSpi caCertificateContentSpi =
         asymmetricCryptoSecuritySetting.getCaCertificate(
@@ -317,11 +325,12 @@ final class SecurePkiModeTransactionManagerAdapter
     CardPublicKeySpi cardPublicKeySpi;
     try {
       cardPublicKeySpi =
-          cardCertificateSpi.checkCertificateAndGetPublicKey(
-              caCertificateContentSpi,
-              new CardIdentifierApiAdapter(card.getDfName(), card.getCalypsoSerialNumberFull()));
-    } catch (CertificateException e) {
+          cardCertificateSpi.checkCertificateAndGetPublicKey(caCertificateContentSpi);
+    } catch (CertificateValidationException e) {
       throw new InvalidCertificateException("Invalid card certificate: " + e.getMessage(), e);
+    } catch (AsymmetricCryptoException e) {
+      throw new CryptoException(
+          "An error occurred while checking the card certificate: " + e.getMessage(), e);
     }
 
     // Save the card public key into the card image
