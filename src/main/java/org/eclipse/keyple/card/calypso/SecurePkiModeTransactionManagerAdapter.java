@@ -344,6 +344,7 @@ final class SecurePkiModeTransactionManagerAdapter
    *
    * @return A non-null reference.
    * @throws IllegalStateException If the certificate parser is not registered.
+   * @throws InvalidCertificateException If the certificate is invalid.
    */
   private CardCertificateSpi parseCardCertificate() {
     byte[] cardCertificateBytes = card.getCardCertificate();
