@@ -164,7 +164,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(buildAnticipatedResponse());
+    updateTerminalSessionIfNeeded(buildAnticipatedResponse());
     return true;
   }
 
@@ -187,7 +187,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 sfi, dataOut[i * 4] & 0xFF, Arrays.copyOfRange(dataOut, (i * 4) + 1, (i * 4) + 4));
       }
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

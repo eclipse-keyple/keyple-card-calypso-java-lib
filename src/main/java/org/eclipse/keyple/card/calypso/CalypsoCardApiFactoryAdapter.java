@@ -17,7 +17,9 @@ import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.CalypsoCardSelectionExtension;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.card.transaction.SymmetricCryptoSecuritySetting;
+import org.eclipse.keypop.calypso.card.transaction.spi.AsymmetricCryptoCardTransactionManagerFactory;
 import org.eclipse.keypop.calypso.card.transaction.spi.SymmetricCryptoCardTransactionManagerFactory;
+import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerFactorySpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.reader.CardReader;
@@ -36,9 +38,16 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   private static final String
       MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
           "The provided 'securitySetting' must be an instance of 'SymmetricCryptoSecuritySettingAdapter'";
+  private static final String
+      MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_ASYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
+          "The provided 'securitySetting' must be an instance of 'AsymmetricCryptoSecuritySettingAdapter'";
   private static final String MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE =
       "The provided 'card' has an undefined product type";
+  private static final String MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY =
+      "cryptoTransactionManagerFactory";
   private static final String MSG_CARD_READER = "cardReader";
+  private static final String MSG_CARD = "card";
+  private static final String MSG_SECURITY_SETTING = "securitySetting";
 
   /**
    * {@inheritDoc}
@@ -59,7 +68,7 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   public SymmetricCryptoSecuritySetting createSymmetricCryptoSecuritySetting(
       SymmetricCryptoCardTransactionManagerFactory cryptoCardTransactionManagerFactory) {
     Assert.getInstance()
-        .notNull(cryptoCardTransactionManagerFactory, "cryptoTransactionManagerFactory");
+        .notNull(cryptoCardTransactionManagerFactory, MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY);
     if (!(cryptoCardTransactionManagerFactory
         instanceof SymmetricCryptoCardTransactionManagerFactorySpi)) {
       throw new IllegalArgumentException(
@@ -72,12 +81,31 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   /**
    * {@inheritDoc}
    *
+   * @since 3.1.0
+   */
+  @Override
+  public AsymmetricCryptoSecuritySetting createAsymmetricCryptoSecuritySetting(
+      AsymmetricCryptoCardTransactionManagerFactory cryptoCardTransactionManagerFactory) {
+    Assert.getInstance()
+        .notNull(cryptoCardTransactionManagerFactory, MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY);
+    if (!(cryptoCardTransactionManagerFactory
+        instanceof AsymmetricCryptoCardTransactionManagerFactorySpi)) {
+      throw new IllegalArgumentException(
+          "The provided 'factory' must implement 'AsymmetricCryptoCardTransactionManagerFactorySpi'");
+    }
+    return new AsymmetricCryptoSecuritySettingAdapter(
+        (AsymmetricCryptoCardTransactionManagerFactorySpi) cryptoCardTransactionManagerFactory);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 3.0.0
    */
   @Override
   public FreeTransactionManager createFreeTransactionManager(
       CardReader cardReader, CalypsoCard card) {
-    Assert.getInstance().notNull(cardReader, MSG_CARD_READER).notNull(card, "card");
+    Assert.getInstance().notNull(cardReader, MSG_CARD_READER).notNull(card, MSG_CARD);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
@@ -103,8 +131,8 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
       CardReader cardReader, CalypsoCard card, SymmetricCryptoSecuritySetting securitySetting) {
     Assert.getInstance()
         .notNull(cardReader, MSG_CARD_READER)
-        .notNull(card, "card")
-        .notNull(securitySetting, "securitySetting");
+        .notNull(card, MSG_CARD)
+        .notNull(securitySetting, MSG_SECURITY_SETTING);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
@@ -136,8 +164,8 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
       CardReader cardReader, CalypsoCard card, SymmetricCryptoSecuritySetting securitySetting) {
     Assert.getInstance()
         .notNull(cardReader, MSG_CARD_READER)
-        .notNull(card, "card")
-        .notNull(securitySetting, "securitySetting");
+        .notNull(card, MSG_CARD)
+        .notNull(securitySetting, MSG_SECURITY_SETTING);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
           MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
@@ -157,6 +185,36 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
         (ProxyReaderApi) cardReader,
         (CalypsoCardAdapter) card,
         (SymmetricCryptoSecuritySettingAdapter) securitySetting);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public SecurePkiModeTransactionManager createSecurePkiModeTransactionManager(
+      CardReader cardReader, CalypsoCard card, AsymmetricCryptoSecuritySetting securitySetting) {
+    Assert.getInstance()
+        .notNull(cardReader, MSG_CARD_READER)
+        .notNull(card, MSG_CARD)
+        .notNull(securitySetting, MSG_SECURITY_SETTING);
+    if (!(cardReader instanceof ProxyReaderApi)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+    }
+    if (!(card instanceof CalypsoCardAdapter)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+    }
+    if (!(securitySetting instanceof AsymmetricCryptoSecuritySettingAdapter)) {
+      throw new IllegalArgumentException(
+          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_ASYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+    }
+    return new SecurePkiModeTransactionManagerAdapter(
+        (ProxyReaderApi) cardReader,
+        (CalypsoCardAdapter) card,
+        (AsymmetricCryptoSecuritySettingAdapter) securitySetting);
   }
 
   /**

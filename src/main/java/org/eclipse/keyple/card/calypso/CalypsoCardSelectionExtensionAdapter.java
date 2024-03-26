@@ -56,7 +56,7 @@ final class CalypsoCardSelectionExtensionAdapter
    */
   CalypsoCardSelectionExtensionAdapter() {
     commands = new ArrayList<Command>();
-    transactionContext = new TransactionContextDto(null, null);
+    transactionContext = new TransactionContextDto();
     commandContext = new CommandContextDto(false, false);
   }
 

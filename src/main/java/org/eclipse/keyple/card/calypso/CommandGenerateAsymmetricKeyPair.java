@@ -16,33 +16,38 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
- * Builds the Rehabilitate command.
+ * Builds the Generate Asymmetric Key Pair command.
  *
- * @since 2.0.1
+ * @since 3.1.0
  */
-final class CommandRehabilitate extends Command {
+final class CommandGenerateAsymmetricKeyPair extends Command {
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
+  private static final String SECP256R1_OID = "06082A8648CE3D030107";
 
   static {
     Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
-    m.put(
-        0x6400,
-        new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
     m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
-    m.put(
-        0x6982,
-        new StatusProperties(
-            "Security conditions not fulfilled (no session, wrong key).",
-            CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (DF context is invalid).", CardAccessForbiddenException.class));
+            "Conditions of use not satisfied: a secure session is running or a card key pair already available.",
+            CardAccessForbiddenException.class));
+    m.put(
+        0x6986,
+        new StatusProperties(
+            "Incorrect file type: the current DF is not an autonomous PKI application.",
+            CardDataAccessException.class));
+    m.put(
+        0x6A80,
+        new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
+    m.put(
+        0x6D00,
+        new StatusProperties("PKI mode not available.", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -51,73 +56,66 @@ final class CommandRehabilitate extends Command {
    *
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
-   * @since 2.3.2
+   * @since 3.1.0
    */
-  CommandRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.REHABILITATE, 0, transactionContext, commandContext);
+  CommandGenerateAsymmetricKeyPair(
+      TransactionContextDto transactionContext, CommandContextDto commandContext) {
+    super(CardCommandRef.GENERATE_ASYMMETRIC_KEY_PAIR, 0, transactionContext, commandContext);
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                transactionContext.getCard().getCardClass().getValue(),
+                getTransactionContext().getCard().getCardClass().getValue(),
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
-                null,
+                HexUtil.toByteArray(SECP256R1_OID),
                 null)));
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    /* nothing to do */
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getCommandContext().isEncryptionActive()) {
-      return false;
-    }
-    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
-    return true;
+    return false; // Need to synchronize the card image
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.3.2
+   * @since 3.1.0
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    updateTerminalSessionIfNeeded();
-    // The DF has been successfully invalidated, update the DF status in the card object
-    getTransactionContext().getCard().setDfInvalidated(false);
   }
 
   /**
    * {@inheritDoc}
    *
-   * @since 2.0.1
+   * @since 3.1.0
    */
   @Override
   Map<Integer, StatusProperties> getStatusTable() {

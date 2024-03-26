@@ -146,7 +146,7 @@ final class CommandWriteRecord extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -160,7 +160,7 @@ final class CommandWriteRecord extends Command {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().getCard().fillContent((byte) sfi, recordNumber, data, 0);
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

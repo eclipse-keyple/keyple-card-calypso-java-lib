@@ -183,7 +183,7 @@ final class CommandReadRecordMultiple extends Command {
               Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
               offset);
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

@@ -169,7 +169,7 @@ final class CommandReadBinary extends Command {
       }
       anticipatedDataOut =
           Arrays.copyOf(anticipatedApduResponse, anticipatedApduResponse.length - 2);
-      updateTerminalSessionMacIfNeeded(anticipatedApduResponse);
+      updateTerminalSessionIfNeeded(anticipatedApduResponse);
     }
     return true;
   }
@@ -209,7 +209,7 @@ final class CommandReadBinary extends Command {
     }
     getTransactionContext().getCard().setContent(sfi, 1, apduResponse.getDataOut(), offset);
     if (!isCryptoServiceSynchronized()) {
-      updateTerminalSessionMacIfNeeded();
+      updateTerminalSessionIfNeeded();
     } else if (getCommandContext().isSecureSessionOpen()
         && isPreOpenMode
         && !Arrays.equals(apduResponse.getDataOut(), anticipatedDataOut)) {

@@ -198,7 +198,7 @@ final class CommandVerifyPin extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -235,7 +235,7 @@ final class CommandVerifyPin extends Command {
                 + " attempt(s)");
       }
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

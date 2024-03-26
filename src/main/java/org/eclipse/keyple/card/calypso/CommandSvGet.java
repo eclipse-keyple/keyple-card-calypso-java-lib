@@ -190,7 +190,7 @@ final class CommandSvGet extends Command {
     if (debitLog != null) {
       calypsoCard.addCyclicContent(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI, debitLog);
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

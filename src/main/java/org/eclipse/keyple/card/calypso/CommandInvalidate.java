@@ -96,7 +96,7 @@ final class CommandInvalidate extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -109,7 +109,7 @@ final class CommandInvalidate extends Command {
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
     // The DF has been successfully invalidated, update the DF status in the card object
     getTransactionContext().getCard().setDfInvalidated(true);
   }

@@ -238,7 +238,7 @@ final class CommandSelectFile extends Command {
       throw new SelectFileException("File not found", e);
     }
     parseProprietaryInformation(apduResponse.getDataOut(), getTransactionContext().getCard());
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

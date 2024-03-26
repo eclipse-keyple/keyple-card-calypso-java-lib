@@ -156,7 +156,7 @@ final class CommandUpdateOrWriteBinary extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -174,7 +174,7 @@ final class CommandUpdateOrWriteBinary extends Command {
     } else {
       getTransactionContext().getCard().fillContent(sfi, 1, data, offset);
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

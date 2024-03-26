@@ -13,6 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -20,6 +21,7 @@ import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.*;
+import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.CardPublicKeySpi;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.CardSelectionResponseApi;
 import org.eclipse.keypop.card.spi.SmartCardSpi;
@@ -65,6 +67,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         27554, 32768, 38967, 46340, 55108, 65536, 77935, 92681, 110217, 131072, 155871, 185363,
         220435, 262144, 311743, 370727, 440871, 524288, 623487, 741455, 881743, 1048576
       };
+
   private ApduResponseApi selectApplicationResponse;
   private String powerOnData;
   private boolean isExtendedModeSupported;
@@ -96,6 +99,10 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private boolean isHce;
   private byte[] challenge;
   private byte[] traceabilityInformation;
+  private CardPublicKeySpi cardPublicKeySpi;
+  private byte[] cardPublicKey;
+  private ByteBuffer cardCertificate;
+  private ByteBuffer caCertificate;
   private byte svKvc;
   private byte[] svGetHeader;
   private byte[] svGetData;
@@ -126,6 +133,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     patchesRev12.add(new PatchRev12("00000000150000", "0000F000FF0000").setCounterValuePostponed());
     // XX XX 1X XX 15 XX XX
     patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
+    // 0A 0A 01 02 20 03 11: PACA Card
+    patchesRev12.add(new PatchRev12("0A0A0102200311", "FFFFFFFFFFFFFF").setCounterValuePostponed());
     // 03 08 03 04 00 02 00: targets ASK Tango having this startup info values
     patchesRev12.add(new PatchRev12("03080304000200", "FFFFFFFFFFFFFF").setLegacyCase1());
   }
@@ -202,8 +211,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     // Parse card FCI - to retrieve DF Name (AID), Serial Number, &amp; StartupInfo
     // CL-SEL-TLVSTRUC.1
     CommandGetDataFci cmdCardGetDataFci =
-        new CommandGetDataFci(
-            new TransactionContextDto(null, null), new CommandContextDto(false, false));
+        new CommandGetDataFci(new TransactionContextDto(), new CommandContextDto(false, false));
     cmdCardGetDataFci.parseResponseForSelection(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
@@ -581,6 +589,36 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public byte[] getTraceabilityInformation() {
     return traceabilityInformation != null ? traceabilityInformation : new byte[0];
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public byte[] getCardPublicKey() {
+    return cardPublicKey != null ? cardPublicKey : new byte[0];
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public byte[] getCardCertificate() {
+    return cardCertificate != null ? cardCertificate.array() : new byte[0];
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public byte[] getCaCertificate() {
+    return caCertificate != null ? caCertificate.array() : new byte[0];
   }
 
   /**
@@ -1078,6 +1116,70 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   void setTraceabilityInformation(byte[] traceabilityInformation) {
     this.traceabilityInformation = traceabilityInformation;
+  }
+
+  /**
+   * Sets the card public key received in response to the GET DATA command for the tag {@link
+   * org.eclipse.keypop.calypso.card.GetDataTag#CARD_PUBLIC_KEY}.
+   *
+   * @param cardPublicKey The card public key.
+   * @since 3.1.0
+   */
+  void setCardPublicKey(byte[] cardPublicKey) {
+    this.cardPublicKey = cardPublicKey;
+  }
+
+  /**
+   * Sets the card public key retrieved from the card certificate.
+   *
+   * @param cardPublicKeySpi The card public key SPI.
+   * @since 3.1.0
+   */
+  void setCardPublicKeySpi(CardPublicKeySpi cardPublicKeySpi) {
+    this.cardPublicKeySpi = cardPublicKeySpi;
+  }
+
+  /**
+   * Retrieves the card public key SPI retrieved from the card certificate.
+   *
+   * <p>Note that the card public key obtained with a Get Data command will not be available with
+   * this method.
+   *
+   * @return The card public key SPI or null if not available.
+   * @since 3.1.0
+   */
+  CardPublicKeySpi getCardPublicKeySpi() {
+    return cardPublicKeySpi;
+  }
+
+  /**
+   * Adds the card certificate bytes received in response to the GET DATA command for the tag {@link
+   * org.eclipse.keypop.calypso.card.GetDataTag#CARD_CERTIFICATE}.
+   *
+   * @param cardCertificateBytes The card certificate bytes.
+   * @param isFirstPart true when the provided data is the first part of the certificate.
+   * @since 3.1.0
+   */
+  void addCardCertificateBytes(byte[] cardCertificateBytes, boolean isFirstPart) {
+    if (isFirstPart) {
+      this.cardCertificate = ByteBuffer.allocate(CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
+    }
+    cardCertificate.put(cardCertificateBytes);
+  }
+
+  /**
+   * Sets the CA certificate bytes received in response to the GET DATA command for the tag {@link
+   * org.eclipse.keypop.calypso.card.GetDataTag#CA_CERTIFICATE}.
+   *
+   * @param caCertificateBytes The CA certificate bytes.
+   * @param isFirstPart true when the provided data is the first part of the certificate.
+   * @since 3.1.0
+   */
+  void addCaCertificateBytes(byte[] caCertificateBytes, boolean isFirstPart) {
+    if (isFirstPart) {
+      this.caCertificate = ByteBuffer.allocate(CalypsoCardConstant.CA_CERTIFICATE_SIZE);
+    }
+    caCertificate.put(caCertificateBytes);
   }
 
   /**
