@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for PKI card transactions. 
 ### Fixed
 - Fixed `Le` value sent in SV Get card command.
+- Fixed postponed data issue for increase/decrease counter commands for PACA cards revision 2 having the following 
+  startup information pattern:
+  - `0A 0A 01 02 20 03 11` (issue [#109]) (Contributed by SNCF Connect).
 ### Upgraded
 - Keypop Calypso Card API `2.0.0` -> `2.1.0`
 - Keyple Util Library `2.3.1` -> `2.3.2` (source code not impacted)
@@ -226,7 +229,7 @@ startup information value:
 
 ## [2.0.1] - 2021-11-22
 ### Added
-- `CHANGELOG.md` file (issue [eclipse/keyple#6]).
+- `CHANGELOG.md` file (issue [eclipse-keyple/keyple#6]).
 - CI: Forbid the publication of a version already released (issue [#20]).
 ### Changed
 - Merging of internal builders and parsers of APDU commands (issue [#24]).
@@ -238,63 +241,64 @@ startup information value:
 
 ## [2.0.0] - 2021-10-06
 This is the initial release.
-It follows the extraction of Keyple 1.0 components contained in the `eclipse/keyple-java` repository to dedicated 
+It follows the extraction of Keyple 1.0 components contained in the `eclipse-keyple/keyple-java` repository to dedicated 
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/3.0.1...HEAD
-[3.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/3.0.0...3.0.1
-[3.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.8...3.0.0
-[2.3.8]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.7...2.3.8
-[2.3.7]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.6...2.3.7
-[2.3.6]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.5...2.3.6
-[2.3.5]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.4...2.3.5
-[2.3.4]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.3...2.3.4
-[2.3.3]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.2...2.3.3
-[2.3.2]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.1...2.3.2
-[2.3.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.3.0...2.3.1
-[2.3.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.5...2.3.0
-[2.2.5]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.4...2.2.5
-[2.2.4]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.3...2.2.4
-[2.2.3]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.2...2.2.3
-[2.2.2]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.1...2.2.2
-[2.2.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.2.0...2.2.1
-[2.2.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.1.0...2.2.0
-[2.1.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.3...2.1.0
-[2.0.3]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.2...2.0.3
-[2.0.2]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.1...2.0.2
-[2.0.1]: https://github.com/eclipse/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
-[2.0.0]: https://github.com/eclipse/keyple-card-calypso-java-lib/releases/tag/2.0.0
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.0.1...HEAD
+[3.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.0.0...3.0.1
+[3.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.8...3.0.0
+[2.3.8]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.7...2.3.8
+[2.3.7]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.6...2.3.7
+[2.3.6]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.5...2.3.6
+[2.3.5]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.4...2.3.5
+[2.3.4]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.3...2.3.4
+[2.3.3]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.2...2.3.3
+[2.3.2]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.1...2.3.2
+[2.3.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.0...2.3.1
+[2.3.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.5...2.3.0
+[2.2.5]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.4...2.2.5
+[2.2.4]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.3...2.2.4
+[2.2.3]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.2...2.2.3
+[2.2.2]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.1...2.2.2
+[2.2.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.2.0...2.2.1
+[2.2.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.1.0...2.2.0
+[2.1.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.3...2.1.0
+[2.0.3]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.2...2.0.3
+[2.0.2]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.1...2.0.2
+[2.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
+[2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
-[#100]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/100
-[#99]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/99
-[#84]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/84
-[#83]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/83
-[#71]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/71
-[#70]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/70
-[#68]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/68
-[#66]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/66
-[#64]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/64
-[#62]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/62
-[#59]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/59
-[#57]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/57
-[#55]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/55
-[#53]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/53
-[#42]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/42
-[#41]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/41
-[#40]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/40
-[#39]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/39
-[#38]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/38
-[#37]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/37
-[#36]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/36
-[#35]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/35
-[#34]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/34
-[#33]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/33
-[#32]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/32
-[#30]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/30
-[#28]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/28
-[#24]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/24
-[#22]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/22
-[#20]: https://github.com/eclipse/keyple-card-calypso-java-lib/issues/20
+[#109]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/109
+[#100]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/100
+[#99]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/99
+[#84]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/84
+[#83]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/83
+[#71]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/71
+[#70]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/70
+[#68]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/68
+[#66]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/66
+[#64]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/64
+[#62]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/62
+[#59]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/59
+[#57]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/57
+[#55]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/55
+[#53]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/53
+[#42]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/42
+[#41]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/41
+[#40]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/40
+[#39]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/39
+[#38]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/38
+[#37]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/37
+[#36]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/36
+[#35]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/35
+[#34]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/34
+[#33]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/33
+[#32]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/32
+[#30]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/30
+[#28]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/28
+[#24]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/24
+[#22]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/22
+[#20]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/20
 
-[eclipse/keyple#6]: https://github.com/eclipse/keyple/issues/6
+[eclipse-keyple/keyple#6]: https://github.com/eclipse-keyple/keyple/issues/6
