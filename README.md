@@ -21,7 +21,7 @@ API documentation & class diagram is available online: [eclipse.github.io/keyple
 
 ## Examples
 
-Examples of implementation are available in the following repository: [github.com/eclipse/keyple-java-example](https://github.com/eclipse/keyple-java-example)
+Examples of implementation are available in the following repository: [github.com/eclipse-keyple/keyple-java-example](https://github.com/eclipse-keyple/keyple-java-example)
 
 ## About the source code
 
