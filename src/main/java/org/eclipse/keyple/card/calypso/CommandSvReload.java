@@ -90,6 +90,7 @@ final class CommandSvReload extends Command {
   }
 
   private final boolean isExtendedModeAllowed;
+
   /** apdu data array */
   private final byte[] dataIn;
 

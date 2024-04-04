@@ -105,6 +105,7 @@ final class CommandSvDebitOrUndebit extends Command {
   private final boolean isDebitCommand;
   private final boolean isExtendedModeAllowed;
   private final boolean isSvNegativeBalanceAuthorized;
+
   /** apdu data array */
   private final byte[] dataIn;
 

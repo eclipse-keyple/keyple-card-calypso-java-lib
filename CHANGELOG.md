@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Java source and target levels `1.6` -> `1.8`
 ### Added
 - Added dependency to "Keypop Calypso Crypto Asymmetric API" `0.1.0`
 - Added support for PKI card transactions. 
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Upgraded
 - Keypop Calypso Card API `2.0.0` -> `2.1.0`
 - Keyple Util Library `2.3.1` -> `2.3.2` (source code not impacted)
+- Gradle `6.8.3` -> `7.6.4`
 
 ## [3.0.1] - 2023-12-06
 ### Fixed
