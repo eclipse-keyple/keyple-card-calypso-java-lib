@@ -10,7 +10,6 @@ plugins {
 buildscript {
     repositories {
         mavenLocal()
-        maven(url = "https://repo.eclipse.org/service/local/repositories/maven_central/content")
         mavenCentral()
     }
     dependencies {
@@ -24,18 +23,16 @@ apply(plugin = "org.eclipse.keyple")
 ///////////////////////////////////////////////////////////////////////////////
 repositories {
     mavenLocal()
-    maven(url = "https://repo.eclipse.org/service/local/repositories/maven_central/content")
     mavenCentral()
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
-    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
-    implementation("org.eclipse.keypop:keypop-reader-java-api:2.0.0")
-    implementation("org.eclipse.keypop:keypop-card-java-api:2.0.0")
+    implementation("org.eclipse.keypop:keypop-reader-java-api:2.0.1-SNAPSHOT") {isChanging=true}
+    implementation("org.eclipse.keypop:keypop-card-java-api:2.0.1-SNAPSHOT") {isChanging = true}
     implementation("org.eclipse.keypop:keypop-calypso-card-java-api:2.1.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keypop:keypop-calypso-crypto-symmetric-java-api:0.1.0")
-    implementation("org.eclipse.keypop:keypop-calypso-crypto-asymmetric-java-api:0.2.0-SNAPSHOT") { isChanging = true }
-    implementation("org.eclipse.keyple:keyple-common-java-api:2.0.0")
+    implementation("org.eclipse.keypop:keypop-calypso-crypto-symmetric-java-api:0.1.1-SNAPSHOT") {isChanging=true}
+    implementation("org.eclipse.keypop:keypop-calypso-crypto-asymmetric-java-api:0.2.0-SNAPSHOT") {isChanging=true}
+    implementation("org.eclipse.keyple:keyple-common-java-api:2.0.1-SNAPSHOT") {isChanging=true}
     implementation("org.eclipse.keyple:keyple-util-java-lib:2.3.2-SNAPSHOT") { isChanging = true }
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:2.10.1")
@@ -43,8 +40,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.vintage:junit-vintage-engine")
-    testImplementation("org.assertj:assertj-core:3.23.1")
-    testImplementation("org.mockito:mockito-core:4.8.0")
+    testImplementation("org.assertj:assertj-core:3.25.3")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }
 
 val javaSourceLevel: String by project
