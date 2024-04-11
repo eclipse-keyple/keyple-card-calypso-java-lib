@@ -19,8 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
+import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.ApduResponseApi;
 
 /**
@@ -222,21 +225,24 @@ abstract class Command {
   }
 
   /**
-   * Finalize the construction of the APDU request if needed.
+   * Finalize the construction of the APDU request if needed (used only with symmetric crypto
+   * transactions).
    *
    * @since 2.3.2
    */
   abstract void finalizeRequest();
 
   /**
-   * @return "true" if the crypto service is required to finalize the construction of the request.
+   * @return "true" if the crypto service is required to finalize the construction of the request
+   *     (used only with symmetric crypto transactions).
    * @since 2.3.2
    */
   abstract boolean isCryptoServiceRequiredToFinalizeRequest();
 
   /**
    * Attempts to synchronize the crypto service before executing the finalized command on the card
-   * and returns "true" in any of the following cases:
+   * and returns "true" in any of the following cases (used only with symmetric crypto
+   * transactions):
    *
    * <ul>
    *   <li>the crypto service is not involved in the process
@@ -274,40 +280,54 @@ abstract class Command {
   }
 
   /**
-   * Updates the terminal session MAC using the parsed APDU response if the encryption is not
-   * active. If encryption is enabled, then the session MAC has already been updated during
+   * Updates the terminal session using the parsed APDU response if the encryption is not active. If
+   * encryption is enabled in symmetric mode, then the session MAC has already been updated during
    * decryption.
    *
    * @since 2.3.2
    */
-  final void updateTerminalSessionMacIfNeeded() {
-    updateTerminalSessionMacIfNeeded(apduResponse.getApdu());
+  final void updateTerminalSessionIfNeeded() {
+    updateTerminalSessionIfNeeded(apduResponse.getApdu());
   }
 
   /**
-   * Updates the terminal session MAC using the provided APDU response.
+   * Updates the terminal session MAC using the provided APDU response when needed.
    *
    * @param apduResponse The APDU response to use.
    * @since 2.3.2
    */
-  final void updateTerminalSessionMacIfNeeded(byte[] apduResponse) {
+  final void updateTerminalSessionIfNeeded(byte[] apduResponse) {
+
     if (isCryptoServiceSynchronized) {
       return;
     }
+
     if (commandContext.isSecureSessionOpen()) {
-      try {
-        transactionContext
-            .getSymmetricCryptoCardTransactionManagerSpi()
-            .updateTerminalSessionMac(apduRequest.getApdu());
-        transactionContext
-            .getSymmetricCryptoCardTransactionManagerSpi()
-            .updateTerminalSessionMac(apduResponse);
-      } catch (SymmetricCryptoException e) {
-        throw new CryptoException(e.getMessage(), e);
-      } catch (SymmetricCryptoIOException e) {
-        throw new CryptoIOException(e.getMessage(), e);
+      if (transactionContext.isPkiMode()) {
+        // asymmetric crypto mode
+        AsymmetricCryptoCardTransactionManagerSpi asymmetricCryptoCardTransactionManagerSpi =
+            transactionContext.getAsymmetricCryptoCardTransactionManagerSpi();
+        try {
+          asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduRequest.getApdu());
+          asymmetricCryptoCardTransactionManagerSpi.updateTerminalPkiSession(apduResponse);
+        } catch (AsymmetricCryptoException e) {
+          throw new CryptoException(e.getMessage(), e);
+        }
+      } else {
+        // symmetric crypto mode
+        SymmetricCryptoCardTransactionManagerSpi symmetricCryptoCardTransactionManager =
+            transactionContext.getSymmetricCryptoCardTransactionManagerSpi();
+        try {
+          symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduRequest.getApdu());
+          symmetricCryptoCardTransactionManager.updateTerminalSessionMac(apduResponse);
+        } catch (SymmetricCryptoException e) {
+          throw new CryptoException(e.getMessage(), e);
+        } catch (SymmetricCryptoIOException e) {
+          throw new CryptoIOException(e.getMessage(), e);
+        }
       }
     }
+
     isCryptoServiceSynchronized = true;
   }
 

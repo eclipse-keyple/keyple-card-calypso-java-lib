@@ -63,8 +63,11 @@ public class SecureExtendedModeTransactionManagerAdapterTest
   }
 
   private void verifyInteractionsForSingleCardCommand(CardRequestSpi cardRequest)
-      throws ReaderBrokenCommunicationException, CardBrokenCommunicationException,
-          UnexpectedStatusWordException, SymmetricCryptoException, SymmetricCryptoIOException {
+      throws ReaderBrokenCommunicationException,
+          CardBrokenCommunicationException,
+          UnexpectedStatusWordException,
+          SymmetricCryptoException,
+          SymmetricCryptoIOException {
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
     inOrder
         .verify(cardReader)

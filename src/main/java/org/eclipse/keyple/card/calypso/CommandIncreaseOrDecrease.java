@@ -236,7 +236,7 @@ final class CommandIncreaseOrDecrease extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(buildAnticipatedResponse());
+    updateTerminalSessionIfNeeded(buildAnticipatedResponse());
     return true;
   }
 
@@ -264,7 +264,7 @@ final class CommandIncreaseOrDecrease extends Command {
           .setCounter(
               (byte) sfi, counterNumber != 0 ? counterNumber : 1, apduResponse.getDataOut());
     }
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

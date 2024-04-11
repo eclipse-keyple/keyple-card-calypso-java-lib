@@ -42,7 +42,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    */
   FreeTransactionManagerAdapter(ProxyReaderApi cardReader, CalypsoCardAdapter card) {
     super(cardReader, card);
-    transactionContext = new TransactionContextDto(card, null);
+    transactionContext = new TransactionContextDto(card);
     commandContext = new CommandContextDto(false, false);
   }
 

@@ -83,6 +83,6 @@ final class CommandGetChallenge extends Command {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().getCard().setChallenge(getApduResponse().getDataOut());
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 }

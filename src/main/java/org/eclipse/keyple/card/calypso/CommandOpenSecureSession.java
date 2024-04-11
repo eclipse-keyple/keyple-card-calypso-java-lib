@@ -22,6 +22,8 @@ import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
 import org.eclipse.keypop.calypso.card.transaction.UnauthorizedKeyException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
+import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -37,6 +39,7 @@ final class CommandOpenSecureSession extends Command {
 
   private static final Logger logger = LoggerFactory.getLogger(CommandOpenSecureSession.class);
   private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
+  private static final String EXTRA_INFO_FORMAT_PKI = "SFI:%02Xh, REC:%d";
   private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
@@ -90,6 +93,7 @@ final class CommandOpenSecureSession extends Command {
   private final WriteAccessLevel writeAccessLevel;
   private final boolean isExtendedModeAllowed;
   private SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
+  private AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting;
   private transient boolean isPreOpenModeOnSelection; // NOSONAR
   private transient boolean isPreOpenMode; // NOSONAR
   private transient byte[] preOpenDataOut; // NOSONAR
@@ -147,6 +151,31 @@ final class CommandOpenSecureSession extends Command {
     this.isExtendedModeAllowed = isExtendedModeAllowed;
     preOpenDataOut = transactionContext.getCard().getPreOpenDataOut();
     isPreOpenMode = preOpenDataOut != null;
+  }
+
+  /**
+   * Constructor for PKI mode variant.
+   *
+   * @param transactionContext The global transaction context common to all commands.
+   * @param commandContext The local command context specific to each command.
+   * @param terminalChallenge The terminal challenge.
+   * @param asymmetricCryptoSecuritySetting The asymmetric crypto security settings to use.
+   * @since 3.1.0
+   */
+  CommandOpenSecureSession(
+      TransactionContextDto transactionContext,
+      CommandContextDto commandContext,
+      byte[] terminalChallenge,
+      AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting) {
+    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
+    this.asymmetricCryptoSecuritySetting = asymmetricCryptoSecuritySetting;
+    isPreOpenModeOnSelection = false;
+    isExtendedModeAllowed = true;
+    this.writeAccessLevel = null;
+    createRev3Pki(terminalChallenge);
+    if (logger.isDebugEnabled()) {
+      addSubName("PKI");
+    }
   }
 
   /**
@@ -214,6 +243,39 @@ final class CommandOpenSecureSession extends Command {
   }
 
   /**
+   * Create Rev 3 for PKI mode
+   *
+   * @param terminalChallenge the terminal challenge.
+   * @throws IllegalArgumentException If the request is inconsistent
+   */
+  private void createRev3Pki(byte[] terminalChallenge) {
+
+    final byte p1 = 0x00;
+    final byte p2 = 0x03;
+    byte[] dataIn = new byte[terminalChallenge.length + 1];
+    System.arraycopy(terminalChallenge, 0, dataIn, 1, terminalChallenge.length);
+
+    /*
+     * case 4: this command contains incoming and outgoing data. We define le = 0, the actual
+     * length will be processed by the lower layers.
+     */
+    setApduRequest(
+        new ApduRequestAdapter(
+            ApduUtil.build(
+                CalypsoCardClass.ISO.getValue(),
+                CardCommandRef.OPEN_SECURE_SESSION.getInstructionByte(),
+                p1,
+                p2,
+                dataIn,
+                (byte) 0)));
+
+    if (logger.isDebugEnabled()) {
+      String extraInfo = String.format(EXTRA_INFO_FORMAT_PKI, sfi, recordNumber);
+      addSubName(extraInfo);
+    }
+  }
+
+  /**
    * Build legacy apdu request.
    *
    * @param keyIndex the key index.
@@ -255,8 +317,19 @@ final class CommandOpenSecureSession extends Command {
    * @since 2.3.2
    */
   void configureReadMode(int sfi, int recordNumber) {
-    this.sfi = sfi;
-    this.recordNumber = recordNumber;
+    if (getTransactionContext().isPkiMode()) {
+      byte[] apdu = getApduRequest().getApdu();
+      // overwrite p1 & p2
+      apdu[2] = (byte) (recordNumber * 8);
+      apdu[3] = (byte) ((sfi * 8) + 3);
+      if (logger.isDebugEnabled()) {
+        String extraInfo = String.format(EXTRA_INFO_FORMAT_PKI, sfi, recordNumber);
+        addSubName(extraInfo);
+      }
+    } else {
+      this.sfi = sfi;
+      this.recordNumber = recordNumber;
+    }
     isReadModeConfigured = true;
   }
 
@@ -327,6 +400,8 @@ final class CommandOpenSecureSession extends Command {
     if (!isPreOpenMode) {
       return false;
     }
+    // In pre-open mode, we can synchronize the crypto service without having to execute the card
+    // open session command first.
     if (!isCryptoServiceSynchronized()) {
       parseRev3(preOpenDataOut);
       synchronizeCryptoService(preOpenDataOut);
@@ -340,23 +415,36 @@ final class CommandOpenSecureSession extends Command {
    * @param dataOut The APDU dataOut field.
    */
   private void synchronizeCryptoService(byte[] dataOut) {
-    Byte computedKvc = computeKvc();
-    Byte computedKif = computeKif(computedKvc);
-    if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
-      throw new UnauthorizedKeyException(
-          String.format(
-              "Unauthorized key error: KIF=%s, KVC=%s",
-              computedKif != null ? String.format(PATTERN_1_BYTE_HEX, computedKif) : null,
-              computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
-    }
-    try {
-      getTransactionContext()
-          .getSymmetricCryptoCardTransactionManagerSpi()
-          .initTerminalSessionMac(dataOut, computedKif, computedKvc);
-    } catch (SymmetricCryptoException e) {
-      throw new CryptoException(e.getMessage(), e);
-    } catch (SymmetricCryptoIOException e) {
-      throw new CryptoIOException(e.getMessage(), e);
+    if (getTransactionContext().isPkiMode()) {
+      try {
+        AsymmetricCryptoCardTransactionManagerSpi cryptoManager =
+            getTransactionContext().getAsymmetricCryptoCardTransactionManagerSpi();
+        cryptoManager.initTerminalPkiSession(
+            getTransactionContext().getCard().getCardPublicKeySpi());
+        cryptoManager.updateTerminalPkiSession(getApduRequest().getApdu());
+        cryptoManager.updateTerminalPkiSession(getApduResponse().getApdu());
+      } catch (AsymmetricCryptoException e) {
+        throw new CryptoException(e.getMessage(), e);
+      }
+    } else {
+      Byte computedKvc = computeKvc();
+      Byte computedKif = computeKif(computedKvc);
+      if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
+        throw new UnauthorizedKeyException(
+            String.format(
+                "Unauthorized key error: KIF=%s, KVC=%s",
+                computedKif != null ? String.format(PATTERN_1_BYTE_HEX, computedKif) : null,
+                computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
+      }
+      try {
+        getTransactionContext()
+            .getSymmetricCryptoCardTransactionManagerSpi()
+            .initTerminalSessionMac(dataOut, computedKif, computedKvc);
+      } catch (SymmetricCryptoException e) {
+        throw new CryptoException(e.getMessage(), e);
+      } catch (SymmetricCryptoIOException e) {
+        throw new CryptoIOException(e.getMessage(), e);
+      }
     }
     confirmCryptoServiceSuccessfullySynchronized();
   }
@@ -374,17 +462,23 @@ final class CommandOpenSecureSession extends Command {
       card.backupFiles();
       getTransactionContext().setSecureSessionOpen(true);
     }
+    // Parse data
     byte[] dataOut = getApduResponse().getDataOut();
-    switch (card.getProductType()) {
-      case PRIME_REVISION_1:
-        parseRev10(dataOut);
-        break;
-      case PRIME_REVISION_2:
-        parseRev24(dataOut);
-        break;
-      default:
-        parseRev3(dataOut);
+    if (getTransactionContext().isPkiMode()) {
+      parsePki(dataOut);
+    } else {
+      switch (card.getProductType()) {
+        case PRIME_REVISION_1:
+          parseRev10(dataOut);
+          break;
+        case PRIME_REVISION_2:
+          parseRev24(dataOut);
+          break;
+        default:
+          parseRev3(dataOut);
+      }
     }
+    // Update Calypso card image
     // CL-CSS-INFORAT.1
     card.setDfRatified(isPreviousSessionRatified);
     // CL-CSS-INFOTCNT.1
@@ -397,12 +491,16 @@ final class CommandOpenSecureSession extends Command {
       card.setPreOpenWriteAccessLevel(writeAccessLevel);
       card.setPreOpenDataOut(dataOut);
     }
+    // Synchronize crypto service
     if (!isCryptoServiceSynchronized()) {
       synchronizeCryptoService(dataOut);
-    } else if (!Arrays.equals(dataOut, preOpenDataOut)) {
-      throw new CardSecurityContextException(
-          "Session has been pre-opened but 'dataOut' fields do not match",
-          CardCommandRef.OPEN_SECURE_SESSION);
+    } else {
+      // If the crypto service is already synchronized, this means you're in pre-open mode.
+      if (!Arrays.equals(dataOut, preOpenDataOut)) {
+        throw new CardSecurityContextException(
+            "Session has been pre-opened but 'dataOut' fields do not match",
+            CardCommandRef.OPEN_SECURE_SESSION);
+      }
     }
   }
 
@@ -569,6 +667,26 @@ final class CommandOpenSecureSession extends Command {
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
     kif = null;
     kvc = null;
+  }
+
+  /**
+   * Parse the command response in PKI mode.
+   *
+   * <p>Extracts the field pkiAid, pkiSerialNumber and pkiStatus.
+   *
+   * @param apduResponseData The card output data.
+   * @throws IllegalStateException If the response is inconsistent.
+   */
+  private void parsePki(byte[] apduResponseData) {
+    int li = apduResponseData[0] & 0xFF;
+    int offset = 1 + li + 8 + 1;
+    challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, offset, offset + 3);
+    offset += 8;
+    isPreviousSessionRatified = (apduResponseData[offset] & 0x01) == (byte) 0x00;
+    offset += 1 + 2;
+    int ld = apduResponseData[offset] & 0xFF;
+    offset += 1;
+    recordData = Arrays.copyOfRange(apduResponseData, offset, offset + ld);
   }
 
   /**

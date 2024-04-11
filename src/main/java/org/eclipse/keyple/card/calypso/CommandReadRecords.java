@@ -196,7 +196,7 @@ final class CommandReadRecords extends Command {
       }
       anticipatedDataOut =
           Arrays.copyOf(anticipatedApduResponse, anticipatedApduResponse.length - 2);
-      updateTerminalSessionMacIfNeeded(anticipatedApduResponse);
+      updateTerminalSessionIfNeeded(anticipatedApduResponse);
     }
     return true;
   }
@@ -229,7 +229,7 @@ final class CommandReadRecords extends Command {
       }
     }
     if (!isCryptoServiceSynchronized()) {
-      updateTerminalSessionMacIfNeeded();
+      updateTerminalSessionIfNeeded();
     } else if (getCommandContext().isSecureSessionOpen()
         && isPreOpenMode
         && !Arrays.equals(dataOut, anticipatedDataOut)) {

@@ -17,6 +17,7 @@ import java.util.*;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.ElementaryFile;
@@ -83,6 +84,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_OFFSET = "offset";
   private static final String MSG_RECORD_DATA = "record data";
   private static final String MSG_RECORD_DATA_LENGTH = "record data length";
+  private static final String MSG_SECURE_SESSION_OPEN = "Secure session open";
+  private static final String MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD =
+      "PKI mode is not available for this card.";
+  private static final String MSG_DATA_LENGTH = "data length";
 
   /* Final fields */
   T currentInstance = (T) this;
@@ -198,7 +203,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     for (int i = 0; i < apduResponses.size(); i++) {
       Command command = commands.get(i);
       try {
-        command.parseResponse(apduResponses.get(i));
+        parseCommandResponse(command, apduResponses.get(i));
       } catch (CardCommandException e) {
         throw new UnexpectedCommandStatusException(
             MSG_CARD_COMMAND_ERROR
@@ -219,6 +224,19 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               + apduResponses.size()
               + getTransactionAuditDataAsString());
     }
+  }
+
+  /**
+   * Parses the command's response.
+   *
+   * @param command The command.
+   * @param apduResponse The response from the card.
+   * @throws CardCommandException If there is an error in the card command.
+   * @since 3.1.0
+   */
+  void parseCommandResponse(Command command, ApduResponseApi apduResponse)
+      throws CardCommandException {
+    command.parseResponse(apduResponse);
   }
 
   /**
@@ -359,7 +377,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @since 2.0.0
    */
   @Override
-  public final T prepareGetData(GetDataTag tag) {
+  public T prepareGetData(GetDataTag tag) {
     try {
       Assert.getInstance().notNull(tag, "tag");
       switch (tag) {
@@ -377,6 +395,26 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               new CommandGetDataTraceabilityInformation(
                   getTransactionContext(), getCommandContext()));
           break;
+        case CARD_PUBLIC_KEY:
+          commands.add(
+              new CommandGetDataCardPublicKey(getTransactionContext(), getCommandContext()));
+          break;
+        case CARD_CERTIFICATE:
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), true, true));
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), true, false));
+          break;
+        case CA_CERTIFICATE:
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), false, true));
+          commands.add(
+              new CommandGetDataCertificate(
+                  getTransactionContext(), getCommandContext(), false, false));
+          break;
         default:
           throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
       }
@@ -385,6 +423,79 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       throw e;
     }
     return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public T preparePutData(PutDataTag putDataTag, byte[] data) {
+    Assert.getInstance().notNull(putDataTag, "putDataTag").notNull(data, "data");
+    switch (putDataTag) {
+      case CARD_KEY_PAIR:
+        preparePutDataCardKeyPair(putDataTag, data);
+        break;
+      case CARD_CERTIFICATE:
+        preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
+        break;
+      case CA_CERTIFICATE:
+        preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CA_CERTIFICATE_SIZE);
+        break;
+      default:
+        throw new UnsupportedOperationException("Unsupported tag: " + putDataTag);
+    }
+    return currentInstance;
+  }
+
+  private void preparePutDataCardKeyPair(PutDataTag putDataTag, byte[] data) {
+
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
+    }
+
+    Assert.getInstance()
+        .isEqual(data.length, CalypsoCardConstant.CARD_KEY_PAIR_SIZE, MSG_DATA_LENGTH);
+
+    commands.add(
+        new CommandPutData(getTransactionContext(), getCommandContext(), putDataTag, true, data));
+  }
+
+  private void preparePutDataCertificate(PutDataTag putDataTag, byte[] data, int certificateSize) {
+
+    TransactionContextDto transactionContext = getTransactionContext();
+    CommandContextDto commandContext = getCommandContext();
+    int payloadCapacity = getTransactionContext().getCard().getPayloadCapacity();
+
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
+    }
+
+    if (commandContext.isSecureSessionOpen()) {
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+    }
+
+    Assert.getInstance().isEqual(data.length, certificateSize, MSG_DATA_LENGTH);
+
+    commands.add(
+        new CommandPutData(
+            transactionContext,
+            commandContext,
+            putDataTag,
+            true,
+            Arrays.copyOf(
+                data, payloadCapacity - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE)));
+    commands.add(
+        new CommandPutData(
+            transactionContext,
+            commandContext,
+            putDataTag,
+            false,
+            Arrays.copyOfRange(
+                data,
+                payloadCapacity - CalypsoCardConstant.TAG_CERTIFICATE_HEADER_SIZE,
+                data.length)));
   }
 
   /**
@@ -1157,6 +1268,24 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       resetTransaction();
       throw e;
     }
+    return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   */
+  @Override
+  public T prepareGenerateAsymmetricKeyPair() {
+    if (!card.isPkiModeSupported()) {
+      throw new UnsupportedOperationException(MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD);
+    }
+    if (getTransactionContext().isSecureSessionOpen()) {
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+    }
+    commands.add(
+        new CommandGenerateAsymmetricKeyPair(getTransactionContext(), getCommandContext()));
     return currentInstance;
   }
 

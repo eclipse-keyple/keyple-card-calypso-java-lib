@@ -18,6 +18,7 @@ package org.eclipse.keyple.card.calypso;
  */
 enum CardCommandRef {
   GET_DATA("Get Data", (byte) 0xCA),
+  PUT_DATA("Put Data", (byte) 0xDA),
   OPEN_SECURE_SESSION("Open Secure Session", (byte) 0x8A),
   CLOSE_SECURE_SESSION("Close Secure Session", (byte) 0x8E),
   MANAGE_SECURE_SESSION("Manage Secure Session", (byte) 0x82),
@@ -45,7 +46,8 @@ enum CardCommandRef {
   SV_RELOAD("SV Reload", (byte) 0xB8),
   SV_UNDEBIT("SV Undebit", (byte) 0xBC),
   INVALIDATE("Invalidate", (byte) 0x04),
-  REHABILITATE("Invalidate", (byte) 0x44);
+  REHABILITATE("Invalidate", (byte) 0x44),
+  GENERATE_ASYMMETRIC_KEY_PAIR("Generate Asymmetric Key Pair", (byte) 0x46);
 
   /** The command name. */
   private final String name;

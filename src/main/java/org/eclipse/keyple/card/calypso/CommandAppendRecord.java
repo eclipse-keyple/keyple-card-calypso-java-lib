@@ -130,7 +130,7 @@ final class CommandAppendRecord extends Command {
     if (getCommandContext().isEncryptionActive()) {
       return false;
     }
-    updateTerminalSessionMacIfNeeded(APDU_RESPONSE_9000);
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -144,7 +144,7 @@ final class CommandAppendRecord extends Command {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().getCard().addCyclicContent((byte) sfi, data);
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**

@@ -80,10 +80,11 @@ final class CommandGetDataFci extends Command {
             ApduUtil.build(
                 cardClass,
                 getCommandRef().getInstructionByte(),
-                (byte) 0x00,
-                (byte) 0x6F,
+                CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_MSB,
+                CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_LSB,
                 null,
                 (byte) 0x00)));
+    addSubName("FCI_FOR_CURRENT_DF");
   }
 
   /**
@@ -214,7 +215,7 @@ final class CommandGetDataFci extends Command {
     }
 
     getTransactionContext().getCard().initializeWithFci(this);
-    updateTerminalSessionMacIfNeeded();
+    updateTerminalSessionIfNeeded();
   }
 
   /**
