@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.1.1] - 2024-04-12
 ### Changed
 - Java source and target levels `1.6` -> `1.8`
 ### Added
@@ -16,8 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   startup information pattern:
   - `0A 0A 01 02 20 03 11` (issue [#109]) (Contributed by SNCF Connect).
 ### Upgraded
+- Keypop Reader API `2.0.0` -> `2.0.1`
+- Keypop Card API `2.0.0` -> `2.0.1`
 - Keypop Calypso Card API `2.0.0` -> `2.1.0`
-- Keyple Util Library `2.3.1` -> `2.3.2` (source code not impacted)
+- Keypop Calypso Crypto Symmetric API `0.1.0` -> `0.1.1`
+- Keypop Calypso Crypto Asymmetric API `0.1.0` -> `0.2.0`
+- Keyple Common API `2.0.0` -> `2.0.1`
+- Keyple Util Lib `2.3.1` -> `2.4.0`
 - Gradle `6.8.3` -> `7.6.4`
 
 ## [3.0.1] - 2023-12-06
