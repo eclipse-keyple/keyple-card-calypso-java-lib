@@ -1282,6 +1282,7 @@ final class DtoAdapters {
     public byte getKvc() {
       return cardResponse[offset + 6];
     }
+
     /**
      * {@inheritDoc}
      *
