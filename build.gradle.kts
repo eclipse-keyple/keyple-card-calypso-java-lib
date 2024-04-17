@@ -3,14 +3,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 plugins {
     java
-    id("com.diffplug.spotless") version "5.10.2"
+    id("com.diffplug.spotless") version "6.25.0"
     id("org.sonarqube") version "3.1"
     jacoco
 }
 buildscript {
     repositories {
         mavenLocal()
-        maven(url = "https://repo.eclipse.org/service/local/repositories/maven_central/content")
         mavenCentral()
     }
     dependencies {
@@ -24,10 +23,8 @@ apply(plugin = "org.eclipse.keyple")
 ///////////////////////////////////////////////////////////////////////////////
 repositories {
     mavenLocal()
-    maven(url = "https://repo.eclipse.org/service/local/repositories/maven_central/content")
     mavenCentral()
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
-    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 dependencies {
     implementation("org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.3.0")
@@ -39,9 +36,11 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:2.10.1")
     testImplementation("org.slf4j:slf4j-simple:1.7.32")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.assertj:assertj-core:3.15.0")
-    testImplementation("org.mockito:mockito-core:2.28.2")
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.vintage:junit-vintage-engine")
+    testImplementation("org.assertj:assertj-core:3.25.3")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }
 
 val javaSourceLevel: String by project

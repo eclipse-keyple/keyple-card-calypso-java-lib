@@ -87,6 +87,7 @@ final class CmdCardSvReload extends CardCommand {
   }
 
   private final boolean isExtendedModeAllowed;
+
   /** apdu data array */
   private final byte[] dataIn;
 

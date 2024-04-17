@@ -102,6 +102,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
   private final boolean isDebitCommand;
   private final boolean isExtendedModeAllowed;
   private final boolean isSvNegativeBalanceAuthorized;
+
   /** apdu data array */
   private final byte[] dataIn;
 
