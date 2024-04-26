@@ -44,16 +44,14 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
   private boolean isReadOnSessionOpeningDisabled;
 
   private final Map<WriteAccessLevel, Map<Byte, Byte>> kifMap =
-      new EnumMap<WriteAccessLevel, Map<Byte, Byte>>(WriteAccessLevel.class);
+      new EnumMap<>(WriteAccessLevel.class);
 
-  private final Map<WriteAccessLevel, Byte> defaultKifMap =
-      new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+  private final Map<WriteAccessLevel, Byte> defaultKifMap = new EnumMap<>(WriteAccessLevel.class);
 
-  private final Map<WriteAccessLevel, Byte> defaultKvcMap =
-      new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+  private final Map<WriteAccessLevel, Byte> defaultKvcMap = new EnumMap<>(WriteAccessLevel.class);
 
-  private final Set<Integer> authorizedSessionKeys = new HashSet<Integer>();
-  private final Set<Integer> authorizedSvKeys = new HashSet<Integer>();
+  private final Set<Integer> authorizedSessionKeys = new HashSet<>();
+  private final Set<Integer> authorizedSvKeys = new HashSet<>();
 
   private Byte pinVerificationCipheringKif;
   private Byte pinVerificationCipheringKvc;
@@ -142,7 +140,7 @@ class SymmetricCryptoSecuritySettingAdapter implements SymmetricCryptoSecuritySe
     Assert.getInstance().notNull(writeAccessLevel, WRITE_ACCESS_LEVEL);
     Map<Byte, Byte> map = kifMap.get(writeAccessLevel);
     if (map == null) {
-      map = new HashMap<Byte, Byte>();
+      map = new HashMap<>();
       kifMap.put(writeAccessLevel, map);
     }
     map.put(kvc, kif);

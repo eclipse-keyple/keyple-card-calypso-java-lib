@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.*;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.card.ElementaryFile;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
@@ -33,42 +34,42 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
     m.put(
         0x6981,
         new StatusProperties(
-            "Incorrect EF type: not a Counters EF.", CardDataAccessException.class));
+            "Incorrect EF type: not a Counters EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no secure session, incorrect key, encryption required, PKI mode and not Always access mode).",
+            "Security conditions not fulfilled (no secure session, incorrect key, encryption required, PKI mode and not Always access mode)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, DF is invalid, etc.).",
+            "Access forbidden (Never access mode, DF is invalid, etc.)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the Current File is not an EF. Supersedes 6981h.",
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
             CardDataAccessException.class));
     m.put(
         0x6A80,
         new StatusProperties(
-            "Incorrect command data (Overflow error, Incorrect counter number, Counter number present more than once).",
+            "Incorrect command data (Overflow error, Incorrect counter number, Counter number present more than once)",
             CardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("P1 or P2 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -123,11 +124,11 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      StringBuilder extraInfo = new StringBuilder(String.format("SFI:%02Xh", sfi));
+      StringBuilder extraInfo = new StringBuilder("sfi: " + HexUtil.toHex(sfi) + "h");
       for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
         extraInfo.append(", ");
         extraInfo.append(entry.getKey());
-        extraInfo.append(":");
+        extraInfo.append(": ");
         extraInfo.append(entry.getValue());
       }
       addSubName(extraInfo.toString());
@@ -243,8 +244,8 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
     }
     throw new IllegalStateException(
         String.format(
-            "Unable to determine the anticipated APDU response for the command '%s' (SFI %02Xh)"
-                + " because some expected counters have not been read beforehand.",
+            "Unable to determine the anticipated APDU response for the command [%s] (sfi %02Xh)"
+                + " because some expected counters have not been read beforehand",
             getName(), sfi));
   }
 }

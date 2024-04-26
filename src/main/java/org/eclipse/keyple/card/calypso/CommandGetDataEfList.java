@@ -38,14 +38,14 @@ final class CommandGetDataEfList extends Command {
   private static final int DESCRIPTOR_DATA_LENGTH = 6;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
-            "Data object not found (optional mode not available).", CardDataAccessException.class));
+            "Data object not found (optional mode not available)", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
+        new StatusProperties("P1 or P2 value not supported", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
 
@@ -138,7 +138,7 @@ final class CommandGetDataEfList extends Command {
    */
   private Map<FileHeaderAdapter, Byte> getEfHeaders() {
     byte[] rawList = getApduResponse().getDataOut();
-    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = new HashMap<FileHeaderAdapter, Byte>();
+    Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = new HashMap<>();
     int nbFiles = rawList[1] / DESCRIPTOR_TAG_LENGTH;
     for (int i = 0; i < nbFiles; i++) {
       fileHeaderToSfiMap.put(

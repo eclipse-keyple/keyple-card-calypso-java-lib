@@ -33,49 +33,49 @@ final class CommandSearchRecordMultiple extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
-            "Data Out overflow (outgoing data would be too long).",
+            "Data Out overflow (outgoing data would be too long)",
             CardSessionBufferOverflowException.class));
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported (<4).", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported (<4)", CardIllegalParameterException.class));
     m.put(
         0x6981,
-        new StatusProperties("Incorrect EF type: Binary EF.", CardDataAccessException.class));
+        new StatusProperties("Incorrect EF type: Binary EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (PIN code not presented, encryption required).",
+            "Security conditions not fulfilled (PIN code not presented, encryption required)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done"
-                + " during the current secure session).",
+                + " during the current secure session)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the Current File is not an EF. Supersedes 6981h.",
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
             CardDataAccessException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Incorrect command data (S. Length incompatible with Lc, S. Length > RecSize,"
-                + " S. Offset + S. Length > RecSize, S. Mask bigger than S. Data).",
+                + " S. Offset + S. Length > RecSize, S. Mask bigger than S. Data)",
             CardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found (record index is 0, or above NumRec).",
+            "Record not found (record index is 0, or above NumRec)",
             CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("P1 or P2 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -142,16 +142,22 @@ final class CommandSearchRecordMultiple extends Command {
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, REPEATED_OFFSET:%s, FETCH_FIRST_RESULT:%s, SEARCH_DATA:%sh,"
-                  + " MASK:%sh",
-              data.getSfi(),
-              data.getRecordNumber(),
-              data.getOffset(),
-              data.isEnableRepeatedOffset(),
-              data.isFetchFirstMatchingResult(),
-              HexUtil.toHex(data.getSearchData()),
-              HexUtil.toHex(data.getMask()));
+          "sfi: "
+              + HexUtil.toHex(data.getSfi())
+              + "h, rec: "
+              + data.getRecordNumber()
+              + ", offset: "
+              + data.getOffset()
+              + ", repeated offset: "
+              + data.isEnableRepeatedOffset()
+              + ", fetch first result: "
+              + data.isFetchFirstMatchingResult()
+              + ", search data: "
+              + HexUtil.toHex(data.getSearchData())
+              + "h,"
+              + " mask: "
+              + HexUtil.toHex(data.getMask())
+              + "h";
       addSubName(extraInfo);
     }
   }

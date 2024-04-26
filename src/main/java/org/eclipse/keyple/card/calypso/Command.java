@@ -53,14 +53,14 @@ abstract class Command {
   static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    HashMap<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>();
+    HashMap<Integer, StatusProperties> m = new HashMap<>();
     m.put(0x9000, new StatusProperties("Success"));
     STATUS_TABLE = m;
   }
 
   private final CardCommandRef commandRef;
   private final CommandContextDto commandContext;
-  private TransactionContextDto transactionContext;
+  private final TransactionContextDto transactionContext;
   private int le;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;

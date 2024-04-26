@@ -35,27 +35,27 @@ final class CommandManageSession extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Preconditions not satisfied:\n"
                 + "- No secure session running in Extended mode.\n"
                 + "- Manage Secure Session not authorized during the running\n"
-                + "session (as indicated by the Flags byte of Open Secure Session).",
+                + "session (as indicated by the Flags byte of Open Secure Session)",
             CardSecurityDataException.class));
     m.put(
         0x6988,
         new StatusProperties(
-            "Incorrect terminal Session MAC (the secure session is aborted).",
+            "Incorrect terminal Session MAC (the secure session is aborted)",
             CardSecurityDataException.class));
     m.put(
         0x6D00,
         new StatusProperties(
-            "Extended mode not supported, or AES keys not supported.",
+            "Extended mode not supported, or AES keys not supported",
             CardSecurityContextException.class));
     STATUS_TABLE = m;
   }

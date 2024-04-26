@@ -15,6 +15,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 
 import java.util.*;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keyple.core.util.json.JsonUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
 import org.eclipse.keypop.calypso.card.PutDataTag;
@@ -78,7 +79,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_CARD_COMMUNICATION_ERROR =
       "A communication error with the card occurred ";
   private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
-  private static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands.";
+  private static final String MSG_WHILE_TRANSMITTING_COMMANDS = "while transmitting commands";
   private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
   private static final String MSG_RECORD_NUMBER = "record number";
   private static final String MSG_OFFSET = "offset";
@@ -86,17 +87,17 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   private static final String MSG_RECORD_DATA_LENGTH = "record data length";
   private static final String MSG_SECURE_SESSION_OPEN = "Secure session open";
   private static final String MSG_PKI_MODE_IS_NOT_AVAILABLE_FOR_THIS_CARD =
-      "PKI mode is not available for this card.";
+      "PKI mode not available for this card";
   private static final String MSG_DATA_LENGTH = "data length";
 
   /* Final fields */
   T currentInstance = (T) this;
   final ProxyReaderApi cardReader;
   final CalypsoCardAdapter card;
-  private final List<byte[]> transactionAuditData = new ArrayList<byte[]>();
+  private final List<byte[]> transactionAuditData = new ArrayList<>();
 
   /* Dynamic fields */
-  final List<Command> commands = new ArrayList<Command>();
+  final List<Command> commands = new ArrayList<>();
 
   /**
    * Builds a new instance.
@@ -247,7 +248,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @since 2.2.0
    */
   private static List<ApduRequestSpi> getApduRequests(List<Command> commands) {
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
+    List<ApduRequestSpi> apduRequests = new ArrayList<>();
     if (commands != null) {
       for (Command command : commands) {
         apduRequests.add(command.getApduRequest());
@@ -284,9 +285,6 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
               + getTransactionAuditDataAsString(),
           e);
     } catch (UnexpectedStatusWordException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("A card command has failed: {}", e.getMessage());
-      }
       cardResponse = e.getCardResponse();
     }
     saveTransactionAuditData(cardRequest, cardResponse);
@@ -329,12 +327,13 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @since 3.0.0
    */
   final String getTransactionAuditDataAsString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("\nTransaction audit JSON data: {");
-    sb.append("\"targetSmartCard\":").append(card.toString()).append(",");
-    sb.append("\"apdus\":").append(JsonUtil.toJson(transactionAuditData));
-    sb.append("}");
-    return sb.toString();
+    return "\nTransaction audit JSON data: {"
+        + "\"targetSmartCard\":"
+        + card.toString()
+        + ","
+        + "\"apdus\":"
+        + JsonUtil.toJson(transactionAuditData)
+        + "}";
   }
 
   /**
@@ -526,7 +525,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
         CommandContextDto commandContext = getCommandContext();
         if (commandContext.isSecureSessionOpen() && !((CardReader) cardReader).isContactless()) {
           throw new IllegalStateException(
-              "Explicit record size is expected inside a secure session in contact mode.");
+              "Explicit record size is expected inside a secure session in contact mode");
         }
         commands.add(
             new CommandReadRecords(
@@ -651,7 +650,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3
           && card.getProductType() != CalypsoCard.ProductType.LIGHT) {
         throw new UnsupportedOperationException(
-            "The 'Read Record Multiple' command is not available for this card.");
+            "'Read Record Multiple' command not available for this card");
       }
 
       Assert.getInstance()
@@ -704,11 +703,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     try {
       if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
         if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
-          logger.warn(
-              "The 'Read Binary' command may not be supported by this PRIME_REVISION_2 card.");
+          logger.warn("Command may not be supported for PRIME_REVISION_2 card: Read Binary");
         } else {
           throw new UnsupportedOperationException(
-              "The 'Read Binary' command is not available for this card.");
+              "'Read Binary' command not available for this card");
         }
       }
 
@@ -768,7 +766,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     try {
       if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
         throw new UnsupportedOperationException(
-            "The 'Search Record Multiple' command is not available for this card.");
+            "'Search Record Multiple' command not available for this card");
       }
 
       if (!(data instanceof SearchCommandDataAdapter)) {
@@ -956,10 +954,10 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       if (card.getProductType() != CalypsoCard.ProductType.PRIME_REVISION_3) {
         if (card.getProductType() == CalypsoCard.ProductType.PRIME_REVISION_2) {
           logger.warn(
-              "The 'Update/Write Binary' command may not be supported by this PRIME_REVISION_2 card.");
+              "Command may not be supported for PRIME_REVISION_2 card: Update/Write Binary");
         } else {
           throw new UnsupportedOperationException(
-              "The 'Update/Write Binary' command is not available for this card.");
+              "'Update/Write Binary' command not available for this card");
         }
       }
 
@@ -1071,9 +1069,9 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       if (delta > 0) {
         if (logger.isTraceEnabled()) {
           logger.trace(
-              "Increment counter {} (file {}) from {} to {}",
+              "Increment counter #{} (file {}h) from {} to {}",
               counterNumber,
-              sfi,
+              HexUtil.toHex(sfi),
               newValue - delta,
               newValue);
         }
@@ -1081,19 +1079,21 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       } else if (delta < 0) {
         if (logger.isTraceEnabled()) {
           logger.trace(
-              "Decrement counter {} (file {}) from {} to {}",
+              "Decrement counter #{} (file {}h) from {} to {}",
               counterNumber,
-              sfi,
+              HexUtil.toHex(sfi),
               newValue - delta,
               newValue);
         }
         prepareDecreaseCounter(sfi, counterNumber, -delta);
       } else {
-        logger.info(
-            "The counter {} (SFI {}) is already set to the desired value {}.",
-            counterNumber,
-            sfi,
-            newValue);
+        if (logger.isDebugEnabled()) {
+          logger.debug(
+              "Counter #{} (sfi {}h) already set to the desired value {}",
+              counterNumber,
+              HexUtil.toHex(sfi),
+              newValue);
+        }
       }
 
     } catch (RuntimeException e) {
@@ -1196,14 +1196,14 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
                   getTransactionContext(),
                   getCommandContext(),
                   sfi,
-                  new TreeMap<Integer, Integer>(counterNumberToIncDecValueMap));
+                  new TreeMap<>(counterNumberToIncDecValueMap));
           prepareNewSecureSessionIfNeeded(command);
           commands.add(command);
         } else {
           // the number of counters exceeds the payload capacity, let's split into several apdu
           // commands
           int i = 0;
-          TreeMap<Integer, Integer> map = new TreeMap<Integer, Integer>();
+          TreeMap<Integer, Integer> map = new TreeMap<>();
           for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
             i++;
             map.put(entry.getKey(), entry.getValue());
@@ -1214,7 +1214,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
                       getTransactionContext(),
                       getCommandContext(),
                       sfi,
-                      new TreeMap<Integer, Integer>(map));
+                      new TreeMap<>(map));
               prepareNewSecureSessionIfNeeded(command);
               commands.add(command);
               i = 0;
@@ -1246,11 +1246,11 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   public final T prepareSvReadAllLogs() {
     try {
       if (!card.isSvFeatureAvailable()) {
-        throw new UnsupportedOperationException("Stored Value is not available for this card.");
+        throw new UnsupportedOperationException("Stored Value not available for this card");
       }
       if (card.getApplicationSubtype() != CalypsoCardConstant.STORED_VALUE_FILE_STRUCTURE_ID) {
         throw new UnsupportedOperationException(
-            "The currently selected application is not an SV application.");
+            "The currently selected application is not an SV application");
       }
       // reset SV data in CalypsoCard if any
       card.setSvData((byte) 0, null, null, 0, 0);

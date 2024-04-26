@@ -31,36 +31,35 @@ import org.slf4j.LoggerFactory;
 final class CommandReadBinary extends Command {
 
   private static final Logger logger = LoggerFactory.getLogger(CommandReadBinary.class);
-  private static final String MSG_SFI_02_XH_OFFSET_D_LENGTH_D = "SFI:%02Xh, OFFSET:%d, LENGTH:%d";
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6981,
-        new StatusProperties("Incorrect EF type: not a Binary EF.", CardDataAccessException.class));
+        new StatusProperties("Incorrect EF type: not a Binary EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (PIN code not presented, encryption required).",
+            "Security conditions not fulfilled (PIN code not presented, encryption required)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode).", CardAccessForbiddenException.class));
+            "Access forbidden (Never access mode)", CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the Current File is not an EF. Supersedes 6981h.",
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
             CardDataAccessException.class));
     m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Offset not in the file (offset overflow).", CardDataAccessException.class));
+            "Offset not in the file (offset overflow)", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("P1 value not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -112,8 +111,7 @@ final class CommandReadBinary extends Command {
                 cardClass, getCommandRef().getInstructionByte(), p1, lsb, null, (byte) length)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(MSG_SFI_02_XH_OFFSET_D_LENGTH_D, sfi, offset, length);
-      addSubName(extraInfo);
+      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset + ", length: " + length);
     }
   }
 
@@ -159,8 +157,8 @@ final class CommandReadBinary extends Command {
       if (anticipatedApduResponse == null) {
         String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
-            "Unable to determine the anticipated APDU response for the command '{}' (SFI {}h, offset {}, length {})"
-                + " because the record or some records have not been read beforehand.",
+            "Unable to determine anticipated APDU response for command [{}] (sfi {}h, offset {}, length {})"
+                + " because the record or some records have not been read beforehand",
             getName(),
             sfiHex,
             offset,

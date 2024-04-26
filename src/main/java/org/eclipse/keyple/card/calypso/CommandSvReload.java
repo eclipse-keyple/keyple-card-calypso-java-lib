@@ -58,34 +58,34 @@ import org.eclipse.keypop.card.ApduResponseApi;
 final class CommandSvReload extends Command {
 
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
-      "Unable to verify the card SV MAC associated to the SV operation.";
+      "Unable to verify the card SV MAC associated to the SV operation";
   public static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
   private static final int SW_POSTPONED_DATA = 0x6200;
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
   private final int amount;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
     m.put(
         0x6900,
         new StatusProperties(
-            "Transaction counter is 0 or SV TNum is FFFEh or FFFFh.",
+            "Transaction counter is 0 or SV TNum is FFFEh or FFFFh",
             CardTerminatedException.class));
     m.put(
         0x6985,
-        new StatusProperties("Preconditions not satisfied.", CardAccessForbiddenException.class));
-    m.put(0x6988, new StatusProperties("Incorrect signatureHi.", CardSecurityDataException.class));
+        new StatusProperties("Preconditions not satisfied", CardAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("Incorrect signatureHi", CardSecurityDataException.class));
     m.put(
         SW_POSTPONED_DATA,
         new StatusProperties(
-            "Successful execution, response data postponed until session closing."));
+            "Successful execution, response data postponed until session closing"));
     STATUS_TABLE = m;
   }
 
@@ -261,7 +261,7 @@ final class CommandSvReload extends Command {
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {
-      throw new IllegalStateException("Bad length in response to SV Reload command.");
+      throw new IllegalStateException("Bad length in response to SV Reload command");
     }
     CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
     calypsoCard.setSvOperationSignature(apduResponse.getDataOut());

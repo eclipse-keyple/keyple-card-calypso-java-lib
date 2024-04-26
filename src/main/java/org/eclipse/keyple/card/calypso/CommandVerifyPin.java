@@ -39,35 +39,35 @@ final class CommandVerifyPin extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
-            "Lc value not supported (only 00h, 04h or 08h are supported).",
+            "Lc value not supported (only 00h, 04h or 08h are supported)",
             CardIllegalParameterException.class));
-    m.put(0x6900, new StatusProperties("Transaction Counter is 0.", CardTerminatedException.class));
+    m.put(0x6900, new StatusProperties("Transaction Counter is 0", CardTerminatedException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (Get Challenge not done: challenge unavailable).",
+            "Security conditions not fulfilled (Get Challenge not done: challenge unavailable)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (a session is open or DF is invalidated).",
+            "Access forbidden (a session is open or DF is invalidated)",
             CardAccessForbiddenException.class));
     m.put(
         0x63C1,
-        new StatusProperties("Incorrect PIN (1 attempt remaining).", CardPinException.class));
+        new StatusProperties("Incorrect PIN (1 attempt remaining)", CardPinException.class));
     m.put(
         0x63C2,
-        new StatusProperties("Incorrect PIN (2 attempt remaining).", CardPinException.class));
+        new StatusProperties("Incorrect PIN (2 attempt remaining)", CardPinException.class));
     m.put(
         0x6983,
-        new StatusProperties("Presentation rejected (PIN is blocked).", CardPinException.class));
+        new StatusProperties("Presentation rejected (PIN is blocked)", CardPinException.class));
     m.put(
         0x6D00,
-        new StatusProperties("PIN function not present.", CardIllegalParameterException.class));
+        new StatusProperties("PIN function not present", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -172,8 +172,8 @@ final class CommandVerifyPin extends Command {
     if (logger.isDebugEnabled()) {
       addSubName(
           isReadCounterMode
-              ? "Read presentation counter"
-              : isPinEncryptedMode ? "ENCRYPTED" : "PLAIN"); // NOSONAR
+              ? "read presentation counter"
+              : isPinEncryptedMode ? "encrypted" : "plain"); // NOSONAR
     }
     encryptRequestAndUpdateTerminalSessionMacIfNeeded();
   }

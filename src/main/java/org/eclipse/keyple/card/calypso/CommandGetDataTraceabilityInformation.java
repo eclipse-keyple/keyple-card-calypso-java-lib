@@ -31,14 +31,14 @@ final class CommandGetDataTraceabilityInformation extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
-            "Data object not found (optional mode not available).", CardDataAccessException.class));
+            "Data object not found (optional mode not available)", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
+        new StatusProperties("P1 or P2 value not supported", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
 

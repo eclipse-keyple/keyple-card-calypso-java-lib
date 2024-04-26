@@ -121,7 +121,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
       return this;
     }
     try {
-      List<Command> cardRequestCommands = new ArrayList<Command>();
+      List<Command> cardRequestCommands = new ArrayList<>();
       for (Command command : commands) {
         command.finalizeRequest();
         cardRequestCommands.add(command);

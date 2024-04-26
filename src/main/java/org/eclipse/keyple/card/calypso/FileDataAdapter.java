@@ -28,7 +28,7 @@ class FileDataAdapter implements FileData {
 
   private static final Logger logger = LoggerFactory.getLogger(FileDataAdapter.class);
 
-  private final TreeMap<Integer, byte[]> records = new TreeMap<Integer, byte[]>();
+  private final TreeMap<Integer, byte[]> records = new TreeMap<>();
 
   /**
    * Constructor
@@ -38,7 +38,7 @@ class FileDataAdapter implements FileData {
   FileDataAdapter() {}
 
   /**
-   * Constructor used to create a clone of the provided file file data.
+   * Constructor used to create a clone of the provided file data.
    *
    * @param source the header to be cloned.
    * @since 2.0.0
@@ -79,7 +79,7 @@ class FileDataAdapter implements FileData {
   public byte[] getContent(int numRecord) {
     byte[] content = records.get(numRecord);
     if (content == null) {
-      logger.warn("Record #{} is not set.", numRecord);
+      logger.warn("Record not set (#{})", numRecord);
       content = new byte[0];
     }
     return content;
@@ -99,12 +99,12 @@ class FileDataAdapter implements FileData {
 
     byte[] content = records.get(numRecord);
     if (content == null) {
-      logger.warn("Record #{} is not set.", numRecord);
+      logger.warn("Record not set (#{})", numRecord);
       return new byte[0];
     }
     if (dataOffset >= content.length) {
       throw new IndexOutOfBoundsException(
-          "Offset [" + dataOffset + "] >= content length [" + content.length + "].");
+          "Offset [" + dataOffset + "] >= content length [" + content.length + "]");
     }
     int toIndex = dataOffset + dataLength;
     if (toIndex > content.length) {
@@ -117,7 +117,7 @@ class FileDataAdapter implements FileData {
               + toIndex
               + "] > content length ["
               + content.length
-              + "].");
+              + "]");
     }
     return Arrays.copyOfRange(content, dataOffset, toIndex);
   }
@@ -134,13 +134,12 @@ class FileDataAdapter implements FileData {
 
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      logger.warn("Record #1 is not set.");
+      logger.warn("Record not set (#1)");
       return null;
     }
     int counterIndex = (numCounter - 1) * 3;
     if (counterIndex >= rec1.length) {
-      logger.warn(
-          "Counter #{} is not set (nb of actual counters = {}).", numCounter, rec1.length / 3);
+      logger.warn("Counter not set (#{}) (nb of actual counters: {})", numCounter, rec1.length / 3);
       return null;
     }
     if (counterIndex + 3 > rec1.length) {
@@ -149,7 +148,7 @@ class FileDataAdapter implements FileData {
               + numCounter
               + " has a truncated value (nb of actual counters = "
               + (rec1.length / 3)
-              + ").");
+              + ")");
     }
     return ByteArrayUtil.extractInt(rec1, counterIndex, 3, false);
   }
@@ -161,10 +160,10 @@ class FileDataAdapter implements FileData {
    */
   @Override
   public SortedMap<Integer, Integer> getAllCountersValue() {
-    SortedMap<Integer, Integer> result = new TreeMap<Integer, Integer>();
+    SortedMap<Integer, Integer> result = new TreeMap<>();
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      logger.warn("Record #1 is not set.");
+      logger.warn("Record not set (#1)");
       return result;
     }
     int length = rec1.length - (rec1.length % 3);
@@ -268,7 +267,7 @@ class FileDataAdapter implements FileData {
    * @since 2.0.0
    */
   void addCyclicContent(byte[] content) {
-    ArrayList<Integer> descendingKeys = new ArrayList<Integer>(records.descendingKeySet());
+    ArrayList<Integer> descendingKeys = new ArrayList<>(records.descendingKeySet());
     for (Integer i : descendingKeys) {
       records.put(i + 1, records.get(i));
     }

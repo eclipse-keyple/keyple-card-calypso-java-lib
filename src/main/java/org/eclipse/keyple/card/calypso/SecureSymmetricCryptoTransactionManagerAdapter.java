@@ -167,11 +167,11 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         CommandCloseSecureSession cancelSecureSessionCommand =
             new CommandCloseSecureSession(transactionContext, getCommandContext(), true);
         cancelSecureSessionCommand.finalizeRequest();
-        List<Command> commands = new ArrayList<Command>(1);
+        List<Command> commands = new ArrayList<>(1);
         commands.add(cancelSecureSessionCommand);
         executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
-        logger.debug("Secure session abortion error: {}", e.getMessage());
+        logger.warn("Failed to abort secure session: {}", e.getMessage());
       } finally {
         card.restoreFiles();
         transactionContext.setSecureSessionOpen(false);
@@ -295,7 +295,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       return currentInstance;
     }
     try {
-      List<Command> cardRequestCommands = new ArrayList<Command>();
+      List<Command> cardRequestCommands = new ArrayList<>();
       for (Command command : commands) {
         if (command.isCryptoServiceRequiredToFinalizeRequest()
             && (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands))) {
@@ -446,8 +446,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       if (card.getPreOpenWriteAccessLevel() != null
           && card.getPreOpenWriteAccessLevel() != writeAccessLevel) {
         logger.warn(
-            "Pre-open mode cancelled because writeAccessLevel '{}' mismatches the writeAccessLevel used for"
-                + " pre-open mode '{}'",
+            "Pre-open mode cancelled because writeAccessLevel [{}] mismatches writeAccessLevel used for"
+                + " pre-open mode [{}]",
             writeAccessLevel,
             card.getPreOpenWriteAccessLevel());
         disablePreOpenMode();
@@ -517,7 +517,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       Assert.getInstance().notNull(svOperation, "svOperation").notNull(svAction, "svAction");
 
       if (!card.isSvFeatureAvailable()) {
-        throw new UnsupportedOperationException("Stored Value is not available for this card.");
+        throw new UnsupportedOperationException("Stored Value not available for this card");
       }
 
       if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {

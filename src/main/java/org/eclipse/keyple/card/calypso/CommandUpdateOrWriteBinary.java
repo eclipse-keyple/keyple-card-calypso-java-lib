@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ final class CommandUpdateOrWriteBinary extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
@@ -121,8 +122,7 @@ final class CommandUpdateOrWriteBinary extends Command {
                 null)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh, OFFSET:%d", sfi, offset);
-      addSubName(extraInfo);
+      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset);
     }
   }
 

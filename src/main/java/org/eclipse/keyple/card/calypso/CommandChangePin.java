@@ -32,33 +32,33 @@ final class CommandChangePin extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
-            "Lc value not supported (not 04h, 10h, 18h, 20h).",
+            "Lc value not supported (not 04h, 10h, 18h, 20h)",
             CardIllegalParameterException.class));
-    m.put(0x6900, new StatusProperties("Transaction Counter is 0.", CardTerminatedException.class));
+    m.put(0x6900, new StatusProperties("Transaction Counter is 0", CardTerminatedException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (Get Challenge not done: challenge unavailable).",
+            "Security conditions not fulfilled (Get Challenge not done: challenge unavailable)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (a session is open or DF is invalidated).",
+            "Access forbidden (a session is open or DF is invalidated)",
             CardAccessForbiddenException.class));
-    m.put(0x6988, new StatusProperties("Incorrect Cryptogram.", CardSecurityDataException.class));
+    m.put(0x6988, new StatusProperties("Incorrect Cryptogram", CardSecurityDataException.class));
     m.put(
         0x6A80,
         new StatusProperties(
-            "Decrypted message incorrect (key algorithm not supported, incorrect padding, etc.).",
+            "Decrypted message incorrect (key algorithm not supported, incorrect padding, etc.)",
             CardSecurityDataException.class));
     m.put(
         0x6A87,
-        new StatusProperties("Lc not compatible with P2.", CardIllegalParameterException.class));
-    m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
+        new StatusProperties("Lc not compatible with P2", CardIllegalParameterException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1, P2", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

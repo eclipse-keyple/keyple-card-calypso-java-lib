@@ -61,7 +61,7 @@ final class DtoAdapters {
      */
     ApduRequestAdapter(byte[] apdu) {
       this.apdu = apdu;
-      successfulStatusWords = new HashSet<Integer>();
+      successfulStatusWords = new HashSet<>();
       successfulStatusWords.add(DEFAULT_SUCCESSFUL_CODE);
     }
 
@@ -229,7 +229,7 @@ final class DtoAdapters {
      */
     CardSelectionRequestAdapter(CardRequestSpi cardRequest) {
       this.cardRequest = cardRequest;
-      successfulSelectionStatusWords = new LinkedHashSet<Integer>(2);
+      successfulSelectionStatusWords = new LinkedHashSet<>(2);
       successfulSelectionStatusWords.add(SW_DEFAULT_SUCCESSFUL);
     }
 
@@ -285,7 +285,7 @@ final class DtoAdapters {
     private byte[] searchData;
     private byte[] mask;
     private boolean fetchFirstMatchingResult;
-    private final List<Integer> matchingRecordNumbers = new ArrayList<Integer>(1);
+    private final List<Integer> matchingRecordNumbers = new ArrayList<>(1);
 
     /**
      * {@inheritDoc}

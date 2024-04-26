@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,49 +33,49 @@ final class CommandReadRecordMultiple extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
     m.put(
         0x6981,
-        new StatusProperties("Incorrect EF type: Binary EF.", CardDataAccessException.class));
+        new StatusProperties("Incorrect EF type: Binary EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (PIN code not presented, encryption required).",
+            "Security conditions not fulfilled (PIN code not presented, encryption required)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, Stored Value log file and a Stored Value operation was done"
-                + " during the current secure session).",
+                + " during the current secure session)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the Current File is not an EF. Supersedes 6981h.",
+            "Incorrect file type: the Current File is not an EF. Supersedes 6981h",
             CardDataAccessException.class));
     m.put(
         0x6A80,
         new StatusProperties(
             "Incorrect command data (incorrect Tag, incorrect Length, R. Length > RecSize,"
-                + " R. Offset + R. Length > RecSize, R. Length = 0).",
+                + " R. Offset + R. Length > RecSize, R. Length = 0)",
             CardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found (record index is 0, or above NumRec).",
+            "Record not found (record index is 0, or above NumRec)",
             CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("P1 or P2 value not supported", CardIllegalParameterException.class));
     m.put(
         0x6200,
         new StatusProperties(
             "Successful execution, partial read only: issue another Read Record Multiple from record"
-                + " (P1 + (Size of returned data) / (R. Length)) to continue reading."));
+                + " (P1 + (Size of returned data) / (R. Length)) to continue reading"));
     STATUS_TABLE = m;
   }
 
@@ -123,11 +124,15 @@ final class CommandReadRecordMultiple extends Command {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo =
-          String.format(
-              "SFI:%02Xh, RECORD_NUMBER:%d, OFFSET:%d, LENGTH:%d",
-              sfi, recordNumber, offset, length);
-      addSubName(extraInfo);
+      addSubName(
+          "sfi: "
+              + HexUtil.toHex(sfi)
+              + "h, rec: "
+              + recordNumber
+              + ", offset: "
+              + offset
+              + ", length: "
+              + length);
     }
   }
 
