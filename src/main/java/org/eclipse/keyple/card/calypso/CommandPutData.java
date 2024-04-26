@@ -32,30 +32,30 @@ final class CommandPutData extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
-    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled.", CardSecurityContextException.class));
-    m.put(0x6985, new StatusProperties("Access forbidden.", CardAccessForbiddenException.class));
+            "Security conditions not fulfilled", CardSecurityContextException.class));
+    m.put(0x6985, new StatusProperties("Access forbidden", CardAccessForbiddenException.class));
     m.put(
         0x6A80,
-        new StatusProperties("Lc not compatible with P1P2.", CardIllegalParameterException.class));
+        new StatusProperties("Lc not compatible with P1P2", CardIllegalParameterException.class));
     m.put(
         0x6A87,
-        new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
-    m.put(0x6A88, new StatusProperties("Data object not found.", CardDataAccessException.class));
-    m.put(0x6A8A, new StatusProperties("Incorrect AID.", CardIllegalParameterException.class));
-    m.put(0x6B00, new StatusProperties("Incorrect P1, P2.", CardIllegalParameterException.class));
+        new StatusProperties("Incorrect incoming data", CardIllegalParameterException.class));
+    m.put(0x6A88, new StatusProperties("Data object not found", CardDataAccessException.class));
+    m.put(0x6A8A, new StatusProperties("Incorrect AID", CardIllegalParameterException.class));
+    m.put(0x6B00, new StatusProperties("Incorrect P1, P2", CardIllegalParameterException.class));
     m.put(
         0x6D00,
         new StatusProperties(
-            "Command Put Data not supported.", CardIllegalParameterException.class));
+            "Command Put Data not supported", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

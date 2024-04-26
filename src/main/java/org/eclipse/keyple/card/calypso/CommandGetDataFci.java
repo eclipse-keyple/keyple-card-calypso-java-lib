@@ -37,15 +37,15 @@ final class CommandGetDataFci extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6A88,
         new StatusProperties(
-            "Data object not found (optional mode not available).", CardDataAccessException.class));
+            "Data object not found (optional mode not available)", CardDataAccessException.class));
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardDataAccessException.class));
-    m.put(0x6283, new StatusProperties("Successful execution, FCI request and DF is invalidated."));
+        new StatusProperties("P1 or P2 value not supported", CardDataAccessException.class));
+    m.put(0x6283, new StatusProperties("Successful execution, FCI request and DF is invalidated"));
     STATUS_TABLE = m;
   }
 
@@ -151,8 +151,7 @@ final class CommandGetDataFci extends Command {
     /* check the command status to determine if the DF has been invalidated */
     // CL-INV-STATUS.1
     if (getApduResponse().getStatusWord() == 0x6283) {
-      logger.debug(
-          "The response to the select application command status word indicates that the DF has been invalidated.");
+      logger.debug("DF invalidated");
       isDfInvalidated = true;
     }
 
@@ -167,43 +166,43 @@ final class CommandGetDataFci extends Command {
 
       dfName = tags.get(TAG_DF_NAME);
       if (dfName == null) {
-        logger.error("DF name tag (84h) not found.");
+        logger.error("DF name tag (84h) not found");
         return;
       }
       if (dfName.length < 5 || dfName.length > 16) {
-        logger.error("Invalid DF name length: {}. Should be between 5 and 16.", dfName.length);
+        logger.error("Invalid DF name length {} (not in range [5..16])", dfName.length);
         return;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("DF name = {}", HexUtil.toHex(dfName));
+        logger.debug("DF name: {}", HexUtil.toHex(dfName));
       }
 
       applicationSN = tags.get(TAG_APPLICATION_SERIAL_NUMBER);
       if (applicationSN == null) {
-        logger.error("Serial Number tag (C7h) not found.");
+        logger.error("Serial number tag (C7h) not found");
         return;
       }
       // CL-SEL-CSN.1
       if (applicationSN.length != 8) {
         logger.error(
-            "Invalid application serial number length: {}. Should be 8.", applicationSN.length);
+            "Invalid application serial number length {} (expected 8)", applicationSN.length);
         return;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("Application Serial Number = {}", HexUtil.toHex(applicationSN));
+        logger.debug("Application serial number: {}h", HexUtil.toHex(applicationSN));
       }
 
       discretionaryData = tags.get(TAG_DISCRETIONARY_DATA);
       if (discretionaryData == null) {
-        logger.error("Discretionary data tag (53h) not found.");
+        logger.error("Discretionary data tag (53h) not found");
         return;
       }
       if (discretionaryData.length < 7) {
-        logger.error("Invalid startup info length: {}. Should be >= 7.", discretionaryData.length);
+        logger.error("Invalid startup info length {} (should be >= 7)", discretionaryData.length);
         return;
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("Discretionary Data = {}", HexUtil.toHex(discretionaryData));
+        logger.debug("Discretionary data: {}", HexUtil.toHex(discretionaryData));
       }
 
       /* all 3 main fields were retrieved */
@@ -211,7 +210,7 @@ final class CommandGetDataFci extends Command {
 
     } catch (Exception e) {
       /* Silently ignore problems decoding TLV structure. Just log. */
-      logger.debug("Error while parsing the FCI BER-TLV data structure ({})", e.getMessage());
+      logger.debug("Failed to parse FCI BER-TLV data structure: {}", e.getMessage());
     }
 
     getTransactionContext().getCard().initializeWithFci(this);

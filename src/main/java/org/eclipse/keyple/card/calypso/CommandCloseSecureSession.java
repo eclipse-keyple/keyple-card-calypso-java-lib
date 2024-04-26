@@ -39,9 +39,9 @@ final class CommandCloseSecureSession extends Command {
   private static final Logger logger = LoggerFactory.getLogger(CommandCloseSecureSession.class);
 
   private static final String MSG_CARD_SESSION_MAC_NOT_VERIFIABLE =
-      "Unable to verify the card session MAC associated to the successfully closed secure session.";
+      "Unable to verify the card session MAC associated to the successfully closed secure session";
   private static final String MSG_CARD_SV_MAC_NOT_VERIFIABLE =
-      "Unable to verify the card SV MAC associated to the SV operation.";
+      "Unable to verify the card SV MAC associated to the SV operation";
   private static final String MSG_INVALID_CARD_SESSION_MAC = "Invalid card session MAC";
   private static final String MSG_INVALID_CARD_SESSION_SIGNATURE = "Invalid card session signature";
 
@@ -50,19 +50,19 @@ final class CommandCloseSecureSession extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
         new StatusProperties(
-            "Lc signatureLo not supported (e.g. Lc=4 with a Revision 3.2 mode for Open Secure Session).",
+            "Lc signatureLo not supported (e.g. Lc=4 with a Revision 3.2 mode for Open Secure Session)",
             CardIllegalParameterException.class));
     m.put(
         0x6B00,
         new StatusProperties(
-            "P1 or P2 signatureLo not supported.", CardIllegalParameterException.class));
+            "P1 or P2 signatureLo not supported", CardIllegalParameterException.class));
     m.put(
-        0x6985, new StatusProperties("No session was opened.", CardAccessForbiddenException.class));
-    m.put(0x6988, new StatusProperties("incorrect signatureLo.", CardSecurityDataException.class));
+        0x6985, new StatusProperties("No session was opened", CardAccessForbiddenException.class));
+    m.put(0x6988, new StatusProperties("incorrect signatureLo", CardSecurityDataException.class));
     STATUS_TABLE = m;
   }
 
@@ -71,7 +71,7 @@ final class CommandCloseSecureSession extends Command {
   private final int svPostponedDataIndex;
 
   /** The postponed data. */
-  private final List<byte[]> postponedData = new ArrayList<byte[]>(0);
+  private final List<byte[]> postponedData = new ArrayList<>(0);
 
   /**
    * Constructor.
@@ -224,7 +224,7 @@ final class CommandCloseSecureSession extends Command {
       logger.info("Secure session successfully aborted");
       getTransactionContext().getCard().restoreFiles();
     } catch (CardCommandException e) {
-      logger.debug("Secure session abortion error: {}", e.getMessage());
+      logger.warn("Failed to abort secure session: {}", e.getMessage());
     }
   }
 

@@ -28,21 +28,21 @@ final class CommandInvalidate extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
-    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no session, wrong key).",
+            "Security conditions not fulfilled (no session, wrong key)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (DF context is invalid).", CardAccessForbiddenException.class));
+            "Access forbidden (DF context is invalid)", CardAccessForbiddenException.class));
     STATUS_TABLE = m;
   }
 

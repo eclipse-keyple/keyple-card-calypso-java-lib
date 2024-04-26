@@ -35,23 +35,23 @@ final class CommandSvGet extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled.", CardSecurityContextException.class));
+            "Security conditions not fulfilled", CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Preconditions not satisfied (a store value operation was already done in the current session).",
+            "Preconditions not satisfied (a store value operation was already done in the current session)",
             CardAccessForbiddenException.class));
-    m.put(0x6A81, new StatusProperties("Incorrect P1 or P2.", CardIllegalParameterException.class));
+    m.put(0x6A81, new StatusProperties("Incorrect P1 or P2", CardIllegalParameterException.class));
     m.put(
         0x6A86,
-        new StatusProperties("Le inconsistent with P2.", CardIllegalParameterException.class));
+        new StatusProperties("Le inconsistent with P2", CardIllegalParameterException.class));
     m.put(
         0x6D00,
-        new StatusProperties("SV function not present.", CardIllegalParameterException.class));
+        new StatusProperties("SV function not present", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 
@@ -93,7 +93,7 @@ final class CommandSvGet extends Command {
                 cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
 
     if (logger.isDebugEnabled()) {
-      addSubName(String.format("OPERATION:%s", svOperation.toString()));
+      addSubName("operation: " + svOperation.toString());
     }
 
     header = new byte[4];

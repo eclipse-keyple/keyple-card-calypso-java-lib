@@ -30,24 +30,24 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
   private static final String SECP256R1_OID = "06082A8648CE3D030107";
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
-    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Conditions of use not satisfied: a secure session is running or a card key pair already available.",
+            "Conditions of use not satisfied: a secure session is running or a card key pair already available",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Incorrect file type: the current DF is not an autonomous PKI application.",
+            "Incorrect file type: the current DF is not an autonomous PKI application",
             CardDataAccessException.class));
     m.put(
         0x6A80,
-        new StatusProperties("Incorrect incoming data.", CardIllegalParameterException.class));
+        new StatusProperties("Incorrect incoming data", CardIllegalParameterException.class));
     m.put(
         0x6D00,
-        new StatusProperties("PKI mode not available.", CardIllegalParameterException.class));
+        new StatusProperties("PKI mode not available", CardIllegalParameterException.class));
     STATUS_TABLE = m;
   }
 

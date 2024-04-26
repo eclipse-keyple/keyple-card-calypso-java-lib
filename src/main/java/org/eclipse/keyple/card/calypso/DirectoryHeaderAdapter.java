@@ -53,10 +53,8 @@ class DirectoryHeaderAdapter implements DirectoryHeader {
     private byte[] accessConditions;
     private byte[] keyIndexes;
     private byte dfStatus;
-    private final EnumMap<WriteAccessLevel, Byte> kif =
-        new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
-    private final EnumMap<WriteAccessLevel, Byte> kvc =
-        new EnumMap<WriteAccessLevel, Byte>(WriteAccessLevel.class);
+    private final EnumMap<WriteAccessLevel, Byte> kif = new EnumMap<>(WriteAccessLevel.class);
+    private final EnumMap<WriteAccessLevel, Byte> kvc = new EnumMap<>(WriteAccessLevel.class);
 
     /** Private constructor */
     private DirectoryHeaderBuilder() {}

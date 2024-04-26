@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,33 +33,32 @@ final class CommandAppendRecord extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6B00,
-        new StatusProperties("P1 or P2 value not supported.", CardIllegalParameterException.class));
-    m.put(0x6700, new StatusProperties("Lc value not supported.", CardDataAccessException.class));
+        new StatusProperties("P1 or P2 value not supported", CardIllegalParameterException.class));
+    m.put(0x6700, new StatusProperties("Lc value not supported", CardDataAccessException.class));
     m.put(
         0x6400,
         new StatusProperties(
-            "Too many modifications in session.", CardSessionBufferOverflowException.class));
+            "Too many modifications in session", CardSessionBufferOverflowException.class));
     m.put(
         0x6981,
-        new StatusProperties("The current EF is not a Cyclic EF.", CardDataAccessException.class));
+        new StatusProperties("The current EF is not a Cyclic EF", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (no session, wrong key).",
+            "Security conditions not fulfilled (no session, wrong key)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, DF is invalidated, etc..).",
+            "Access forbidden (Never access mode, DF is invalidated, etc..)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
-        new StatusProperties(
-            "Command not allowed (no current EF).", CardDataAccessException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+        new StatusProperties("Command not allowed (no current EF)", CardDataAccessException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     STATUS_TABLE = m;
   }
 
@@ -95,8 +95,7 @@ final class CommandAppendRecord extends Command {
                 data,
                 null)));
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format("SFI:%02Xh", sfi);
-      addSubName(extraInfo);
+      addSubName("sfi: " + HexUtil.toHex(sfi) + "h");
     }
   }
 

@@ -35,20 +35,20 @@ final class CommandReadRecords extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6981,
         new StatusProperties("Command forbidden on binary files", CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
-            "Security conditions not fulfilled (PIN code not presented, encryption required).",
+            "Security conditions not fulfilled (PIN code not presented, encryption required)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
             "Access forbidden (Never access mode, stored value log file and a stored value operation was done"
-                + " during the current session).",
+                + " during the current session)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
@@ -132,16 +132,15 @@ final class CommandReadRecords extends Command {
             ApduUtil.build(cardClass, getCommandRef().getInstructionByte(), p1, p2, null, le)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo =
-          "SFI: "
-              + Integer.toHexString(sfi)
-              + "h, REC: "
+      addSubName(
+          "sfi: "
+              + HexUtil.toHex(sfi)
+              + "h, rec: "
               + firstRecordNumber
-              + ", READMODE: "
+              + ", read mode: "
               + readMode.name()
-              + ", EXPECTEDLENGTH: "
-              + expectedLength;
-      addSubName(extraInfo);
+              + ", expected length: "
+              + expectedLength);
     }
   }
 
@@ -187,8 +186,8 @@ final class CommandReadRecords extends Command {
       if (anticipatedApduResponse == null) {
         String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
-            "Unable to determine the anticipated APDU response for the command '{}' (SFI {}h, record {})"
-                + " because the record or some records have not been read beforehand.",
+            "Unable to determine anticipated APDU response for command [{}] (sfi {}h, record {})"
+                + " because the record or some records have not been read beforehand",
             getName(),
             sfiHex,
             firstRecordNumber);

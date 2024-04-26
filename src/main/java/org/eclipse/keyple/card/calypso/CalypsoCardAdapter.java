@@ -37,9 +37,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoCardAdapter.class);
 
-  private static final String PATTERN_1_BYTE_HEX = "%02Xh";
-  private static final String PATTERN_2_BYTES_HEX = "%04Xh";
-
   private static final int CARD_REV1_ATR_LENGTH = 20;
   private static final int REV1_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 3;
   private static final int REV2_CARD_DEFAULT_WRITE_OPERATIONS_NUMBER_SUPPORTED_PER_SESSION = 6;
@@ -84,10 +81,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private int modificationsCounterMax;
   private boolean isModificationCounterInBytes = true;
   private DirectoryHeader directoryHeader;
-  private final Set<ElementaryFile> files =
-      Collections.newSetFromMap(new ConcurrentHashMap<ElementaryFile, Boolean>());
+  private final Set<ElementaryFile> files = Collections.newSetFromMap(new ConcurrentHashMap<>());
   private final Set<ElementaryFile> filesBackup =
-      Collections.newSetFromMap(new ConcurrentHashMap<ElementaryFile, Boolean>());
+      Collections.newSetFromMap(new ConcurrentHashMap<>());
   private ElementaryFileAdapter currentEf;
   private Boolean isDfRatified;
   private Integer transactionCounter;
@@ -116,8 +112,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private WriteAccessLevel preOpenWriteAccessLevel;
   private byte[] preOpenDataOut;
 
-  private static final List<PatchRev3> patchesRev3 = new ArrayList<PatchRev3>();
-  private static final List<PatchRev12> patchesRev12 = new ArrayList<PatchRev12>();
+  private static final List<PatchRev3> patchesRev3 = new ArrayList<>();
+  private static final List<PatchRev12> patchesRev12 = new ArrayList<>();
 
   static {
     // Patches for revision 3:
@@ -215,7 +211,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     cmdCardGetDataFci.parseResponseForSelection(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
-      throw new IllegalArgumentException("Bad FCI format.");
+      throw new IllegalArgumentException("Bad FCI format");
     }
   }
 
@@ -248,8 +244,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     applicationSubType = startupInfo[SI_APPLICATION_SUBTYPE];
     if (applicationSubType == (byte) 0x00 || applicationSubType == (byte) 0xFF) {
       throw new IllegalArgumentException(
-          "Unexpected application subtype: "
-              + String.format(PATTERN_1_BYTE_HEX, applicationSubType));
+          "Unexpected application subtype: " + HexUtil.toHex(applicationSubType));
     }
     sessionModification = startupInfo[SI_BUFFER_SIZE_INDICATOR];
 
@@ -263,7 +258,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (sessionModification < 0x04 || sessionModification > 0x37) {
         throw new IllegalArgumentException(
             "Wrong session modification value for a Basic type (should be between 04h and 37h): "
-                + String.format(PATTERN_1_BYTE_HEX, sessionModification));
+                + HexUtil.toHex(sessionModification));
       }
       calypsoCardClass = CalypsoCardClass.ISO;
       isModificationCounterInBytes = false;
@@ -275,7 +270,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       if (sessionModification < (byte) 0x06 || sessionModification > (byte) 0x37) {
         throw new IllegalArgumentException(
             "Session modifications byte should be in range 06h to 47h. Was: "
-                + String.format(PATTERN_1_BYTE_HEX, sessionModification));
+                + HexUtil.toHex(sessionModification));
       }
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
     }
@@ -632,7 +627,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       return isDfRatified;
     }
     throw new IllegalStateException(
-        "Unable to determine the ratification status. No session was opened.");
+        "Unable to determine the ratification status. No session was opened");
   }
 
   /**
@@ -644,7 +639,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   public int getTransactionCounter() {
     if (transactionCounter == null) {
       throw new IllegalStateException(
-          "Unable to determine the transaction counter. No session was opened.");
+          "Unable to determine the transaction counter. No session was opened");
     }
     return transactionCounter;
   }
@@ -687,7 +682,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public int getSvBalance() {
     if (svBalance == null) {
-      throw new IllegalStateException("No SV Get command has been executed.");
+      throw new IllegalStateException("No SV Get command has been executed");
     }
     return svBalance;
   }
@@ -700,7 +695,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public int getSvLastTNum() {
     if (svBalance == null) {
-      throw new IllegalStateException("No SV Get command has been executed.");
+      throw new IllegalStateException("No SV Get command has been executed");
     }
     return svLastTNum;
   }
@@ -743,7 +738,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   @Override
   public List<SvDebitLogRecord> getSvDebitLogAllRecords() {
-    List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<SvDebitLogRecord>();
+    List<SvDebitLogRecord> svDebitLogRecords = new ArrayList<>();
     // get the logs from the file data
     ElementaryFile ef = getFileBySfi(CalypsoCardConstant.SV_DEBIT_LOG_FILE_SFI);
     if (ef == null) {
@@ -825,8 +820,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         return ef;
       }
     }
-    String sfiHex = String.format(PATTERN_1_BYTE_HEX, sfi);
-    logger.warn("EF with SFI {} is not found.", sfiHex);
+    logger.warn("EF not found (sfi {}h)", HexUtil.toHex(sfi));
     return null;
   }
 
@@ -842,8 +836,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         return ef;
       }
     }
-    String lidHex = String.format(PATTERN_2_BYTES_HEX, lid);
-    logger.warn("EF with LID {} is not found.", lidHex);
+    logger.warn("EF not found (lid {}h)", HexUtil.toHex(lid));
     return null;
   }
 
@@ -912,7 +905,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   @Override
   public int getPinAttemptRemaining() {
     if (pinAttemptCounter == null) {
-      throw new IllegalStateException("PIN status has not been checked.");
+      throw new IllegalStateException("PIN status has not been checked");
     }
     return pinAttemptCounter;
   }
@@ -1222,7 +1215,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   byte[] getSvGetHeader() {
     if (svGetHeader == null) {
-      throw new IllegalStateException("SV Get Header not available.");
+      throw new IllegalStateException("SV Get Header not available");
     }
     return svGetHeader;
   }
@@ -1236,7 +1229,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   byte[] getSvGetData() {
     if (svGetData == null) {
-      throw new IllegalStateException("SV Get Data not available.");
+      throw new IllegalStateException("SV Get Data not available");
     }
     return svGetData;
   }

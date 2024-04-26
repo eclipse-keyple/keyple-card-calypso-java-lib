@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.transaction.CryptoException;
 import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
@@ -38,62 +39,59 @@ import org.slf4j.LoggerFactory;
 final class CommandOpenSecureSession extends Command {
 
   private static final Logger logger = LoggerFactory.getLogger(CommandOpenSecureSession.class);
-  private static final String EXTRA_INFO_FORMAT = "KEYINDEX:%d, SFI:%02Xh, REC:%d";
-  private static final String EXTRA_INFO_FORMAT_PKI = "SFI:%02Xh, REC:%d";
   private static final String PATTERN_1_BYTE_HEX = "%02Xh";
 
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
     m.put(0x6900, new StatusProperties("Transaction Counter is 0", CardTerminatedException.class));
     m.put(
         0x6981,
         new StatusProperties(
-            "Command forbidden (read requested and current EF is a Binary file).",
+            "Command forbidden (read requested and current EF is a Binary file)",
             CardDataAccessException.class));
     m.put(
         0x6982,
         new StatusProperties(
             "Security conditions not fulfilled (PIN code not presented, AES key forbidding the "
-                + "compatibility mode, encryption required).",
+                + "compatibility mode, encryption required)",
             CardSecurityContextException.class));
     m.put(
         0x6985,
         new StatusProperties(
-            "Access forbidden (Never access mode, Session already opened).",
+            "Access forbidden (Never access mode, Session already opened)",
             CardAccessForbiddenException.class));
     m.put(
         0x6986,
         new StatusProperties(
-            "Command not allowed (read requested and no current EF).",
+            "Command not allowed (read requested and no current EF)",
             CardDataAccessException.class));
-    m.put(0x6A81, new StatusProperties("Wrong key index.", CardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
+    m.put(0x6A81, new StatusProperties("Wrong key index", CardIllegalParameterException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
     m.put(
         0x6A83,
         new StatusProperties(
-            "Record not found (record index is above NumRec).", CardDataAccessException.class));
+            "Record not found (record index is above NumRec)", CardDataAccessException.class));
     m.put(
         0x6B00,
         new StatusProperties(
-            "P1 or P2 value not supported (key index incorrect, wrong P2, extended mode not supported).",
+            "P1 or P2 value not supported (key index incorrect, wrong P2, extended mode not supported)",
             CardIllegalParameterException.class));
-    m.put(0x61FF, new StatusProperties("Correct execution (ISO7816 T=0)."));
+    m.put(0x61FF, new StatusProperties("Correct execution (ISO7816 T=0)"));
     m.put(
         0x6200,
         new StatusProperties(
-            "Successful execution, with warning (Pre-Open variant, secure session not opened)."));
+            "Successful execution, with warning (Pre-Open variant, secure session not opened)"));
     STATUS_TABLE = m;
   }
 
   private final WriteAccessLevel writeAccessLevel;
   private final boolean isExtendedModeAllowed;
   private SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting;
-  private AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting;
   private transient boolean isPreOpenModeOnSelection; // NOSONAR
   private transient boolean isPreOpenMode; // NOSONAR
   private transient byte[] preOpenDataOut; // NOSONAR
@@ -125,7 +123,7 @@ final class CommandOpenSecureSession extends Command {
     this.writeAccessLevel = writeAccessLevel;
     createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
     if (logger.isDebugEnabled()) {
-      addSubName("PREOPEN");
+      addSubName("pre-open");
     }
   }
 
@@ -159,16 +157,13 @@ final class CommandOpenSecureSession extends Command {
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command.
    * @param terminalChallenge The terminal challenge.
-   * @param asymmetricCryptoSecuritySetting The asymmetric crypto security settings to use.
    * @since 3.1.0
    */
   CommandOpenSecureSession(
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
-      byte[] terminalChallenge,
-      AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting) {
+      byte[] terminalChallenge) {
     super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
-    this.asymmetricCryptoSecuritySetting = asymmetricCryptoSecuritySetting;
     isPreOpenModeOnSelection = false;
     isExtendedModeAllowed = true;
     this.writeAccessLevel = null;
@@ -215,8 +210,8 @@ final class CommandOpenSecureSession extends Command {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
-      addSubName(extraInfo);
+      addSubName(
+          "key index: " + keyIndex + ", sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
     }
   }
 
@@ -270,8 +265,7 @@ final class CommandOpenSecureSession extends Command {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(EXTRA_INFO_FORMAT_PKI, sfi, recordNumber);
-      addSubName(extraInfo);
+      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
     }
   }
 
@@ -304,8 +298,8 @@ final class CommandOpenSecureSession extends Command {
                 (byte) 0)));
 
     if (logger.isDebugEnabled()) {
-      String extraInfo = String.format(EXTRA_INFO_FORMAT, keyIndex, sfi, recordNumber);
-      addSubName(extraInfo);
+      addSubName(
+          "key index: " + keyIndex + ", sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
     }
   }
 
@@ -323,8 +317,7 @@ final class CommandOpenSecureSession extends Command {
       apdu[2] = (byte) (recordNumber * 8);
       apdu[3] = (byte) ((sfi * 8) + 3);
       if (logger.isDebugEnabled()) {
-        String extraInfo = String.format(EXTRA_INFO_FORMAT_PKI, sfi, recordNumber);
-        addSubName(extraInfo);
+        addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
       }
     } else {
       this.sfi = sfi;

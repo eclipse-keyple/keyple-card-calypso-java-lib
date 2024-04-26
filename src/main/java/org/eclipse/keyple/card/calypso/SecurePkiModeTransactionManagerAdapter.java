@@ -45,7 +45,7 @@ final class SecurePkiModeTransactionManagerAdapter
   private static final Logger logger =
       LoggerFactory.getLogger(SecurePkiModeTransactionManagerAdapter.class);
 
-  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN not available for this card";
   private static final String MSG_INVALID_CARD_CERTIFICATE = "Invalid card certificate: ";
   private static final String MSG_INVALID_CA_CERTIFICATE = "Invalid CA certificate: ";
   private final TransactionContextDto transactionContext;
@@ -143,11 +143,11 @@ final class SecurePkiModeTransactionManagerAdapter
         CommandCloseSecureSession cancelSecureSessionCommand =
             new CommandCloseSecureSession(transactionContext, getCommandContext(), true);
         cancelSecureSessionCommand.finalizeRequest();
-        List<Command> commands = new ArrayList<Command>(1);
+        List<Command> commands = new ArrayList<>(1);
         commands.add(cancelSecureSessionCommand);
         executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
-        logger.debug("Secure session abortion error: {}", e.getMessage());
+        logger.warn("Failed to abort secure session: {}", e.getMessage());
       } finally {
         card.restoreFiles();
         transactionContext.setSecureSessionOpen(false);
@@ -296,7 +296,7 @@ final class SecurePkiModeTransactionManagerAdapter
     if (!Arrays.equals(
         card.getApplicationSerialNumber(), cardCertificateSpi.getCardSerialNumber())) {
       throw new InvalidCertificateException(
-          "Card serial number and certificate card serial number mismatch.");
+          "Card serial number and certificate card serial number mismatch");
     }
 
     // Try to retrieve the issuer certificate content from the store
@@ -319,7 +319,7 @@ final class SecurePkiModeTransactionManagerAdapter
     } else {
       // Force the closing of the channel if originally requested
       if (originalChannelControl == ChannelControl.CLOSE_AFTER) {
-        executeCardCommands(Collections.<Command>emptyList(), ChannelControl.CLOSE_AFTER);
+        executeCardCommands(Collections.emptyList(), ChannelControl.CLOSE_AFTER);
       }
     }
 
@@ -387,7 +387,7 @@ final class SecurePkiModeTransactionManagerAdapter
    * available in the card image.
    */
   private void readCaCertificate() {
-    List<Command> commands = new ArrayList<Command>(2);
+    List<Command> commands = new ArrayList<>(2);
     commands.add(
         new CommandGetDataCertificate(transactionContext, getCommandContext(), false, true));
     commands.add(
@@ -420,11 +420,7 @@ final class SecurePkiModeTransactionManagerAdapter
     byte[] terminalChallenge = new byte[8];
     secureRandom.nextBytes(terminalChallenge);
     commands.add(
-        new CommandOpenSecureSession(
-            transactionContext,
-            getCommandContext(),
-            terminalChallenge,
-            asymmetricCryptoSecuritySetting));
+        new CommandOpenSecureSession(transactionContext, getCommandContext(), terminalChallenge));
     isSecureSessionOpen = true;
     return this;
   }

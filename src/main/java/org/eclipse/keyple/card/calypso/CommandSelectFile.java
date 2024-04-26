@@ -71,12 +71,12 @@ final class CommandSelectFile extends Command {
   private static final Map<Integer, StatusProperties> STATUS_TABLE;
 
   static {
-    Map<Integer, StatusProperties> m = new HashMap<Integer, StatusProperties>(Command.STATUS_TABLE);
+    Map<Integer, StatusProperties> m = new HashMap<>(Command.STATUS_TABLE);
     m.put(
         0x6700,
-        new StatusProperties("Lc value not supported.", CardIllegalParameterException.class));
-    m.put(0x6A82, new StatusProperties("File not found.", CardDataAccessException.class));
-    m.put(0x6119, new StatusProperties("Correct execution (ISO7816 T=0)."));
+        new StatusProperties("Lc value not supported", CardIllegalParameterException.class));
+    m.put(0x6A82, new StatusProperties("File not found", CardDataAccessException.class));
+    m.put(0x6119, new StatusProperties("Correct execution (ISO7816 T=0)"));
     STATUS_TABLE = m;
   }
 
@@ -131,7 +131,7 @@ final class CommandSelectFile extends Command {
                 cardClass, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("SELECTIONCONTROL" + selectFileControl);
+      addSubName("select file control: " + selectFileControl);
     }
   }
 
@@ -190,7 +190,7 @@ final class CommandSelectFile extends Command {
                 (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("LID=" + HexUtil.toHex(dataIn));
+      addSubName("lid: " + HexUtil.toHex(dataIn) + "h");
     }
   }
 
@@ -287,7 +287,7 @@ final class CommandSelectFile extends Command {
     Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(dataOut, true);
     proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
     if (proprietaryInformation == null) {
-      throw new IllegalStateException("Proprietary information: tag not found.");
+      throw new IllegalStateException("Proprietary information: tag not found");
     }
     Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
     return proprietaryInformation;

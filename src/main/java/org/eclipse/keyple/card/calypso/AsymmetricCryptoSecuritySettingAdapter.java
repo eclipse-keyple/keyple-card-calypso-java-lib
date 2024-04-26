@@ -57,12 +57,9 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
 
   private final AsymmetricCryptoCardTransactionManagerFactorySpi
       cryptoCardTransactionManagerFactorySpi;
-  private final Map<String, CaCertificateContentSpi> caCertificates =
-      new HashMap<String, CaCertificateContentSpi>();
-  private final Map<Byte, CaCertificateParserSpi> caCertificateParsers =
-      new HashMap<Byte, CaCertificateParserSpi>();
-  private final Map<Byte, CardCertificateParserSpi> cardCertificateParsers =
-      new HashMap<Byte, CardCertificateParserSpi>();
+  private final Map<String, CaCertificateContentSpi> caCertificates = new HashMap<>();
+  private final Map<Byte, CaCertificateParserSpi> caCertificateParsers = new HashMap<>();
+  private final Map<Byte, CardCertificateParserSpi> cardCertificateParsers = new HashMap<>();
 
   /**
    * Constructor.

@@ -55,7 +55,7 @@ final class CalypsoCardSelectionExtensionAdapter
    * @throws IllegalArgumentException If cardSelector is null.
    */
   CalypsoCardSelectionExtensionAdapter() {
-    commands = new ArrayList<Command>();
+    commands = new ArrayList<>();
     transactionContext = new TransactionContextDto();
     commandContext = new CommandContextDto(false, false);
   }
@@ -229,7 +229,7 @@ final class CalypsoCardSelectionExtensionAdapter
    */
   @Override
   public CardSelectionRequestSpi getCardSelectionRequest() {
-    List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<ApduRequestSpi>();
+    List<ApduRequestSpi> cardSelectionApduRequests = new ArrayList<>();
     CardSelectionRequestAdapter cardSelectionRequest;
     if (commands.isEmpty()) {
       cardSelectionRequest = new CardSelectionRequestAdapter(null);
@@ -259,7 +259,7 @@ final class CalypsoCardSelectionExtensionAdapter
             ? cardResponse.getApduResponses()
             : Collections.<ApduResponseApi>emptyList();
     if (commands.size() != apduResponses.size()) {
-      throw new ParseException("Mismatch in the number of requests/responses.");
+      throw new ParseException("Mismatch in the number of requests/responses");
     }
     CalypsoCardAdapter calypsoCard;
     try {
@@ -274,7 +274,7 @@ final class CalypsoCardSelectionExtensionAdapter
         && cardSelectionResponse.getSelectApplicationResponse() == null
         && cardSelectionResponse.getPowerOnData() == null) {
       throw new ParseException(
-          "Unable to create a CalypsoCard: no power-on data and no FCI provided.");
+          "Unable to create a CalypsoCard: no power-on data and no FCI provided");
     }
     return calypsoCard;
   }
