@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.3.11] - 2024-06-25
+### Fixed
+- Fixed the name of the field `stopOnUnsuccessfulStatusWord` in the adapter of `CardRequestSpi` (issue [#115]).
 ### Changed
 - Java source and target levels `1.6` -> `1.8`
 ### Upgraded
@@ -208,7 +212,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse-key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.10...HEAD
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.11...HEAD
+[2.3.11]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.10...2.3.11
 [2.3.10]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.9...2.3.10
 [2.3.9]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.8...2.3.9
 [2.3.8]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.7...2.3.8
@@ -232,6 +237,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#115]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/115
 [#109]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/109
 [#100]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/100
 [#99]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/99
