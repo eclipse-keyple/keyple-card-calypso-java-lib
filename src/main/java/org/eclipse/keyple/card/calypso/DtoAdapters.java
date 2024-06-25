@@ -155,7 +155,7 @@ final class DtoAdapters {
   static final class CardRequestAdapter implements CardRequestSpi {
 
     private final List<ApduRequestSpi> apduRequests;
-    private final boolean isStatusCodesVerificationEnabled;
+    private final boolean stopOnUnsuccessfulStatusWord;
 
     /**
      * Builds a card request with a list of {@link ApduRequestSpi } and the flag indicating the
@@ -165,13 +165,12 @@ final class DtoAdapters {
      * interrupted as soon as the status code of a response is unexpected.
      *
      * @param apduRequests A not empty list.
-     * @param isStatusCodesVerificationEnabled true or false.
+     * @param stopOnUnsuccessfulStatusWord true or false.
      * @since 2.0.0
      */
-    CardRequestAdapter(
-        List<ApduRequestSpi> apduRequests, boolean isStatusCodesVerificationEnabled) {
+    CardRequestAdapter(List<ApduRequestSpi> apduRequests, boolean stopOnUnsuccessfulStatusWord) {
       this.apduRequests = apduRequests;
-      this.isStatusCodesVerificationEnabled = isStatusCodesVerificationEnabled;
+      this.stopOnUnsuccessfulStatusWord = stopOnUnsuccessfulStatusWord;
     }
 
     /**
@@ -191,7 +190,7 @@ final class DtoAdapters {
      */
     @Override
     public boolean stopOnUnsuccessfulStatusWord() {
-      return isStatusCodesVerificationEnabled;
+      return stopOnUnsuccessfulStatusWord;
     }
 
     /**
