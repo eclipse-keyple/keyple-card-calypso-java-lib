@@ -128,6 +128,8 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
     // 0A 0A 01 02 20 03 11: PACA Card
     patchesRev12.add(new PatchRev12("0A0A0102200311", "FFFFFFFFFFFFFF").setCounterValuePostponed());
+    // 0A 2E 13 02 00 01 01: Oura Card
+    patchesRev12.add(new PatchRev12("0A2E1302000101", "FFFFFFFFFFFFFF").setCounterValuePostponed());
     // 03 08 03 04 00 02 00: targets ASK Tango having this startup info values
     patchesRev12.add(new PatchRev12("03080304000200", "FFFFFFFFFFFFFF").setLegacyCase1());
   }

@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fix postponed data issue for increase/decrease counter commands for OURA cards revision 2 having the following startup
+  information pattern:
+  - `0A 2E 13 02 00 01 01` (issue [#119]) (Contributed by SNCF Connect).
 
 ## [2.3.11] - 2024-06-25
 ### Fixed
@@ -237,6 +241,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#119]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/119
 [#115]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/115
 [#109]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/109
 [#100]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/100
