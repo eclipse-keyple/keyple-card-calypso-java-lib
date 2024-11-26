@@ -1,0 +1,38 @@
+name: Trigger Centralized Documentation Update
+
+on:
+  workflow_run:
+    workflows:
+      - "pages-build-deployment"
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  checks: write
+
+jobs:
+  check-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      has-token: ${{ steps.check.outputs.has-token }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ secrets.ORG_GITHUB_BOT_TOKEN }}" != "" ]; then
+            echo "has-token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-token=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  notify-doc-site:
+    needs: check-secret
+    if: needs.check-secret.outputs.has-token == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch Event
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.ORG_GITHUB_BOT_TOKEN }}
+          repository: eclipse-keyple/keyple-api-docs
+          event-type: update-submodules
