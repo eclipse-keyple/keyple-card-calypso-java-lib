@@ -18,8 +18,8 @@ git clone https://github.com/eclipse-keyple/$repository_name.git
 
 cd $repository_name
 
-echo "Checkout gh-pages branch..."
-git checkout -f gh-pages
+echo "Checkout doc branch..."
+git checkout -f doc
 
 echo "Delete existing SNAPSHOT directory..."
 rm -rf *-SNAPSHOT
