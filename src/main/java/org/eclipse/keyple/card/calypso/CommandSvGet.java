@@ -90,7 +90,12 @@ final class CommandSvGet extends Command {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
+                cla,
+                getCommandRef().getInstructionByte(),
+                p1,
+                p2,
+                NO_DATA_IN,
+                (byte) getExpectedResponseLength())));
 
     if (logger.isDebugEnabled()) {
       addSubName("operation: " + svOperation.toString());
@@ -100,7 +105,7 @@ final class CommandSvGet extends Command {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) getLe();
+    header[3] = (byte) getExpectedResponseLength();
   }
 
   private static int computeLe(SvOperation svOperation, boolean useExtendedMode) {

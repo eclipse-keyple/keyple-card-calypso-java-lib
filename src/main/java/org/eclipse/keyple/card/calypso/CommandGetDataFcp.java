@@ -54,7 +54,7 @@ final class CommandGetDataFcp extends Command {
    * @since 2.3.2
    */
   CommandGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
@@ -66,8 +66,8 @@ final class CommandGetDataFcp extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_MSB,
                 CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_LSB,
-                null,
-                (byte) 0x00)));
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
     addSubName("FCP_FOR_CURRENT_FILE");
   }
 

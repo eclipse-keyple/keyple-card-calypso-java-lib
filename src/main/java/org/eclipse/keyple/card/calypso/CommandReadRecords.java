@@ -270,8 +270,8 @@ final class CommandReadRecords extends Command {
    */
   private byte[] buildAnticipatedResponseForOneRecordMode(ElementaryFile ef) {
     byte[] content = ef.getData().getContent(firstRecordNumber);
-    if (content.length > 0 && content.length >= getLe()) {
-      int length = getLe() != 0 ? getLe() : content.length;
+    if (content.length > 0 && content.length >= getExpectedResponseLength()) {
+      int length = getExpectedResponseLength() != 0 ? getExpectedResponseLength() : content.length;
       byte[] apdu = new byte[length + 2];
       System.arraycopy(content, 0, apdu, 0, length); // Record content
       apdu[length] = (byte) 0x90; // SW 9000
@@ -287,8 +287,8 @@ final class CommandReadRecords extends Command {
    * @return Null if some records have not been read beforehand.
    */
   private byte[] buildAnticipatedResponseForMultipleRecordsMode(ElementaryFile ef) {
-    byte[] apdu = new byte[getLe() + 2];
-    int nbRecords = getLe() / (recordSize + 2);
+    byte[] apdu = new byte[getExpectedResponseLength() + 2];
+    int nbRecords = getExpectedResponseLength() / (recordSize + 2);
     int lastRecordNumber = firstRecordNumber + nbRecords - 1;
     int index = 0;
     for (int i = firstRecordNumber; i <= lastRecordNumber; i++) {

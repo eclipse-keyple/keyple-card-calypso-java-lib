@@ -62,8 +62,8 @@ final class CommandInvalidate extends Command {
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
-                null,
-                null)));
+                NO_DATA_IN,
+                ISO7816_LE_ABSENT)));
   }
 
   /**

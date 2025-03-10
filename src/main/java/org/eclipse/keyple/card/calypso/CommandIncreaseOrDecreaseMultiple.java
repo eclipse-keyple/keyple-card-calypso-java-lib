@@ -97,7 +97,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
-        0,
+        counterNumberToIncDecValueMap.size() * 4,
         transactionContext,
         commandContext);
 
@@ -121,7 +121,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 p1,
                 p2,
                 dataIn,
-                (byte) 0)));
+                ISO7816_LE_MAX)));
 
     if (logger.isDebugEnabled()) {
       StringBuilder extraInfo = new StringBuilder("sfi: " + HexUtil.toHex(sfi) + "h");

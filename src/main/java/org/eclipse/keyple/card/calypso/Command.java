@@ -43,6 +43,10 @@ import org.eclipse.keypop.card.ApduResponseApi;
 abstract class Command {
 
   static final byte[] APDU_RESPONSE_9000 = new byte[] {(byte) 0x90, 0x00};
+  protected static final Byte ISO7816_LE_ABSENT = null;
+  protected static final byte ISO7816_LE_MAX = 0x00;
+  static final byte[] NO_DATA_IN = null;
+  static final int MAXIMUM_DATA_LENGTH = 256;
 
   /**
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
@@ -61,7 +65,7 @@ abstract class Command {
   private final CardCommandRef commandRef;
   private final CommandContextDto commandContext;
   private final TransactionContextDto transactionContext;
-  private int le;
+  private int expectedResponseLength;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
@@ -71,19 +75,19 @@ abstract class Command {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef A command reference from the Calypso command table.
-   * @param le The value of the LE field.
+   * @param expectedResponseLength The expected command response length.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command
    * @since 2.0.1
    */
   Command(
       CardCommandRef commandRef,
-      int le,
+      int expectedResponseLength,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
-    this.le = le;
+    this.expectedResponseLength = expectedResponseLength;
     this.transactionContext = transactionContext;
     this.commandContext = commandContext;
   }
@@ -190,11 +194,11 @@ abstract class Command {
   }
 
   /**
-   * @param le The value of the LE field.
+   * @param expectedResponseLength The expected command response length.
    * @since 2.3.2
    */
-  final void setLe(int le) {
-    this.le = le;
+  final void setExpectedResponseLength(int expectedResponseLength) {
+    this.expectedResponseLength = expectedResponseLength;
   }
 
   /**
@@ -203,8 +207,8 @@ abstract class Command {
    * @return 0 if LE is not set.
    * @since 2.3.2
    */
-  final int getLe() {
-    return le;
+  final int getExpectedResponseLength() {
+    return expectedResponseLength;
   }
 
   /**
@@ -447,15 +451,24 @@ abstract class Command {
    *     not equal to the LE field in the request.
    */
   private void checkStatus() throws CardCommandException {
-
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
-      if (le != 0 && apduResponse.getDataOut().length != le) {
+      boolean shouldCheckLength = false;
+
+      if (commandContext.isSecureSessionOpen()) {
+        // In secure session, check all commands except CLOSE_SECURE_SESSION
+        shouldCheckLength = commandRef != CardCommandRef.CLOSE_SECURE_SESSION;
+      } else {
+        // Outside secure session, only check if a specific length was requested
+        shouldCheckLength = expectedResponseLength != MAXIMUM_DATA_LENGTH;
+      }
+
+      if (shouldCheckLength && apduResponse.getDataOut().length != expectedResponseLength) {
         throw new CardUnexpectedResponseLengthException(
             String.format(
-                "Incorrect APDU response length (expected: %d, actual: %d)",
-                le, apduResponse.getDataOut().length),
+                "Incorrect APDU response length for command %s (expected: %d, actual: %d)",
+                commandRef, expectedResponseLength, apduResponse.getDataOut().length),
             commandRef);
       }
       // SW and response length are correct.

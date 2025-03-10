@@ -44,8 +44,8 @@ final class CommandRatification extends Command {
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
-                null,
-                (byte) 0x00)));
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
   }
 
   /**

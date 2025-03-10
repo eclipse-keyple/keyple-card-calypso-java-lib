@@ -57,7 +57,7 @@ final class CommandGetDataCertificate extends Command {
       CommandContextDto commandContext,
       boolean isCardCertificate,
       boolean isFirstPart) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     this.isCardCertificate = isCardCertificate;
     this.isFirstPart = isFirstPart;
     byte cardClass =
@@ -79,7 +79,12 @@ final class CommandGetDataCertificate extends Command {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cardClass, getCommandRef().getInstructionByte(), p1, p2, null, (byte) 0x00)));
+                cardClass,
+                getCommandRef().getInstructionByte(),
+                p1,
+                p2,
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
     if (isCardCertificate) {
       addSubName("CARD_CERTIFICATE");
     } else {

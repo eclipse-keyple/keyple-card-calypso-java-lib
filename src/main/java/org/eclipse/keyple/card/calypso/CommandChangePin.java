@@ -139,7 +139,7 @@ final class CommandChangePin extends Command {
                 (byte) 0x00, // CL-PIN-MP1P2.1
                 (byte) 0xFF,
                 pin,
-                null)));
+                ISO7816_LE_ABSENT)));
   }
 
   /**

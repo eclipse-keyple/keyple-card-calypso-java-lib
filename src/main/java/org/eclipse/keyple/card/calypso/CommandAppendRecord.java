@@ -93,7 +93,7 @@ final class CommandAppendRecord extends Command {
                 p1,
                 p2,
                 data,
-                null)));
+                ISO7816_LE_ABSENT)));
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h");
     }

@@ -88,7 +88,8 @@ final class CommandCloseSecureSession extends Command {
       CommandContextDto commandContext,
       boolean isAutoRatificationAsked,
       int svPostponedDataIndex) {
-    super(commandRef, 0, transactionContext, commandContext);
+    // CL-CSS-RESPLE.1: the command is either case 1 (abort) or case 4
+    super(commandRef, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = svPostponedDataIndex;
@@ -105,7 +106,8 @@ final class CommandCloseSecureSession extends Command {
    */
   CommandCloseSecureSession(
       TransactionContextDto transactionContext, CommandContextDto context, boolean isAbort) {
-    super(commandRef, 0, transactionContext, context);
+    // CL-CSS-RESPLE.1: the command is either case 1 (abort) or case 4
+    super(commandRef, MAXIMUM_DATA_LENGTH, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.svPostponedDataIndex = -1;
     if (transactionContext.isPkiMode()) {
@@ -118,8 +120,8 @@ final class CommandCloseSecureSession extends Command {
                   commandRef.getInstructionByte(),
                   (byte) 0x00,
                   (byte) 0x00,
-                  null,
-                  isAbort ? (byte) 0 : (byte) 0x40)));
+                  NO_DATA_IN,
+                  ISO7816_LE_MAX)));
       this.isAbortSecureSession = isAbort;
     } else {
       // this is a non PKI session abort
@@ -144,8 +146,8 @@ final class CommandCloseSecureSession extends Command {
                   commandRef.getInstructionByte(),
                   (byte) 0x00,
                   (byte) 0x00,
-                  null,
-                  (byte) 0)));
+                  NO_DATA_IN,
+                  ISO7816_LE_MAX)));
     } else {
       // Close secure session
       byte[] terminalSessionMac;
@@ -167,7 +169,7 @@ final class CommandCloseSecureSession extends Command {
                   isAutoRatificationAsked ? (byte) 0x80 : (byte) 0x00,
                   (byte) 0x00,
                   terminalSessionMac,
-                  (byte) 0)));
+                  ISO7816_LE_MAX)));
     }
   }
 

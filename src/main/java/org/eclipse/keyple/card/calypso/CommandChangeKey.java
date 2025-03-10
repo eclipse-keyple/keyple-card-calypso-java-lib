@@ -127,7 +127,7 @@ final class CommandChangeKey extends Command {
                 (byte) 0x00,
                 keyIndex,
                 cipheredKey,
-                null)));
+                ISO7816_LE_ABSENT)));
   }
 
   /**

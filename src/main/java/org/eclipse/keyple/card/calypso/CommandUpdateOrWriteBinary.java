@@ -119,7 +119,7 @@ final class CommandUpdateOrWriteBinary extends Command {
                 p1,
                 lsb,
                 data,
-                null)));
+                ISO7816_LE_ABSENT)));
 
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset);

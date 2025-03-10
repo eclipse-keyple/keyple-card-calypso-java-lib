@@ -96,7 +96,7 @@ final class CommandSelectFile extends Command {
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
 
-    super(commandRef, 0, transactionContext, commandContext);
+    super(commandRef, 0x19, transactionContext, commandContext);
 
     byte cardClass =
         transactionContext.getCard() != null
@@ -128,7 +128,7 @@ final class CommandSelectFile extends Command {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cardClass, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
+                cardClass, commandRef.getInstructionByte(), p1, p2, selectData, ISO7816_LE_MAX)));
 
     if (logger.isDebugEnabled()) {
       addSubName("select file control: " + selectFileControl);
@@ -187,7 +187,7 @@ final class CommandSelectFile extends Command {
                 p1,
                 (byte) 0x00,
                 dataIn,
-                (byte) 0x00)));
+                ISO7816_LE_MAX)));
 
     if (logger.isDebugEnabled()) {
       addSubName("lid: " + HexUtil.toHex(dataIn) + "h");

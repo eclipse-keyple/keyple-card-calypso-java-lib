@@ -52,7 +52,7 @@ final class CommandGetDataCardPublicKey extends Command {
    */
   CommandGetDataCardPublicKey(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
@@ -64,8 +64,8 @@ final class CommandGetDataCardPublicKey extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_MSB,
                 CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_LSB,
-                null,
-                (byte) 0x00)));
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
     addSubName("ECC_PUBLIC_KEY");
   }
 

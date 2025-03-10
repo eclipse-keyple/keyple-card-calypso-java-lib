@@ -69,7 +69,7 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
                 (byte) 0x00,
                 (byte) 0x00,
                 HexUtil.toByteArray(SECP256R1_OID),
-                null)));
+                ISO7816_LE_ABSENT)));
   }
 
   /**

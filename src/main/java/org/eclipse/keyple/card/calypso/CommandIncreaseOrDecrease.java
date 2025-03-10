@@ -104,7 +104,7 @@ final class CommandIncreaseOrDecrease extends Command {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
-        0,
+        3,
         transactionContext,
         commandContext);
 
@@ -129,7 +129,7 @@ final class CommandIncreaseOrDecrease extends Command {
                   (byte) counterNumber,
                   p2,
                   valueBuffer,
-                  (byte) 0x00));
+                  ISO7816_LE_MAX));
     } else {
       /* this command is considered as a case 3, we set Le = null */
       apduRequest =

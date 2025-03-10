@@ -130,7 +130,7 @@ final class CommandPutData extends Command {
                 tagMsb,
                 tagLsb,
                 dataIn.array(),
-                null)));
+                ISO7816_LE_ABSENT)));
   }
 
   /**

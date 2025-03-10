@@ -72,7 +72,8 @@ final class CommandManageSession extends Command {
    */
   CommandManageSession(
       DtoAdapters.TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(commandRef, 0, transactionContext, commandContext);
+    // CL-CSS-RESPLE.1: expected length may be overridden later
+    super(commandRef, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
   }
 
   /**
@@ -108,7 +109,7 @@ final class CommandManageSession extends Command {
     if (isMutualAuthenticationRequested) {
       // case 4: this command contains incoming and outgoing data. We define le = 0, the actual
       // length will be processed by the lower layers.
-      setLe(8); // for auto check of response length
+      setExpectedResponseLength(8); // for auto check of response length
       p2 = isEncryptionRequested ? (byte) 0x03 : (byte) 0x01;
       try {
         terminalSessionMac =
@@ -120,13 +121,12 @@ final class CommandManageSession extends Command {
       } catch (SymmetricCryptoIOException e) {
         throw new CryptoIOException(e.getMessage(), e);
       }
-      le = 0;
+      le = ISO7816_LE_MAX;
     } else {
       // case 1: this command contains no data. We define le = null.
-      setLe(0);
       p2 = isEncryptionRequested ? (byte) 0x02 : (byte) 0x00;
-      terminalSessionMac = null;
-      le = null;
+      terminalSessionMac = NO_DATA_IN;
+      le = ISO7816_LE_ABSENT;
     }
     setApduRequest(
         new ApduRequestAdapter(

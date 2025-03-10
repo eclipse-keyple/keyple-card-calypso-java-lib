@@ -70,7 +70,7 @@ final class CommandGetDataFci extends Command {
    * @since 2.3.2
    */
   CommandGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
@@ -82,8 +82,8 @@ final class CommandGetDataFci extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_MSB,
                 CalypsoCardConstant.TAG_FCI_FOR_CURRENT_DF_LSB,
-                null,
-                (byte) 0x00)));
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
     addSubName("FCI_FOR_CURRENT_DF");
   }
 

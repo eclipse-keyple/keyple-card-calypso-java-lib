@@ -57,7 +57,7 @@ final class CommandGetDataEfList extends Command {
    * @since 2.3.2
    */
   CommandGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
@@ -69,8 +69,8 @@ final class CommandGetDataEfList extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_EF_LIST_MSB,
                 CalypsoCardConstant.TAG_EF_LIST_LSB,
-                null,
-                (byte) 0x00)));
+                NO_DATA_IN,
+                ISO7816_LE_MAX)));
     addSubName("EF_LIST");
   }
 

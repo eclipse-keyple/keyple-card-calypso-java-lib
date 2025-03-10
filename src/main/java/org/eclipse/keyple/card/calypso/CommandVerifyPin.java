@@ -94,6 +94,7 @@ final class CommandVerifyPin extends Command {
       byte[] pin,
       byte cipheringKif,
       byte cipheringKvc) {
+    // CL-CSS-RESPLE.1
     super(commandRef, 0, transactionContext, commandContext);
     this.isReadCounterMode = false;
     this.pin = pin;

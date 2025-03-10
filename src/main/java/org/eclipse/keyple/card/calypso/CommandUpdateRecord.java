@@ -109,7 +109,7 @@ final class CommandUpdateRecord extends Command {
                 (byte) recordNumber,
                 p2,
                 newRecordData,
-                null)));
+                ISO7816_LE_ABSENT)));
 
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
