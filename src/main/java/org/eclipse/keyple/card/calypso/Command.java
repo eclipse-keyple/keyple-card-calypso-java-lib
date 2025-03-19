@@ -43,10 +43,6 @@ import org.eclipse.keypop.card.ApduResponseApi;
 abstract class Command {
 
   static final byte[] APDU_RESPONSE_9000 = new byte[] {(byte) 0x90, 0x00};
-  protected static final Byte ISO7816_LE_ABSENT = null;
-  protected static final byte ISO7816_LE_MAX = 0x00;
-  static final byte[] NO_DATA_IN = null;
-  static final int MAXIMUM_DATA_LENGTH = 256;
 
   /**
    * This Map stores expected status that could be by default initialized with sw1=90 and sw2=00
@@ -65,7 +61,7 @@ abstract class Command {
   private final CardCommandRef commandRef;
   private final CommandContextDto commandContext;
   private final TransactionContextDto transactionContext;
-  private int expectedResponseLength;
+  private Integer expectedResponseLength;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
@@ -75,14 +71,14 @@ abstract class Command {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef A command reference from the Calypso command table.
-   * @param expectedResponseLength The expected command response length.
+   * @param expectedResponseLength The expected command response length or null if not specified.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command
    * @since 2.0.1
    */
   Command(
       CardCommandRef commandRef,
-      int expectedResponseLength,
+      Integer expectedResponseLength,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext) {
     this.commandRef = commandRef;
@@ -194,20 +190,21 @@ abstract class Command {
   }
 
   /**
-   * @param expectedResponseLength The expected command response length.
+   * @param expectedResponseLength The expected command response length or null if the expected
+   *     length is not specified.
    * @since 2.3.2
    */
-  final void setExpectedResponseLength(int expectedResponseLength) {
+  final void setExpectedResponseLength(Integer expectedResponseLength) {
     this.expectedResponseLength = expectedResponseLength;
   }
 
   /**
-   * Returns the value of the LE.
+   * Returns the value of the expected length.
    *
-   * @return 0 if LE is not set.
+   * @return null if expected length is not set.
    * @since 2.3.2
    */
-  final int getExpectedResponseLength() {
+  final Integer getExpectedResponseLength() {
     return expectedResponseLength;
   }
 
@@ -385,7 +382,7 @@ abstract class Command {
    *
    * @param apduResponse The APDU response.
    * @throws CardCommandException If status is not successful or if the length of the response is
-   *     not equal to the LE field in the request.
+   *     not equal to the expected one.
    * @since 2.0.1
    */
   final void setApduResponseAndCheckStatus(ApduResponseApi apduResponse)
@@ -404,8 +401,8 @@ abstract class Command {
    * @return "false" in case of "best effort" mode and a "file not found" or a "record not found"
    *     error occurs. In this case, the process must be stopped.
    * @throws CardCommandException If status is not successful and a secure session is open or the SW
-   *     is different of 6A82h and 6A83h, or if the length of the response is not equal to the LE
-   *     field in the request.
+   *     is different of 6A82h and 6A83h, or if the length of the response is not equal to the
+   *     expected one.
    * @since 2.3.2
    */
   final boolean setApduResponseAndCheckStatusInBestEffortMode(ApduResponseApi apduResponse)
@@ -443,8 +440,8 @@ abstract class Command {
   }
 
   /**
-   * This method check the status word and if the length of the response is equal to the LE field in
-   * the request.<br>
+   * This method check the status word and if the length of the response is equal to the expected
+   * one.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CardCommandException if status is not successful or if the length of the response is
@@ -454,17 +451,8 @@ abstract class Command {
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
-      boolean shouldCheckLength = false;
-
-      if (commandContext.isSecureSessionOpen()) {
-        // In secure session, check all commands except CLOSE_SECURE_SESSION
-        shouldCheckLength = commandRef != CardCommandRef.CLOSE_SECURE_SESSION;
-      } else {
-        // Outside secure session, only check if a specific length was requested
-        shouldCheckLength = expectedResponseLength != MAXIMUM_DATA_LENGTH;
-      }
-
-      if (shouldCheckLength && apduResponse.getDataOut().length != expectedResponseLength) {
+      if (expectedResponseLength != null
+          && apduResponse.getDataOut().length != expectedResponseLength) {
         throw new CardUnexpectedResponseLengthException(
             String.format(
                 "Incorrect APDU response length for command %s (expected: %d, actual: %d)",

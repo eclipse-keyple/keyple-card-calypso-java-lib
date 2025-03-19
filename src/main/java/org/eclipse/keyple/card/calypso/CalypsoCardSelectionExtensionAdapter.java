@@ -92,7 +92,7 @@ final class CalypsoCardSelectionExtensionAdapter
             sfi,
             recordNumber,
             CommandReadRecords.ReadMode.ONE_RECORD,
-            Command.MAXIMUM_DATA_LENGTH,
+            null,
             0));
     return this;
   }

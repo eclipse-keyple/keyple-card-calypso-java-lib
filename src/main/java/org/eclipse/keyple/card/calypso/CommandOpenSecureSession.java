@@ -104,6 +104,7 @@ final class CommandOpenSecureSession extends Command {
   private Byte kif;
   private Byte kvc;
   private byte[] recordData;
+  private int expectedRecordDataLength;
 
   /**
    * Constructor for "pre-open" variant (to be used for card selection only).
@@ -117,7 +118,7 @@ final class CommandOpenSecureSession extends Command {
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       WriteAccessLevel writeAccessLevel) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, transactionContext, commandContext);
     isPreOpenModeOnSelection = true;
     isExtendedModeAllowed = true;
     this.writeAccessLevel = writeAccessLevel;
@@ -143,7 +144,7 @@ final class CommandOpenSecureSession extends Command {
       SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
       WriteAccessLevel writeAccessLevel,
       boolean isExtendedModeAllowed) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, transactionContext, commandContext);
     this.writeAccessLevel = writeAccessLevel;
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -163,7 +164,7 @@ final class CommandOpenSecureSession extends Command {
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       byte[] terminalChallenge) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, transactionContext, commandContext);
     isPreOpenModeOnSelection = false;
     isExtendedModeAllowed = true;
     this.writeAccessLevel = null;
@@ -308,9 +309,10 @@ final class CommandOpenSecureSession extends Command {
    *
    * @param sfi The SFI to select.
    * @param recordNumber The number of the record to read.
+   * @param expectedRecordDataLength The expected record data length.
    * @since 2.3.2
    */
-  void configureReadMode(int sfi, int recordNumber) {
+  void configureReadMode(int sfi, int recordNumber, int expectedRecordDataLength) {
     if (getTransactionContext().isPkiMode()) {
       byte[] apdu = getApduRequest().getApdu();
       // overwrite p1 & p2
@@ -323,6 +325,7 @@ final class CommandOpenSecureSession extends Command {
       this.sfi = sfi;
       this.recordNumber = recordNumber;
     }
+    this.expectedRecordDataLength = expectedRecordDataLength;
     isReadModeConfigured = true;
   }
 
@@ -396,7 +399,11 @@ final class CommandOpenSecureSession extends Command {
     // In pre-open mode, we can synchronize the crypto service without having to execute the card
     // open session command first.
     if (!isCryptoServiceSynchronized()) {
-      parseRev3(preOpenDataOut);
+      try {
+        parseRev3(preOpenDataOut);
+      } catch (CardUnexpectedResponseLengthException e) {
+        throw new IllegalStateException("Unexpected response length in pre-open mode", e);
+      }
       synchronizeCryptoService(preOpenDataOut);
     }
     return true;
@@ -533,7 +540,7 @@ final class CommandOpenSecureSession extends Command {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev3(byte[] apduResponseData) {
+  private void parseRev3(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     int offset;
     // CL-CSS-OSSRFU.1
     if (isExtendedModeAllowed) {
@@ -552,6 +559,7 @@ final class CommandOpenSecureSession extends Command {
     kif = apduResponseData[5 + offset];
     kvc = apduResponseData[6 + offset];
     int dataLength = apduResponseData[7 + offset];
+    checkReceivedDataLength(dataLength);
     recordData = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
   }
 
@@ -582,13 +590,14 @@ final class CommandOpenSecureSession extends Command {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev24(byte[] apduResponseData) {
+  private void parseRev24(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     switch (apduResponseData.length) {
       case 5:
         isPreviousSessionRatified = true;
         recordData = new byte[0];
         break;
       case 34:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = true;
         recordData = Arrays.copyOfRange(apduResponseData, 5, 34);
         break;
@@ -597,12 +606,16 @@ final class CommandOpenSecureSession extends Command {
         recordData = new byte[0];
         break;
       case 36:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = false;
         recordData = Arrays.copyOfRange(apduResponseData, 7, 36);
         break;
       default:
-        throw new IllegalStateException(
-            "Bad response length to Open Secure Session: " + apduResponseData.length);
+        throw new CardUnexpectedResponseLengthException(
+            String.format(
+                "Unexpected APDU response length for command %s (expected: 5/7/34/36, actual: %d)",
+                getCommandRef(), apduResponseData.length),
+            getCommandRef());
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 1, 4);
     kif = null;
@@ -635,13 +648,14 @@ final class CommandOpenSecureSession extends Command {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev10(byte[] apduResponseData) {
+  private void parseRev10(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     switch (apduResponseData.length) {
       case 4:
         isPreviousSessionRatified = true;
         recordData = new byte[0];
         break;
       case 33:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = true;
         recordData = Arrays.copyOfRange(apduResponseData, 4, 33);
         break;
@@ -650,12 +664,16 @@ final class CommandOpenSecureSession extends Command {
         recordData = new byte[0];
         break;
       case 35:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = false;
         recordData = Arrays.copyOfRange(apduResponseData, 6, 35);
         break;
       default:
-        throw new IllegalStateException(
-            "Bad response length to Open Secure Session: " + apduResponseData.length);
+        throw new CardUnexpectedResponseLengthException(
+            String.format(
+                "Unexpected APDU response length for command %s (expected: 4/6/33/35, actual: %d)",
+                getCommandRef(), apduResponseData.length),
+            getCommandRef());
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
     kif = null;
@@ -680,6 +698,17 @@ final class CommandOpenSecureSession extends Command {
     int ld = apduResponseData[offset] & 0xFF;
     offset += 1;
     recordData = Arrays.copyOfRange(apduResponseData, offset, offset + ld);
+  }
+
+  private void checkReceivedDataLength(int dataLength)
+      throws CardUnexpectedResponseLengthException {
+    if (dataLength != expectedRecordDataLength) {
+      throw new CardUnexpectedResponseLengthException(
+          String.format(
+              "Unexpected APDU response length for command %s (expected: %d, actual: %d)",
+              getCommandRef(), expectedRecordDataLength, dataLength),
+          getCommandRef());
+    }
   }
 
   /**

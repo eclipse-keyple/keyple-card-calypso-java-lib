@@ -119,6 +119,7 @@ final class CommandChangeKey extends Command {
     } catch (SymmetricCryptoIOException e) {
       throw new CryptoIOException(e.getMessage(), e);
     }
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -127,7 +128,7 @@ final class CommandChangeKey extends Command {
                 (byte) 0x00,
                 keyIndex,
                 cipheredKey,
-                ISO7816_LE_ABSENT)));
+                null)));
   }
 
   /**

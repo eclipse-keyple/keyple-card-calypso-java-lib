@@ -161,6 +161,8 @@ final class CommandVerifyPin extends Command {
         throw new CryptoIOException(e.getMessage(), e);
       }
     }
+
+    // APDU Case 1 (check status) or 3 (verify)
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -169,7 +171,7 @@ final class CommandVerifyPin extends Command {
                 (byte) 0x00, // CL-PIN-PP1P2.1
                 (byte) 0x00,
                 pin,
-                null)));
+                pin == null ? (byte) 0x00 : null))); // CL-C1-5BYTE.1
     if (logger.isDebugEnabled()) {
       addSubName(
           isReadCounterMode

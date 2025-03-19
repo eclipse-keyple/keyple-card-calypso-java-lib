@@ -55,6 +55,7 @@ final class CommandRehabilitate extends Command {
    */
   CommandRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.REHABILITATE, 0, transactionContext, commandContext);
+    // APDU Case 1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -62,8 +63,8 @@ final class CommandRehabilitate extends Command {
                 getCommandRef().getInstructionByte(),
                 (byte) 0x00,
                 (byte) 0x00,
-                NO_DATA_IN,
-                ISO7816_LE_ABSENT)));
+                null,
+                (byte) 0x00))); // CL-C1-5BYTE.1
   }
 
   /**

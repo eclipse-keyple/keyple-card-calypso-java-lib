@@ -94,7 +94,7 @@ final class CommandSearchRecordMultiple extends Command {
       CommandContextDto commandContext,
       SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, transactionContext, commandContext);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, null, transactionContext, commandContext);
 
     this.data = data;
 
@@ -130,6 +130,7 @@ final class CommandSearchRecordMultiple extends Command {
       }
     }
 
+    // APDU Case 4 - always outside secure session
     setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -138,7 +139,7 @@ final class CommandSearchRecordMultiple extends Command {
                 (byte) data.getRecordNumber(),
                 p2,
                 dataIn,
-                (byte) 0)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
@@ -169,7 +170,7 @@ final class CommandSearchRecordMultiple extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -179,7 +180,7 @@ final class CommandSearchRecordMultiple extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -189,7 +190,7 @@ final class CommandSearchRecordMultiple extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -199,7 +200,6 @@ final class CommandSearchRecordMultiple extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
       return;
     }
@@ -216,7 +216,6 @@ final class CommandSearchRecordMultiple extends Command {
               data.getMatchingRecordNumbers().get(0),
               Arrays.copyOfRange(dataOut, nbRecords + 1, dataOut.length));
     }
-    updateTerminalSessionIfNeeded();
   }
 
   /**

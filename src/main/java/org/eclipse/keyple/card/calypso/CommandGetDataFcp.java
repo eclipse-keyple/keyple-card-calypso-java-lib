@@ -54,11 +54,13 @@ final class CommandGetDataFcp extends Command {
    * @since 2.3.2
    */
   CommandGetDataFcp(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
             : CalypsoCardClass.ISO.getValue();
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -66,8 +68,8 @@ final class CommandGetDataFcp extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_MSB,
                 CalypsoCardConstant.TAG_FCP_FOR_CURRENT_FILE_LSB,
-                NO_DATA_IN,
-                ISO7816_LE_MAX)));
+                null,
+                (byte) 0x00)));
     addSubName("FCP_FOR_CURRENT_FILE");
   }
 
@@ -78,7 +80,7 @@ final class CommandGetDataFcp extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -88,7 +90,7 @@ final class CommandGetDataFcp extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -98,7 +100,7 @@ final class CommandGetDataFcp extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -108,11 +110,9 @@ final class CommandGetDataFcp extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     CommandSelectFile.parseProprietaryInformation(
         apduResponse.getDataOut(), getTransactionContext().getCard());
-    updateTerminalSessionIfNeeded();
   }
 
   /**

@@ -93,7 +93,7 @@ final class CommandReadRecords extends Command {
    * @param firstRecordNumber the record number to read (or first record to read in case of several.
    *     records)
    * @param readMode read mode, requests the reading of one or all the records.
-   * @param expectedLength the expected length of the record(s).
+   * @param expectedLength the expected length of the record(s) or null if not specified.
    * @param recordSize the size of one record.
    * @since 2.3.2
    */
@@ -103,7 +103,7 @@ final class CommandReadRecords extends Command {
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength,
+      Integer expectedLength,
       int recordSize) {
 
     super(CardCommandRef.READ_RECORDS, expectedLength, transactionContext, commandContext);
@@ -126,7 +126,9 @@ final class CommandReadRecords extends Command {
     if (readMode == ReadMode.ONE_RECORD) {
       p2 = (byte) (p2 - (byte) 0x01);
     }
-    byte le = (byte) expectedLength;
+    byte le = expectedLength != null ? expectedLength.byteValue() : (byte) 0x00;
+
+    // APDU Case 2
     setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(cardClass, getCommandRef().getInstructionByte(), p1, p2, null, le)));

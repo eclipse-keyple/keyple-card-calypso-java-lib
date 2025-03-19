@@ -113,6 +113,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
       ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
       index += 4;
     }
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -121,7 +122,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 p1,
                 p2,
                 dataIn,
-                ISO7816_LE_MAX)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       StringBuilder extraInfo = new StringBuilder("sfi: " + HexUtil.toHex(sfi) + "h");

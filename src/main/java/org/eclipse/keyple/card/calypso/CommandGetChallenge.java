@@ -32,6 +32,7 @@ final class CommandGetChallenge extends Command {
    */
   CommandGetChallenge(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_CHALLENGE, 8, transactionContext, commandContext);
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

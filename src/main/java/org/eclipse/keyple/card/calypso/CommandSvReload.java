@@ -17,10 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.keyple.core.util.ApduUtil;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
-import org.eclipse.keypop.calypso.card.transaction.CardSignatureNotVerifiableException;
-import org.eclipse.keypop.calypso.card.transaction.CryptoException;
-import org.eclipse.keypop.calypso.card.transaction.CryptoIOException;
-import org.eclipse.keypop.calypso.card.transaction.InvalidCardSignatureException;
+import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.card.ApduResponseApi;
@@ -119,7 +116,11 @@ final class CommandSvReload extends Command {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, transactionContext, commandContext);
+    super(
+        CardCommandRef.SV_RELOAD,
+        computeExpectedResponseLength(commandContext, isExtendedModeAllowed),
+        transactionContext,
+        commandContext);
 
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -140,9 +141,33 @@ final class CommandSvReload extends Command {
     dataIn[10] = time[1];
     // dataIn[11]..dataIn[11+7+sigLen] will be filled in at the finalization phase.
     // add dummy apdu request to ensure it exists when checking the session buffer usage
+    // APDU Case 3 (in session) or 4 (outside session)
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build((byte) 0, (byte) 0, (byte) 0, (byte) 0, dataIn, null)));
+            ApduUtil.build(
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                dataIn,
+                computeLe(commandContext, isExtendedModeAllowed))));
+  }
+
+  private static int computeExpectedResponseLength(
+      CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return 0;
+    } else {
+      return isExtendedModeAllowed ? 6 : 3;
+    }
+  }
+
+  private static Byte computeLe(CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return null;
+    } else {
+      return (byte) (isExtendedModeAllowed ? 6 : 3);
+    }
   }
 
   /**
@@ -174,6 +199,7 @@ final class CommandSvReload extends Command {
         18,
         svCommandSecurityData.getTerminalSvMac().length);
 
+    // APDU Case 3 (in session) or 4 (outside session)
     setApduRequest(
         new ApduRequestAdapter(
                 ApduUtil.build(
@@ -184,7 +210,7 @@ final class CommandSvReload extends Command {
                     p1,
                     p2,
                     dataIn,
-                    null))
+                    computeLe(getCommandContext(), isExtendedModeAllowed)))
             .addSuccessfulStatusWord(SW_POSTPONED_DATA));
   }
 

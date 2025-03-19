@@ -61,6 +61,8 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
   CommandGenerateAsymmetricKeyPair(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GENERATE_ASYMMETRIC_KEY_PAIR, 0, transactionContext, commandContext);
+
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -69,7 +71,7 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
                 (byte) 0x00,
                 (byte) 0x00,
                 HexUtil.toByteArray(SECP256R1_OID),
-                ISO7816_LE_ABSENT)));
+                null)));
   }
 
   /**

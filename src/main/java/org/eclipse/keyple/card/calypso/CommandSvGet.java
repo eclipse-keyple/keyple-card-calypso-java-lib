@@ -75,7 +75,7 @@ final class CommandSvGet extends Command {
 
     super(
         CardCommandRef.SV_GET,
-        computeLe(svOperation, useExtendedMode),
+        computeExpectedResponseLength(svOperation, useExtendedMode),
         transactionContext,
         commandContext);
 
@@ -87,6 +87,7 @@ final class CommandSvGet extends Command {
     byte p1 = useExtendedMode ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -94,8 +95,8 @@ final class CommandSvGet extends Command {
                 getCommandRef().getInstructionByte(),
                 p1,
                 p2,
-                NO_DATA_IN,
-                (byte) getExpectedResponseLength())));
+                null,
+                getExpectedResponseLength().byteValue())));
 
     if (logger.isDebugEnabled()) {
       addSubName("operation: " + svOperation.toString());
@@ -105,10 +106,11 @@ final class CommandSvGet extends Command {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) getExpectedResponseLength();
+    header[3] = getExpectedResponseLength().byteValue();
   }
 
-  private static int computeLe(SvOperation svOperation, boolean useExtendedMode) {
+  private static int computeExpectedResponseLength(
+      SvOperation svOperation, boolean useExtendedMode) {
     if (useExtendedMode) {
       return 0x3D;
     } else {

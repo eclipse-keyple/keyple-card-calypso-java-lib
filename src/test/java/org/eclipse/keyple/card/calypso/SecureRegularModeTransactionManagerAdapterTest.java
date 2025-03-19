@@ -1529,16 +1529,16 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
   public void processCommands_whenOutOfSession_shouldInteractWithCardOnly() throws Exception {
     CardRequestSpi cardRequest =
         mockTransmitCardRequest(
-            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
             CARD_READ_REC_SFI7_REC1_RSP,
-            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD,
             CARD_READ_REC_SFI8_REC1_RSP,
             CARD_READ_REC_SFI10_REC1_CMD,
             CARD_READ_REC_SFI10_REC1_RSP);
 
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
-    cardTransactionManager.prepareReadRecord(FILE8, 1);
-    cardTransactionManager.prepareReadRecord(FILE10, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE10, 1, 1, 34);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verifyInteractionsForSingleCardCommand(cardRequest);
@@ -1765,7 +1765,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecord(FILE7, 1)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -1793,13 +1793,13 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         mockTransmitCardRequest(
             CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD,
             CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP,
-            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD,
             CARD_READ_REC_SFI8_REC1_RSP);
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecord(FILE7, 1)
-        .prepareReadRecords(FILE8, 1, 1, 0)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
+        .prepareReadRecords(FILE8, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -1816,7 +1816,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             HexUtil.toByte(KVC));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
@@ -1835,15 +1835,15 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         mockTransmitCardRequest(
             CARD_OPEN_SECURE_SESSION_CMD,
             CARD_OPEN_SECURE_SESSION_RSP,
-            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
             CARD_READ_REC_SFI7_REC1_RSP,
-            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD,
             CARD_READ_REC_SFI8_REC1_RSP);
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecords(FILE7, 1, 1, 0)
-        .prepareReadRecords(FILE8, 1, 1, 0)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
+        .prepareReadRecords(FILE8, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -1860,13 +1860,13 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             HexUtil.toByte(KVC));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
@@ -1896,15 +1896,15 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         mockTransmitCardRequest(
             CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
             CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
-            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
             CARD_READ_REC_SFI7_REC1_RSP,
-            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD,
             CARD_READ_REC_SFI8_REC1_RSP);
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecords(FILE7, 1, 1, 0)
-        .prepareReadRecords(FILE8, 1, 1, 0)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
+        .prepareReadRecords(FILE8, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -1921,13 +1921,13 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             HexUtil.toByte(KVC));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI8_REC1_RSP));
@@ -1951,7 +1951,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecord(FILE7, 1)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -1992,12 +1992,12 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         mockTransmitCardRequest(
             CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
             CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
-            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
             CARD_READ_REC_SFI7_REC1_RSP);
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecords(FILE7, 1, 1, 0)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
@@ -2014,7 +2014,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             HexUtil.toByte(KVC));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
-        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_CMD));
+        .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_L29_CMD));
     inOrder
         .verify(symmetricCryptoCardTransactionManager)
         .updateTerminalSessionMac(HexUtil.toByteArray(CARD_READ_REC_SFI7_REC1_RSP));
@@ -2040,7 +2040,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
 
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
-        .prepareReadRecords(FILE7, 1, 1, 0)
+        .prepareReadRecords(FILE7, 1, 1, RECORD_SIZE)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);

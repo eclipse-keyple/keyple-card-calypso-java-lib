@@ -89,7 +89,7 @@ final class CommandCloseSecureSession extends Command {
       boolean isAutoRatificationAsked,
       int svPostponedDataIndex) {
     // CL-CSS-RESPLE.1: the command is either case 1 (abort) or case 4
-    super(commandRef, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
+    super(commandRef, null, transactionContext, commandContext);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = svPostponedDataIndex;
@@ -107,12 +107,13 @@ final class CommandCloseSecureSession extends Command {
   CommandCloseSecureSession(
       TransactionContextDto transactionContext, CommandContextDto context, boolean isAbort) {
     // CL-CSS-RESPLE.1: the command is either case 1 (abort) or case 4
-    super(commandRef, MAXIMUM_DATA_LENGTH, transactionContext, context);
+    super(commandRef, isAbort ? 0 : null, transactionContext, context);
     this.isAutoRatificationAsked = true;
     this.svPostponedDataIndex = -1;
     if (transactionContext.isPkiMode()) {
       // this a close in PKI mode.
       // in this case, set the APDU earlier since there is no call to finalizeRequest
+      // APDU Case 4
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -120,8 +121,8 @@ final class CommandCloseSecureSession extends Command {
                   commandRef.getInstructionByte(),
                   (byte) 0x00,
                   (byte) 0x00,
-                  NO_DATA_IN,
-                  ISO7816_LE_MAX)));
+                  null,
+                  (byte) 0x00)));
       this.isAbortSecureSession = isAbort;
     } else {
       // this is a non PKI session abort
@@ -139,6 +140,7 @@ final class CommandCloseSecureSession extends Command {
     if (isAbortSecureSession) {
       // Abort secure session
       // CL-CSS-ABORTCMD.1
+      // APDU Case 1
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -146,8 +148,8 @@ final class CommandCloseSecureSession extends Command {
                   commandRef.getInstructionByte(),
                   (byte) 0x00,
                   (byte) 0x00,
-                  NO_DATA_IN,
-                  ISO7816_LE_MAX)));
+                  null,
+                  (byte) 0x00))); // CL-C1-5BYTE.1
     } else {
       // Close secure session
       byte[] terminalSessionMac;
@@ -161,6 +163,7 @@ final class CommandCloseSecureSession extends Command {
       } catch (SymmetricCryptoIOException e) {
         throw new CryptoIOException(e.getMessage(), e);
       }
+      // APDU Case 4
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -169,7 +172,7 @@ final class CommandCloseSecureSession extends Command {
                   isAutoRatificationAsked ? (byte) 0x80 : (byte) 0x00,
                   (byte) 0x00,
                   terminalSessionMac,
-                  ISO7816_LE_MAX)));
+                  (byte) 0x00)));
     }
   }
 

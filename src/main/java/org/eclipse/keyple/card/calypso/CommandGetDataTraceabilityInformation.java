@@ -51,11 +51,13 @@ final class CommandGetDataTraceabilityInformation extends Command {
    */
   CommandGetDataTraceabilityInformation(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
             : CalypsoCardClass.ISO.getValue();
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -63,8 +65,8 @@ final class CommandGetDataTraceabilityInformation extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_TRACEABILITY_INFORMATION_MSB,
                 CalypsoCardConstant.TAG_TRACEABILITY_INFORMATION_LSB,
-                NO_DATA_IN,
-                ISO7816_LE_MAX)));
+                null,
+                (byte) 0x00)));
     addSubName("TRACEABILITY_INFORMATION");
   }
 
@@ -75,7 +77,7 @@ final class CommandGetDataTraceabilityInformation extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -85,7 +87,7 @@ final class CommandGetDataTraceabilityInformation extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -95,7 +97,7 @@ final class CommandGetDataTraceabilityInformation extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -105,10 +107,8 @@ final class CommandGetDataTraceabilityInformation extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     getTransactionContext().getCard().setTraceabilityInformation(apduResponse.getDataOut());
-    updateTerminalSessionIfNeeded();
   }
 
   /**

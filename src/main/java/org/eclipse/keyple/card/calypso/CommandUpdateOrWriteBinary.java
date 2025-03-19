@@ -111,6 +111,7 @@ final class CommandUpdateOrWriteBinary extends Command {
     // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
     byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
 
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -119,7 +120,7 @@ final class CommandUpdateOrWriteBinary extends Command {
                 p1,
                 lsb,
                 data,
-                ISO7816_LE_ABSENT)));
+                null)));
 
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset);

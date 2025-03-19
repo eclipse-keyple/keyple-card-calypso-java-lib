@@ -85,6 +85,8 @@ final class CommandAppendRecord extends Command {
     this.data = data;
     byte p1 = (byte) 0x00;
     byte p2 = (sfi == 0) ? (byte) 0x00 : (byte) (sfi * 8);
+
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -93,7 +95,7 @@ final class CommandAppendRecord extends Command {
                 p1,
                 p2,
                 data,
-                ISO7816_LE_ABSENT)));
+                null)));
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h");
     }

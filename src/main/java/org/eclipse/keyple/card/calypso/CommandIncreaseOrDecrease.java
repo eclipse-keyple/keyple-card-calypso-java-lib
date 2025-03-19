@@ -129,9 +129,9 @@ final class CommandIncreaseOrDecrease extends Command {
                   (byte) counterNumber,
                   p2,
                   valueBuffer,
-                  ISO7816_LE_MAX));
+                  (byte) 0x00));
     } else {
-      /* this command is considered as a case 3, we set Le = null */
+      /* this command is considered as a case 3, we set Le = null and the expected length = 0 */
       apduRequest =
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -141,6 +141,7 @@ final class CommandIncreaseOrDecrease extends Command {
                   p2,
                   valueBuffer,
                   null));
+      setExpectedResponseLength(0);
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 

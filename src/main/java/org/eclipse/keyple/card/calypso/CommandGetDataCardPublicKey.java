@@ -52,11 +52,13 @@ final class CommandGetDataCardPublicKey extends Command {
    */
   CommandGetDataCardPublicKey(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, MAXIMUM_DATA_LENGTH, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
             : CalypsoCardClass.ISO.getValue();
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -64,8 +66,8 @@ final class CommandGetDataCardPublicKey extends Command {
                 getCommandRef().getInstructionByte(),
                 CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_MSB,
                 CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_LSB,
-                NO_DATA_IN,
-                ISO7816_LE_MAX)));
+                null,
+                (byte) 0x00)));
     addSubName("ECC_PUBLIC_KEY");
   }
 
@@ -76,7 +78,7 @@ final class CommandGetDataCardPublicKey extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -86,7 +88,7 @@ final class CommandGetDataCardPublicKey extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -96,7 +98,7 @@ final class CommandGetDataCardPublicKey extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -114,7 +116,6 @@ final class CommandGetDataCardPublicKey extends Command {
                 apduResponse.getDataOut(),
                 CalypsoCardConstant.TAG_CARD_PUBLIC_KEY_HEADER_SIZE,
                 apduResponse.getDataOut().length));
-    updateTerminalSessionIfNeeded();
   }
 
   /**

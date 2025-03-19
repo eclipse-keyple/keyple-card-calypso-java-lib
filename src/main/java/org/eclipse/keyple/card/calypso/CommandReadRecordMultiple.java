@@ -103,7 +103,7 @@ final class CommandReadRecordMultiple extends Command {
       byte offset,
       byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, transactionContext, commandContext);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, null, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -113,6 +113,7 @@ final class CommandReadRecordMultiple extends Command {
     byte p2 = (byte) (sfi * 8 + 5);
     byte[] dataIn = {0x54, 0x02, offset, length};
 
+    // APDU Case 4 - always outside secure session
     setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -121,7 +122,7 @@ final class CommandReadRecordMultiple extends Command {
                 recordNumber,
                 p2,
                 dataIn,
-                (byte) 0)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName(
@@ -143,7 +144,7 @@ final class CommandReadRecordMultiple extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -153,7 +154,7 @@ final class CommandReadRecordMultiple extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -163,7 +164,7 @@ final class CommandReadRecordMultiple extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -173,7 +174,6 @@ final class CommandReadRecordMultiple extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     if (!setApduResponseAndCheckStatusInBestEffortMode(apduResponse)) {
       return;
     }
@@ -188,7 +188,6 @@ final class CommandReadRecordMultiple extends Command {
               Arrays.copyOfRange(dataOut, i * length, (i + 1) * length),
               offset);
     }
-    updateTerminalSessionIfNeeded();
   }
 
   /**

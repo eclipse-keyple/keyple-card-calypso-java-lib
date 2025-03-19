@@ -131,6 +131,7 @@ final class CommandChangePin extends Command {
         throw new CryptoIOException(e.getMessage(), e);
       }
     }
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -139,7 +140,7 @@ final class CommandChangePin extends Command {
                 (byte) 0x00, // CL-PIN-MP1P2.1
                 (byte) 0xFF,
                 pin,
-                ISO7816_LE_ABSENT)));
+                null)));
   }
 
   /**

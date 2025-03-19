@@ -96,7 +96,7 @@ final class CommandSelectFile extends Command {
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
 
-    super(commandRef, 0x19, transactionContext, commandContext);
+    super(commandRef, 25, transactionContext, commandContext);
 
     byte cardClass =
         transactionContext.getCard() != null
@@ -125,10 +125,11 @@ final class CommandSelectFile extends Command {
             "Unsupported selectFileControl parameter " + selectFileControl.name());
     }
 
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cardClass, commandRef.getInstructionByte(), p1, p2, selectData, ISO7816_LE_MAX)));
+                cardClass, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName("select file control: " + selectFileControl);
@@ -146,7 +147,7 @@ final class CommandSelectFile extends Command {
    */
   CommandSelectFile(
       TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
-    super(commandRef, 0, transactionContext, commandContext);
+    super(commandRef, 25, transactionContext, commandContext);
 
     CalypsoCardClass calypsoCardClass;
     CalypsoCard.ProductType productType;
@@ -179,6 +180,7 @@ final class CommandSelectFile extends Command {
 
     byte[] dataIn = ByteArrayUtil.extractBytes(lid, 2);
 
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -187,7 +189,7 @@ final class CommandSelectFile extends Command {
                 p1,
                 (byte) 0x00,
                 dataIn,
-                ISO7816_LE_MAX)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       addSubName("lid: " + HexUtil.toHex(dataIn) + "h");

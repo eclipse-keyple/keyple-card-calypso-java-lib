@@ -105,15 +105,11 @@ final class CommandReadBinary extends Command {
     // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
     byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
 
+    // APDU Case 2
     setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cardClass,
-                getCommandRef().getInstructionByte(),
-                p1,
-                lsb,
-                NO_DATA_IN,
-                (byte) length)));
+                cardClass, getCommandRef().getInstructionByte(), p1, lsb, null, (byte) length)));
 
     if (logger.isDebugEnabled()) {
       addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset + ", length: " + length);
