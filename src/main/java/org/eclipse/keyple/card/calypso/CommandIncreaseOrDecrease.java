@@ -104,7 +104,7 @@ final class CommandIncreaseOrDecrease extends Command {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
-        0,
+        3,
         transactionContext,
         commandContext);
 
@@ -131,7 +131,7 @@ final class CommandIncreaseOrDecrease extends Command {
                   valueBuffer,
                   (byte) 0x00));
     } else {
-      /* this command is considered as a case 3, we set Le = null */
+      /* this command is considered as a case 3, we set Le = null and the expected length = 0 */
       apduRequest =
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -141,6 +141,7 @@ final class CommandIncreaseOrDecrease extends Command {
                   p2,
                   valueBuffer,
                   null));
+      setExpectedResponseLength(0);
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 

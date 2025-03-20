@@ -93,7 +93,7 @@ final class CommandReadRecords extends Command {
    * @param firstRecordNumber the record number to read (or first record to read in case of several.
    *     records)
    * @param readMode read mode, requests the reading of one or all the records.
-   * @param expectedLength the expected length of the record(s).
+   * @param expectedLength the expected length of the record(s) or null if not specified.
    * @param recordSize the size of one record.
    * @since 2.3.2
    */
@@ -103,7 +103,7 @@ final class CommandReadRecords extends Command {
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength,
+      Integer expectedLength,
       int recordSize) {
 
     super(CardCommandRef.READ_RECORDS, expectedLength, transactionContext, commandContext);
@@ -126,7 +126,9 @@ final class CommandReadRecords extends Command {
     if (readMode == ReadMode.ONE_RECORD) {
       p2 = (byte) (p2 - (byte) 0x01);
     }
-    byte le = (byte) expectedLength;
+    byte le = expectedLength != null ? expectedLength.byteValue() : (byte) 0x00;
+
+    // APDU Case 2
     setApduRequestInBestEffortMode(
         new ApduRequestAdapter(
             ApduUtil.build(cardClass, getCommandRef().getInstructionByte(), p1, p2, null, le)));
@@ -270,8 +272,8 @@ final class CommandReadRecords extends Command {
    */
   private byte[] buildAnticipatedResponseForOneRecordMode(ElementaryFile ef) {
     byte[] content = ef.getData().getContent(firstRecordNumber);
-    if (content.length > 0 && content.length >= getLe()) {
-      int length = getLe() != 0 ? getLe() : content.length;
+    if (content.length > 0 && content.length >= getExpectedResponseLength()) {
+      int length = getExpectedResponseLength() != 0 ? getExpectedResponseLength() : content.length;
       byte[] apdu = new byte[length + 2];
       System.arraycopy(content, 0, apdu, 0, length); // Record content
       apdu[length] = (byte) 0x90; // SW 9000
@@ -287,8 +289,8 @@ final class CommandReadRecords extends Command {
    * @return Null if some records have not been read beforehand.
    */
   private byte[] buildAnticipatedResponseForMultipleRecordsMode(ElementaryFile ef) {
-    byte[] apdu = new byte[getLe() + 2];
-    int nbRecords = getLe() / (recordSize + 2);
+    byte[] apdu = new byte[getExpectedResponseLength() + 2];
+    int nbRecords = getExpectedResponseLength() / (recordSize + 2);
     int lastRecordNumber = firstRecordNumber + nbRecords - 1;
     int index = 0;
     for (int i = firstRecordNumber; i <= lastRecordNumber; i++) {

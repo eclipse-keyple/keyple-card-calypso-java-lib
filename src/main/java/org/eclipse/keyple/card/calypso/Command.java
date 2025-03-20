@@ -61,7 +61,7 @@ abstract class Command {
   private final CardCommandRef commandRef;
   private final CommandContextDto commandContext;
   private final TransactionContextDto transactionContext;
-  private int le;
+  private Integer expectedResponseLength;
   private transient String name; // NOSONAR
   private ApduRequestAdapter apduRequest;
   private ApduResponseApi apduResponse;
@@ -71,19 +71,19 @@ abstract class Command {
    * Constructor dedicated for the building of referenced Calypso commands
    *
    * @param commandRef A command reference from the Calypso command table.
-   * @param le The value of the LE field.
+   * @param expectedResponseLength The expected command response length or null if not specified.
    * @param transactionContext The global transaction context common to all commands.
    * @param commandContext The local command context specific to each command
    * @since 2.0.1
    */
   Command(
       CardCommandRef commandRef,
-      int le,
+      Integer expectedResponseLength,
       TransactionContextDto transactionContext,
       CommandContextDto commandContext) {
     this.commandRef = commandRef;
     this.name = commandRef.getName();
-    this.le = le;
+    this.expectedResponseLength = expectedResponseLength;
     this.transactionContext = transactionContext;
     this.commandContext = commandContext;
   }
@@ -190,21 +190,22 @@ abstract class Command {
   }
 
   /**
-   * @param le The value of the LE field.
+   * @param expectedResponseLength The expected command response length or null if the expected
+   *     length is not specified.
    * @since 2.3.2
    */
-  final void setLe(int le) {
-    this.le = le;
+  final void setExpectedResponseLength(Integer expectedResponseLength) {
+    this.expectedResponseLength = expectedResponseLength;
   }
 
   /**
-   * Returns the value of the LE.
+   * Returns the value of the expected length.
    *
-   * @return 0 if LE is not set.
+   * @return null if expected length is not set.
    * @since 2.3.2
    */
-  final int getLe() {
-    return le;
+  final Integer getExpectedResponseLength() {
+    return expectedResponseLength;
   }
 
   /**
@@ -381,7 +382,7 @@ abstract class Command {
    *
    * @param apduResponse The APDU response.
    * @throws CardCommandException If status is not successful or if the length of the response is
-   *     not equal to the LE field in the request.
+   *     not equal to the expected one.
    * @since 2.0.1
    */
   final void setApduResponseAndCheckStatus(ApduResponseApi apduResponse)
@@ -400,8 +401,8 @@ abstract class Command {
    * @return "false" in case of "best effort" mode and a "file not found" or a "record not found"
    *     error occurs. In this case, the process must be stopped.
    * @throws CardCommandException If status is not successful and a secure session is open or the SW
-   *     is different of 6A82h and 6A83h, or if the length of the response is not equal to the LE
-   *     field in the request.
+   *     is different of 6A82h and 6A83h, or if the length of the response is not equal to the
+   *     expected one.
    * @since 2.3.2
    */
   final boolean setApduResponseAndCheckStatusInBestEffortMode(ApduResponseApi apduResponse)
@@ -439,23 +440,23 @@ abstract class Command {
   }
 
   /**
-   * This method check the status word and if the length of the response is equal to the LE field in
-   * the request.<br>
+   * This method check the status word and if the length of the response is equal to the expected
+   * one.<br>
    * If status word is not referenced, then status is considered unsuccessful.
    *
    * @throws CardCommandException if status is not successful or if the length of the response is
    *     not equal to the LE field in the request.
    */
   private void checkStatus() throws CardCommandException {
-
     StatusProperties props = getStatusWordProperties();
     if (props != null && props.isSuccessful()) {
       // SW is successful, then check the response length (CL-CSS-RESPLE.1)
-      if (le != 0 && apduResponse.getDataOut().length != le) {
+      if (expectedResponseLength != null
+          && apduResponse.getDataOut().length != expectedResponseLength) {
         throw new CardUnexpectedResponseLengthException(
             String.format(
-                "Incorrect APDU response length (expected: %d, actual: %d)",
-                le, apduResponse.getDataOut().length),
+                "Incorrect APDU response length for command %s (expected: %d, actual: %d)",
+                commandRef, expectedResponseLength, apduResponse.getDataOut().length),
             commandRef);
       }
       // SW and response length are correct.

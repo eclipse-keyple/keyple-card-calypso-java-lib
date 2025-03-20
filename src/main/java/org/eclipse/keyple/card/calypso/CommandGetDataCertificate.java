@@ -57,7 +57,7 @@ final class CommandGetDataCertificate extends Command {
       CommandContextDto commandContext,
       boolean isCardCertificate,
       boolean isFirstPart) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     this.isCardCertificate = isCardCertificate;
     this.isFirstPart = isFirstPart;
     byte cardClass =
@@ -76,6 +76,8 @@ final class CommandGetDataCertificate extends Command {
     if (!isFirstPart) {
       p2++;
     }
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -94,7 +96,7 @@ final class CommandGetDataCertificate extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -104,7 +106,7 @@ final class CommandGetDataCertificate extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -114,7 +116,7 @@ final class CommandGetDataCertificate extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -125,7 +127,6 @@ final class CommandGetDataCertificate extends Command {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
 
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
 
     byte[] dataOut = apduResponse.getDataOut();
@@ -150,8 +151,6 @@ final class CommandGetDataCertificate extends Command {
     } else {
       getTransactionContext().getCard().addCaCertificateBytes(certificateBytes, isFirstPart);
     }
-
-    updateTerminalSessionIfNeeded();
   }
 
   /**

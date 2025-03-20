@@ -57,11 +57,13 @@ final class CommandGetDataEfList extends Command {
    * @since 2.3.2
    */
   CommandGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
             : CalypsoCardClass.ISO.getValue();
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -81,7 +83,7 @@ final class CommandGetDataEfList extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -91,7 +93,7 @@ final class CommandGetDataEfList extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -101,7 +103,7 @@ final class CommandGetDataEfList extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -111,13 +113,11 @@ final class CommandGetDataEfList extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     Map<FileHeaderAdapter, Byte> fileHeaderToSfiMap = getEfHeaders();
     for (Map.Entry<FileHeaderAdapter, Byte> entry : fileHeaderToSfiMap.entrySet()) {
       getTransactionContext().getCard().setFileHeader(entry.getValue(), entry.getKey());
     }
-    updateTerminalSessionIfNeeded();
   }
 
   /**

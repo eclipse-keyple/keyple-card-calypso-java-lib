@@ -70,11 +70,13 @@ final class CommandGetDataFci extends Command {
    * @since 2.3.2
    */
   CommandGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, transactionContext, commandContext);
     byte cardClass =
         transactionContext.getCard() != null
             ? transactionContext.getCard().getCardClass().getValue()
             : CalypsoCardClass.ISO.getValue();
+
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -94,7 +96,7 @@ final class CommandGetDataFci extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -104,7 +106,7 @@ final class CommandGetDataFci extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -114,7 +116,7 @@ final class CommandGetDataFci extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**
@@ -143,7 +145,6 @@ final class CommandGetDataFci extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
 
     Map<Integer, byte[]> tags;
@@ -214,7 +215,6 @@ final class CommandGetDataFci extends Command {
     }
 
     getTransactionContext().getCard().initializeWithFci(this);
-    updateTerminalSessionIfNeeded();
   }
 
   /**

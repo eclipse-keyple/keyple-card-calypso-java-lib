@@ -1469,16 +1469,16 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
   public void processCommands_whenOutOfSession_shouldExchangeApduWithCardOnly() throws Exception {
     CardRequestSpi cardRequest =
         mockTransmitCardRequest(
-            CARD_READ_REC_SFI7_REC1_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
             CARD_READ_REC_SFI7_REC1_RSP,
-            CARD_READ_REC_SFI8_REC1_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD,
             CARD_READ_REC_SFI8_REC1_RSP,
             CARD_READ_REC_SFI10_REC1_CMD,
             CARD_READ_REC_SFI10_REC1_RSP);
 
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
-    cardTransactionManager.prepareReadRecord(FILE8, 1);
-    cardTransactionManager.prepareReadRecord(FILE10, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE10, 1, 1, 34);
     cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
 
     verify(cardReader)

@@ -64,6 +64,7 @@ abstract class AbstractTransactionManagerTest {
   static final byte FILE7 = 0x07;
   static final byte FILE8 = 0x08;
   static final byte FILE10 = 0x10;
+  static final int RECORD_SIZE = 29;
 
   static final String SW_9000 = "9000";
   static final String SW_6200 = "6200";
@@ -116,18 +117,18 @@ abstract class AbstractTransactionManagerTest {
   static final String CARD_CLOSE_SECURE_SESSION_RSP = CARD_SIGNATURE + SW_9000;
   static final String CARD_ABORT_SECURE_SESSION_CMD = "008E000000";
 
-  static final String CARD_READ_REC_SFI1_REC2_CMD = "00B2020C00";
+  static final String CARD_READ_REC_SFI1_REC2_CMD = "00B2020C01";
   static final String CARD_READ_REC_SFI1_REC2_RSP = "22" + SW_9000;
-  static final String CARD_READ_REC_SFI1_REC4_CMD = "00B2040C00";
+  static final String CARD_READ_REC_SFI1_REC4_CMD = "00B2040C01";
   static final String CARD_READ_REC_SFI1_REC4_RSP = "44" + SW_9000;
-  static final String CARD_READ_REC_SFI1_REC5_CMD = "00B2050C00";
+  static final String CARD_READ_REC_SFI1_REC5_CMD = "00B2050C01";
   static final String CARD_READ_REC_SFI1_REC5_RSP = "55" + SW_9000;
   static final String CARD_READ_REC_SFI7_REC1_CMD = "00B2013C00";
   static final String CARD_READ_REC_SFI7_REC1_L29_CMD = "00B2013C1D";
   static final String CARD_READ_REC_SFI7_REC1_RSP = FILE7_REC1_29B + SW_9000;
-  static final String CARD_READ_REC_SFI8_REC1_CMD = "00B2014400";
+  static final String CARD_READ_REC_SFI8_REC1_L29_CMD = "00B201441D";
   static final String CARD_READ_REC_SFI8_REC1_RSP = FILE8_REC1_29B + SW_9000;
-  static final String CARD_READ_REC_SFI10_REC1_CMD = "00B2018400";
+  static final String CARD_READ_REC_SFI10_REC1_CMD = "00B2018422";
   static final String CARD_READ_REC_SFI10_REC1_RSP = FILE10_REC1_COUNTER + SW_9000;
   static final String CARD_READ_RECORDS_FROM1_TO2_CMD = "00B2010D06";
   static final String CARD_READ_RECORDS_FROM1_TO2_RSP = "010111020122" + SW_9000;
@@ -349,13 +350,13 @@ abstract class AbstractTransactionManagerTest {
   static final String CARD_MSS_AUTHENTICATION_RSP = "8877665544332211" + SW_9000;
   static final String CARD_MSS_ENCRYPTION_CMD = "0082000200";
   static final String CARD_MSS_CMD = "0082000000";
-  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD = "00B2010C00";
+  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD = "00B2010C01";
   static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP = "E1" + SW_9000;
   static final String CARD_READ_REC_DECRYPTED_SFI1_REC1_RSP = "11" + SW_9000;
-  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD = "00B2030C00";
+  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD = "00B2030C01";
   static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP = "E3" + SW_9000;
   static final String CARD_READ_REC_DECRYPTED_SFI1_REC3_RSP = "33" + SW_9000;
-  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD = "00B2060C00";
+  static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD = "00B2060C01";
   static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_RSP = "E6" + SW_9000;
   static final String CARD_READ_REC_DECRYPTED_SFI1_REC6_RSP = "66" + SW_9000;
   static final String CARD_UPDATE_REC_SFI1_REC1_CMD = "00DC010C01" + "AA";

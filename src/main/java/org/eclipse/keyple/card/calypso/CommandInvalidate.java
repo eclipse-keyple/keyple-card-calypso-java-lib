@@ -55,6 +55,7 @@ final class CommandInvalidate extends Command {
    */
   CommandInvalidate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.INVALIDATE, 0, transactionContext, commandContext);
+    // APDU Case 1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -63,7 +64,7 @@ final class CommandInvalidate extends Command {
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
-                null)));
+                (byte) 0x00))); // CL-C1-5BYTE.1
   }
 
   /**

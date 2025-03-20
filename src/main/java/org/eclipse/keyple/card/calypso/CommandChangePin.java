@@ -131,6 +131,7 @@ final class CommandChangePin extends Command {
         throw new CryptoIOException(e.getMessage(), e);
       }
     }
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

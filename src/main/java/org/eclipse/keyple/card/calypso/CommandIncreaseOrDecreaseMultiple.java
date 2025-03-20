@@ -97,7 +97,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
-        0,
+        counterNumberToIncDecValueMap.size() * 4,
         transactionContext,
         commandContext);
 
@@ -113,6 +113,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
       ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
       index += 4;
     }
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -121,7 +122,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 p1,
                 p2,
                 dataIn,
-                (byte) 0)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       StringBuilder extraInfo = new StringBuilder("sfi: " + HexUtil.toHex(sfi) + "h");

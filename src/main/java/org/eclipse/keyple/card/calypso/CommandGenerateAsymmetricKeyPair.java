@@ -61,6 +61,8 @@ final class CommandGenerateAsymmetricKeyPair extends Command {
   CommandGenerateAsymmetricKeyPair(
       TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GENERATE_ASYMMETRIC_KEY_PAIR, 0, transactionContext, commandContext);
+
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

@@ -122,6 +122,8 @@ final class CommandPutData extends Command {
       default:
         throw new UnsupportedOperationException("Unsupported tag: " + tag);
     }
+
+    // APDU Case 3 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -140,7 +142,7 @@ final class CommandPutData extends Command {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -150,7 +152,7 @@ final class CommandPutData extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -160,10 +162,6 @@ final class CommandPutData extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getCommandContext().isEncryptionActive()) {
-      return false;
-    }
-    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -174,7 +172,6 @@ final class CommandPutData extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
-    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     if (tag == PutDataTag.CARD_KEY_PAIR) {
       getTransactionContext().getCard().setCardPublicKey(Arrays.copyOf(data, CARD_PUBLIC_KEY_SIZE));
@@ -183,7 +180,6 @@ final class CommandPutData extends Command {
     } else if (tag == PutDataTag.CA_CERTIFICATE) {
       getTransactionContext().getCard().addCaCertificateBytes(data, isFirstPart);
     }
-    updateTerminalSessionIfNeeded();
   }
 
   /**
