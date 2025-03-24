@@ -99,6 +99,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
   private Byte kif;
   private Byte kvc;
   private byte[] recordData;
+  private int expectedRecordDataLength;
 
   /**
    * Constructor.
@@ -108,6 +109,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @param samChallenge The SAM challenge.
    * @param sfi The optional SFI of the file to read.
    * @param recordNumber The optional record number to read.
+   * @param recordSize The size of the record to read.
    * @param isExtendedModeAllowed True if the extended mode is allowed.
    * @since 2.0.1
    */
@@ -117,14 +119,16 @@ final class CmdCardOpenSecureSession extends CardCommand {
       byte[] samChallenge,
       int sfi,
       int recordNumber,
+      int recordSize,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, calypsoCard, null, null);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, calypsoCard, null, null);
 
     this.isExtendedModeAllowed = isExtendedModeAllowed;
     this.writeAccessLevel = writeAccessLevel;
     this.sfi = sfi;
     this.recordNumber = recordNumber;
+    expectedRecordDataLength = recordSize;
 
     byte keyIndex = (byte) (writeAccessLevel.ordinal() + 1);
     switch (getCalypsoCard().getProductType()) {
@@ -152,7 +156,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
    * @since 2.3.3
    */
   CmdCardOpenSecureSession(WriteAccessLevel writeAccessLevel) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, null, null);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, null, null, null);
     isExtendedModeAllowed = true;
     this.writeAccessLevel = writeAccessLevel;
     createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
@@ -177,7 +181,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
       SymmetricCryptoSecuritySettingAdapter symmetricCryptoSecuritySetting,
       WriteAccessLevel writeAccessLevel,
       boolean isExtendedModeAllowed) {
-    super(CardCommandRef.OPEN_SECURE_SESSION, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.OPEN_SECURE_SESSION, null, null, transactionContext, commandContext);
     this.writeAccessLevel = writeAccessLevel;
     this.symmetricCryptoSecuritySetting = symmetricCryptoSecuritySetting;
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -299,11 +303,13 @@ final class CmdCardOpenSecureSession extends CardCommand {
    *
    * @param sfi The SFI to select.
    * @param recordNumber The number of the record to read.
+   * @param expectedRecordDataLength The expected record data length.
    * @since 2.3.2
    */
-  void configureReadMode(int sfi, int recordNumber) {
+  void configureReadMode(int sfi, int recordNumber, int expectedRecordDataLength) {
     this.sfi = sfi;
     this.recordNumber = recordNumber;
+    this.expectedRecordDataLength = expectedRecordDataLength;
     isReadModeConfigured = true;
   }
 
@@ -375,7 +381,11 @@ final class CmdCardOpenSecureSession extends CardCommand {
       return false;
     }
     if (!isCryptoServiceSynchronized()) {
-      parseRev3(preOpenDataOut);
+      try {
+        parseRev3(preOpenDataOut);
+      } catch (CardUnexpectedResponseLengthException e) {
+        throw new IllegalStateException("Unexpected response length in pre-open mode", e);
+      }
       synchronizeCryptoService(preOpenDataOut);
     }
     return true;
@@ -516,7 +526,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev3(byte[] apduResponseData) {
+  private void parseRev3(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     CalypsoCardAdapter card =
         getTransactionContext() != null ? getTransactionContext().getCard() : getCalypsoCard();
     int offset;
@@ -538,6 +548,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
     kif = apduResponseData[5 + offset];
     kvc = apduResponseData[6 + offset];
     int dataLength = apduResponseData[7 + offset];
+    checkReceivedDataLength(dataLength);
     recordData = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
   }
 
@@ -568,13 +579,14 @@ final class CmdCardOpenSecureSession extends CardCommand {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev24(byte[] apduResponseData) {
+  private void parseRev24(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     switch (apduResponseData.length) {
       case 5:
         isPreviousSessionRatified = true;
         recordData = new byte[0];
         break;
       case 34:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = true;
         recordData = Arrays.copyOfRange(apduResponseData, 5, 34);
         break;
@@ -583,6 +595,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
         recordData = new byte[0];
         break;
       case 36:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = false;
         recordData = Arrays.copyOfRange(apduResponseData, 7, 36);
         break;
@@ -622,13 +635,14 @@ final class CmdCardOpenSecureSession extends CardCommand {
    *
    * @param apduResponseData The response data.
    */
-  private void parseRev10(byte[] apduResponseData) {
+  private void parseRev10(byte[] apduResponseData) throws CardUnexpectedResponseLengthException {
     switch (apduResponseData.length) {
       case 4:
         isPreviousSessionRatified = true;
         recordData = new byte[0];
         break;
       case 33:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = true;
         recordData = Arrays.copyOfRange(apduResponseData, 4, 33);
         break;
@@ -637,6 +651,7 @@ final class CmdCardOpenSecureSession extends CardCommand {
         recordData = new byte[0];
         break;
       case 35:
+        checkReceivedDataLength(29);
         isPreviousSessionRatified = false;
         recordData = Arrays.copyOfRange(apduResponseData, 6, 35);
         break;
@@ -648,6 +663,17 @@ final class CmdCardOpenSecureSession extends CardCommand {
     challengeRandomNumber = Arrays.copyOfRange(apduResponseData, 3, 4);
     kif = null;
     kvc = null;
+  }
+
+  private void checkReceivedDataLength(int dataLength)
+      throws CardUnexpectedResponseLengthException {
+    if (dataLength != expectedRecordDataLength) {
+      throw new CardUnexpectedResponseLengthException(
+          String.format(
+              "Unexpected APDU response length for command %s (expected: %d, actual: %d)",
+              getCommandRef(), expectedRecordDataLength, dataLength),
+          getCommandRef());
+    }
   }
 
   /**

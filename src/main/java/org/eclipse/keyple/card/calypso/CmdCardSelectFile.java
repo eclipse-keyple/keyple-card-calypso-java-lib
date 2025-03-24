@@ -94,7 +94,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, SelectFileControl selectFileControl) {
-    super(commandRef, 0, calypsoCard, null, null);
+    super(commandRef, 25, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass(), selectFileControl);
   }
 
@@ -111,7 +111,7 @@ final class CmdCardSelectFile extends CardCommand {
       TransactionContextDto transactionContext,
       CommandContextDto commandContext,
       SelectFileControl selectFileControl) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 25, null, transactionContext, commandContext);
     buildCommand(transactionContext.getCard().getCardClass(), selectFileControl);
   }
 
@@ -124,7 +124,7 @@ final class CmdCardSelectFile extends CardCommand {
    * @since 2.0.1
    */
   CmdCardSelectFile(CalypsoCardClass calypsoCardClass, SelectFileControl selectFileControl) {
-    super(commandRef, 0, null, null, null);
+    super(commandRef, 25, null, null, null);
     buildCommand(calypsoCardClass, selectFileControl);
   }
 
@@ -139,7 +139,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   @Deprecated
   CmdCardSelectFile(CalypsoCardAdapter calypsoCard, short lid) {
-    super(commandRef, 0, calypsoCard, null, null);
+    super(commandRef, 25, calypsoCard, null, null);
     buildCommand(
         calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
   }
@@ -155,7 +155,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   CmdCardSelectFile(
       TransactionContextDto transactionContext, CommandContextDto commandContext, short lid) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, 25, null, transactionContext, commandContext);
     CalypsoCardAdapter calypsoCard = transactionContext.getCard();
     buildCommand(
         calypsoCard.getCardClass(), calypsoCard.getProductType(), calypsoCard.isLegacyCase1(), lid);
@@ -172,7 +172,7 @@ final class CmdCardSelectFile extends CardCommand {
    */
   CmdCardSelectFile(
       CalypsoCardClass calypsoCardClass, CalypsoCard.ProductType productType, short lid) {
-    super(commandRef, 0, null, null, null);
+    super(commandRef, 25, null, null, null);
     buildCommand(calypsoCardClass, productType, false, lid);
   }
 
@@ -207,6 +207,7 @@ final class CmdCardSelectFile extends CardCommand {
             "Unsupported selectFileControl parameter " + selectFileControl.name());
     }
 
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(cla, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));

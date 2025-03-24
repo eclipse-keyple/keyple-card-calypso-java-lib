@@ -104,7 +104,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
-        0,
+        3,
         calypsoCard,
         null,
         null);
@@ -143,6 +143,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
                   p2,
                   valueBuffer,
                   null));
+      setExpectedResponseLength(0);
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 
@@ -181,7 +182,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE : CardCommandRef.INCREASE,
-        0,
+        3,
         null,
         transactionContext,
         commandContext);
@@ -219,6 +220,7 @@ final class CmdCardIncreaseOrDecrease extends CardCommand {
                   p2,
                   valueBuffer,
                   null));
+      setExpectedResponseLength(0);
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 

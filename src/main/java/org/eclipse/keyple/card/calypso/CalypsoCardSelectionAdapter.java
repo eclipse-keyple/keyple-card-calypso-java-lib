@@ -211,7 +211,7 @@ final class CalypsoCardSelectionAdapter implements CalypsoCardSelection, CardSel
             CalypsoCardConstant.NB_REC_MAX,
             "recordNumber");
     commands.add(
-        new CmdCardReadRecords(sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, 0));
+        new CmdCardReadRecords(sfi, recordNumber, CmdCardReadRecords.ReadMode.ONE_RECORD, null));
     return this;
   }
 

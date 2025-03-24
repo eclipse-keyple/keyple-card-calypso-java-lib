@@ -116,7 +116,7 @@ final class CmdCardSvReload extends CardCommand {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, calypsoCard, null, null);
+    super(CardCommandRef.SV_RELOAD, null, calypsoCard, null, null);
 
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -163,7 +163,12 @@ final class CmdCardSvReload extends CardCommand {
       byte[] free,
       boolean isExtendedModeAllowed) {
 
-    super(CardCommandRef.SV_RELOAD, 0, null, transactionContext, commandContext);
+    super(
+        CardCommandRef.SV_RELOAD,
+        computeExpectedResponseLength(commandContext, isExtendedModeAllowed),
+        null,
+        transactionContext,
+        commandContext);
 
     // keeps a copy of these fields until the builder is finalized
     this.isExtendedModeAllowed = isExtendedModeAllowed;
@@ -184,9 +189,33 @@ final class CmdCardSvReload extends CardCommand {
     dataIn[10] = time[1];
     // dataIn[11]..dataIn[11+7+sigLen] will be filled in at the finalization phase.
     // add dummy apdu request to ensure it exists when checking the session buffer usage
+    // APDU Case 3 (in session) or 4 (outside session)
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build((byte) 0, (byte) 0, (byte) 0, (byte) 0, dataIn, null)));
+            ApduUtil.build(
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                dataIn,
+                computeLe(commandContext, isExtendedModeAllowed))));
+  }
+
+  private static int computeExpectedResponseLength(
+      CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return 0;
+    } else {
+      return isExtendedModeAllowed ? 6 : 3;
+    }
+  }
+
+  private static Byte computeLe(CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return null;
+    } else {
+      return (byte) (isExtendedModeAllowed ? 6 : 3);
+    }
   }
 
   /**

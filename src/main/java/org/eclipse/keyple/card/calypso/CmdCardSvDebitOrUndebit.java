@@ -131,7 +131,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
 
     super(
         isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT,
-        0,
+        null,
         calypsoCard,
         null,
         null);
@@ -184,7 +184,7 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
 
     super(
         isDebitCommand ? CardCommandRef.SV_DEBIT : CardCommandRef.SV_UNDEBIT,
-        0,
+        computeExpectedResponseLength(commandContext, isExtendedModeAllowed),
         null,
         transactionContext,
         commandContext);
@@ -209,9 +209,33 @@ final class CmdCardSvDebitOrUndebit extends CardCommand {
     dataIn[7] = transactionContext.getCard().getSvKvc();
     // dataIn[8]..dataIn[8+7+sigLen] will be filled in at the finalization phase.
     // add dummy apdu request to ensure it exists when checking the session buffer usage
+    // APDU Case 3 (in session) or 4 (outside session)
     setApduRequest(
         new ApduRequestAdapter(
-            ApduUtil.build((byte) 0, (byte) 0, (byte) 0, (byte) 0, dataIn, null)));
+            ApduUtil.build(
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                (byte) 0,
+                dataIn,
+                computeLe(commandContext, isExtendedModeAllowed))));
+  }
+
+  private static int computeExpectedResponseLength(
+      CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return 0;
+    } else {
+      return isExtendedModeAllowed ? 6 : 3;
+    }
+  }
+
+  private static Byte computeLe(CommandContextDto commandContext, boolean isExtendedModeAllowed) {
+    if (commandContext.isSecureSessionOpen()) {
+      return null;
+    } else {
+      return (byte) (isExtendedModeAllowed ? 6 : 3);
+    }
   }
 
   /**

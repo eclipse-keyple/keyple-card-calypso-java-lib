@@ -119,6 +119,8 @@ final class CmdCardAppendRecord extends CardCommand {
     this.data = data;
     byte p1 = (byte) 0x00;
     byte p2 = (sfi == 0) ? (byte) 0x00 : (byte) (sfi * 8);
+
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

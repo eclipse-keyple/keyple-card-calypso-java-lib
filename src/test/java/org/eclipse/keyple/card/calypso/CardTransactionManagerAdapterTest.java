@@ -96,6 +96,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_SIGNATURE = "12345678";
   private static final String CARD_SIGNATURE = "9ABCDEF0";
 
+  private static final int RECORD_SIZE = 29;
   private static final String FILE7_REC1_29B =
       "7111111111111111111111111111111111111111111111111111111111";
   private static final String FILE7_REC2_29B =
@@ -183,11 +184,11 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_RATIFICATION_CMD = "00B2000000";
   private static final String CARD_RATIFICATION_RSP = "6B00";
 
-  private static final String CARD_READ_REC_SFI1_REC2_CMD = "00B2020C00";
+  private static final String CARD_READ_REC_SFI1_REC2_CMD = "00B2020C01";
   private static final String CARD_READ_REC_SFI1_REC2_RSP = "22" + SW1SW2_OK;
-  private static final String CARD_READ_REC_SFI1_REC4_CMD = "00B2040C00";
+  private static final String CARD_READ_REC_SFI1_REC4_CMD = "00B2040C01";
   private static final String CARD_READ_REC_SFI1_REC4_RSP = "44" + SW1SW2_OK;
-  private static final String CARD_READ_REC_SFI1_REC5_CMD = "00B2050C00";
+  private static final String CARD_READ_REC_SFI1_REC5_CMD = "00B2050C01";
   private static final String CARD_READ_REC_SFI1_REC5_RSP = "55" + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI7_REC1_CMD = "00B2013C00";
   private static final String CARD_READ_REC_SFI7_REC1_L29_CMD = "00B2013C1D";
@@ -196,6 +197,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_READ_REC_SFI7_REC1_6B_COUNTER_RSP =
       FILE7_REC1_COUNTER1 + FILE7_REC1_COUNTER2 + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI8_REC1_CMD = "00B2014400";
+  private static final String CARD_READ_REC_SFI8_REC1_L29_CMD = "00B201441D";
   private static final String CARD_READ_REC_SFI8_REC1_RSP = FILE8_REC1_29B + SW1SW2_OK;
   private static final String CARD_READ_REC_SFI7_REC3_4_CMD = "00B2033D3E";
   private static final String CARD_READ_REC_SFI7_REC3_4_RSP =
@@ -572,11 +574,11 @@ public class CardTransactionManagerAdapterTest {
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI7_REC2_L29_CMD =
       "808C8000" + "26" + "05" + "00B2013C1D" + "1F" + FILE7_REC2_29B + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC2_CMD =
-      "808C8000" + "0A" + "05" + "00B2020C00" + "03" + "22" + SW1SW2_OK;
+      "808C8000" + "0A" + "05" + "00B2020C01" + "03" + "22" + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC4_CMD =
-      "808C8000" + "0A" + "05" + "00B2040C00" + "03" + "44" + SW1SW2_OK;
+      "808C8000" + "0A" + "05" + "00B2040C01" + "03" + "44" + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_MULTIPLE_READ_REC_SFI1_REC5_CMD =
-      "808C8000" + "0A" + "05" + "00B2050C00" + "03" + "55" + SW1SW2_OK;
+      "808C8000" + "0A" + "05" + "00B2050C01" + "03" + "55" + SW1SW2_OK;
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI7_REC1_RSP_CMD =
       "808C00001F\" + FILE7_REC1_29B+ \"9000";
   private static final String SAM_DIGEST_UPDATE_READ_REC_SFI8_REC1_RSP_CMD =
@@ -706,7 +708,7 @@ public class CardTransactionManagerAdapterTest {
   private static final String CARD_MSS_AUTHENTICATION_RSP = "8877665544332211" + SW1SW2_OK;
   private static final String CARD_MSS_ENCRYPTION_CMD = "0082000200";
   private static final String CARD_MSS_CMD = "0082000000";
-  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD = "00B2010C00";
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD = "00B2010C01";
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_CMD =
       "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC1_CMD;
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_CMD_RSP =
@@ -716,7 +718,7 @@ public class CardTransactionManagerAdapterTest {
       "808C008003" + CARD_READ_REC_ENCRYPTED_SFI1_REC1_RSP;
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC1_RSP_RSP =
       "119000" + SW1SW2_OK;
-  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD = "00B2030C00";
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD = "00B2030C01";
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_CMD =
       "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC3_CMD;
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_CMD_RSP =
@@ -726,7 +728,7 @@ public class CardTransactionManagerAdapterTest {
       "808C008003" + CARD_READ_REC_ENCRYPTED_SFI1_REC3_RSP;
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC3_RSP_RSP =
       "339000" + SW1SW2_OK;
-  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD = "00B2060C00";
+  private static final String CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD = "00B2060C01";
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_CMD =
       "808C008005" + CARD_READ_REC_ENCRYPTED_SFI1_REC6_CMD;
   private static final String SAM_DIGEST_UPDATE_ENCRYPTED_READ_REC_SFI1_REC6_CMD_RSP =
@@ -931,7 +933,7 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
     InOrder inOrder = inOrder(cardReader, samReader);
     inOrder
@@ -951,7 +953,7 @@ public class CardTransactionManagerAdapterTest {
     CardRequestSpi samCardRequest = createCardRequest(SAM_GET_CHALLENGE_CMD);
     CardResponseApi samCardResponse = createCardResponse(SAM_GET_CHALLENGE_RSP);
     CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
+        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_L29_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(samReader.transmitCardRequest(
@@ -960,8 +962,8 @@ public class CardTransactionManagerAdapterTest {
     when(cardReader.transmitCardRequest(
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
-    cardTransactionManager.prepareReadRecord(FILE8, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
     cardTransactionManager.processOpening(WriteAccessLevel.DEBIT);
     InOrder inOrder = inOrder(cardReader, samReader);
     inOrder
@@ -1379,7 +1381,7 @@ public class CardTransactionManagerAdapterTest {
   @Test(expected = IllegalStateException.class)
   public void processVerifyPin_whenPINIsNotFirstCommand_shouldThrowISE() throws Exception {
     initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_PIN);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processVerifyPin(PIN_OK.getBytes());
   }
 
@@ -3635,26 +3637,26 @@ public class CardTransactionManagerAdapterTest {
     cardTransactionManager
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareActivateEncryption() // + encryption
-        .prepareReadRecord((byte) 1, 1)
+        .prepareReadRecords((byte) 1, 1, 1, 1)
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareDeactivateEncryption() // - encryption
-        .prepareReadRecord((byte) 1, 2)
+        .prepareReadRecords((byte) 1, 2, 2, 1)
         .prepareActivateEncryption() // + encryption
         .processOpening(WriteAccessLevel.DEBIT);
     cardTransactionManager
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareEarlyMutualAuthentication() // Authentication (Twice consecutive call)
-        .prepareReadRecord((byte) 1, 3)
+        .prepareReadRecords((byte) 1, 3, 3, 1)
         .prepareUpdateRecord((byte) 1, 1, new byte[] {(byte) 0xAA})
         .prepareUpdateRecord((byte) 1, 2, new byte[] {(byte) 0xBB}) // 2nd session
         .prepareDeactivateEncryption() // - encryption
         .processCommands();
     cardTransactionManager
-        .prepareReadRecord((byte) 1, 4)
+        .prepareReadRecords((byte) 1, 4, 4, 1)
         .prepareEarlyMutualAuthentication() // Authentication
-        .prepareReadRecord((byte) 1, 5)
+        .prepareReadRecords((byte) 1, 5, 5, 1)
         .prepareActivateEncryption() // + encryption
-        .prepareReadRecord((byte) 1, 6)
+        .prepareReadRecords((byte) 1, 6, 6, 1)
         .prepareReleaseCardChannel()
         .processClosing();
 
@@ -3916,7 +3918,7 @@ public class CardTransactionManagerAdapterTest {
             argThat(new CardRequestMatcher(cardCardRequest)), any(ChannelControl.class)))
         .thenReturn(cardCardResponse);
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
     InOrder inOrder = inOrder(cardReader, samReader);
     inOrder
@@ -3942,7 +3944,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(samCardResponse);
 
     CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
+        createCardRequest(CARD_OPEN_SECURE_SESSION_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_L29_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(CARD_OPEN_SECURE_SESSION_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
     when(cardReader.transmitCardRequest(
@@ -3950,8 +3952,8 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
-    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -3985,7 +3987,9 @@ public class CardTransactionManagerAdapterTest {
 
     CardRequestSpi cardCardRequest =
         createCardRequest(
-            CARD_OPEN_SECURE_SESSION_CMD, CARD_READ_REC_SFI7_REC1_CMD, CARD_READ_REC_SFI8_REC1_CMD);
+            CARD_OPEN_SECURE_SESSION_CMD,
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(
             CARD_OPEN_SECURE_SESSION_RSP, CARD_READ_REC_SFI7_REC1_RSP, CARD_READ_REC_SFI8_REC1_RSP);
@@ -3994,8 +3998,8 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
-    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -4033,8 +4037,8 @@ public class CardTransactionManagerAdapterTest {
     CardRequestSpi cardCardRequest =
         createCardRequest(
             CARD_OPEN_SECURE_SESSION_EXTENDED_CMD,
-            CARD_READ_REC_SFI7_REC1_CMD,
-            CARD_READ_REC_SFI8_REC1_CMD);
+            CARD_READ_REC_SFI7_REC1_L29_CMD,
+            CARD_READ_REC_SFI8_REC1_L29_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(
             CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
@@ -4045,8 +4049,8 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
-    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
+    cardTransactionManager.prepareReadRecords(FILE8, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -4086,7 +4090,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -4122,7 +4126,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(samCardResponse);
 
     CardRequestSpi cardCardRequest =
-        createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD, CARD_READ_REC_SFI7_REC1_CMD);
+        createCardRequest(CARD_OPEN_SECURE_SESSION_EXTENDED_CMD, CARD_READ_REC_SFI7_REC1_L29_CMD);
     CardResponseApi cardCardResponse =
         createCardResponse(CARD_OPEN_SECURE_SESSION_EXTENDED_RSP, CARD_READ_REC_SFI7_REC1_RSP);
     when(cardReader.transmitCardRequest(
@@ -4130,7 +4134,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, 0);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -4170,7 +4174,7 @@ public class CardTransactionManagerAdapterTest {
         .thenReturn(cardCardResponse);
 
     cardTransactionManager.prepareOpenSecureSession(WriteAccessLevel.DEBIT);
-    cardTransactionManager.prepareReadRecord(FILE7, 1);
+    cardTransactionManager.prepareReadRecords(FILE7, 1, 1, RECORD_SIZE);
     cardTransactionManager.processCommands(false);
 
     InOrder inOrder = inOrder(cardReader, samReader);
@@ -7414,26 +7418,26 @@ public class CardTransactionManagerAdapterTest {
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareActivateEncryption() // + encryption
-        .prepareReadRecord((byte) 1, 1)
+        .prepareReadRecords((byte) 1, 1, 1, 1)
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareDeactivateEncryption() // - encryption
-        .prepareReadRecord((byte) 1, 2)
+        .prepareReadRecords((byte) 1, 2, 2, 1)
         .prepareActivateEncryption() // + encryption
         .processCommands(false);
     cardTransactionManager
         .prepareEarlyMutualAuthentication() // Authentication
         .prepareEarlyMutualAuthentication() // Authentication (Twice consecutive call)
-        .prepareReadRecord((byte) 1, 3)
+        .prepareReadRecords((byte) 1, 3, 3, 1)
         .prepareUpdateRecord((byte) 1, 1, new byte[] {(byte) 0xAA})
         .prepareUpdateRecord((byte) 1, 2, new byte[] {(byte) 0xBB}) // 2nd session
         .prepareDeactivateEncryption() // - encryption
         .processCommands(false);
     cardTransactionManager
-        .prepareReadRecord((byte) 1, 4)
+        .prepareReadRecords((byte) 1, 4, 4, 1)
         .prepareEarlyMutualAuthentication() // Authentication
-        .prepareReadRecord((byte) 1, 5)
+        .prepareReadRecords((byte) 1, 5, 5, 1)
         .prepareActivateEncryption() // + encryption
-        .prepareReadRecord((byte) 1, 6)
+        .prepareReadRecords((byte) 1, 6, 6, 1)
         .prepareCloseSecureSession()
         .processCommands(true);
 

@@ -93,7 +93,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
   @Deprecated
   CmdCardSearchRecordMultiple(CalypsoCardAdapter calypsoCard, SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, calypsoCard, null, null);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, null, calypsoCard, null, null);
 
     this.data = data;
 
@@ -129,6 +129,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
       }
     }
 
+    // APDU Case 4 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -137,7 +138,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
                 (byte) data.getRecordNumber(),
                 p2,
                 dataIn,
-                (byte) 0)));
+                (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
@@ -168,7 +169,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
       CommandContextDto commandContext,
       SearchCommandDataAdapter data) {
 
-    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.SEARCH_RECORD_MULTIPLE, null, null, transactionContext, commandContext);
 
     this.data = data;
 
@@ -204,6 +205,7 @@ final class CmdCardSearchRecordMultiple extends CardCommand {
       }
     }
 
+    // APDU Case 4 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

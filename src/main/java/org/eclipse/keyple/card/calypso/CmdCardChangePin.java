@@ -169,6 +169,7 @@ final class CmdCardChangePin extends CardCommand {
         throw (RuntimeException) e.getCause();
       }
     }
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
