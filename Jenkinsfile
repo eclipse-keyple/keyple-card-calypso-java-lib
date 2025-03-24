@@ -65,7 +65,7 @@ pipeline {
             git config user.name "${PROJECT_BOT_NAME}"
             git commit --allow-empty -m "docs: update documentation ${JOB_NAME}-${BUILD_NUMBER}"
             git log --graph --abbrev-commit --date=relative -n 5
-            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/eclipse-keyple/${PROJECT_NAME}.git" HEAD:gh-pages
+            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/eclipse-keyple/${PROJECT_NAME}.git" HEAD:doc
             '''
           }
         }
