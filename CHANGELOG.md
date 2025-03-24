@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.3.14] - 2025-03-24
 :warning: Security Fix
 ### Security
 - Restrict methods `prepareGetData`, `prepareReadRecord`, `prepareReadRecordsPartially` and `prepareSearchRecords` from
@@ -228,7 +230,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse-key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.13...HEAD
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.14...HEAD
+[2.3.14]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.13...2.3.14
 [2.3.13]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.12...2.3.13
 [2.3.12]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.11...2.3.12
 [2.3.11]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.3.10...2.3.11
