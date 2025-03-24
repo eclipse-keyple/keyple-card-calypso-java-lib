@@ -59,7 +59,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataEfList(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
+    super(CardCommandRef.GET_DATA, null, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
@@ -71,7 +71,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @since 2.3.2
    */
   CmdCardGetDataEfList(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, null, transactionContext, commandContext);
     buildCommand(transactionContext.getCard().getCardClass());
   }
 
@@ -82,7 +82,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @since 2.1.0
    */
   CmdCardGetDataEfList(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null, null);
+    super(CardCommandRef.GET_DATA, null, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -92,6 +92,7 @@ final class CmdCardGetDataEfList extends CardCommand {
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    */
   private void buildCommand(CalypsoCardClass calypsoCardClass) {
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

@@ -86,8 +86,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       CalypsoCardAdapter calypsoCard,
       boolean isAutoRatificationAsked,
       byte[] terminalSessionSignature) {
-
-    super(commandRef, 0, calypsoCard, null, null);
+    super(commandRef, null, calypsoCard, null, null);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = -1;
@@ -105,7 +104,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
                 p1,
                 (byte) 0x00,
                 terminalSessionSignature,
-                (byte) 0)));
+                (byte) 0x00)));
   }
 
   /**
@@ -133,7 +132,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
-                (byte) 0)));
+                (byte) 0x00)));
   }
 
   /**
@@ -151,7 +150,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       CommandContextDto commandContext,
       boolean isAutoRatificationAsked,
       int svPostponedDataIndex) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    super(commandRef, null, null, transactionContext, commandContext);
     this.isAutoRatificationAsked = isAutoRatificationAsked;
     this.isAbortSecureSession = false;
     this.svPostponedDataIndex = svPostponedDataIndex;
@@ -193,6 +192,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
     if (isAbortSecureSession) {
       // Abort secure session
       // CL-CSS-ABORTCMD.1
+      // APDU Case 1
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -201,7 +201,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
                   (byte) 0x00,
                   (byte) 0x00,
                   null,
-                  (byte) 0)));
+                  (byte) 0x00)));
     } else {
       // Close secure session
       byte[] terminalSessionMac;
@@ -215,6 +215,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
       } catch (SymmetricCryptoIOException e) {
         throw (RuntimeException) e.getCause();
       }
+      // APDU Case 4
       setApduRequest(
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -223,7 +224,7 @@ final class CmdCardCloseSecureSession extends CardCommand {
                   isAutoRatificationAsked ? (byte) 0x80 : (byte) 0x00,
                   (byte) 0x00,
                   terminalSessionMac,
-                  (byte) 0)));
+                  (byte) 0x00)));
     }
   }
 

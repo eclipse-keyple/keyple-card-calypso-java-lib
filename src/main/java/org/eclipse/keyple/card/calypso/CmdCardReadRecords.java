@@ -104,7 +104,7 @@ final class CmdCardReadRecords extends CardCommand {
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength,
+      Integer expectedLength,
       int recordSize) {
     super(CardCommandRef.READ_RECORDS, expectedLength, calypsoCard, null, null);
     buildCommand(
@@ -130,7 +130,7 @@ final class CmdCardReadRecords extends CardCommand {
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength,
+      Integer expectedLength,
       int recordSize) {
     super(CardCommandRef.READ_RECORDS, expectedLength, null, transactionContext, commandContext);
     isPreOpenMode = transactionContext.getCard().getPreOpenWriteAccessLevel() != null;
@@ -153,7 +153,7 @@ final class CmdCardReadRecords extends CardCommand {
    * @param expectedLength the expected length of the record(s).
    * @since 2.0.1
    */
-  CmdCardReadRecords(int sfi, int firstRecordNumber, ReadMode readMode, int expectedLength) {
+  CmdCardReadRecords(int sfi, int firstRecordNumber, ReadMode readMode, Integer expectedLength) {
     super(CardCommandRef.READ_RECORDS, expectedLength, null, null, null);
     buildCommand(CalypsoCardClass.ISO, sfi, firstRecordNumber, readMode, expectedLength, 0);
   }
@@ -174,7 +174,7 @@ final class CmdCardReadRecords extends CardCommand {
       int sfi,
       int firstRecordNumber,
       ReadMode readMode,
-      int expectedLength,
+      Integer expectedLength,
       int recordSize) {
 
     this.sfi = sfi;
@@ -187,7 +187,9 @@ final class CmdCardReadRecords extends CardCommand {
     if (readMode == ReadMode.ONE_RECORD) {
       p2 = (byte) (p2 - (byte) 0x01);
     }
-    byte le = (byte) expectedLength;
+    byte le = expectedLength != null ? expectedLength.byteValue() : (byte) 0x00;
+
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -373,8 +375,8 @@ final class CmdCardReadRecords extends CardCommand {
    */
   private byte[] buildAnticipatedResponseForOneRecordMode(ElementaryFile ef) {
     byte[] content = ef.getData().getContent(firstRecordNumber);
-    if (content.length > 0 && content.length >= getLe()) {
-      int length = getLe() != 0 ? getLe() : content.length;
+    if (content.length > 0 && content.length >= getExpectedResponseLength()) {
+      int length = getExpectedResponseLength() != 0 ? getExpectedResponseLength() : content.length;
       byte[] apdu = new byte[length + 2];
       System.arraycopy(content, 0, apdu, 0, length); // Record content
       apdu[length] = (byte) 0x90; // SW 9000
@@ -390,8 +392,8 @@ final class CmdCardReadRecords extends CardCommand {
    * @return Null if some records have not been read beforehand.
    */
   private byte[] buildAnticipatedResponseForMultipleRecordsMode(ElementaryFile ef) {
-    byte[] apdu = new byte[getLe() + 2];
-    int nbRecords = getLe() / (recordSize + 2);
+    byte[] apdu = new byte[getExpectedResponseLength() + 2];
+    int nbRecords = getExpectedResponseLength() / (recordSize + 2);
     int lastRecordNumber = firstRecordNumber + nbRecords - 1;
     int index = 0;
     for (int i = firstRecordNumber; i <= lastRecordNumber; i++) {
@@ -423,6 +425,14 @@ final class CmdCardReadRecords extends CardCommand {
    */
   int getFirstRecordNumber() {
     return firstRecordNumber;
+  }
+
+  /**
+   * @return the size of the record to read
+   * @since 2.3.14
+   */
+  int getRecordSize() {
+    return recordSize;
   }
 
   /**

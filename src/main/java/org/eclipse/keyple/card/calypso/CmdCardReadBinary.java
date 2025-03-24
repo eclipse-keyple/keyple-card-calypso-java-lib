@@ -133,6 +133,7 @@ final class CmdCardReadBinary extends CardCommand {
     // 0xxxxxxx : 'xxxxxxx' = MSB of the offset of the first byte.
     byte p1 = msb > 0 ? msb : (byte) (0x80 + sfi);
 
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -262,7 +263,7 @@ final class CmdCardReadBinary extends CardCommand {
             getName(),
             HexUtil.toHex(sfi),
             offset,
-            getLe());
+            getExpectedResponseLength());
         return false;
       }
       anticipatedDataOut =
@@ -283,10 +284,10 @@ final class CmdCardReadBinary extends CardCommand {
       return null; // NOSONAR
     }
     try {
-      byte[] content = ef.getData().getContent(1, offset, getLe());
-      byte[] apdu = new byte[getLe() + 2];
-      System.arraycopy(content, 0, apdu, 0, getLe()); // Record content
-      apdu[getLe()] = (byte) 0x90; // SW 9000
+      byte[] content = ef.getData().getContent(1, offset, getExpectedResponseLength());
+      byte[] apdu = new byte[getExpectedResponseLength() + 2];
+      System.arraycopy(content, 0, apdu, 0, getExpectedResponseLength()); // Record content
+      apdu[getExpectedResponseLength()] = (byte) 0x90; // SW 9000
       return apdu;
     } catch (IndexOutOfBoundsException e) {
       // NOP

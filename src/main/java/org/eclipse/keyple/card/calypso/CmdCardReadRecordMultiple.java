@@ -99,7 +99,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
   CmdCardReadRecordMultiple(
       CalypsoCardAdapter calypsoCard, byte sfi, byte recordNumber, byte offset, byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, calypsoCard, null, null);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, null, calypsoCard, null, null);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -147,7 +147,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
       byte offset,
       byte length) {
 
-    super(CardCommandRef.READ_RECORD_MULTIPLE, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.READ_RECORD_MULTIPLE, null, null, transactionContext, commandContext);
 
     this.sfi = sfi;
     this.recordNumber = recordNumber;
@@ -157,6 +157,7 @@ final class CmdCardReadRecordMultiple extends CardCommand {
     byte p2 = (byte) (sfi * 8 + 5);
     byte[] dataIn = {0x54, 0x02, offset, length};
 
+    // APDU Case 4 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

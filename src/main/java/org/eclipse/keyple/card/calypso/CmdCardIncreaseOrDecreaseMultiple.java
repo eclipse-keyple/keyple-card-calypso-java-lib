@@ -97,7 +97,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
-        0,
+        counterNumberToIncDecValueMap.size() * 4,
         calypsoCard,
         null,
         null);
@@ -114,6 +114,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
       ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
       index += 4;
     }
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -157,7 +158,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
 
     super(
         isDecreaseCommand ? CardCommandRef.DECREASE_MULTIPLE : CardCommandRef.INCREASE_MULTIPLE,
-        0,
+        counterNumberToIncDecValueMap.size() * 4,
         null,
         transactionContext,
         commandContext);
@@ -174,6 +175,7 @@ final class CmdCardIncreaseOrDecreaseMultiple extends CardCommand {
       ByteArrayUtil.copyBytes(incDecValue, dataIn, index + 1, 3);
       index += 4;
     }
+    // APDU Case 4
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

@@ -408,6 +408,7 @@ final class CardTransactionManagerAdapter
     int manageSecureSessionIndexOffset;
     int sfi = 0;
     int recordNumber = 0;
+    int recordSize = 0;
 
     if (isEncryptionActive) {
       manageSecureSessionIndexOffset = 2; // Open session + Manage session commands
@@ -435,6 +436,7 @@ final class CardTransactionManagerAdapter
                 == CmdCardReadRecords.ReadMode.ONE_RECORD) {
           sfi = ((CmdCardReadRecords) cardCommand).getSfi();
           recordNumber = ((CmdCardReadRecords) cardCommand).getFirstRecordNumber();
+          recordSize = ((CmdCardReadRecords) cardCommand).getRecordSize();
           cardCommands.remove(0);
           manageSecureSessionIndexOffset = 0;
         }
@@ -454,7 +456,7 @@ final class CardTransactionManagerAdapter
     // Build the "Open Secure Session" card command.
     CmdCardOpenSecureSession cmdCardOpenSecureSession =
         new CmdCardOpenSecureSession(
-            card, writeAccessLevel, samChallenge, sfi, recordNumber, isExtendedMode);
+            card, writeAccessLevel, samChallenge, sfi, recordNumber, recordSize, isExtendedMode);
 
     // Add the "Open Secure Session" card command in first position.
     cardCommands.add(0, cmdCardOpenSecureSession);
@@ -2617,6 +2619,9 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareGetData(GetDataTag tag) {
     try {
+      if (getCommandContext().isSecureSessionOpen()) {
+        throw new IllegalStateException(SECURE_SESSION_OPEN);
+      }
       Assert.getInstance().notNull(tag, "tag");
       switch (tag) {
         case FCI_FOR_CURRENT_DF:
@@ -2696,6 +2701,9 @@ final class CardTransactionManagerAdapter
   @Override
   public CardTransactionManager prepareReadRecord(byte sfi, int recordNumber) {
     try {
+      if (getCommandContext().isSecureSessionOpen()) {
+        throw new IllegalStateException(SECURE_SESSION_OPEN);
+      }
       Assert.getInstance()
           .isInRange((int) sfi, CalypsoCardConstant.SFI_MIN, CalypsoCardConstant.SFI_MAX, "sfi")
           .isInRange(
@@ -2704,29 +2712,19 @@ final class CardTransactionManagerAdapter
               CalypsoCardConstant.NB_REC_MAX,
               RECORD_NUMBER);
 
-      // A record size of 0 indicates that the card determines the output length.
+      // A null record size indicates that the card determines the output length.
       // However, "legacy case 1" cards require a non-zero value.
-      int recordSize = card.isLegacyCase1() ? CalypsoCardConstant.LEGACY_REC_LENGTH : 0;
+      Integer recordSize = card.isLegacyCase1() ? CalypsoCardConstant.LEGACY_REC_LENGTH : null;
 
-      // Try to group the first read record command with the open secure session command.
-      if (canConfigureReadOnOpenSecureSession()) {
-        ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-            .configureReadMode(sfi, recordNumber);
-      } else {
-        if (_isSecureSessionOpen && !((CardReader) cardReader).isContactless()) {
-          throw new IllegalStateException(
-              "Explicit record size is expected inside a secure session in contact mode.");
-        }
-        _cardCommands.add(
-            new CmdCardReadRecords(
-                _transactionContext,
-                getCommandContext(),
-                sfi,
-                recordNumber,
-                CmdCardReadRecords.ReadMode.ONE_RECORD,
-                recordSize,
-                recordSize));
-      }
+      _cardCommands.add(
+          new CmdCardReadRecords(
+              _transactionContext,
+              getCommandContext(),
+              sfi,
+              recordNumber,
+              CmdCardReadRecords.ReadMode.ONE_RECORD,
+              recordSize,
+              recordSize != null ? recordSize : 0));
       // TODO legacy
       cardCommands.add(
           new CmdCardReadRecords(
@@ -2735,7 +2733,7 @@ final class CardTransactionManagerAdapter
               recordNumber,
               CmdCardReadRecords.ReadMode.ONE_RECORD,
               recordSize,
-              recordSize));
+              recordSize != null ? recordSize : 0));
 
     } catch (RuntimeException e) {
       resetTransaction();
@@ -2786,7 +2784,7 @@ final class CardTransactionManagerAdapter
         // Try to group the first read record command with the open secure session command.
         if (canConfigureReadOnOpenSecureSession()) {
           ((CmdCardOpenSecureSession) _cardCommands.get(_cardCommands.size() - 1))
-              .configureReadMode(sfi, fromRecordNumber);
+              .configureReadMode(sfi, fromRecordNumber, recordSize);
           // TODO legacy
           cardCommands.add(
               new CmdCardReadRecords(
@@ -2897,6 +2895,9 @@ final class CardTransactionManagerAdapter
           && card.getProductType() != CalypsoCard.ProductType.LIGHT) {
         throw new UnsupportedOperationException(
             "The 'Read Record Multiple' command is not available for this card.");
+      }
+      if (getCommandContext().isSecureSessionOpen()) {
+        throw new IllegalStateException(SECURE_SESSION_OPEN);
       }
 
       Assert.getInstance()
@@ -3019,10 +3020,12 @@ final class CardTransactionManagerAdapter
         throw new UnsupportedOperationException(
             "The 'Search Record Multiple' command is not available for this card.");
       }
-
       if (!(data instanceof SearchCommandDataAdapter)) {
         throw new IllegalArgumentException(
             "The provided data must be an instance of 'SearchCommandDataAdapter'");
+      }
+      if (getCommandContext().isSecureSessionOpen()) {
+        throw new IllegalStateException(SECURE_SESSION_OPEN);
       }
 
       SearchCommandDataAdapter dataAdapter = (SearchCommandDataAdapter) data;

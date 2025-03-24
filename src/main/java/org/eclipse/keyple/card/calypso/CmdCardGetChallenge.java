@@ -39,6 +39,7 @@ final class CmdCardGetChallenge extends CardCommand {
     byte p2 = 0x00;
     byte le = 0x08;
 
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -59,6 +60,7 @@ final class CmdCardGetChallenge extends CardCommand {
    */
   CmdCardGetChallenge(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.GET_CHALLENGE, 0x08, null, transactionContext, commandContext);
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(

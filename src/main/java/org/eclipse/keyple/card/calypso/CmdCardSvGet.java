@@ -71,7 +71,12 @@ final class CmdCardSvGet extends CardCommand {
   @Deprecated
   CmdCardSvGet(CalypsoCardAdapter calypsoCard, SvOperation svOperation, boolean useExtendedMode) {
 
-    super(CardCommandRef.SV_GET, computeLe(svOperation, useExtendedMode), calypsoCard, null, null);
+    super(
+        CardCommandRef.SV_GET,
+        computeExpectedResponseLength(svOperation, useExtendedMode),
+        calypsoCard,
+        null,
+        null);
 
     byte cla =
         calypsoCard.getCardClass() == CalypsoCardClass.LEGACY
@@ -84,7 +89,12 @@ final class CmdCardSvGet extends CardCommand {
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
+                cla,
+                getCommandRef().getInstructionByte(),
+                p1,
+                p2,
+                null,
+                getExpectedResponseLength().byteValue())));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
@@ -94,7 +104,7 @@ final class CmdCardSvGet extends CardCommand {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) getLe();
+    header[3] = getExpectedResponseLength().byteValue();
   }
 
   /**
@@ -115,7 +125,7 @@ final class CmdCardSvGet extends CardCommand {
 
     super(
         CardCommandRef.SV_GET,
-        computeLe(svOperation, useExtendedMode),
+        computeExpectedResponseLength(svOperation, useExtendedMode),
         null,
         transactionContext,
         commandContext);
@@ -128,10 +138,16 @@ final class CmdCardSvGet extends CardCommand {
     byte p1 = useExtendedMode ? (byte) 0x01 : (byte) 0x00;
     byte p2 = svOperation == SvOperation.RELOAD ? (byte) 0x07 : (byte) 0x09;
 
+    // APDU Case 2
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
-                cla, getCommandRef().getInstructionByte(), p1, p2, null, (byte) getLe())));
+                cla,
+                getCommandRef().getInstructionByte(),
+                p1,
+                p2,
+                null,
+                getExpectedResponseLength().byteValue())));
 
     if (logger.isDebugEnabled()) {
       addSubName(String.format("OPERATION:%s", svOperation.toString()));
@@ -141,10 +157,11 @@ final class CmdCardSvGet extends CardCommand {
     header[0] = getCommandRef().getInstructionByte();
     header[1] = p1;
     header[2] = p2;
-    header[3] = (byte) getLe();
+    header[3] = getExpectedResponseLength().byteValue();
   }
 
-  private static int computeLe(SvOperation svOperation, boolean useExtendedMode) {
+  private static int computeExpectedResponseLength(
+      SvOperation svOperation, boolean useExtendedMode) {
     if (useExtendedMode) {
       return 0x3D;
     } else {

@@ -73,7 +73,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Deprecated
   CmdCardGetDataFci(CalypsoCardAdapter calypsoCard) {
-    super(CardCommandRef.GET_DATA, 0, calypsoCard, null, null);
+    super(CardCommandRef.GET_DATA, null, calypsoCard, null, null);
     buildCommand(calypsoCard.getCardClass());
   }
 
@@ -85,7 +85,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @since 2.3.2
    */
   CmdCardGetDataFci(TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(CardCommandRef.GET_DATA, 0, null, transactionContext, commandContext);
+    super(CardCommandRef.GET_DATA, null, null, transactionContext, commandContext);
     buildCommand(transactionContext.getCard().getCardClass());
   }
 
@@ -96,7 +96,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @since 2.0.1
    */
   CmdCardGetDataFci(CalypsoCardClass calypsoCardClass) {
-    super(CardCommandRef.GET_DATA, 0, null, null, null);
+    super(CardCommandRef.GET_DATA, null, null, null, null);
     buildCommand(calypsoCardClass);
   }
 
@@ -106,6 +106,7 @@ final class CmdCardGetDataFci extends CardCommand {
    * @param calypsoCardClass indicates which CLA byte should be used for the Apdu.
    */
   private void buildCommand(CalypsoCardClass calypsoCardClass) {
+    // APDU Case 2 - always outside secure session
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -135,7 +136,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Override
   void finalizeRequest() {
-    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
+    // NOP
   }
 
   /**
@@ -145,7 +146,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return getCommandContext().isEncryptionActive();
+    return false;
   }
 
   /**
@@ -155,7 +156,7 @@ final class CmdCardGetDataFci extends CardCommand {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    return !getCommandContext().isSecureSessionOpen();
+    return true;
   }
 
   /**

@@ -96,6 +96,7 @@ final class CmdCardVerifyPin extends CardCommand {
         || (encryptPinTransmission && pin.length != 8)) {
       throw new IllegalArgumentException("The PIN must be 4 bytes long");
     }
+    // APDU Case 3
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -169,6 +170,7 @@ final class CmdCardVerifyPin extends CardCommand {
     this.isPinEncryptedMode = false;
     this.cipheringKif = 0;
     this.cipheringKvc = 0;
+    // APDU Case 1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -177,7 +179,7 @@ final class CmdCardVerifyPin extends CardCommand {
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
-                null)));
+                (byte) 0x00)));
     if (logger.isDebugEnabled()) {
       addSubName("Read presentation counter");
     }
@@ -264,6 +266,8 @@ final class CmdCardVerifyPin extends CardCommand {
         throw (RuntimeException) e.getCause();
       }
     }
+
+    // APDU Case 1 (check status) or 3 (verify)
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -272,7 +276,7 @@ final class CmdCardVerifyPin extends CardCommand {
                 (byte) 0x00, // CL-PIN-PP1P2.1
                 (byte) 0x00,
                 pin,
-                null)));
+                pin == null ? (byte) 0x00 : null))); // CL-C1-5BYTE.1
     if (logger.isDebugEnabled()) {
       addSubName(
           isReadCounterMode

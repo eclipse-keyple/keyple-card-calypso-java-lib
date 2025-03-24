@@ -111,7 +111,8 @@ final class CmdCardManageSession extends CardCommand {
    */
   CmdCardManageSession(
       DtoAdapters.TransactionContextDto transactionContext, CommandContextDto commandContext) {
-    super(commandRef, 0, null, transactionContext, commandContext);
+    // CL-CSS-RESPLE.1: expected length may be overridden later
+    super(commandRef, null, null, transactionContext, commandContext);
   }
 
   /**
@@ -147,7 +148,7 @@ final class CmdCardManageSession extends CardCommand {
     if (isMutualAuthenticationRequested) {
       // case 4: this command contains incoming and outgoing data. We define le = 0, the actual
       // length will be processed by the lower layers.
-      setLe(8); // for auto check of response length
+      setExpectedResponseLength(8); // for auto check of response length
       p2 = isEncryptionRequested ? (byte) 0x03 : (byte) 0x01;
       try {
         terminalSessionMac =
@@ -162,7 +163,7 @@ final class CmdCardManageSession extends CardCommand {
       le = 0;
     } else {
       // case 1: this command contains no data. We define le = null.
-      setLe(0);
+      setExpectedResponseLength(0);
       p2 = isEncryptionRequested ? (byte) 0x02 : (byte) 0x00;
       terminalSessionMac = null;
       le = null;

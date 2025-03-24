@@ -70,7 +70,7 @@ final class CmdCardRehabilitate extends CardCommand {
                 p1,
                 p2,
                 null,
-                null)));
+                (byte) 0x00)));
   }
 
   /**
@@ -82,6 +82,7 @@ final class CmdCardRehabilitate extends CardCommand {
    */
   CmdCardRehabilitate(TransactionContextDto transactionContext, CommandContextDto commandContext) {
     super(CardCommandRef.REHABILITATE, 0, null, transactionContext, commandContext);
+    // APDU Case 1
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -90,7 +91,7 @@ final class CmdCardRehabilitate extends CardCommand {
                 (byte) 0x00,
                 (byte) 0x00,
                 null,
-                null)));
+                (byte) 0x00)));
   }
 
   /**
