@@ -46,7 +46,7 @@ enum CardCommandRef {
   SV_RELOAD("SV Reload", (byte) 0xB8),
   SV_UNDEBIT("SV Undebit", (byte) 0xBC),
   INVALIDATE("Invalidate", (byte) 0x04),
-  REHABILITATE("Invalidate", (byte) 0x44),
+  REHABILITATE("Rehabilitate", (byte) 0x44),
   GENERATE_ASYMMETRIC_KEY_PAIR("Generate Asymmetric Key Pair", (byte) 0x46);
 
   /** The command name. */
