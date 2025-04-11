@@ -45,7 +45,7 @@ enum CardCommandRef {
   SV_RELOAD("SV Reload", (byte) 0xB8),
   SV_UNDEBIT("SV Undebit", (byte) 0xBC),
   INVALIDATE("Invalidate", (byte) 0x04),
-  REHABILITATE("Invalidate", (byte) 0x44);
+  REHABILITATE("Rehabilitate", (byte) 0x44);
 
   /** The command name. */
   private final String name;

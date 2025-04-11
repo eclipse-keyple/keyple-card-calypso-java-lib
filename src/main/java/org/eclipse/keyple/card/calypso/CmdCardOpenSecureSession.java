@@ -548,7 +548,13 @@ final class CmdCardOpenSecureSession extends CardCommand {
     kif = apduResponseData[5 + offset];
     kvc = apduResponseData[6 + offset];
     int dataLength = apduResponseData[7 + offset];
-    checkReceivedDataLength(dataLength);
+    if (dataLength != apduResponseData.length - 8 - offset) {
+      throw new CardUnexpectedResponseLengthException(
+          String.format(
+              "Unexpected APDU response length for command %s (expected: %d, actual: %d)",
+              getCommandRef(), expectedRecordDataLength, dataLength),
+          getCommandRef());
+    }
     recordData = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
   }
 
