@@ -18,6 +18,8 @@
 *.css    text eol=lf
 *.js     text eol=lf
 *.sql    text eol=lf
+*.kts    text eol=lf
+*.gradle.kts text eol=lf
 
 ###############################
 # Git Large File System (LFS) #
