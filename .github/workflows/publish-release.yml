@@ -1,0 +1,10 @@
+name: Publish Release package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-release:
+    uses: eclipse-keyple/keyple-actions/.github/workflows/reusable-publish-release.yml@publish-release-v1
+    secrets: inherit

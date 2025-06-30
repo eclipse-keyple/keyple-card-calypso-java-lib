@@ -1,97 +1,204 @@
 ///////////////////////////////////////////////////////////////////////////////
 //  GRADLE CONFIGURATION
 ///////////////////////////////////////////////////////////////////////////////
+
 plugins {
-    java
-    id("com.diffplug.spotless") version "6.25.0"
-    id("org.sonarqube") version "3.1"
-    jacoco
+  java
+  `maven-publish`
+  signing
+  id("com.diffplug.spotless") version "6.25.0"
 }
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.eclipse.keyple:keyple-gradle:0.2.+") { isChanging = true }
-    }
-}
-apply(plugin = "org.eclipse.keyple")
 
 ///////////////////////////////////////////////////////////////////////////////
 //  APP CONFIGURATION
 ///////////////////////////////////////////////////////////////////////////////
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
-}
+
 dependencies {
-    implementation("org.eclipse.keypop:keypop-reader-java-api:2.0.1")
-    implementation("org.eclipse.keypop:keypop-card-java-api:2.0.1")
-    implementation("org.eclipse.keypop:keypop-calypso-card-java-api:2.1.2")
-    implementation("org.eclipse.keypop:keypop-calypso-crypto-symmetric-java-api:0.1.1")
-    implementation("org.eclipse.keypop:keypop-calypso-crypto-asymmetric-java-api:0.2.0")
-    implementation("org.eclipse.keyple:keyple-common-java-api:2.0.1")
-    implementation("org.eclipse.keyple:keyple-util-java-lib:2.4.0")
-    implementation("org.slf4j:slf4j-api:1.7.32")
-    implementation("com.google.code.gson:gson:2.10.1")
-    testImplementation("org.slf4j:slf4j-simple:1.7.32")
-    testImplementation(platform("org.junit:junit-bom:5.10.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.junit.vintage:junit-vintage-engine")
-    testImplementation("org.assertj:assertj-core:3.25.3")
-    testImplementation("org.mockito:mockito-core:5.11.0")
+  implementation("org.eclipse.keypop:keypop-reader-java-api:2.0.1")
+  implementation("org.eclipse.keypop:keypop-card-java-api:2.0.1")
+  implementation("org.eclipse.keypop:keypop-calypso-card-java-api:2.1.2")
+  implementation("org.eclipse.keypop:keypop-calypso-crypto-symmetric-java-api:0.1.1")
+  implementation("org.eclipse.keypop:keypop-calypso-crypto-asymmetric-java-api:0.2.0")
+  implementation("org.eclipse.keyple:keyple-common-java-api:2.0.1")
+  implementation("org.eclipse.keyple:keyple-util-java-lib:2.4.0")
+  implementation("org.slf4j:slf4j-api:1.7.32")
+  implementation("com.google.code.gson:gson:2.10.1")
+  testImplementation("org.slf4j:slf4j-simple:1.7.32")
+  testImplementation(platform("org.junit:junit-bom:5.10.2"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation("org.junit.vintage:junit-vintage-engine")
+  testImplementation("org.assertj:assertj-core:3.25.3")
+  testImplementation("org.mockito:mockito-core:5.11.0")
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  STANDARD CONFIGURATION FOR JAVA PROJECTS
+///////////////////////////////////////////////////////////////////////////////
+
+if (project.hasProperty("releaseTag")) {
+  project.version = project.property("releaseTag") as String
+  println("Release mode: version set to ${project.version}")
+} else {
+  println("Development mode: version is ${project.version}")
 }
 
 val javaSourceLevel: String by project
 val javaTargetLevel: String by project
+
 java {
-    sourceCompatibility = JavaVersion.toVersion(javaSourceLevel)
-    targetCompatibility = JavaVersion.toVersion(javaTargetLevel)
-    println("Compiling Java $sourceCompatibility to Java $targetCompatibility")
-    withJavadocJar()
-    withSourcesJar()
+  sourceCompatibility = JavaVersion.toVersion(javaSourceLevel)
+  targetCompatibility = JavaVersion.toVersion(javaTargetLevel)
+  println("Compiling Java $sourceCompatibility to Java $targetCompatibility.")
+  withJavadocJar()
+  withSourcesJar()
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//  TASKS CONFIGURATION
-///////////////////////////////////////////////////////////////////////////////
+fun copyLicenseFiles() {
+  val metaInfDir = File(layout.buildDirectory.get().asFile, "resources/main/META-INF")
+  val licenseFile = File(project.rootDir, "LICENSE")
+  val noticeFile = File(project.rootDir, "NOTICE.md")
+  metaInfDir.mkdirs()
+  licenseFile.copyTo(File(metaInfDir, "LICENSE"), overwrite = true)
+  noticeFile.copyTo(File(metaInfDir, "NOTICE.md"), overwrite = true)
+}
+
 tasks {
-    spotless {
-        java {
-            target("src/**/*.java")
-            licenseHeaderFile("${project.rootDir}/LICENSE_HEADER")
-            importOrder("java", "javax", "org", "com", "")
-            removeUnusedImports()
-            googleJavaFormat()
-        }
+  spotless {
+    java {
+      target("src/**/*.java")
+      licenseHeaderFile("${project.rootDir}/LICENSE_HEADER")
+      importOrder("java", "javax", "org", "com", "")
+      removeUnusedImports()
+      googleJavaFormat()
     }
-    test {
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-        finalizedBy("jacocoTestReport")
+    kotlinGradle {
+      target("**/*.kts")
+      ktfmt()
     }
-    jacocoTestReport {
-        dependsOn("test")
-        reports {
-            xml.isEnabled = true
-            csv.isEnabled = false
-            html.isEnabled = true
-        }
+  }
+  test {
+    useJUnitPlatform()
+    testLogging { events("passed", "skipped", "failed") }
+  }
+  javadoc {
+    dependsOn(processResources)
+    val javadocLogo = project.findProperty("javadoc.logo") as String
+    val javadocCopyright = project.findProperty("javadoc.copyright") as String
+    val titleProperty = project.findProperty("title") as String
+    (options as StandardJavadocDocletOptions).apply {
+      overview = "src/main/javadoc/overview.html"
+      windowTitle = "$titleProperty - ${project.version}"
+      header(
+          "<div style=\"margin-top: 7px\">$javadocLogo $titleProperty - ${project.version}</div>")
+      docTitle("$titleProperty - ${project.version}")
+      use(true)
+      bottom(javadocCopyright)
+      encoding = "UTF-8"
+      charSet = "UTF-8"
+      if (JavaVersion.current().isJava11Compatible) {
+        addBooleanOption("html5", true)
+        addStringOption("Xdoclint:none", "-quiet")
+      }
     }
-    sonarqube {
-        properties {
-            property("sonar.projectKey", "eclipse_" + project.name)
-            property("sonar.organization", "eclipse")
-            property("sonar.host.url", "https://sonarcloud.io")
-            property("sonar.login", System.getenv("SONAR_LOGIN"))
-            System.getenv("BRANCH_NAME")?.let {
-                if (!"main".equals(it)) {
-                    property("sonar.branch.name", it)
-                }
-            }
-        }
+    doFirst { println("Generating Javadoc for ${project.name} version ${project.version}") }
+  }
+  jar {
+    dependsOn(processResources)
+    doFirst { copyLicenseFiles() }
+    manifest {
+      attributes(
+          mapOf(
+              "Implementation-Title" to (project.findProperty("title") as String),
+              "Implementation-Version" to project.version,
+              "Implementation-Vendor" to (project.findProperty("organization.name") as String),
+              "Implementation-URL" to (project.findProperty("project.url") as String),
+              "Specification-Title" to (project.findProperty("title") as String),
+              "Specification-Version" to project.version,
+              "Specification-Vendor" to (project.findProperty("organization.name") as String),
+              "Created-By" to
+                  "${System.getProperty("java.version")} (${System.getProperty("java.vendor")})",
+              "Build-Jdk" to System.getProperty("java.version")))
     }
+  }
+  named<Jar>("sourcesJar") {
+    doFirst { copyLicenseFiles() }
+    manifest {
+      attributes(
+          mapOf(
+              "Implementation-Title" to "${project.findProperty("title") as String} Sources",
+              "Implementation-Version" to project.version))
+    }
+  }
+  named<Jar>("javadocJar") {
+    dependsOn(javadoc)
+    doFirst { copyLicenseFiles() }
+    manifest {
+      attributes(
+          mapOf(
+              "Implementation-Title" to "${project.findProperty("title") as String} Documentation",
+              "Implementation-Version" to project.version))
+    }
+  }
+}
+
+publishing {
+  publications {
+    create<MavenPublication>("mavenJava") {
+      from(components["java"])
+      pom {
+        name.set(project.findProperty("title") as String)
+        description.set(project.findProperty("description") as String)
+        url.set(project.findProperty("project.url") as String)
+        licenses {
+          license {
+            name.set(project.findProperty("license.name") as String)
+            url.set(project.findProperty("license.url") as String)
+            distribution.set(project.findProperty("license.distribution") as String)
+          }
+        }
+        developers {
+          developer {
+            name.set(project.findProperty("developer.name") as String)
+            email.set(project.findProperty("developer.email") as String)
+          }
+        }
+        organization {
+          name.set(project.findProperty("organization.name") as String)
+          url.set(project.findProperty("organization.url") as String)
+        }
+        scm {
+          connection.set(project.findProperty("scm.connection") as String)
+          developerConnection.set(project.findProperty("scm.developerConnection") as String)
+          url.set(project.findProperty("scm.url") as String)
+        }
+        ciManagement {
+          system.set(project.findProperty("ci.system") as String)
+          url.set(project.findProperty("ci.url") as String)
+        }
+        properties.set(
+            mapOf(
+                "project.build.sourceEncoding" to "UTF-8",
+                "maven.compiler.source" to javaSourceLevel,
+                "maven.compiler.target" to javaTargetLevel))
+      }
+    }
+  }
+  repositories {
+    maven {
+      if (project.hasProperty("sonatypeURL")) {
+        url = uri(project.property("sonatypeURL") as String)
+        credentials {
+          username = project.property("sonatypeUsername") as String
+          password = project.property("sonatypePassword") as String
+        }
+      }
+    }
+  }
+}
+
+signing {
+  if (project.hasProperty("releaseTag")) {
+    useGpgCmd()
+    sign(publishing.publications["mavenJava"])
+  }
 }
