@@ -264,10 +264,6 @@ final class CommandOpenSecureSession extends Command {
                 p2,
                 dataIn,
                 (byte) 0)));
-
-    if (logger.isDebugEnabled()) {
-      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
-    }
   }
 
   /**
@@ -319,12 +315,11 @@ final class CommandOpenSecureSession extends Command {
       apdu[2] = (byte) (recordNumber * 8);
       apdu[3] = (byte) ((sfi * 8) + 3);
       if (logger.isDebugEnabled()) {
-        addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+        addSubName(" sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
       }
-    } else {
-      this.sfi = sfi;
-      this.recordNumber = recordNumber;
     }
+    this.sfi = sfi;
+    this.recordNumber = recordNumber;
     this.expectedRecordDataLength = expectedRecordDataLength;
     isReadModeConfigured = true;
   }
