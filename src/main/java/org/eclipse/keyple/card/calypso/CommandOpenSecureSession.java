@@ -315,7 +315,7 @@ final class CommandOpenSecureSession extends Command {
       apdu[2] = (byte) (recordNumber * 8);
       apdu[3] = (byte) ((sfi * 8) + 3);
       if (logger.isDebugEnabled()) {
-        addSubName(" sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+        addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
       }
     }
     this.sfi = sfi;
