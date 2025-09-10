@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.1.9] - 2025-09-10
 ### Fixed
 - Corrected inconsistent initialization of `sfi` and `recordNumber` in `CommandOpenSecureSession`, ensuring they are
   always properly set when configuring read mode.
@@ -300,7 +302,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse-key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.8...HEAD
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.9...HEAD
+[3.1.9]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.8...3.1.9
 [3.1.8]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.7...3.1.8
 [3.1.7]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.6...3.1.7
 [3.1.6]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.5...3.1.6
