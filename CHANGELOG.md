@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Support for ST CD21 specific EP_LOG file type (EF type 16), treated as cyclic file type.
 
 ## [3.1.9] - 2025-09-10
 ### Fixed

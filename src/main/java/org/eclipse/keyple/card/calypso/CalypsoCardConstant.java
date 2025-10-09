@@ -63,6 +63,7 @@ final class CalypsoCardConstant {
   static final int EF_TYPE_CYCLIC = 4;
   static final int EF_TYPE_SIMULATED_COUNTERS = 8;
   static final int EF_TYPE_COUNTERS = 9;
+  static final int EF_TYPE_EP_LOG = 16; // /!\ ST CD21 specific
 
   // Field offsets in select file response (tag/length excluded)
   static final int SEL_SFI_OFFSET = 0;

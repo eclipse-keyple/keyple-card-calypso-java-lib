@@ -14,6 +14,7 @@ package org.eclipse.keyple.card.calypso;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_BINARY;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_COUNTERS;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_CYCLIC;
+import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_EP_LOG;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_LINEAR;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.EF_TYPE_SIMULATED_COUNTERS;
 import static org.eclipse.keyple.card.calypso.CalypsoCardConstant.FILE_TYPE_DF;
@@ -404,6 +405,7 @@ final class CommandSelectFile extends Command {
         fileType = ElementaryFile.Type.LINEAR;
         break;
       case EF_TYPE_CYCLIC:
+      case EF_TYPE_EP_LOG:
         fileType = ElementaryFile.Type.CYCLIC;
         break;
       case EF_TYPE_SIMULATED_COUNTERS:
