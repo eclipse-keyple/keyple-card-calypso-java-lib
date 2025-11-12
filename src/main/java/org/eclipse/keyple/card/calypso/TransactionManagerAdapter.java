@@ -27,6 +27,7 @@ import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.eclipse.keypop.reader.CardCommunicationException;
+import org.eclipse.keypop.reader.ChannelControl;
 import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
@@ -173,8 +174,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @param channelControl The channel control directive.
    * @since 3.0.0
    */
-  final void executeCardCommands(
-      List<Command> commands, org.eclipse.keypop.reader.ChannelControl channelControl) {
+  final void executeCardCommands(List<Command> commands, ChannelControl channelControl) {
 
     // Retrieve the list of C-APDUs
     List<ApduRequestSpi> apduRequests = getApduRequests(commands);
@@ -267,7 +267,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @return The card response.
    */
   private CardResponseApi transmitCardRequest(
-      CardRequestSpi cardRequest, org.eclipse.keypop.reader.ChannelControl channelControl) {
+      CardRequestSpi cardRequest, ChannelControl channelControl) {
     CardResponseApi cardResponse;
     try {
       cardResponse =
@@ -301,7 +301,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @return The corresponding ChannelControl provided by the Card layer.
    */
   private org.eclipse.keypop.card.ChannelControl mapToInternalChannelControl(
-      org.eclipse.keypop.reader.ChannelControl channelControl) {
+      ChannelControl channelControl) {
     return org.eclipse.keypop.card.ChannelControl.valueOf(channelControl.name());
   }
 

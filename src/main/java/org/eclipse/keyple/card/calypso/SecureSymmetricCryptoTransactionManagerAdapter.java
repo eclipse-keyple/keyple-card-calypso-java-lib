@@ -27,6 +27,7 @@ import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransa
 import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.reader.CardCommunicationException;
 import org.eclipse.keypop.reader.CardReader;
+import org.eclipse.keypop.reader.ChannelControl;
 import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
@@ -171,7 +172,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         cancelSecureSessionCommand.finalizeRequest();
         List<Command> commands = new ArrayList<>(1);
         commands.add(cancelSecureSessionCommand);
-        executeCardCommands(commands, org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
+        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
         logger.warn("Failed to abort secure session: {}", e.getMessage());
       } finally {
@@ -284,6 +285,27 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
+   */
+  @Deprecated
+  @Override
+  public final T processCommands(
+      org.eclipse.keypop.calypso.card.transaction.ChannelControl channelControl) {
+    try {
+      return processCommands(ChannelControl.valueOf(channelControl.name()));
+    } catch (CardCommunicationException e) {
+      throw new CardIOException(e.getMessage(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new ReaderIOException(e.getMessage(), e);
+    } catch (InvalidCardResponseException e) {
+      throw new UnexpectedCommandStatusException(e.getMessage(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>For each prepared command, if a pre-processing is required, then we try to execute the
    * post-processing of each of the previous commands in anticipation. If at least one
    * post-processing cannot be anticipated, then we execute the block of previous commands first.
@@ -291,7 +313,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
    * @since 3.2.0
    */
   @Override
-  public final T processCommands(org.eclipse.keypop.reader.ChannelControl channelControl) {
+  public final T processCommands(ChannelControl channelControl) {
     if (commands.isEmpty()) {
       processCryptoPreparedCommands();
       return currentInstance;
@@ -301,8 +323,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       for (Command command : commands) {
         if (command.isCryptoServiceRequiredToFinalizeRequest()
             && (!synchronizeCryptoServiceBeforeCardProcessing(cardRequestCommands))) {
-          executeCardCommands(
-              cardRequestCommands, org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
+          executeCardCommands(cardRequestCommands, ChannelControl.KEEP_OPEN);
           cardRequestCommands.clear();
         }
         command.finalizeRequest();
@@ -321,28 +342,6 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       }
     }
     return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.3.2
-   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
-   */
-  @Deprecated
-  @Override
-  public final T processCommands(
-      org.eclipse.keypop.calypso.card.transaction.ChannelControl channelControl) {
-    try {
-      return processCommands(
-          org.eclipse.keypop.reader.ChannelControl.valueOf(channelControl.name()));
-    } catch (CardCommunicationException e) {
-      throw new CardIOException(e.getMessage(), e);
-    } catch (ReaderCommunicationException e) {
-      throw new ReaderIOException(e.getMessage(), e);
-    } catch (InvalidCardResponseException e) {
-      throw new UnexpectedCommandStatusException(e.getMessage(), e);
-    }
   }
 
   /**

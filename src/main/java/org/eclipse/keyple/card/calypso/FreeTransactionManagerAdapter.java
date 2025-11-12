@@ -19,6 +19,7 @@ import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.transaction.*;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.reader.CardCommunicationException;
+import org.eclipse.keypop.reader.ChannelControl;
 import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.eclipse.keypop.reader.ReaderCommunicationException;
 
@@ -111,6 +112,27 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
   /**
    * {@inheritDoc}
    *
+   * @since 3.0.0
+   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
+   */
+  @Deprecated
+  @Override
+  public FreeTransactionManager processCommands(
+      org.eclipse.keypop.calypso.card.transaction.ChannelControl channelControl) {
+    try {
+      return processCommands(ChannelControl.valueOf(channelControl.name()));
+    } catch (CardCommunicationException e) {
+      throw new CardIOException(e.getMessage(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new ReaderIOException(e.getMessage(), e);
+    } catch (InvalidCardResponseException e) {
+      throw new UnexpectedCommandStatusException(e.getMessage(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>For each prepared command, if a pre-processing is required, then we try to execute the
    * post-processing of each of the previous commands in anticipation. If at least one
    * post-processing cannot be anticipated, then we execute the block of previous commands first.
@@ -118,8 +140,7 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
    * @since 3.2.0
    */
   @Override
-  public FreeTransactionManager processCommands(
-      org.eclipse.keypop.reader.ChannelControl channelControl) {
+  public FreeTransactionManager processCommands(ChannelControl channelControl) {
     if (commands.isEmpty()) {
       return this;
     }
@@ -137,27 +158,6 @@ final class FreeTransactionManagerAdapter extends TransactionManagerAdapter<Free
       commands.clear();
     }
     return currentInstance;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 3.0.0
-   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
-   */
-  @Deprecated
-  @Override
-  public FreeTransactionManager processCommands(ChannelControl channelControl) {
-    try {
-      return processCommands(
-          org.eclipse.keypop.reader.ChannelControl.valueOf(channelControl.name()));
-    } catch (CardCommunicationException e) {
-      throw new CardIOException(e.getMessage(), e);
-    } catch (ReaderCommunicationException e) {
-      throw new ReaderIOException(e.getMessage(), e);
-    } catch (InvalidCardResponseException e) {
-      throw new UnexpectedCommandStatusException(e.getMessage(), e);
-    }
   }
 
   /**
