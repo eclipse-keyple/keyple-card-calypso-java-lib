@@ -330,7 +330,6 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         cardRequestCommands.add(command);
       }
       executeCardCommands(cardRequestCommands, channelControl);
-
       processCryptoPreparedCommands();
     } catch (RuntimeException e) {
       resetTransaction();
