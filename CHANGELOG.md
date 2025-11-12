@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Added `processCommands` methods using `org.eclipse.keypop.reader.ChannelControl` from Reader API in transaction
+  managers to replace deprecated methods using Calypso Card API.
+### Deprecated
+- `FreeTransactionManager.processCommands(org.eclipse.keypop.calypso.card.transaction.ChannelControl)` method.
+  Use `processCommands(org.eclipse.keypop.reader.ChannelControl)` instead.
+- `SecurePkiModeTransactionManager.processCommands(org.eclipse.keypop.calypso.card.transaction.ChannelControl)` method.
+  Use `processCommands(org.eclipse.keypop.reader.ChannelControl)` instead.
+- `SecureSymmetricCryptoTransactionManager.processCommands(org.eclipse.keypop.calypso.card.transaction.ChannelControl)`
+  method. Use `processCommands(org.eclipse.keypop.reader.ChannelControl)` instead.
+### Upgraded
+- Keypop Reader API `2.0.1` -> `2.1.0`
+- Keypop Calypso Card API `2.1.2` -> `2.2.0`
+- Keyple Common API `2.0.1` -> `2.0.2`
 
 ## [3.1.9] - 2025-09-10
 ### Fixed

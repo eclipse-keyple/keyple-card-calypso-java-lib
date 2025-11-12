@@ -29,10 +29,10 @@ import org.mockito.ArgumentMatcher;
 
 abstract class AbstractTransactionManagerTest {
 
-  static org.eclipse.keypop.calypso.card.transaction.ChannelControl CHANNEL_CONTROL_KEEP_OPEN =
-      org.eclipse.keypop.calypso.card.transaction.ChannelControl.KEEP_OPEN;
-  static org.eclipse.keypop.calypso.card.transaction.ChannelControl CHANNEL_CONTROL_CLOSE_AFTER =
-      org.eclipse.keypop.calypso.card.transaction.ChannelControl.CLOSE_AFTER;
+  static org.eclipse.keypop.reader.ChannelControl CHANNEL_CONTROL_KEEP_OPEN =
+      org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN;
+  static org.eclipse.keypop.reader.ChannelControl CHANNEL_CONTROL_CLOSE_AFTER =
+      org.eclipse.keypop.reader.ChannelControl.CLOSE_AFTER;
 
   static final String CARD_SERIAL_NUMBER = "0000000011223344";
   static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3 =

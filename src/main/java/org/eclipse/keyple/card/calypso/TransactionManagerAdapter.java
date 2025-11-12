@@ -23,10 +23,12 @@ import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.ElementaryFile;
 import org.eclipse.keypop.calypso.card.transaction.*;
-import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
 import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
+import org.eclipse.keypop.reader.CardCommunicationException;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
+import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +173,8 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @param channelControl The channel control directive.
    * @since 3.0.0
    */
-  final void executeCardCommands(List<Command> commands, ChannelControl channelControl) {
+  final void executeCardCommands(
+      List<Command> commands, org.eclipse.keypop.reader.ChannelControl channelControl) {
 
     // Retrieve the list of C-APDUs
     List<ApduRequestSpi> apduRequests = getApduRequests(commands);
@@ -205,7 +208,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       try {
         parseCommandResponse(command, apduResponses.get(i));
       } catch (CardCommandException e) {
-        throw new UnexpectedCommandStatusException(
+        throw new InvalidCardResponseException(
             MSG_CARD_COMMAND_ERROR
                 + "while processing responses to card commands: "
                 + command.getCommandRef()
@@ -264,21 +267,21 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @return The card response.
    */
   private CardResponseApi transmitCardRequest(
-      CardRequestSpi cardRequest, ChannelControl channelControl) {
+      CardRequestSpi cardRequest, org.eclipse.keypop.reader.ChannelControl channelControl) {
     CardResponseApi cardResponse;
     try {
       cardResponse =
           cardReader.transmitCardRequest(cardRequest, mapToInternalChannelControl(channelControl));
     } catch (ReaderBrokenCommunicationException e) {
       saveTransactionAuditData(cardRequest, e.getCardResponse());
-      throw new ReaderIOException(
+      throw new ReaderCommunicationException(
           MSG_CARD_READER_COMMUNICATION_ERROR
               + MSG_WHILE_TRANSMITTING_COMMANDS
               + getTransactionAuditDataAsString(),
           e);
     } catch (CardBrokenCommunicationException e) {
       saveTransactionAuditData(cardRequest, e.getCardResponse());
-      throw new CardIOException(
+      throw new CardCommunicationException(
           MSG_CARD_COMMUNICATION_ERROR
               + MSG_WHILE_TRANSMITTING_COMMANDS
               + getTransactionAuditDataAsString(),
@@ -298,7 +301,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    * @return The corresponding ChannelControl provided by the Card layer.
    */
   private org.eclipse.keypop.card.ChannelControl mapToInternalChannelControl(
-      ChannelControl channelControl) {
+      org.eclipse.keypop.reader.ChannelControl channelControl) {
     return org.eclipse.keypop.card.ChannelControl.valueOf(channelControl.name());
   }
 

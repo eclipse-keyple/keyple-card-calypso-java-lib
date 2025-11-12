@@ -30,6 +30,9 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ProxyReaderApi;
+import org.eclipse.keypop.reader.CardCommunicationException;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
+import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +57,7 @@ final class SecurePkiModeTransactionManagerAdapter
   private final SecureRandom secureRandom = new SecureRandom();
   private final int payloadCapacity;
 
-  private ChannelControl originalChannelControl;
+  private org.eclipse.keypop.reader.ChannelControl originalChannelControl;
   private boolean isGetDataCardCertificatePrepared;
   private boolean isGetDataCaCertificatePrepared;
 
@@ -145,7 +148,7 @@ final class SecurePkiModeTransactionManagerAdapter
         cancelSecureSessionCommand.finalizeRequest();
         List<Command> commands = new ArrayList<>(1);
         commands.add(cancelSecureSessionCommand);
-        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
+        executeCardCommands(commands, org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
         logger.warn("Failed to abort secure session: {}", e.getMessage());
       } finally {
@@ -242,10 +245,11 @@ final class SecurePkiModeTransactionManagerAdapter
   /**
    * {@inheritDoc}
    *
-   * @since 3.1.0
+   * @since 3.2.0
    */
   @Override
-  public SecurePkiModeTransactionManager processCommands(ChannelControl channelControl) {
+  public SecurePkiModeTransactionManager processCommands(
+      org.eclipse.keypop.reader.ChannelControl channelControl) {
     if (commands.isEmpty()) {
       return this;
     }
@@ -257,7 +261,7 @@ final class SecurePkiModeTransactionManagerAdapter
       // as expected after the execution of the Get Data commands (role of originalChannelControl).
       originalChannelControl = channelControl;
       if (card.getCaCertificate().length == 0 && !isGetDataCaCertificatePrepared) {
-        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
+        executeCardCommands(commands, org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
       } else {
         executeCardCommands(commands, channelControl);
       }
@@ -268,6 +272,27 @@ final class SecurePkiModeTransactionManagerAdapter
       commands.clear();
     }
     return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.1.0
+   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
+   */
+  @Deprecated
+  @Override
+  public SecurePkiModeTransactionManager processCommands(ChannelControl channelControl) {
+    try {
+      return processCommands(
+          org.eclipse.keypop.reader.ChannelControl.valueOf(channelControl.name()));
+    } catch (CardCommunicationException e) {
+      throw new CardIOException(e.getMessage(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new ReaderIOException(e.getMessage(), e);
+    } catch (InvalidCardResponseException e) {
+      throw new UnexpectedCommandStatusException(e.getMessage(), e);
+    }
   }
 
   /**
@@ -318,8 +343,9 @@ final class SecurePkiModeTransactionManagerAdapter
               cardCertificateSpi.getIssuerPublicKeyReference());
     } else {
       // Force the closing of the channel if originally requested
-      if (originalChannelControl == ChannelControl.CLOSE_AFTER) {
-        executeCardCommands(Collections.emptyList(), ChannelControl.CLOSE_AFTER);
+      if (originalChannelControl == org.eclipse.keypop.reader.ChannelControl.CLOSE_AFTER) {
+        executeCardCommands(
+            Collections.emptyList(), org.eclipse.keypop.reader.ChannelControl.CLOSE_AFTER);
       }
     }
 
