@@ -31,6 +31,7 @@ import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransa
 import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.card.ChannelControl;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -1613,7 +1614,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
-  @Test(expected = UnexpectedCommandStatusException.class)
+  @Test(expected = InvalidCardResponseException.class)
   public void prepareCloseSecureSession_whenCloseSessionFails_shouldThrowUCSE() throws Exception {
 
     CardRequestSpi cardRequest =
@@ -2120,7 +2121,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
   }
 
-  @Test(expected = UnexpectedCommandStatusException.class)
+  @Test(expected = InvalidCardResponseException.class)
   public void prepareOpenSecureSession_whenPreOpenVariantWithDifferentDataOut_shouldThrowUCSE()
       throws Exception {
 
@@ -2154,7 +2155,7 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
   }
 
-  @Test(expected = UnexpectedCommandStatusException.class)
+  @Test(expected = InvalidCardResponseException.class)
   public void
       prepareOpenSecureSession_whenPreOpenVariantWithDifferentRecordContent_shouldThrowUCSE()
           throws Exception {

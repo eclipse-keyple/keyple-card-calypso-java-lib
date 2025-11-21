@@ -25,14 +25,13 @@ import org.eclipse.keypop.card.*;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
 import org.eclipse.keypop.reader.CardReader;
+import org.eclipse.keypop.reader.ChannelControl;
 import org.mockito.ArgumentMatcher;
 
 abstract class AbstractTransactionManagerTest {
 
-  static org.eclipse.keypop.calypso.card.transaction.ChannelControl CHANNEL_CONTROL_KEEP_OPEN =
-      org.eclipse.keypop.calypso.card.transaction.ChannelControl.KEEP_OPEN;
-  static org.eclipse.keypop.calypso.card.transaction.ChannelControl CHANNEL_CONTROL_CLOSE_AFTER =
-      org.eclipse.keypop.calypso.card.transaction.ChannelControl.CLOSE_AFTER;
+  static ChannelControl CHANNEL_CONTROL_KEEP_OPEN = ChannelControl.KEEP_OPEN;
+  static ChannelControl CHANNEL_CONTROL_CLOSE_AFTER = ChannelControl.CLOSE_AFTER;
 
   static final String CARD_SERIAL_NUMBER = "0000000011223344";
   static final String SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3 =
@@ -401,7 +400,8 @@ abstract class AbstractTransactionManagerTest {
     CardResponseApi cardResponse = new TestDtoAdapters.CardResponseAdapter(apduResponses, true);
 
     when(cardReader.transmitCardRequest(
-            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class)))
+            argThat(new CardRequestMatcher(cardRequest)),
+            any(org.eclipse.keypop.card.ChannelControl.class)))
         .thenReturn(cardResponse);
 
     return cardRequest;

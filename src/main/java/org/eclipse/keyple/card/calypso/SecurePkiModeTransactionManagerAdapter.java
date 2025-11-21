@@ -30,6 +30,10 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ProxyReaderApi;
+import org.eclipse.keypop.reader.CardCommunicationException;
+import org.eclipse.keypop.reader.ChannelControl;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
+import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,6 +247,27 @@ final class SecurePkiModeTransactionManagerAdapter
    * {@inheritDoc}
    *
    * @since 3.1.0
+   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
+   */
+  @Deprecated
+  @Override
+  public SecurePkiModeTransactionManager processCommands(
+      org.eclipse.keypop.calypso.card.transaction.ChannelControl channelControl) {
+    try {
+      return processCommands(ChannelControl.valueOf(channelControl.name()));
+    } catch (CardCommunicationException e) {
+      throw new CardIOException(e.getMessage(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new ReaderIOException(e.getMessage(), e);
+    } catch (InvalidCardResponseException e) {
+      throw new UnexpectedCommandStatusException(e.getMessage(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @since 3.2.0
    */
   @Override
   public SecurePkiModeTransactionManager processCommands(ChannelControl channelControl) {

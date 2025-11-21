@@ -19,14 +19,17 @@ import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.transaction.*;
-import org.eclipse.keypop.calypso.card.transaction.ChannelControl;
 import org.eclipse.keypop.calypso.card.transaction.spi.CardTransactionCryptoExtension;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.symmetric.SymmetricCryptoIOException;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerFactorySpi;
 import org.eclipse.keypop.calypso.crypto.symmetric.spi.SymmetricCryptoCardTransactionManagerSpi;
 import org.eclipse.keypop.card.*;
+import org.eclipse.keypop.reader.CardCommunicationException;
 import org.eclipse.keypop.reader.CardReader;
+import org.eclipse.keypop.reader.ChannelControl;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
+import org.eclipse.keypop.reader.ReaderCommunicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,11 +285,32 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   /**
    * {@inheritDoc}
    *
+   * @since 2.3.2
+   * @deprecated Use {@link #processCommands(org.eclipse.keypop.reader.ChannelControl)} instead.
+   */
+  @Deprecated
+  @Override
+  public final T processCommands(
+      org.eclipse.keypop.calypso.card.transaction.ChannelControl channelControl) {
+    try {
+      return processCommands(ChannelControl.valueOf(channelControl.name()));
+    } catch (CardCommunicationException e) {
+      throw new CardIOException(e.getMessage(), e);
+    } catch (ReaderCommunicationException e) {
+      throw new ReaderIOException(e.getMessage(), e);
+    } catch (InvalidCardResponseException e) {
+      throw new UnexpectedCommandStatusException(e.getMessage(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>For each prepared command, if a pre-processing is required, then we try to execute the
    * post-processing of each of the previous commands in anticipation. If at least one
    * post-processing cannot be anticipated, then we execute the block of previous commands first.
    *
-   * @since 2.3.2
+   * @since 3.2.0
    */
   @Override
   public final T processCommands(ChannelControl channelControl) {

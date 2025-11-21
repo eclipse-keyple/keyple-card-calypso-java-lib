@@ -24,12 +24,12 @@ import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.CalypsoCardSelectionExtension;
 import org.eclipse.keypop.calypso.card.transaction.InconsistentDataException;
 import org.eclipse.keypop.calypso.card.transaction.SelectFileException;
-import org.eclipse.keypop.calypso.card.transaction.UnexpectedCommandStatusException;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.CardResponseApi;
 import org.eclipse.keypop.card.CardSelectionResponseApi;
 import org.eclipse.keypop.card.ParseException;
 import org.eclipse.keypop.card.spi.*;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
 
 /**
  * Implementation of {@link CalypsoCardSelectionExtension}.
@@ -316,7 +316,7 @@ final class CalypsoCardSelectionExtensionAdapter
         if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {
           throw new SelectFileException("File not found", e);
         } else {
-          throw new UnexpectedCommandStatusException(
+          throw new InvalidCardResponseException(
               MSG_CARD_COMMAND_ERROR + "while processing responses to card commands: " + commandRef,
               e);
         }
