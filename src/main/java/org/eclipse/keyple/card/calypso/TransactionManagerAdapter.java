@@ -207,6 +207,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       Command command = commands.get(i);
       try {
         parseCommandResponse(command, apduResponses.get(i));
+        handleCommandPostProcessing(i, commands);
       } catch (CardCommandException e) {
         throw new InvalidCardResponseException(
             MSG_CARD_COMMAND_ERROR
@@ -241,6 +242,15 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
       throws CardCommandException {
     command.parseResponse(apduResponse);
   }
+
+  /**
+   * Handles the post-processing of a command based on its index and the list of commands.
+   *
+   * @param commandIndex the index of the command in the list to be processed
+   * @param commands the list of commands to be post-processed
+   * @since 3.2.1
+   */
+  void handleCommandPostProcessing(int commandIndex, List<Command> commands) {}
 
   /**
    * Creates a list of {@link ApduRequestSpi} from a list of {@link Command}.

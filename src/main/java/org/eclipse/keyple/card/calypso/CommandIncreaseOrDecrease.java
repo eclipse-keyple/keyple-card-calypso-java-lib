@@ -119,8 +119,9 @@ final class CommandIncreaseOrDecrease extends Command {
     byte p2 = (byte) (sfi * 8);
 
     ApduRequestAdapter apduRequest;
-    if (!transactionContext.getCard().isCounterValuePostponed()) {
-      /* this is a case4 command, we set Le = 0 */
+    if (Boolean.FALSE.equals(transactionContext.getCard().getIsCounterValuePostponed())) {
+      // For Rev 3 cards or legacy cards which not postpone data, this is a case4 command;
+      // We set Le = 0
       apduRequest =
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -131,7 +132,9 @@ final class CommandIncreaseOrDecrease extends Command {
                   valueBuffer,
                   (byte) 0x00));
     } else {
-      /* this command is considered as a case 3, we set Le = null and the expected length = 0 */
+      // For legacy cards, this command is considered as case 3 (especially to support postponed
+      // data);
+      // We set Le = null
       apduRequest =
           new ApduRequestAdapter(
               ApduUtil.build(
@@ -141,7 +144,6 @@ final class CommandIncreaseOrDecrease extends Command {
                   p2,
                   valueBuffer,
                   null));
-      setExpectedResponseLength(0);
       apduRequest.addSuccessfulStatusWord(SW_POSTPONED_DATA);
     }
 
@@ -167,9 +169,9 @@ final class CommandIncreaseOrDecrease extends Command {
    * @throws IllegalStateException If the counter has not been read beforehand.
    * @since 2.3.2
    */
-  byte[] buildAnticipatedResponse() {
+  private byte[] buildAnticipatedResponse() {
     byte[] response;
-    if (getTransactionContext().getCard().isCounterValuePostponed()) {
+    if (Boolean.TRUE.equals(getTransactionContext().getCard().getIsCounterValuePostponed())) {
       // Response = 6200
       response = new byte[2];
       response[0] = (byte) 0x62; // SW 6200
@@ -238,7 +240,8 @@ final class CommandIncreaseOrDecrease extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
-    if (getCommandContext().isEncryptionActive()) {
+    if (getCommandContext().isEncryptionActive()
+        || getTransactionContext().getCard().getIsCounterValuePostponed() == null) {
       return false;
     }
     updateTerminalSessionIfNeeded(buildAnticipatedResponse());
@@ -253,17 +256,20 @@ final class CommandIncreaseOrDecrease extends Command {
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
     decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
+    if (apduResponse.getDataOut().length == 0
+        && (!Boolean.FALSE.equals(
+            getTransactionContext().getCard().getIsCounterValuePostponed()))) {
+      setExpectedResponseLength(0);
+    }
     super.setApduResponseAndCheckStatus(apduResponse);
     if (apduResponse.getStatusWord() == SW_POSTPONED_DATA) {
-      if (!getTransactionContext().getCard().isCounterValuePostponed()) {
-        throw new CardUnknownStatusException("Unexpected status word: 6200h", getCommandRef());
-      }
+      getTransactionContext().getCard().setIsCounterValuePostponed(true);
       getTransactionContext()
           .getCard()
           .setCounter(
               (byte) sfi, counterNumber != 0 ? counterNumber : 1, buildAnticipatedDataOut());
     } else {
-      // Set returned value
+      getTransactionContext().getCard().setIsCounterValuePostponed(false);
       getTransactionContext()
           .getCard()
           .setCounter(

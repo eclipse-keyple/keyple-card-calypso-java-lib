@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Postponed counter-value updates are now detected dynamically during command execution rather than through static
+  patches.
+### Removed
+- Static startup-info rules that previously forced counter-value postponing for certain card patterns.
 
 ## [3.2.0] - 2025-11-21
 ### Changed
