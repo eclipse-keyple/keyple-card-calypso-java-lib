@@ -612,4 +612,46 @@ public class CalypsoCardAdapterTest {
     calypsoCardAdapter = buildCalypsoCard((ApduResponseApi) null);
     calypsoCardAdapter.getTransactionCounter();
   }
+
+  @Test
+  public void initializeWithFci_whenPrimeRevision3_shouldInitCounterValuePostponedToFalse()
+      throws Exception {
+    calypsoCardAdapter =
+        buildCalypsoCard(
+            buildSelectApplicationResponse(
+                DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_3, SW1SW2_OK));
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isFalse();
+  }
+
+  @Test
+  public void initializeWithFci_whenPrimeRevision2_shouldKeepCounterValuePostponedNull()
+      throws Exception {
+    calypsoCardAdapter =
+        buildCalypsoCard(
+            buildSelectApplicationResponse(
+                DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_2, SW1SW2_OK));
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isNull();
+  }
+
+  @Test
+  public void initializeWithPowerOnData_whenPrimeRevision1_shouldKeepCounterValuePostponedNull()
+      throws Exception {
+    calypsoCardAdapter = buildCalypsoCard(POWER_ON_DATA);
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isNull();
+  }
+
+  @Test
+  public void setIsCounterValuePostponed_shouldUpdateValueCorrectly() throws Exception {
+    calypsoCardAdapter =
+        buildCalypsoCard(
+            buildSelectApplicationResponse(
+                DF_NAME, CALYPSO_SERIAL_NUMBER, STARTUP_INFO_PRIME_REVISION_2, SW1SW2_OK));
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isNull();
+
+    calypsoCardAdapter.setIsCounterValuePostponed(true);
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isTrue();
+
+    calypsoCardAdapter.setIsCounterValuePostponed(false);
+    assertThat(calypsoCardAdapter.getIsCounterValuePostponed()).isFalse();
+  }
 }
