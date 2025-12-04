@@ -107,7 +107,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   private byte applicationType;
   private byte sessionModification;
   private int payloadCapacity = DEFAULT_PAYLOAD_CAPACITY;
-  private boolean isCounterValuePostponed;
+  private Boolean isCounterValuePostponed;
   private boolean isLegacyCase1;
   private WriteAccessLevel preOpenWriteAccessLevel;
   private byte[] preOpenDataOut;
@@ -121,21 +121,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     patchesRev3.add(new PatchRev3("003C0000001000", "00FF000000FF00").setPayloadCapacity(235));
 
     // Patches for revision 1 & 2:
-    // 06 XX 01 03 XX XX XX
-    patchesRev12.add(new PatchRev12("06000103000000", "FF00FFFF000000").setCounterValuePostponed());
-    // 06 0A 01 02 XX XX XX
-    patchesRev12.add(new PatchRev12("060A0102000000", "FFFFFFFF000000").setCounterValuePostponed());
-    // XX XX 0X XX 15 XX XX
-    patchesRev12.add(new PatchRev12("00000000150000", "0000F000FF0000").setCounterValuePostponed());
-    // XX XX 1X XX 15 XX XX
-    patchesRev12.add(new PatchRev12("00001000150000", "0000F000FF0000").setCounterValuePostponed());
-    // 0A 0A 01 02 20 03 11: PACA Card
-    patchesRev12.add(new PatchRev12("0A0A0102200311", "FFFFFFFFFFFFFF").setCounterValuePostponed());
-    // 0A 28 13 02 10 12 2B: PACA Card
-    patchesRev12.add(new PatchRev12("0A28130210122B", "FFFFFFFFFFFFFF").setCounterValuePostponed());
-    // 0A 2E 13 02 00 01 01: OURA Card
-    patchesRev12.add(new PatchRev12("0A2E1302000101", "FFFFFFFFFFFFFF").setCounterValuePostponed());
-    // 03 08 03 04 00 02 00: targets ASK Tango having this startup info values
+    // 03 08 03 04 00 02 00: targets ASK Tango having this startup info value
     patchesRev12.add(new PatchRev12("03080304000200", "FFFFFFFFFFFFFF").setLegacyCase1());
   }
 
@@ -294,6 +280,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
 
     isHce = (calypsoSerialNumber[3] & (byte) 0x80) == (byte) 0x80;
+
+    if (productType != ProductType.PRIME_REVISION_2
+        && productType != ProductType.PRIME_REVISION_1) {
+      isCounterValuePostponed = false;
+    }
 
     applyPatchIfNeeded();
   }
@@ -1239,7 +1230,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * Gets the last SV Operation signature (SV Reload, Debit or Undebit)
+   * Gets the last SV Operation signature (SV Reload, Debit, or Undebit)
    *
    * @return A byte array containing the SV Operation signature or null if not available.
    * @since 2.0.0
@@ -1249,13 +1240,25 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   }
 
   /**
-   * Indicates if the response of the Increase/Decrease counter command is postponed to the close
+   * Sets whether the counter-value update is postponed.
+   *
+   * @param isCounterValuePostponed a boolean value indicating if the counter-value update should be
+   *     postponed/
+   * @since 3.2.1
+   */
+  void setIsCounterValuePostponed(boolean isCounterValuePostponed) {
+    this.isCounterValuePostponed = isCounterValuePostponed;
+  }
+
+  /**
+   * Indicates if the response of the Increase/Decrease counter-command is postponed to the close
    * secure session (old revision 2 cards).
    *
-   * @return true if the response of the Increase/Decrease counter command is postponed.
+   * @return true/false if the response of the Increase/Decrease counter-command is postponed or
+   *     not, and null if the flag is not already determined.
    * @since 2.2.4
    */
-  boolean isCounterValuePostponed() {
+  Boolean getIsCounterValuePostponed() {
     return isCounterValuePostponed;
   }
 
@@ -1354,7 +1357,6 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
   /** POJO containing card rev 1 & 2 specificities to be applied according to startup info. */
   private static class PatchRev12 extends Patch {
 
-    private Boolean isCounterValuePostponed;
     private Boolean isLegacyCase1;
 
     private PatchRev12(String startupInfo, String mask) {
@@ -1363,17 +1365,9 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     @Override
     void apply(CalypsoCardAdapter calypsoCard) {
-      if (isCounterValuePostponed != null) {
-        calypsoCard.isCounterValuePostponed = isCounterValuePostponed;
-      }
       if (isLegacyCase1 != null) {
         calypsoCard.isLegacyCase1 = isLegacyCase1;
       }
-    }
-
-    private PatchRev12 setCounterValuePostponed() {
-      isCounterValuePostponed = true;
-      return this;
     }
 
     private PatchRev12 setLegacyCase1() {

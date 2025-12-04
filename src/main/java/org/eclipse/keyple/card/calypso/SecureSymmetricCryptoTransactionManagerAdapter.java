@@ -276,9 +276,6 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   final T prepareIncreaseOrDecreaseCounter(
       boolean isDecreaseCommand, byte sfi, int counterNumber, int incDecValue) {
     super.prepareIncreaseOrDecreaseCounter(isDecreaseCommand, sfi, counterNumber, incDecValue);
-    if (getCommandContext().isSecureSessionOpen() && card.isCounterValuePostponed()) {
-      nbPostponedData++;
-    }
     return currentInstance;
   }
 
@@ -341,6 +338,48 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       }
     }
     return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Handles the post-processing of a command during a secure symmetric crypto transaction. This
+   * method processes commands related to counter-value adjustments (e.g., increase or decrease)
+   * that are postponed and ensures proper handling of subsequent commands such as session closure
+   * and stored-value operations, if applicable.
+   *
+   * @param commandIndex The index of the command being post-processed within the list of commands.
+   * @param commands The list of all commands in the transaction, including the command being
+   *     processed.
+   * @since 3.2.1
+   */
+  @Override
+  void handleCommandPostProcessing(int commandIndex, List<Command> commands) {
+    if (!Boolean.TRUE.equals(transactionContext.getCard().getIsCounterValuePostponed())) {
+      return;
+    }
+    CardCommandRef commandRef = commands.get(commandIndex).getCommandRef();
+    if (commandRef != CardCommandRef.INCREASE && commandRef != CardCommandRef.DECREASE) {
+      return;
+    }
+    nbPostponedData++;
+    if (commandIndex == commands.size() - 1) {
+      return;
+    }
+    boolean isSv = false;
+    for (int i = commandIndex + 1; i < commands.size(); i++) {
+      commandRef = commands.get(i).getCommandRef();
+      if (commandRef == CardCommandRef.SV_RELOAD
+          || commandRef == CardCommandRef.SV_DEBIT
+          || commandRef == CardCommandRef.SV_UNDEBIT) {
+        isSv = true;
+      } else if (commandRef == CardCommandRef.CLOSE_SECURE_SESSION) {
+        if (isSv) {
+          ((CommandCloseSecureSession) commands.get(i)).incrementSvPostponedDataIndex();
+        }
+        break;
+      }
+    }
   }
 
   /**

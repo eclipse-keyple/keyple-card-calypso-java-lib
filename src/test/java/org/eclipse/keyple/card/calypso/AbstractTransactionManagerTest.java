@@ -139,6 +139,7 @@ abstract class AbstractTransactionManagerTest {
   static final String CARD_DECREASE_SFI10_CNT1_4286U_RSP = "0010BE9000";
   static final String CARD_INCREASE_SFI11_CNT1_100U_CMD = "003201080300006400";
   static final String CARD_INCREASE_SFI11_CNT1_8821U_RSP = "0022759000";
+  static final String CARD_INCREASE_SFI11_CNT1_100U_CMD_CASE3 = "0032010803000064";
   static final String CARD_INCREASE_MULTIPLE_SFI1_C1_1_C2_2_C3_3_CMD =
       "003A00080C01000001020000020300000300";
   static final String CARD_INCREASE_MULTIPLE_SFI1_C1_11_C2_22_C3_33_RSP =
@@ -390,8 +391,8 @@ abstract class AbstractTransactionManagerTest {
 
   CardRequestSpi mockTransmitCardRequest(String... apdus) throws Exception {
 
-    List<ApduRequestSpi> apduRequests = new ArrayList<ApduRequestSpi>();
-    List<ApduResponseApi> apduResponses = new ArrayList<ApduResponseApi>();
+    List<ApduRequestSpi> apduRequests = new ArrayList<>();
+    List<ApduResponseApi> apduResponses = new ArrayList<>();
     for (int i = 0; i < apdus.length; i += 2) {
       apduRequests.add(new DtoAdapters.ApduRequestAdapter(HexUtil.toByteArray(apdus[i])));
       apduResponses.add(new TestDtoAdapters.ApduResponseAdapter(HexUtil.toByteArray(apdus[i + 1])));

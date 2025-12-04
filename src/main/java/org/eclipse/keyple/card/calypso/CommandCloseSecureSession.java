@@ -68,7 +68,7 @@ final class CommandCloseSecureSession extends Command {
 
   private final boolean isAutoRatificationAsked;
   private final boolean isAbortSecureSession;
-  private final int svPostponedDataIndex;
+  private int svPostponedDataIndex;
 
   /** The postponed data. */
   private final List<byte[]> postponedData = new ArrayList<>(0);
@@ -291,6 +291,19 @@ final class CommandCloseSecureSession extends Command {
     } catch (AsymmetricCryptoException e) {
       throw new CryptoException(e.getMessage(), e);
     }
+  }
+
+  /**
+   * Increments the index of the SV postponed data by one.
+   *
+   * <p>This method updates the value of the svPostponedDataIndex field, which represents the
+   * current position or index within the collection of postponed data related to SV. This operation
+   * is typically used to progress through postponed data elements in sequence.
+   *
+   * @since 3.2.1
+   */
+  void incrementSvPostponedDataIndex() {
+    svPostponedDataIndex++;
   }
 
   /**

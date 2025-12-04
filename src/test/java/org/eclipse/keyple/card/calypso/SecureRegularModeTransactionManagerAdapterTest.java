@@ -1185,6 +1185,40 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
   }
 
   @Test
+  public void prepareIncreaseCounter_whenRev3Card_shouldUseCase4AndReceive9000() throws Exception {
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_SFI11_CNT1_100U_CMD, CARD_INCREASE_SFI11_CNT1_8821U_RSP);
+
+    cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    verifyInteractionsForSingleCardCommand(cardRequest);
+
+    assertThat(calypsoCard.getIsCounterValuePostponed()).isFalse();
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(8821);
+  }
+
+  @Test
+  public void prepareIncreaseCounter_whenRev2CardReturns9000_shouldDetectNoPostponedAndUpdateFlag()
+      throws Exception {
+    // Mock card's isCounterValuePostponed to null (Rev2 behavior) before the first call
+    when(calypsoCard.getIsCounterValuePostponed()).thenReturn(null).thenCallRealMethod();
+
+    CardRequestSpi cardRequest =
+        mockTransmitCardRequest(
+            CARD_INCREASE_SFI11_CNT1_100U_CMD_CASE3, CARD_INCREASE_SFI11_CNT1_8821U_RSP);
+
+    cardTransactionManager.prepareIncreaseCounter((byte) 1, 1, 100);
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    assertThat(calypsoCard.getIsCounterValuePostponed()).isFalse();
+    assertThat(calypsoCard.getFileBySfi((byte) 1).getData().getContentAsCounterValue(1))
+        .isEqualTo(8821);
+  }
+
+  @Test
   public void prepareIncreaseCounters_whenCardIsLowerThanPrime3__shouldAddMultipleIncreaseCommands()
       throws Exception {
     when(calypsoCard.getProductType()).thenReturn(CalypsoCard.ProductType.BASIC);
