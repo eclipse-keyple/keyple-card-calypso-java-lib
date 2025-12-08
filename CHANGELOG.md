@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed the possible `BufferOverflow` exception when processing the CA/Card certificates data returned by the card
+  (issue [#129]).
 ### Changed
 - Postponed counter-value updates are now detected dynamically during command execution rather than through static
   patches.
@@ -357,6 +360,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#129]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/129
 [#119]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/119
 [#115]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/115
 [#109]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/109

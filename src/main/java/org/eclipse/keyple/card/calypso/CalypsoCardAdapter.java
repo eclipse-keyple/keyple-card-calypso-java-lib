@@ -1146,11 +1146,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param cardCertificateBytes The card certificate bytes.
    * @param isFirstPart true when the provided data is the first part of the certificate.
+   * @throws IllegalArgumentException if the provided data is not a valid card certificate.
    * @since 3.1.0
    */
   void addCardCertificateBytes(byte[] cardCertificateBytes, boolean isFirstPart) {
     if (isFirstPart) {
       this.cardCertificate = ByteBuffer.allocate(CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
+    }
+    if (cardCertificateBytes.length > cardCertificate.remaining()) {
+      throw new IllegalArgumentException(
+          "Card certificate size should be " + CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
     }
     cardCertificate.put(cardCertificateBytes);
   }
@@ -1161,11 +1166,16 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    *
    * @param caCertificateBytes The CA certificate bytes.
    * @param isFirstPart true when the provided data is the first part of the certificate.
+   * @throws IllegalArgumentException if the provided data is not a valid CA certificate.
    * @since 3.1.0
    */
   void addCaCertificateBytes(byte[] caCertificateBytes, boolean isFirstPart) {
     if (isFirstPart) {
       this.caCertificate = ByteBuffer.allocate(CalypsoCardConstant.CA_CERTIFICATE_SIZE);
+    }
+    if (caCertificateBytes.length > caCertificate.remaining()) {
+      throw new IllegalArgumentException(
+          "CA certificate size should be " + CalypsoCardConstant.CA_CERTIFICATE_SIZE);
     }
     caCertificate.put(caCertificateBytes);
   }
