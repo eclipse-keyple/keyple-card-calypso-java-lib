@@ -122,7 +122,7 @@ final class CommandSelectFile extends Command {
         break;
       default:
         throw new IllegalStateException(
-            "Unsupported selectFileControl parameter " + selectFileControl.name());
+            "Unsupported SelectFileControl: " + selectFileControl.name());
     }
 
     // APDU Case 4
@@ -132,7 +132,7 @@ final class CommandSelectFile extends Command {
                 cardClass, commandRef.getInstructionByte(), p1, p2, selectData, (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("select file control: " + selectFileControl);
+      addSubName("Select file control: " + selectFileControl);
     }
   }
 
@@ -192,7 +192,7 @@ final class CommandSelectFile extends Command {
                 (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("lid: " + HexUtil.toHex(dataIn) + "h");
+      addSubName("LID: " + HexUtil.toHex(dataIn) + "h");
     }
   }
 
@@ -276,7 +276,7 @@ final class CommandSelectFile extends Command {
         calypsoCard.setFileHeader(sfi, fileHeader);
         break;
       default:
-        throw new IllegalStateException(String.format("Unknown file type: %02Xh", fileType));
+        throw new IllegalStateException("Unsupported file type: " + HexUtil.toHex(fileType));
     }
   }
 
@@ -289,7 +289,7 @@ final class CommandSelectFile extends Command {
     Map<Integer, byte[]> tags = BerTlvUtil.parseSimple(dataOut, true);
     proprietaryInformation = tags.get(TAG_PROPRIETARY_INFORMATION);
     if (proprietaryInformation == null) {
-      throw new IllegalStateException("Proprietary information: tag not found");
+      throw new IllegalStateException("Proprietary information tag not found");
     }
     Assert.getInstance().isEqual(proprietaryInformation.length, 23, "proprietaryInformation");
     return proprietaryInformation;
@@ -413,7 +413,7 @@ final class CommandSelectFile extends Command {
         fileType = ElementaryFile.Type.COUNTERS;
         break;
       default:
-        throw new IllegalStateException("Unknown EF Type: " + efType);
+        throw new IllegalStateException("Unsupported EF Type: " + efType);
     }
     return fileType;
   }

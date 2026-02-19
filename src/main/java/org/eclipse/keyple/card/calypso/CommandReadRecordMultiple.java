@@ -126,13 +126,13 @@ final class CommandReadRecordMultiple extends Command {
 
     if (logger.isDebugEnabled()) {
       addSubName(
-          "sfi: "
+          "SFI: "
               + HexUtil.toHex(sfi)
-              + "h, rec: "
+              + "h, Rec: "
               + recordNumber
-              + ", offset: "
+              + ", Offset: "
               + offset
-              + ", length: "
+              + ", Length: "
               + length);
     }
   }

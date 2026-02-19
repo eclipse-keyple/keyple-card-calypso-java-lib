@@ -143,20 +143,20 @@ final class CommandSearchRecordMultiple extends Command {
 
     if (logger.isDebugEnabled()) {
       String extraInfo =
-          "sfi: "
+          "SFI: "
               + HexUtil.toHex(data.getSfi())
-              + "h, rec: "
+              + "h, Rec: "
               + data.getRecordNumber()
-              + ", offset: "
+              + ", Offset: "
               + data.getOffset()
-              + ", repeated offset: "
+              + ", Repeated offset: "
               + data.isEnableRepeatedOffset()
-              + ", fetch first result: "
+              + ", Fetch first result: "
               + data.isFetchFirstMatchingResult()
-              + ", search data: "
+              + ", Search data: "
               + HexUtil.toHex(data.getSearchData())
               + "h,"
-              + " mask: "
+              + " Mask: "
               + HexUtil.toHex(data.getMask())
               + "h";
       addSubName(extraInfo);

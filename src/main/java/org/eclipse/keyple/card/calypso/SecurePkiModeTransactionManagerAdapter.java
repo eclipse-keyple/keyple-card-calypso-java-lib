@@ -49,9 +49,9 @@ final class SecurePkiModeTransactionManagerAdapter
   private static final Logger logger =
       LoggerFactory.getLogger(SecurePkiModeTransactionManagerAdapter.class);
 
-  private static final String MSG_PIN_NOT_AVAILABLE = "PIN not available for this card";
-  private static final String MSG_INVALID_CARD_CERTIFICATE = "Invalid card certificate: ";
-  private static final String MSG_INVALID_CA_CERTIFICATE = "Invalid CA certificate: ";
+  private static final String MSG_PIN_NOT_AVAILABLE = "PIN is not available for this card";
+  private static final String MSG_INVALID_CARD_CERTIFICATE = "Invalid card certificate";
+  private static final String MSG_INVALID_CA_CERTIFICATE = "Invalid CA certificate";
   private final TransactionContextDto transactionContext;
   private final AsymmetricCryptoSecuritySettingAdapter asymmetricCryptoSecuritySetting;
   private final CardTransactionCryptoExtension cryptoExtension;
@@ -151,7 +151,7 @@ final class SecurePkiModeTransactionManagerAdapter
         commands.add(cancelSecureSessionCommand);
         executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
-        logger.warn("Failed to abort secure session: {}", e.getMessage());
+        logger.warn("Failed to abort secure session [reason={}]", e.getMessage());
       } finally {
         card.restoreFiles();
         transactionContext.setSecureSessionOpen(false);
@@ -354,10 +354,9 @@ final class SecurePkiModeTransactionManagerAdapter
       cardPublicKeySpi =
           cardCertificateSpi.checkCertificateAndGetPublicKey(caCertificateContentSpi);
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE, e);
     } catch (AsymmetricCryptoException e) {
-      throw new CryptoException(
-          "An error occurred while checking the card certificate: " + e.getMessage(), e);
+      throw new CryptoException("Failed to check the card certificate", e);
     }
 
     // Save the card public key into the card image
@@ -382,7 +381,7 @@ final class SecurePkiModeTransactionManagerAdapter
     try {
       return cardCertificateParser.parseCertificate(cardCertificateBytes);
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CARD_CERTIFICATE, e);
     }
   }
 
@@ -403,7 +402,7 @@ final class SecurePkiModeTransactionManagerAdapter
     try {
       return caCertificateParser.parseCertificate(caCertificateBytes);
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException(MSG_INVALID_CA_CERTIFICATE + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CA_CERTIFICATE, e);
     }
   }
 

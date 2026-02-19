@@ -454,9 +454,12 @@ abstract class Command {
       if (expectedResponseLength != null
           && apduResponse.getDataOut().length != expectedResponseLength) {
         throw new CardUnexpectedResponseLengthException(
-            String.format(
-                "Incorrect APDU response length for command %s (expected: %d, actual: %d)",
-                commandRef, expectedResponseLength, apduResponse.getDataOut().length),
+            "APDU response is not the expected length. Command: "
+                + commandRef
+                + ", Expected: "
+                + expectedResponseLength
+                + ", Actual: "
+                + apduResponse.getDataOut().length,
             commandRef);
       }
       // SW and response length are correct.

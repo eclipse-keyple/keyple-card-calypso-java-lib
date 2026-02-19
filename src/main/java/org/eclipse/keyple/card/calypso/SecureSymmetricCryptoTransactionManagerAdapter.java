@@ -174,7 +174,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         commands.add(cancelSecureSessionCommand);
         executeCardCommands(commands, ChannelControl.KEEP_OPEN);
       } catch (RuntimeException e) {
-        logger.warn("Failed to abort secure session: {}", e.getMessage());
+        logger.warn("Failed to abort secure session [reason={}]", e.getMessage());
       } finally {
         card.restoreFiles();
         transactionContext.setSecureSessionOpen(false);
@@ -246,7 +246,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     // CL-CSS-INFOCSS.1
     if (!symmetricCryptoSecuritySetting.isMultipleSessionEnabled()) {
       throw new SessionBufferOverflowException(
-          "ATOMIC mode error! This command would overflow the card modifications buffer: "
+          "Multiple session is not allowed. A command would overflow the card modifications buffer. Command: "
               + command.getName()
               + getTransactionAuditDataAsString());
     }
@@ -509,8 +509,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       if (card.getPreOpenWriteAccessLevel() != null
           && card.getPreOpenWriteAccessLevel() != writeAccessLevel) {
         logger.warn(
-            "Pre-open mode cancelled because writeAccessLevel [{}] mismatches writeAccessLevel used for"
-                + " pre-open mode [{}]",
+            "Pre-open mode cancelled because writeAccessLevel mismatches writeAccessLevel used for"
+                + " pre-open mode [writeAccessLevel={}, preOpenWriteAccessLevel={}]",
             writeAccessLevel,
             card.getPreOpenWriteAccessLevel());
         disablePreOpenMode();
@@ -580,7 +580,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       Assert.getInstance().notNull(svOperation, "svOperation").notNull(svAction, "svAction");
 
       if (!card.isSvFeatureAvailable()) {
-        throw new UnsupportedOperationException("Stored Value not available for this card");
+        throw new UnsupportedOperationException("Stored Value is not available for this card");
       }
 
       if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {
@@ -653,7 +653,11 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     }
     isSvGet = false;
     if (svOperation != this.svOperation) {
-      throw new IllegalStateException("Inconsistent SV operation");
+      throw new IllegalStateException(
+          "SV operation is inconsistent with previous SV Get command. Expected: "
+              + this.svOperation
+              + ", Actual: "
+              + svOperation);
     }
     // CL-SV-1PCSS.1
     if (isSecureSessionOpen) {
@@ -743,7 +747,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   public final T prepareInvalidate() {
     try {
       if (card.isDfInvalidated()) {
-        throw new IllegalStateException("Card already invalidated");
+        throw new IllegalStateException("Card is already invalidated");
       }
       CommandInvalidate command = new CommandInvalidate(transactionContext, getCommandContext());
       prepareNewSecureSessionIfNeeded(command);
@@ -764,7 +768,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   public final T prepareRehabilitate() {
     try {
       if (!card.isDfInvalidated()) {
-        throw new IllegalStateException("Card not invalidated");
+        throw new IllegalStateException("Card is not invalidated");
       }
       CommandRehabilitate command =
           new CommandRehabilitate(transactionContext, getCommandContext());
@@ -787,7 +791,8 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       int keyIndex, byte newKif, byte newKvc, byte issuerKif, byte issuerKvc) {
     try {
       if (card.getProductType() == CalypsoCard.ProductType.BASIC) {
-        throw new UnsupportedOperationException("'Change Key' command not available for this card");
+        throw new UnsupportedOperationException(
+            "'Change Key' command is not available for this card");
       }
       checkNoSecureSession();
       Assert.getInstance().isInRange(keyIndex, 1, 3, "keyIndex");

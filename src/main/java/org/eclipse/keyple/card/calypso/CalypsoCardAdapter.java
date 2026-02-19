@@ -161,7 +161,11 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
 
     // basic check: we expect to be here following a selection based on the ATR
     if (atr.length != CARD_REV1_ATR_LENGTH) {
-      throw new IllegalArgumentException("Unexpected ATR length: " + powerOnData);
+      throw new IllegalArgumentException(
+          "ATR is not the correct length. Expected: "
+              + CARD_REV1_ATR_LENGTH
+              + ", got: "
+              + atr.length);
     }
 
     dfName = null;
@@ -201,7 +205,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     cmdCardGetDataFci.parseResponseForSelection(selectApplicationResponse, this);
 
     if (!cmdCardGetDataFci.isValidCalypsoFCI()) {
-      throw new IllegalArgumentException("Bad FCI format");
+      throw new IllegalArgumentException("FCI has a bad format");
     }
   }
 
@@ -259,7 +263,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
       // CL-SI-SM.1
       if (sessionModification < (byte) 0x06 || sessionModification > (byte) 0x37) {
         throw new IllegalArgumentException(
-            "Session modifications byte should be in range 06h to 47h. Was: "
+            "Session modifications byte should be in range [06h..47h]. Actual: "
                 + HexUtil.toHex(sessionModification));
       }
       modificationsCounterMax = BUFFER_SIZE_INDICATOR_TO_BUFFER_SIZE[sessionModification];
@@ -815,7 +819,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         return ef;
       }
     }
-    logger.warn("EF not found (sfi {}h)", HexUtil.toHex(sfi));
+    logger.warn("EF not found [sfi={}]", HexUtil.toHex(sfi));
     return null;
   }
 
@@ -831,7 +835,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
         return ef;
       }
     }
-    logger.warn("EF not found (lid {}h)", HexUtil.toHex(lid));
+    logger.warn("EF not found [lid={}]", HexUtil.toHex(lid));
     return null;
   }
 
@@ -1155,7 +1159,10 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
     if (cardCertificateBytes.length > cardCertificate.remaining()) {
       throw new IllegalArgumentException(
-          "Card certificate size should be " + CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
+          "Card certificate is not the correct length. Expected: "
+              + CalypsoCardConstant.CARD_CERTIFICATE_SIZE
+              + ", Actual: "
+              + cardCertificateBytes.length);
     }
     cardCertificate.put(cardCertificateBytes);
   }
@@ -1175,7 +1182,10 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
     }
     if (caCertificateBytes.length > caCertificate.remaining()) {
       throw new IllegalArgumentException(
-          "CA certificate size should be " + CalypsoCardConstant.CA_CERTIFICATE_SIZE);
+          "CA certificate is not the correct length. Expected: "
+              + CalypsoCardConstant.CA_CERTIFICATE_SIZE
+              + ", Actual: "
+              + caCertificateBytes.length);
     }
     caCertificate.put(caCertificateBytes);
   }
@@ -1220,7 +1230,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   byte[] getSvGetHeader() {
     if (svGetHeader == null) {
-      throw new IllegalStateException("SV Get Header not available");
+      throw new IllegalStateException("SV Get Header is not available");
     }
     return svGetHeader;
   }
@@ -1234,7 +1244,7 @@ final class CalypsoCardAdapter implements CalypsoCard, SmartCardSpi {
    */
   byte[] getSvGetData() {
     if (svGetData == null) {
-      throw new IllegalStateException("SV Get Data not available");
+      throw new IllegalStateException("SV Get Data is not available");
     }
     return svGetData;
   }

@@ -152,7 +152,9 @@ final class CommandGetDataFci extends Command {
     /* check the command status to determine if the DF has been invalidated */
     // CL-INV-STATUS.1
     if (getApduResponse().getStatusWord() == 0x6283) {
-      logger.debug("DF invalidated");
+      if (logger.isDebugEnabled()) {
+        logger.debug("DF invalidated");
+      }
       isDfInvalidated = true;
     }
 
@@ -171,11 +173,10 @@ final class CommandGetDataFci extends Command {
         return;
       }
       if (dfName.length < 5 || dfName.length > 16) {
-        logger.error("Invalid DF name length {} (not in range [5..16])", dfName.length);
+        logger.error(
+            "DF name is not the correct length (should be in range [5..16]) [actual={}]",
+            dfName.length);
         return;
-      }
-      if (logger.isDebugEnabled()) {
-        logger.debug("DF name: {}", HexUtil.toHex(dfName));
       }
 
       applicationSN = tags.get(TAG_APPLICATION_SERIAL_NUMBER);
@@ -186,11 +187,9 @@ final class CommandGetDataFci extends Command {
       // CL-SEL-CSN.1
       if (applicationSN.length != 8) {
         logger.error(
-            "Invalid application serial number length {} (expected 8)", applicationSN.length);
+            "Application serial number is not the correct length (expected 8) [actual={}]",
+            applicationSN.length);
         return;
-      }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Application serial number: {}h", HexUtil.toHex(applicationSN));
       }
 
       discretionaryData = tags.get(TAG_DISCRETIONARY_DATA);
@@ -199,19 +198,26 @@ final class CommandGetDataFci extends Command {
         return;
       }
       if (discretionaryData.length < 7) {
-        logger.error("Invalid startup info length {} (should be >= 7)", discretionaryData.length);
+        logger.error(
+            "Startup info is not the correct length (should be >= 7) [actual={}]",
+            discretionaryData.length);
         return;
-      }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Discretionary data: {}", HexUtil.toHex(discretionaryData));
       }
 
       /* all 3 main fields were retrieved */
       isValidCalypsoFCI = true;
 
+      if (logger.isDebugEnabled()) {
+        logger.debug(
+            "DF parsed [dfName={}, serialNumber={}, discretionaryData={}]",
+            HexUtil.toHex(dfName),
+            HexUtil.toHex(applicationSN),
+            HexUtil.toHex(discretionaryData));
+      }
+
     } catch (Exception e) {
       /* Silently ignore problems decoding TLV structure. Just log. */
-      logger.debug("Failed to parse FCI BER-TLV data structure: {}", e.getMessage());
+      logger.debug("Failed to parse FCI BER-TLV data structure [reason={}]", e.getMessage());
     }
 
     getTransactionContext().getCard().initializeWithFci(this);

@@ -151,13 +151,13 @@ final class CommandIncreaseOrDecrease extends Command {
 
     if (logger.isDebugEnabled()) {
       addSubName(
-          "sfi: "
+          "SFI: "
               + HexUtil.toHex(sfi)
-              + "h, counter: "
+              + "h, Counter: "
               + counterNumber
               + ", "
-              + (isDecreaseCommand ? "decrement" : "increment")
-              + ":"
+              + (isDecreaseCommand ? "Decrement" : "Increment")
+              + ": "
               + incDecValue);
     }
   }
@@ -207,10 +207,14 @@ final class CommandIncreaseOrDecrease extends Command {
       }
     }
     throw new IllegalStateException(
-        String.format(
-            "Unable to determine the anticipated APDU response for the command [%s] (sfi %02Xh, counter %d)"
-                + " because the counter has not been read beforehand",
-            getName(), sfi, counterNumber));
+        "Unable to determine anticipated APDU response "
+            + "because the counter has not been read beforehand. "
+            + "Command: "
+            + getName()
+            + ", SFI: "
+            + HexUtil.toHex(sfi)
+            + "h, Counter: "
+            + counterNumber);
   }
 
   /**

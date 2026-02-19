@@ -125,7 +125,7 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
                 (byte) 0x00)));
 
     if (logger.isDebugEnabled()) {
-      StringBuilder extraInfo = new StringBuilder("sfi: " + HexUtil.toHex(sfi) + "h");
+      StringBuilder extraInfo = new StringBuilder("SFI: " + HexUtil.toHex(sfi) + "h");
       for (Map.Entry<Integer, Integer> entry : counterNumberToIncDecValueMap.entrySet()) {
         extraInfo.append(", ");
         extraInfo.append(entry.getKey());
@@ -244,9 +244,12 @@ final class CommandIncreaseOrDecreaseMultiple extends Command {
       }
     }
     throw new IllegalStateException(
-        String.format(
-            "Unable to determine the anticipated APDU response for the command [%s] (sfi %02Xh)"
-                + " because some expected counters have not been read beforehand",
-            getName(), sfi));
+        "Unable to determine anticipated APDU response "
+            + "because some expected counters have not been read beforehand. "
+            + "Command: "
+            + getName()
+            + ", SFI: "
+            + HexUtil.toHex(sfi)
+            + "h");
   }
 }

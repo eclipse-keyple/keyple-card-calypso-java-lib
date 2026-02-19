@@ -123,7 +123,7 @@ final class CommandUpdateOrWriteBinary extends Command {
                 null)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset);
+      addSubName("SFI: " + HexUtil.toHex(sfi) + "h, Offset: " + offset);
     }
   }
 

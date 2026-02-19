@@ -135,14 +135,22 @@ final class DtoAdapters {
     }
 
     /**
-     * Converts the APDU request into a string where the data is encoded in a json format.
+     * {@inheritDoc}
      *
-     * @return A not empty String
      * @since 2.0.0
      */
     @Override
     public String toString() {
-      return "APDU_REQUEST = " + JsonUtil.toJson(this);
+      return "ApduRequestAdapter{"
+          + "apdu='"
+          + HexUtil.toHex(apdu)
+          + '\''
+          + ", successfulStatusWords="
+          + JsonUtil.toJson(successfulStatusWords)
+          + ", info='"
+          + info
+          + '\''
+          + '}';
     }
   }
 
@@ -194,14 +202,18 @@ final class DtoAdapters {
     }
 
     /**
-     * Converts the card request into a string where the data is encoded in a json format.
+     * {@inheritDoc}
      *
-     * @return A not empty String
      * @since 2.0.0
      */
     @Override
     public String toString() {
-      return "CARD_REQUEST = " + JsonUtil.toJson(this);
+      return "CardRequestAdapter{"
+          + "apduRequests="
+          + apduRequests
+          + ", stopOnUnsuccessfulStatusWord="
+          + stopOnUnsuccessfulStatusWord
+          + '}';
     }
   }
 
@@ -259,14 +271,18 @@ final class DtoAdapters {
     }
 
     /**
-     * Converts the card selection request into a string where the data is encoded in a json format.
+     * {@inheritDoc}
      *
-     * @return A not empty String
      * @since 2.0.0
      */
     @Override
     public String toString() {
-      return "CARD_SELECTION_REQUEST = " + JsonUtil.toJson(this);
+      return "CardSelectionRequestAdapter{"
+          + "cardRequest="
+          + cardRequest
+          + ", successfulSelectionStatusWords="
+          + JsonUtil.toJson(successfulSelectionStatusWords)
+          + '}';
     }
   }
 
@@ -675,30 +691,34 @@ final class DtoAdapters {
     }
 
     /**
-     * Gets the object content as a Json string.
+     * {@inheritDoc}
      *
-     * @return A not empty string.
      * @since 2.0.0
      */
     @Override
     public String toString() {
-      return "{\"amount\":"
+      return "SvDebitLogRecordAdapter{"
+          + "amount="
           + getAmount()
-          + ",\"balance\":"
+          + ", balance="
           + getBalance()
-          + ",\"debitDate\":\""
+          + ", debitDate='"
           + HexUtil.toHex(getDebitDate())
-          + "\",\"debitTime\":\""
+          + '\''
+          + ", debitTime='"
           + HexUtil.toHex(getDebitTime())
-          + "\",\"kvc\":\""
+          + '\''
+          + ", kvc='"
           + HexUtil.toHex(getKvc())
-          + "\",\"samId\":\""
+          + '\''
+          + ", samId='"
           + HexUtil.toHex(getSamId())
-          + "\",\"svTransactionNumber\":"
+          + '\''
+          + ", svTransactionNumber="
           + getSvTNum()
-          + ",\"svSamTransactionNumber\":"
+          + ", svSamTransactionNumber="
           + getSamTNum()
-          + "}";
+          + '}';
     }
   }
 
@@ -840,32 +860,37 @@ final class DtoAdapters {
     }
 
     /**
-     * Gets the object content as a Json string.
+     * {@inheritDoc}
      *
-     * @return A not empty string.
      * @since 2.0.0
      */
     @Override
     public String toString() {
-      return "{\"amount\":"
+      return "SvLoadLogRecordAdapter{"
+          + "amount="
           + getAmount()
-          + ",\"balance\":"
+          + ", balance="
           + getBalance()
-          + ",\"loadDate\":\""
+          + ", loadDate='"
           + HexUtil.toHex(getLoadDate())
-          + "\",\"loadTime\":\""
+          + '\''
+          + ", loadTime='"
           + HexUtil.toHex(getLoadTime())
-          + "\",\"freeBytes\":\""
+          + '\''
+          + ", freeBytes='"
           + HexUtil.toHex(getFreeData())
-          + "\",\"kvc\":\""
+          + '\''
+          + ", kvc='"
           + HexUtil.toHex(getKvc())
-          + "\",\"samId\":\""
+          + '\''
+          + ", samId='"
           + HexUtil.toHex(getSamId())
-          + "\",\"svTransactionNumber\":"
+          + '\''
+          + ", svTransactionNumber="
           + getSvTNum()
-          + ",\"svSamTransactionNumber\":"
+          + ", svSamTransactionNumber="
           + getSamTNum()
-          + "}";
+          + '}';
     }
   }
 

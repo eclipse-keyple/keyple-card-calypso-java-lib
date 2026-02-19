@@ -112,7 +112,7 @@ final class CommandReadBinary extends Command {
                 cardClass, getCommandRef().getInstructionByte(), p1, lsb, null, (byte) length)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, offset: " + offset + ", length: " + length);
+      addSubName("SFI: " + HexUtil.toHex(sfi) + "h, Offset: " + offset + ", Length: " + length);
     }
   }
 
@@ -158,8 +158,9 @@ final class CommandReadBinary extends Command {
       if (anticipatedApduResponse == null) {
         String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
-            "Unable to determine anticipated APDU response for command [{}] (sfi {}h, offset {}, length {})"
-                + " because the record or some records have not been read beforehand",
+            "Unable to determine anticipated APDU response "
+                + "because the record or some records have not been read beforehand "
+                + "[command={}, sfi={}, offset={}, length={}]",
             getName(),
             sfiHex,
             offset,

@@ -175,8 +175,8 @@ final class CommandVerifyPin extends Command {
     if (logger.isDebugEnabled()) {
       addSubName(
           isReadCounterMode
-              ? "read presentation counter"
-              : isPinEncryptedMode ? "encrypted" : "plain"); // NOSONAR
+              ? "Read presentation counter"
+              : isPinEncryptedMode ? "Encrypted" : "Plain"); // NOSONAR
     }
     encryptRequestAndUpdateTerminalSessionMacIfNeeded();
   }

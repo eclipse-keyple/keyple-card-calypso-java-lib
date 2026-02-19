@@ -79,7 +79,7 @@ class FileDataAdapter implements FileData {
   public byte[] getContent(int numRecord) {
     byte[] content = records.get(numRecord);
     if (content == null) {
-      logger.warn("Record not set (#{})", numRecord);
+      logger.warn("Record not set [rec={}]", numRecord);
       content = new byte[0];
     }
     return content;
@@ -99,7 +99,7 @@ class FileDataAdapter implements FileData {
 
     byte[] content = records.get(numRecord);
     if (content == null) {
-      logger.warn("Record not set (#{})", numRecord);
+      logger.warn("Record not set [rec={}]", numRecord);
       return new byte[0];
     }
     if (dataOffset >= content.length) {
@@ -134,12 +134,12 @@ class FileDataAdapter implements FileData {
 
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      logger.warn("Record not set (#1)");
+      logger.warn("Record not set [rec=1]");
       return null;
     }
     int counterIndex = (numCounter - 1) * 3;
     if (counterIndex >= rec1.length) {
-      logger.warn("Counter not set (#{}) (nb of actual counters: {})", numCounter, rec1.length / 3);
+      logger.warn("Counter not set [counter={}, counterCount={}]", numCounter, rec1.length / 3);
       return null;
     }
     if (counterIndex + 3 > rec1.length) {
@@ -163,7 +163,7 @@ class FileDataAdapter implements FileData {
     SortedMap<Integer, Integer> result = new TreeMap<>();
     byte[] rec1 = records.get(1);
     if (rec1 == null) {
-      logger.warn("Record not set (#1)");
+      logger.warn("Record not set [rec=1]");
       return result;
     }
     int length = rec1.length - (rec1.length % 3);

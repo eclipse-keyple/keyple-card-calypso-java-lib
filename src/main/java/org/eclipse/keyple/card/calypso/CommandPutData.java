@@ -120,7 +120,7 @@ final class CommandPutData extends Command {
         }
         break;
       default:
-        throw new UnsupportedOperationException("Unsupported tag: " + tag);
+        throw new UnsupportedOperationException("Unsupported PutDataTag: " + tag);
     }
 
     // APDU Case 3 - always outside secure session
