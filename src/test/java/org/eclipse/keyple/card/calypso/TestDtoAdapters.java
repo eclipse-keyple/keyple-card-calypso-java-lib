@@ -13,7 +13,7 @@ package org.eclipse.keyple.card.calypso;
 
 import java.util.Arrays;
 import java.util.List;
-import org.eclipse.keyple.core.util.json.JsonUtil;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.CardResponseApi;
 import org.eclipse.keypop.card.CardSelectionResponseApi;
@@ -57,15 +57,16 @@ class TestDtoAdapters {
       return statusWord;
     }
 
-    /**
-     * Converts the APDU response into a string where the data is encoded in a json format.
-     *
-     * @return A not empty String
-     * @since 2.0.0
-     */
     @Override
     public String toString() {
-      return "APDU_RESPONSE = " + JsonUtil.toJson(this);
+      return "ApduResponseAdapter{"
+          + "apdu='"
+          + HexUtil.toHex(apdu)
+          + '\''
+          + ", statusWord='"
+          + HexUtil.toHex(statusWord)
+          + '\''
+          + '}';
     }
 
     @Override
@@ -133,6 +134,16 @@ class TestDtoAdapters {
     }
 
     @Override
+    public String toString() {
+      return "CardResponseAdapter{"
+          + "apduResponses="
+          + apduResponses
+          + ", isLogicalChannelOpen="
+          + isLogicalChannelOpen
+          + '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
@@ -182,6 +193,17 @@ class TestDtoAdapters {
     @Override
     public CardResponseApi getCardResponse() {
       throw new UnsupportedOperationException("hasMatched");
+    }
+
+    @Override
+    public String toString() {
+      return "CardSelectionResponseAdapter{"
+          + "powerOnData='"
+          + powerOnData
+          + '\''
+          + ", selectApplicationResponse="
+          + selectApplicationResponse
+          + '}';
     }
   }
 }
