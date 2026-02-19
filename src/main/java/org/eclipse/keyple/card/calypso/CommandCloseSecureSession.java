@@ -226,10 +226,10 @@ final class CommandCloseSecureSession extends Command {
     getTransactionContext().setSecureSessionOpen(false);
     try {
       super.setApduResponseAndCheckStatus(apduResponse);
-      logger.info("Secure session successfully aborted");
+      logger.info("Secure session aborted");
       getTransactionContext().getCard().restoreFiles();
     } catch (CardCommandException e) {
-      logger.warn("Failed to abort secure session: {}", e.getMessage());
+      logger.warn("Failed to abort secure session [reason={}]", e.getMessage());
     }
   }
 

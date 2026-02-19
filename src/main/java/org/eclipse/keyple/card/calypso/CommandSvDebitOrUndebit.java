@@ -260,7 +260,7 @@ final class CommandSvDebitOrUndebit extends Command {
     if (isDebitCommand
         && !isSvNegativeBalanceAuthorized
         && (getTransactionContext().getCard().getSvBalance() - amount) < 0) {
-      throw new IllegalStateException("Negative balances not allowed");
+      throw new IllegalStateException("Negative balances are not allowed");
     }
     SvCommandSecurityDataApiAdapter svCommandSecurityData = new SvCommandSecurityDataApiAdapter();
     svCommandSecurityData.setSvGetRequest(getTransactionContext().getCard().getSvGetHeader());
@@ -311,7 +311,9 @@ final class CommandSvDebitOrUndebit extends Command {
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {
-      throw new IllegalStateException("Bad length in response to SV Debit/Undebit command");
+      throw new IllegalStateException(
+          "SV Debit/Undebit response is not the correct length. Expected: 0/3/6, Actual: "
+              + apduResponse.getDataOut().length);
     }
     CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
     calypsoCard.setSvOperationSignature(apduResponse.getDataOut());

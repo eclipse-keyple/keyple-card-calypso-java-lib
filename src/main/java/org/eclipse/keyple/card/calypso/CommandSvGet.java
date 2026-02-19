@@ -99,7 +99,7 @@ final class CommandSvGet extends Command {
                 getExpectedResponseLength().byteValue())));
 
     if (logger.isDebugEnabled()) {
-      addSubName("operation: " + svOperation.toString());
+      addSubName("Operation: " + svOperation.toString());
     }
 
     header = new byte[4];
@@ -187,7 +187,9 @@ final class CommandSvGet extends Command {
         debitLog = Arrays.copyOfRange(cardResponse, 42, cardResponse.length);
         break;
       default:
-        throw new IllegalStateException("Incorrect data length in response to SVGet");
+        throw new IllegalStateException(
+            "SV Get response is not the correct length. Expected: 30/33/61, Actual: "
+                + cardResponse.length);
     }
     CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
     calypsoCard.setSvData(currentKvc, header, apduResponse.getApdu(), balance, transactionNumber);

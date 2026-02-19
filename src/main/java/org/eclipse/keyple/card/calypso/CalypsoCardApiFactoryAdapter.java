@@ -31,20 +31,8 @@ import org.eclipse.keypop.reader.CardReader;
  */
 class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
 
-  private static final String MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API =
-      "The provided 'cardReader' must implement 'ProxyReaderApi'";
-  private static final String MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER =
-      "The provided 'card' must be an instance of 'CalypsoCardAdapter'";
-  private static final String
-      MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
-          "The provided 'securitySetting' must be an instance of 'SymmetricCryptoSecuritySettingAdapter'";
-  private static final String
-      MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_ASYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER =
-          "The provided 'securitySetting' must be an instance of 'AsymmetricCryptoSecuritySettingAdapter'";
   private static final String MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE =
       "The provided 'card' has an undefined product type";
-  private static final String MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY =
-      "cryptoTransactionManagerFactory";
   private static final String MSG_CARD_READER = "cardReader";
   private static final String MSG_CARD = "card";
   private static final String MSG_SECURITY_SETTING = "securitySetting";
@@ -68,11 +56,12 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   public SymmetricCryptoSecuritySetting createSymmetricCryptoSecuritySetting(
       SymmetricCryptoCardTransactionManagerFactory cryptoCardTransactionManagerFactory) {
     Assert.getInstance()
-        .notNull(cryptoCardTransactionManagerFactory, MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY);
+        .notNull(cryptoCardTransactionManagerFactory, "cryptoCardTransactionManagerFactory");
     if (!(cryptoCardTransactionManagerFactory
         instanceof SymmetricCryptoCardTransactionManagerFactorySpi)) {
       throw new IllegalArgumentException(
-          "The provided 'factory' must implement 'SymmetricCryptoCardTransactionManagerFactorySpi'");
+          "Cannot cast 'factory' to SymmetricCryptoCardTransactionManagerFactorySpi. Actual type: "
+              + cryptoCardTransactionManagerFactory.getClass().getName());
     }
     return new SymmetricCryptoSecuritySettingAdapter(
         (SymmetricCryptoCardTransactionManagerFactorySpi) cryptoCardTransactionManagerFactory);
@@ -87,11 +76,12 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
   public AsymmetricCryptoSecuritySetting createAsymmetricCryptoSecuritySetting(
       AsymmetricCryptoCardTransactionManagerFactory cryptoCardTransactionManagerFactory) {
     Assert.getInstance()
-        .notNull(cryptoCardTransactionManagerFactory, MSG_CRYPTO_CARD_TRANSACTION_MANAGER_FACTORY);
+        .notNull(cryptoCardTransactionManagerFactory, "cryptoCardTransactionManagerFactory");
     if (!(cryptoCardTransactionManagerFactory
         instanceof AsymmetricCryptoCardTransactionManagerFactorySpi)) {
       throw new IllegalArgumentException(
-          "The provided 'factory' must implement 'AsymmetricCryptoCardTransactionManagerFactorySpi'");
+          "Cannot cast 'factory' to AsymmetricCryptoCardTransactionManagerFactorySpi. Actual type: "
+              + cryptoCardTransactionManagerFactory.getClass().getName());
     }
     return new AsymmetricCryptoSecuritySettingAdapter(
         (AsymmetricCryptoCardTransactionManagerFactorySpi) cryptoCardTransactionManagerFactory);
@@ -108,11 +98,12 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
     Assert.getInstance().notNull(cardReader, MSG_CARD_READER).notNull(card, MSG_CARD);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          "Cannot cast 'cardReader' to ProxyReaderApi. Actual type: "
+              + cardReader.getClass().getName());
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          "Cannot cast 'card' to CalypsoCardAdapter. Actual type: " + card.getClass().getName());
     }
     if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
       throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
@@ -135,15 +126,17 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
         .notNull(securitySetting, MSG_SECURITY_SETTING);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          "Cannot cast 'cardReader' to ProxyReaderApi. Actual type: "
+              + cardReader.getClass().getName());
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          "Cannot cast 'card' to CalypsoCardAdapter. Actual type: " + card.getClass().getName());
     }
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+          "Cannot cast 'securitySetting' to SymmetricCryptoSecuritySettingAdapter. Actual type: "
+              + securitySetting.getClass().getName());
     }
     if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
       throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
@@ -168,15 +161,17 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
         .notNull(securitySetting, MSG_SECURITY_SETTING);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          "Cannot cast 'cardReader' to ProxyReaderApi. Actual type: "
+              + cardReader.getClass().getName());
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          "Cannot cast 'card' to CalypsoCardAdapter. Actual type: " + card.getClass().getName());
     }
     if (!(securitySetting instanceof SymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_SYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+          "Cannot cast 'securitySetting' to SymmetricCryptoSecuritySettingAdapter. Actual type: "
+              + securitySetting.getClass().getName());
     }
     if (card.getProductType() == CalypsoCard.ProductType.UNKNOWN) {
       throw new IllegalArgumentException(MSG_THE_PROVIDED_CARD_HAS_AN_UNDEFINED_PRODUCT_TYPE);
@@ -201,15 +196,17 @@ class CalypsoCardApiFactoryAdapter implements CalypsoCardApiFactory {
         .notNull(securitySetting, MSG_SECURITY_SETTING);
     if (!(cardReader instanceof ProxyReaderApi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_READER_MUST_IMPLEMENT_PROXY_READER_API);
+          "Cannot cast 'cardReader' to ProxyReaderApi. Actual type: "
+              + cardReader.getClass().getName());
     }
     if (!(card instanceof CalypsoCardAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_MUST_BE_AN_INSTANCE_OF_CALYPSO_CARD_ADAPTER);
+          "Cannot cast 'card' to CalypsoCardAdapter. Actual type: " + card.getClass().getName());
     }
     if (!(securitySetting instanceof AsymmetricCryptoSecuritySettingAdapter)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_SECURITY_SETTING_MUST_BE_AN_INSTANCE_OF_ASYMMETRIC_CRYPTO_SECURITY_SETTING_ADAPTER);
+          "Cannot cast 'securitySetting' to AsymmetricCryptoSecuritySettingAdapter. Actual type: "
+              + securitySetting.getClass().getName());
     }
     return new SecurePkiModeTransactionManagerAdapter(
         (ProxyReaderApi) cardReader,

@@ -185,7 +185,7 @@ final class CommandGetDataEfList extends Command {
         efType = ElementaryFile.Type.SIMULATED_COUNTERS;
         break;
       default:
-        throw new IllegalStateException("Unexpected EF type");
+        throw new IllegalStateException("Unexpected EF type: " + efDescriptorByteArray[3]);
     }
     return FileHeaderAdapter.builder()
         .lid(ByteArrayUtil.extractShort(efDescriptorByteArray, 0))

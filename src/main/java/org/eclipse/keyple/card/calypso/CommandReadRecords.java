@@ -135,13 +135,13 @@ final class CommandReadRecords extends Command {
 
     if (logger.isDebugEnabled()) {
       addSubName(
-          "sfi: "
+          "SFI: "
               + HexUtil.toHex(sfi)
-              + "h, rec: "
+              + "h, Rec: "
               + firstRecordNumber
-              + ", read mode: "
+              + ", Read mode: "
               + readMode.name()
-              + ", expected length: "
+              + ", Expected length: "
               + expectedLength);
     }
   }
@@ -188,8 +188,9 @@ final class CommandReadRecords extends Command {
       if (anticipatedApduResponse == null) {
         String sfiHex = HexUtil.toHex(sfi);
         logger.warn(
-            "Unable to determine anticipated APDU response for command [{}] (sfi {}h, record {})"
-                + " because the record or some records have not been read beforehand",
+            "Unable to determine anticipated APDU response "
+                + "because the record or some records have not been read beforehand "
+                + "[command={}, sfi={}, record={}]",
             getName(),
             sfiHex,
             firstRecordNumber);

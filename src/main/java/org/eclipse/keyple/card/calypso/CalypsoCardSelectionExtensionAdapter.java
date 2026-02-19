@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
@@ -40,7 +41,6 @@ final class CalypsoCardSelectionExtensionAdapter
     implements CalypsoCardSelectionExtension, CardSelectionExtensionSpi {
 
   private static final int SW_CARD_INVALIDATED = 0x6283;
-  private static final String MSG_CARD_COMMAND_ERROR = "A card command error occurred ";
 
   private final List<Command> commands;
   private final TransactionContextDto transactionContext;
@@ -163,7 +163,7 @@ final class CalypsoCardSelectionExtensionAdapter
   public CalypsoCardSelectionExtension preparePreOpenSecureSession(
       WriteAccessLevel writeAccessLevel) {
     if (isPreOpenPrepared) {
-      throw new IllegalStateException("'Pre-Open Secure Session' command already prepared");
+      throw new IllegalStateException("'Pre-Open Secure Session' command is already prepared");
     }
     Assert.getInstance().notNull(writeAccessLevel, "writeAccessLevel");
     commands.add(
@@ -194,7 +194,7 @@ final class CalypsoCardSelectionExtensionAdapter
         commands.add(new CommandGetDataTraceabilityInformation(transactionContext, commandContext));
         break;
       default:
-        throw new UnsupportedOperationException("Unsupported Get Data tag: " + tag.name());
+        throw new UnsupportedOperationException("Unsupported GetDataTag: " + tag.name());
     }
     return this;
   }
@@ -259,7 +259,11 @@ final class CalypsoCardSelectionExtensionAdapter
             ? cardResponse.getApduResponses()
             : Collections.<ApduResponseApi>emptyList();
     if (commands.size() != apduResponses.size()) {
-      throw new ParseException("Mismatch in the number of requests/responses");
+      throw new ParseException(
+          "The number of commands/responses does not match. Expected "
+              + commands.size()
+              + " responses, got "
+              + apduResponses.size());
     }
     CalypsoCardAdapter calypsoCard;
     try {
@@ -268,13 +272,13 @@ final class CalypsoCardSelectionExtensionAdapter
         parseApduResponses(calypsoCard, commands, apduResponses);
       }
     } catch (Exception e) {
-      throw new ParseException("Invalid card response: " + e.getMessage(), e);
+      throw new ParseException("Invalid card response", e);
     }
     if (calypsoCard.getProductType() == CalypsoCard.ProductType.UNKNOWN
         && cardSelectionResponse.getSelectApplicationResponse() == null
         && cardSelectionResponse.getPowerOnData() == null) {
       throw new ParseException(
-          "Unable to create a CalypsoCard: no power-on data and no FCI provided");
+          "No power-on data and no FCI provided. Unable to create a CalypsoCard");
     }
     return calypsoCard;
   }
@@ -295,9 +299,9 @@ final class CalypsoCardSelectionExtensionAdapter
     // desynchronized exception.
     if (apduResponses.size() > commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          "The number of commands/responses does not match. Expected "
               + commands.size()
-              + ", nb responses = "
+              + " responses, got "
               + apduResponses.size());
     }
     // We go through all the responses (and not the requests) because there may be fewer in the
@@ -316,9 +320,12 @@ final class CalypsoCardSelectionExtensionAdapter
         if (e instanceof CardDataAccessException && commandRef == CardCommandRef.SELECT_FILE) {
           throw new SelectFileException("File not found", e);
         } else {
+          String sw =
+              commands.get(i).getApduResponse() != null
+                  ? HexUtil.toHex(commands.get(i).getApduResponse().getStatusWord())
+                  : "null";
           throw new InvalidCardResponseException(
-              MSG_CARD_COMMAND_ERROR + "while processing responses to card commands: " + commandRef,
-              e);
+              "Failed to process SAM response. Command: " + commandRef + ", SW: " + sw, e);
         }
       }
     }
@@ -326,9 +333,9 @@ final class CalypsoCardSelectionExtensionAdapter
     // throw a desynchronized exception.
     if (apduResponses.size() < commands.size()) {
       throw new InconsistentDataException(
-          "The number of commands/responses does not match: nb commands = "
+          "The number of commands/responses does not match. Expected "
               + commands.size()
-              + ", nb responses = "
+              + " responses, got "
               + apduResponses.size());
     }
   }

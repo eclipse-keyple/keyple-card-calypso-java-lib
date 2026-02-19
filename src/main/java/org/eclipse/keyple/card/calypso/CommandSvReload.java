@@ -287,7 +287,9 @@ final class CommandSvReload extends Command {
     if (apduResponse.getDataOut().length != 0
         && apduResponse.getDataOut().length != 3
         && apduResponse.getDataOut().length != 6) {
-      throw new IllegalStateException("Bad length in response to SV Reload command");
+      throw new IllegalStateException(
+          "SV Reload response is not the correct length. Expected: 0/3/6, Actual: "
+              + apduResponse.getDataOut().length);
     }
     CalypsoCardAdapter calypsoCard = getTransactionContext().getCard();
     calypsoCard.setSvOperationSignature(apduResponse.getDataOut());

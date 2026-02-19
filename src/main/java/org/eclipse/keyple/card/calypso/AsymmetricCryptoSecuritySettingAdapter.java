@@ -34,19 +34,9 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCr
  */
 final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSecuritySetting {
 
-  private static final String MSG_THE_PROVIDED_PCA_CERTIFICATE_MUST_IMPLEMENT_PCA_CERTIFICATE_SPI =
-      "The provided 'pcaCertificate' must implement 'PcaCertificateSpi'";
-  private static final String MSG_THE_PROVIDED_CA_CERTIFICATE_MUST_IMPLEMENT_CA_CERTIFICATE_SPI =
-      "The provided 'caCertificate' must implement 'CaCertificateSpi'";
-  private static final String
-      MSG_THE_PROVIDED_CA_CERTIFICATE_PARSER_MUST_IMPLEMENT_CA_CERTIFICATE_PARSER_SPI =
-          "The provided 'caCertificateParser' must implement 'CaCertificateParserSpi'";
-  private static final String
-      MSG_THE_PROVIDED_CARD_CERTIFICATE_PARSER_MUST_IMPLEMENT_CARD_CERTIFICATE_PARSER_SPI =
-          "The provided 'cardCertificateParser' must implement 'CardCertificateParserSpi'";
-  private static final String MSG_INVALID_CERTIFICATE = "Invalid certificate: ";
-  private static final String MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE =
-      "An error occurs during the check of the certificate: ";
+  private static final String MSG_INVALID_CERTIFICATE = "Invalid certificate";
+  private static final String MSG_FAILED_TO_CHECK_THE_CERTIFICATE =
+      "Failed to check the certificate";
   private static final String
       MSG_A_CERTIFICATE_IS_ALREADY_REGISTERED_FOR_THE_PROVIDED_PUBLIC_KEY_REFERENCE =
           "A certificate is already registered for the provided public key reference: ";
@@ -91,7 +81,8 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
     Assert.getInstance().notNull(pcaCertificate, "pcaCertificate");
     if (!(pcaCertificate instanceof PcaCertificateSpi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_PCA_CERTIFICATE_MUST_IMPLEMENT_PCA_CERTIFICATE_SPI);
+          "Cannot cast 'pcaCertificate' to PcaCertificateSpi. Actual type: "
+              + pcaCertificate.getClass().getName());
     }
     PcaCertificateSpi pcaCertificateSpi = (PcaCertificateSpi) pcaCertificate;
 
@@ -100,10 +91,9 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
     try {
       certificateContent = pcaCertificateSpi.checkCertificateAndGetContent();
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE, e);
     } catch (AsymmetricCryptoException e) {
-      throw new CryptoException(
-          MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE + e.getMessage(), e);
+      throw new CryptoException(MSG_FAILED_TO_CHECK_THE_CERTIFICATE, e);
     }
 
     // Save the certificate content into the store
@@ -128,7 +118,8 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
     Assert.getInstance().notNull(caCertificate, "caCertificate");
     if (!(caCertificate instanceof CaCertificateSpi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CA_CERTIFICATE_MUST_IMPLEMENT_CA_CERTIFICATE_SPI);
+          "Cannot cast 'caCertificate' to CaCertificateSpi. Actual type: "
+              + caCertificate.getClass().getName());
     }
     CaCertificateSpi caCertificateSpi = (CaCertificateSpi) caCertificate;
 
@@ -147,10 +138,9 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
       caCertificateContent =
           caCertificateSpi.checkCertificateAndGetContent(issuerCertificateContent);
     } catch (CertificateValidationException e) {
-      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE + e.getMessage(), e);
+      throw new InvalidCertificateException(MSG_INVALID_CERTIFICATE, e);
     } catch (AsymmetricCryptoException e) {
-      throw new CryptoException(
-          MSG_AN_ERROR_OCCURS_DURING_THE_CHECK_OF_THE_CERTIFICATE + e.getMessage(), e);
+      throw new CryptoException(MSG_FAILED_TO_CHECK_THE_CERTIFICATE, e);
     }
 
     // Save the certificate content into the store
@@ -175,7 +165,8 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
     Assert.getInstance().notNull(caCertificateParser, "caCertificateParser");
     if (!(caCertificateParser instanceof CaCertificateParserSpi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CA_CERTIFICATE_PARSER_MUST_IMPLEMENT_CA_CERTIFICATE_PARSER_SPI);
+          "Cannot cast 'caCertificateParser' to CaCertificateParserSpi. Actual type: "
+              + caCertificateParser.getClass().getName());
     }
 
     // Save the parser into the store
@@ -202,7 +193,8 @@ final class AsymmetricCryptoSecuritySettingAdapter implements AsymmetricCryptoSe
     Assert.getInstance().notNull(cardCertificateParser, "cardCertificateParser");
     if (!(cardCertificateParser instanceof CardCertificateParserSpi)) {
       throw new IllegalArgumentException(
-          MSG_THE_PROVIDED_CARD_CERTIFICATE_PARSER_MUST_IMPLEMENT_CARD_CERTIFICATE_PARSER_SPI);
+          "Cannot cast 'cardCertificateParser' to CardCertificateParserSpi. Actual type: "
+              + cardCertificateParser.getClass().getName());
     }
 
     // Save the parser into the store

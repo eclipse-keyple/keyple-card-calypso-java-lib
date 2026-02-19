@@ -113,7 +113,7 @@ final class CommandUpdateRecord extends Command {
                 null)));
 
     if (logger.isDebugEnabled()) {
-      addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+      addSubName("SFI: " + HexUtil.toHex(sfi) + "h, Rec: " + recordNumber);
     }
   }
 

@@ -124,7 +124,7 @@ final class CommandOpenSecureSession extends Command {
     this.writeAccessLevel = writeAccessLevel;
     createRev3((byte) (writeAccessLevel.ordinal() + 1), new byte[0]); // with no SAM challenge
     if (logger.isDebugEnabled()) {
-      addSubName("pre-open");
+      addSubName("PRE-OPEN");
     }
   }
 
@@ -212,7 +212,7 @@ final class CommandOpenSecureSession extends Command {
 
     if (logger.isDebugEnabled()) {
       addSubName(
-          "key index: " + keyIndex + ", sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+          "Key index: " + keyIndex + ", SFI: " + HexUtil.toHex(sfi) + "h, Rec: " + recordNumber);
     }
   }
 
@@ -296,7 +296,7 @@ final class CommandOpenSecureSession extends Command {
 
     if (logger.isDebugEnabled()) {
       addSubName(
-          "key index: " + keyIndex + ", sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+          "Key index: " + keyIndex + ", SFI: " + HexUtil.toHex(sfi) + "h, Rec: " + recordNumber);
     }
   }
 
@@ -315,7 +315,7 @@ final class CommandOpenSecureSession extends Command {
       apdu[2] = (byte) (recordNumber * 8);
       apdu[3] = (byte) ((sfi * 8) + 3);
       if (logger.isDebugEnabled()) {
-        addSubName("sfi: " + HexUtil.toHex(sfi) + "h, rec: " + recordNumber);
+        addSubName("SFI: " + HexUtil.toHex(sfi) + "h, Rec: " + recordNumber);
       }
     }
     this.sfi = sfi;
@@ -365,9 +365,7 @@ final class CommandOpenSecureSession extends Command {
         break;
       default:
         throw new IllegalArgumentException(
-            "Product type "
-                + getTransactionContext().getCard().getProductType()
-                + " not supported");
+            "Unsupported ProductType:" + getTransactionContext().getCard().getProductType());
     }
   }
 
@@ -426,10 +424,7 @@ final class CommandOpenSecureSession extends Command {
       Byte computedKif = computeKif(computedKvc);
       if (!symmetricCryptoSecuritySetting.isSessionKeyAuthorized(computedKif, computedKvc)) {
         throw new UnauthorizedKeyException(
-            String.format(
-                "Unauthorized key error: KIF=%s, KVC=%s",
-                computedKif != null ? String.format(PATTERN_1_BYTE_HEX, computedKif) : null,
-                computedKvc != null ? String.format(PATTERN_1_BYTE_HEX, computedKvc) : null));
+            "Unauthorized key. KIF: " + HexUtil.toHex(computedKif) + ", KVC: " + computedKvc);
       }
       try {
         getTransactionContext()
@@ -556,9 +551,12 @@ final class CommandOpenSecureSession extends Command {
     int dataLength = apduResponseData[7 + offset];
     if (dataLength != apduResponseData.length - 8 - offset) {
       throw new CardUnexpectedResponseLengthException(
-          String.format(
-              "Unexpected APDU response length for command %s (expected: %d, actual: %d)",
-              getCommandRef(), expectedRecordDataLength, dataLength),
+          "APDU response is not the correct length. Command: "
+              + getCommandRef()
+              + ", Expected: "
+              + expectedRecordDataLength
+              + ", Actual: "
+              + dataLength,
           getCommandRef());
     }
     recordData = Arrays.copyOfRange(apduResponseData, 8 + offset, 8 + offset + dataLength);
@@ -613,9 +611,10 @@ final class CommandOpenSecureSession extends Command {
         break;
       default:
         throw new CardUnexpectedResponseLengthException(
-            String.format(
-                "Unexpected APDU response length for command %s (expected: 5/7/34/36, actual: %d)",
-                getCommandRef(), apduResponseData.length),
+            "APDU response is not the correct length. Command: "
+                + getCommandRef()
+                + ", Expected: 5/7/34/36, Actual: "
+                + apduResponseData.length,
             getCommandRef());
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 1, 4);
@@ -671,9 +670,10 @@ final class CommandOpenSecureSession extends Command {
         break;
       default:
         throw new CardUnexpectedResponseLengthException(
-            String.format(
-                "Unexpected APDU response length for command %s (expected: 4/6/33/35, actual: %d)",
-                getCommandRef(), apduResponseData.length),
+            "APDU response is not the correct length. Command: "
+                + getCommandRef()
+                + ", Expected: 4/6/33/35, Actual: "
+                + apduResponseData.length,
             getCommandRef());
     }
     challengeTransactionCounter = Arrays.copyOfRange(apduResponseData, 0, 3);
@@ -705,9 +705,12 @@ final class CommandOpenSecureSession extends Command {
       throws CardUnexpectedResponseLengthException {
     if (dataLength != expectedRecordDataLength) {
       throw new CardUnexpectedResponseLengthException(
-          String.format(
-              "Unexpected APDU response length for command %s (expected: %d, actual: %d)",
-              getCommandRef(), expectedRecordDataLength, dataLength),
+          "APDU response is not the correct length. Command: "
+              + getCommandRef()
+              + ", Expected: "
+              + expectedRecordDataLength
+              + ", Actual: "
+              + dataLength,
           getCommandRef());
     }
   }

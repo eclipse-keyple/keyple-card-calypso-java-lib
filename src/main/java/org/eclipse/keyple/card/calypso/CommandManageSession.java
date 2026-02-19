@@ -178,7 +178,7 @@ final class CommandManageSession extends Command {
       if (apduResponse.getStatusWord() == 0x6985
           && !getTransactionContext().getCard().isExtendedModeSupported()) {
         throw new UnsupportedOperationException(
-            "'Manage Secure Session' command not available for this context"
+            "'Manage Secure Session' command is not available for this context"
                 + " (Card and/or SAM does not support extended mode)");
       }
       throw e;
@@ -189,7 +189,7 @@ final class CommandManageSession extends Command {
         if (!getTransactionContext()
             .getSymmetricCryptoCardTransactionManagerSpi()
             .isCardSessionMacValid(cardSessionMac)) {
-          throw new InvalidCardSignatureException("Invalid card (authentication failed!)");
+          throw new InvalidCardSignatureException("Invalid card (authentication failed)");
         }
       } catch (SymmetricCryptoException e) {
         throw new CryptoException(e.getMessage(), e);
