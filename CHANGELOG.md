@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.2.2] - 2026-02-20
 ### Changed
 - Normalized logging and error messages using Keyple coding standards.
 ### Upgraded
@@ -333,7 +335,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse-key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.1...HEAD
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.2...HEAD
+[3.2.2]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.9...3.2.0
 [3.1.9]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.8...3.1.9
