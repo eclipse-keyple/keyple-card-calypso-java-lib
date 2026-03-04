@@ -54,7 +54,7 @@ hide <<grey>> stereotype
 legend top
     __Colors legend__ :
     * __External API references__ :
-    ** <back:pink>**keypop-calypso-java-api**</back>
+    ** <back:pink>**keypop-calypso-card-java-api**</back>
     ** <back:cyan>**keyple-common-java-api**</back>
 end legend
 
