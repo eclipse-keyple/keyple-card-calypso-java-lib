@@ -25,7 +25,7 @@ listed source code repository logs.
 
 This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v. 2.0 which is available at
-http://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+https://www.eclipse.org/legal/epl-2.0/
 
 SPDX-License-Identifier: EPL-2.0
    
@@ -59,4 +59,4 @@ SLF4J API
 GSON
 
 * License: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
-* Project: https://github.com/google/gson/gson
+* Project: https://github.com/google/gson
