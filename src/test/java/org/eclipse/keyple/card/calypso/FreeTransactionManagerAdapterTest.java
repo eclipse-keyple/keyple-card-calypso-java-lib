@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.card.ElementaryFile;
@@ -1484,5 +1485,10 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
     verify(cardReader)
         .transmitCardRequest(
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void preparePutData_whenAid_shouldThrowUOE() {
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, new byte[8]);
   }
 }

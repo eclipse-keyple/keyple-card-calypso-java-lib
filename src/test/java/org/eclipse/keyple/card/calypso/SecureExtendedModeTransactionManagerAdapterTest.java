@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import java.util.*;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.*;
@@ -2922,5 +2923,65 @@ public class SecureExtendedModeTransactionManagerAdapterTest
         .isCardSessionMacValid(HexUtil.toByteArray(CARD_SIGNATURE_EXTENDED));
     inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
     verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
+  }
+
+  @Test
+  public void preparePutData_whenAidAndEncryptionIsActive_shouldSendEncryptedPutData()
+      throws Exception {
+    String openSecureSessionPersoCmd = "008A010209" + "00" + SAM_CHALLENGE_EXTENDED + "00";
+    String putDataAidCmd = "00DA004F08" + "A000000291FF9101";
+    String putDataAidEncryptedCmd = "00DA004F08" + "E1E2E3E4E5E6E7E8";
+
+    initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_EXTENDED);
+
+    when(symmetricCryptoCardTransactionManager.initTerminalSecureSessionContext())
+        .thenReturn(HexUtil.toByteArray(SAM_CHALLENGE_EXTENDED));
+    when(symmetricCryptoCardTransactionManager.updateTerminalSessionMac(
+            HexUtil.toByteArray(putDataAidCmd)))
+        .thenReturn(HexUtil.toByteArray(putDataAidEncryptedCmd));
+    when(symmetricCryptoCardTransactionManager.updateTerminalSessionMac(
+            HexUtil.toByteArray(SW_9000)))
+        .thenReturn(HexUtil.toByteArray(SW_9000));
+
+    CardRequestSpi cardOpenAndEncryptRequest =
+        mockTransmitCardRequest(
+            openSecureSessionPersoCmd,
+            CARD_OPEN_SECURE_SESSION_EXTENDED_RSP,
+            CARD_MSS_ENCRYPTION_CMD,
+            SW_9000);
+    CardRequestSpi cardPutDataRequest = mockTransmitCardRequest(putDataAidEncryptedCmd, SW_9000);
+
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.PERSONALIZATION)
+        .prepareActivateEncryption()
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager
+        .preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray("A000000291FF9101"))
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    InOrder inOrder = inOrder(cardReader, symmetricCryptoCardTransactionManager);
+    inOrder.verify(symmetricCryptoCardTransactionManager).initTerminalSecureSessionContext();
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardOpenAndEncryptRequest)),
+            eq(ChannelControl.KEEP_OPEN));
+    inOrder
+        .verify(symmetricCryptoCardTransactionManager)
+        .initTerminalSessionMac(
+            HexUtil.toByteArray(CARD_OPEN_SECURE_SESSION_EXTENDED_DATA_OUT),
+            HexUtil.toByte(KIF),
+            HexUtil.toByte(KVC));
+    inOrder.verify(symmetricCryptoCardTransactionManager).activateEncryption();
+    inOrder
+        .verify(symmetricCryptoCardTransactionManager)
+        .updateTerminalSessionMac(HexUtil.toByteArray(putDataAidCmd));
+    inOrder
+        .verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardPutDataRequest)), eq(ChannelControl.KEEP_OPEN));
+    inOrder
+        .verify(symmetricCryptoCardTransactionManager)
+        .updateTerminalSessionMac(HexUtil.toByteArray(SW_9000));
   }
 }

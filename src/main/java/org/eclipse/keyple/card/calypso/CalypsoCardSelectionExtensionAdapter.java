@@ -325,7 +325,7 @@ final class CalypsoCardSelectionExtensionAdapter
                   ? HexUtil.toHex(commands.get(i).getApduResponse().getStatusWord())
                   : "null";
           throw new InvalidCardResponseException(
-              "Failed to process SAM response. Command: " + commandRef + ", SW: " + sw, e);
+              "Failed to process card response. Command: " + commandRef + ", SW: " + sw, e);
         }
       }
     }

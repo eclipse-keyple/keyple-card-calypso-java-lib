@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [#133]).
 - The CA certificate is no longer read twice when its Get Data command is prepared by the application in the same
   `processCommands` call as the opening of the secure session.
+### Added
+- Support of the "Put Data" command with the AID tag (4Fh) and the Stored Value link tag (D0h) through
+  `preparePutData(PutDataTag.APPLICATION_AID, ...)` and `preparePutData(PutDataTag.STORED_VALUE_LINK, ...)`. These
+  commands are allowed only within a secure session opened in symmetric crypto mode; the card rejects them if the
+  session is not opened with the `PERSONALIZATION` level (issue [#131]).
+### Upgraded
+- Keypop Calypso Card API `2.2.0` -> `2.3.0`
 
 ## [3.2.2] - 2026-02-20
 ### Changed
@@ -379,6 +386,7 @@ It also brings many major API changes.
 [2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
 [#133]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/133
+[#131]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/131
 [#129]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/129
 [#119]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/119
 [#115]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/115

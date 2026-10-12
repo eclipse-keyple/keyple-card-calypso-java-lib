@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.transaction.SecurePkiModeTransactionManager;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificate;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificateParser;
@@ -87,6 +88,20 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
 
   interface CardCertificateParserMock extends CardCertificateParser, CardCertificateParserSpi {}
 
+  /** Serializable card public key (a mock would break the JSON audit data of the card image). */
+  static final class CardPublicKeyStub implements CardPublicKeySpi {
+    private final byte[] rawValue;
+
+    CardPublicKeyStub(byte[] rawValue) {
+      this.rawValue = rawValue;
+    }
+
+    @Override
+    public byte[] getRawValue() {
+      return rawValue;
+    }
+  }
+
   @Override
   void initTransactionManager() {
     cardTransactionManager =
@@ -149,7 +164,7 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
     when(cardCertificate.getCardSerialNumber()).thenReturn(HexUtil.toByteArray(CARD_SERIAL_NUMBER));
     when(cardCertificate.getIssuerPublicKeyReference()).thenReturn(CA_PUBLIC_KEY_REFERENCE);
     when(cardCertificate.checkCertificateAndGetPublicKey(caContent))
-        .thenReturn(mock(CardPublicKeySpi.class));
+        .thenReturn(new CardPublicKeyStub(new byte[64]));
     CardCertificateParserMock cardCertificateParser = mock(CardCertificateParserMock.class);
     when(cardCertificateParser.getCertificateType()).thenReturn(CARD_CERTIFICATE_TYPE);
     when(cardCertificateParser.parseCertificate(any(byte[].class))).thenReturn(cardCertificate);
@@ -358,5 +373,11 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
     assertThat(transmittedRequests.get(1).get(0)).startsWith(OPEN_SECURE_SESSION_PREFIX);
     assertThat(transmittedRequests.get(1).get(1)).isEqualTo(CLOSE_SECURE_SESSION);
     verifyNoGetDataInTerminalSessionHash();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void preparePutData_whenAid_shouldThrowUOE() {
+    cardTransactionManager.preparePutData(
+        PutDataTag.APPLICATION_AID, HexUtil.toByteArray("A000000291FF9101"));
   }
 }

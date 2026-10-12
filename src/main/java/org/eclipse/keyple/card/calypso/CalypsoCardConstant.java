@@ -136,6 +136,10 @@ final class CalypsoCardConstant {
   static final byte[] TAG_CA_CERTIFICATE_HEADER = HexUtil.toByteArray("DF4A820180");
   static final byte TAG_CA_CERTIFICATE_LSB = (byte) (TAG_CA_CERTIFICATE & 0xFF);
   static final byte TAG_CA_CERTIFICATE_MSB = (byte) ((TAG_CA_CERTIFICATE & 0xFF00) >> 8);
+  static final byte TAG_APPLICATION_AID = (byte) 0x4F;
+  static final byte TAG_STORED_VALUE_LINK = (byte) 0xD0;
+  static final int AID_MIN_LENGTH = 5;
+  static final int AID_MAX_LENGTH = 16;
 
   /** (private) */
   private CalypsoCardConstant() {}
