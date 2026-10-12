@@ -16,7 +16,6 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
 import org.eclipse.keyple.core.util.HexUtil;
@@ -28,7 +27,6 @@ import org.eclipse.keypop.calypso.crypto.asymmetric.AsymmetricCryptoException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.CertificateValidationException;
 import org.eclipse.keypop.calypso.crypto.asymmetric.certificate.spi.*;
 import org.eclipse.keypop.calypso.crypto.asymmetric.transaction.spi.AsymmetricCryptoCardTransactionManagerSpi;
-import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ProxyReaderApi;
 import org.eclipse.keypop.reader.CardCommunicationException;
 import org.eclipse.keypop.reader.ChannelControl;
@@ -58,9 +56,7 @@ final class SecurePkiModeTransactionManagerAdapter
   private final SecureRandom secureRandom = new SecureRandom();
   private final int payloadCapacity;
 
-  private ChannelControl originalChannelControl;
   private boolean isGetDataCardCertificatePrepared;
-  private boolean isGetDataCaCertificatePrepared;
 
   /**
    * Builds a new instance.
@@ -139,7 +135,6 @@ final class SecurePkiModeTransactionManagerAdapter
   void resetTransaction() {
     resetCommandContext();
     isGetDataCardCertificatePrepared = false;
-    isGetDataCaCertificatePrepared = false;
     disablePreOpenMode();
     commands.clear();
     if (transactionContext.isSecureSessionOpen()) {
@@ -237,8 +232,6 @@ final class SecurePkiModeTransactionManagerAdapter
     super.prepareGetData(tag);
     if (tag == GetDataTag.CARD_CERTIFICATE) {
       isGetDataCardCertificatePrepared = true;
-    } else if (tag == GetDataTag.CA_CERTIFICATE) {
-      isGetDataCaCertificatePrepared = true;
     }
     return this;
   }
@@ -275,17 +268,20 @@ final class SecurePkiModeTransactionManagerAdapter
       return this;
     }
     try {
-      // In the case that the CA certificate is missing before the parsing of the response to
-      // the "open secure session" command, we seamlessly trigger the execution of Get Data commands
-      // to fetch it. Depending on the current status of the session, these commands might also be
-      // integrated to the session hash. We need to keep the channel open and close or keep it open
-      // as expected after the execution of the Get Data commands (role of originalChannelControl).
-      originalChannelControl = channelControl;
-      if (card.getCaCertificate().length == 0 && !isGetDataCaCertificatePrepared) {
-        executeCardCommands(commands, ChannelControl.KEEP_OPEN);
-      } else {
-        executeCardCommands(commands, channelControl);
+      List<Command> remainingCommands = commands;
+      int openSecureSessionIndex = getOpenSecureSessionIndex();
+      if (openSecureSessionIndex != -1) {
+        // The card public key must be established before the opening of the secure session,
+        // because the CA certificate may have to be read from the card: inside the secure session,
+        // the Get Data commands would enter the card session signature but not the terminal one.
+        List<Command> commandsBeforeOpening = commands.subList(0, openSecureSessionIndex);
+        if (containsGetDataCertificate(commandsBeforeOpening)) {
+          executeCardCommands(commandsBeforeOpening, ChannelControl.KEEP_OPEN);
+          remainingCommands = commands.subList(openSecureSessionIndex, commands.size());
+        }
+        checkCardCertificateAndGetCardPublicKey();
       }
+      executeCardCommands(remainingCommands, channelControl);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;
@@ -296,23 +292,40 @@ final class SecurePkiModeTransactionManagerAdapter
   }
 
   /**
-   * Parses the command's response and performs the necessary actions based on the command type.
+   * Returns the index of the first "Open Secure Session" command in the prepared commands.
    *
-   * @param command The command.
-   * @param apduResponse The response from the card.
-   * @throws CardCommandException If there is an error in the card command.
-   * @since 3.1.0
+   * @return -1 if no such command is prepared.
    */
-  @Override
-  void parseCommandResponse(Command command, ApduResponseApi apduResponse)
-      throws CardCommandException {
-    if (command.getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION) {
-      checkCardCertificateAndGetCardPublicKey();
+  private int getOpenSecureSessionIndex() {
+    for (int i = 0; i < commands.size(); i++) {
+      if (commands.get(i).getCommandRef() == CardCommandRef.OPEN_SECURE_SESSION) {
+        return i;
+      }
     }
-    command.parseResponse(apduResponse);
+    return -1;
   }
 
-  /** Extracts the card public key using the PKI chain of trust and place it into the card image. */
+  /**
+   * Indicates whether the provided commands contain a Get Data command for a certificate.
+   *
+   * @param commands The commands.
+   * @return true if at least one command is a {@link CommandGetDataCertificate}.
+   */
+  private static boolean containsGetDataCertificate(List<Command> commands) {
+    for (Command command : commands) {
+      if (command instanceof CommandGetDataCertificate) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Extracts the card public key using the PKI chain of trust and place it into the card image.
+   *
+   * <p>Must be invoked before the opening of the secure session, since the CA certificate may have
+   * to be read from the card.
+   */
   private void checkCardCertificateAndGetCardPublicKey() {
 
     // Parse the card certificate raw data
@@ -330,9 +343,11 @@ final class SecurePkiModeTransactionManagerAdapter
             cardCertificateSpi.getIssuerPublicKeyReference());
 
     // If the issuer certificate content is not already registered, then retrieve it from the card
+    // (unless it has already been read with a Get Data command prepared by the application)
     if (caCertificateContentSpi == null) {
-      // Read the CA certificate from the card using the original channel control
-      readCaCertificate();
+      if (card.getCaCertificate().length == 0) {
+        readCaCertificate();
+      }
       // Parse the CA certificate raw data
       CaCertificateSpi caCertificateSpi = parseCaCertificate();
       // Register the CA certificate into the store
@@ -341,11 +356,6 @@ final class SecurePkiModeTransactionManagerAdapter
       caCertificateContentSpi =
           asymmetricCryptoSecuritySetting.getCaCertificate(
               cardCertificateSpi.getIssuerPublicKeyReference());
-    } else {
-      // Force the closing of the channel if originally requested
-      if (originalChannelControl == ChannelControl.CLOSE_AFTER) {
-        executeCardCommands(Collections.emptyList(), ChannelControl.CLOSE_AFTER);
-      }
     }
 
     // Check the card certificate using the issuer certificate content and extract the public key
@@ -409,14 +419,21 @@ final class SecurePkiModeTransactionManagerAdapter
   /**
    * Executes Get Data commands to retrieve the CA certificate from the card. The result will
    * available in the card image.
+   *
+   * <p>The Get Data commands are not part of the secure session (they would otherwise enter the
+   * card session signature), hence they must be executed outside any secure session.
+   *
+   * @throws IllegalStateException If a secure session is open.
    */
   private void readCaCertificate() {
+    if (transactionContext.isSecureSessionOpen()) {
+      throw new IllegalStateException("CA certificate cannot be read during a secure session");
+    }
+    CommandContextDto commandContext = new CommandContextDto(false, false);
     List<Command> commands = new ArrayList<>(2);
-    commands.add(
-        new CommandGetDataCertificate(transactionContext, getCommandContext(), false, true));
-    commands.add(
-        new CommandGetDataCertificate(transactionContext, getCommandContext(), false, false));
-    executeCardCommands(commands, originalChannelControl);
+    commands.add(new CommandGetDataCertificate(transactionContext, commandContext, false, true));
+    commands.add(new CommandGetDataCertificate(transactionContext, commandContext, false, false));
+    executeCardCommands(commands, ChannelControl.KEEP_OPEN);
   }
 
   /**
