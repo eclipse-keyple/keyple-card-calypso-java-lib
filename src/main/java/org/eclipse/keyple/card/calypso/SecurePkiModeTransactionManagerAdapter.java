@@ -272,8 +272,8 @@ final class SecurePkiModeTransactionManagerAdapter
       int openSecureSessionIndex = getOpenSecureSessionIndex();
       if (openSecureSessionIndex != -1) {
         // The card public key must be established before the opening of the secure session,
-        // because the CA certificate may have to be read from the card: inside the secure session,
-        // the Get Data commands would enter the card session signature but not the terminal one.
+        // because the CA certificate may have to be read from the card and Get Data is not
+        // allowed within a secure session.
         List<Command> commandsBeforeOpening = commands.subList(0, openSecureSessionIndex);
         if (containsGetDataCertificate(commandsBeforeOpening)) {
           executeCardCommands(commandsBeforeOpening, ChannelControl.KEEP_OPEN);
@@ -417,11 +417,11 @@ final class SecurePkiModeTransactionManagerAdapter
   }
 
   /**
-   * Executes Get Data commands to retrieve the CA certificate from the card. The result will
+   * Executes Get Data commands to retrieve the CA certificate from the card. The result will be
    * available in the card image.
    *
-   * <p>The Get Data commands are not part of the secure session (they would otherwise enter the
-   * card session signature), hence they must be executed outside any secure session.
+   * <p>As Get Data is not allowed within a secure session, this method must be called before its
+   * opening.
    *
    * @throws IllegalStateException If a secure session is open.
    */
