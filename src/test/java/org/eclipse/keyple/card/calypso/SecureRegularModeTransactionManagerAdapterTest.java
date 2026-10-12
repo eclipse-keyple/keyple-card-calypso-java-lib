@@ -18,6 +18,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import java.util.*;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.SelectFileControl;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.*;
@@ -2517,5 +2518,110 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
             argThat(new CardRequestMatcher(cardChangeKeyCardRequest)), any(ChannelControl.class));
     inOrder.verify(symmetricCryptoCardTransactionManager).synchronize();
     verifyNoMoreInteractions(symmetricCryptoCardTransactionManager, cardReader);
+  }
+
+  private static final String CARD_OPEN_SECURE_SESSION_PERSO_CMD =
+      "008A010104" + SAM_CHALLENGE + "00";
+  private static final String NEW_AID = "A000000291FF9101";
+  private static final String CARD_PUT_DATA_AID_CMD = "00DA004F08" + NEW_AID;
+  private static final String CARD_PUT_DATA_SV_LINK_CMD = "00DA00D008" + NEW_AID;
+  private static final String CARD_PUT_DATA_SV_LINK_CANCEL_CMD = "00DA00D000";
+
+  private void openPersonalizationSession() throws Exception {
+    mockTransmitCardRequest(CARD_OPEN_SECURE_SESSION_PERSO_CMD, CARD_OPEN_SECURE_SESSION_RSP);
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.PERSONALIZATION)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+  }
+
+  private void verifyPutDataInSession(String putDataCmd) throws Exception {
+    CardRequestSpi cardRequest = mockTransmitCardRequest(putDataCmd, SW_9000);
+    cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    verify(cardReader)
+        .transmitCardRequest(
+            argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
+    InOrder inOrder = inOrder(symmetricCryptoCardTransactionManager);
+    inOrder
+        .verify(symmetricCryptoCardTransactionManager)
+        .updateTerminalSessionMac(HexUtil.toByteArray(putDataCmd));
+    inOrder
+        .verify(symmetricCryptoCardTransactionManager)
+        .updateTerminalSessionMac(HexUtil.toByteArray(SW_9000));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void preparePutData_whenAidAndNoSecureSession_shouldThrowISE() {
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray(NEW_AID));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void preparePutData_whenAidAndSessionNotOpenedWithPersonalizationLevel_shouldThrowISE()
+      throws Exception {
+    mockTransmitCardRequest(CARD_OPEN_SECURE_SESSION_CMD, CARD_OPEN_SECURE_SESSION_RSP);
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray(NEW_AID));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void preparePutData_whenSvLinkAndNoSecureSession_shouldThrowISE() {
+    cardTransactionManager.preparePutData(PutDataTag.STORED_VALUE_LINK, new byte[0]);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void preparePutData_whenAidIsTooShort_shouldThrowIAE() throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, new byte[4]);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void preparePutData_whenAidIsTooLong_shouldThrowIAE() throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, new byte[17]);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void preparePutData_whenAidIsEmpty_shouldThrowIAE() throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, new byte[0]);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void preparePutData_whenSvLinkAidIsTooShort_shouldThrowIAE() throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.STORED_VALUE_LINK, new byte[4]);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void preparePutData_whenCardKeyPairInSecureSession_shouldThrowISE() throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.CARD_KEY_PAIR, new byte[96]);
+  }
+
+  @Test
+  public void preparePutData_whenAidInPersonalizationSession_shouldSendPutData4FAndUpdateMac()
+      throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray(NEW_AID));
+    verifyPutDataInSession(CARD_PUT_DATA_AID_CMD);
+    assertThat(calypsoCard.getDfName()).isNotEqualTo(HexUtil.toByteArray(NEW_AID));
+  }
+
+  @Test
+  public void preparePutData_whenSvLinkInPersonalizationSession_shouldSendPutDataD0WithAid()
+      throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(
+        PutDataTag.STORED_VALUE_LINK, HexUtil.toByteArray(NEW_AID));
+    verifyPutDataInSession(CARD_PUT_DATA_SV_LINK_CMD);
+  }
+
+  @Test
+  public void preparePutData_whenSvLinkCancelInPersonalizationSession_shouldSendPutDataD0NoData()
+      throws Exception {
+    openPersonalizationSession();
+    cardTransactionManager.preparePutData(PutDataTag.STORED_VALUE_LINK, new byte[0]);
+    verifyPutDataInSession(CARD_PUT_DATA_SV_LINK_CANCEL_CMD);
   }
 }

@@ -152,6 +152,16 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   /**
    * {@inheritDoc}
    *
+   * @since 3.3.0
+   */
+  @Override
+  final boolean isSymmetricSecureSessionOpenWithIssuerKey() {
+    return isSecureSessionOpen && writeAccessLevel == WriteAccessLevel.PERSONALIZATION;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @since 3.0.0
    */
   @Override

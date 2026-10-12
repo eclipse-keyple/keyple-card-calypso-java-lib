@@ -119,11 +119,22 @@ final class CommandPutData extends Command {
           dataIn = ByteBuffer.wrap(data);
         }
         break;
+      case APPLICATION_AID:
+        tagMsb = 0;
+        tagLsb = CalypsoCardConstant.TAG_APPLICATION_AID;
+        dataIn = ByteBuffer.wrap(data);
+        break;
+      case STORED_VALUE_LINK:
+        tagMsb = 0;
+        tagLsb = CalypsoCardConstant.TAG_STORED_VALUE_LINK;
+        // no data field to cancel the link (APDU case 1)
+        dataIn = data.length == 0 ? null : ByteBuffer.wrap(data);
+        break;
       default:
         throw new UnsupportedOperationException("Unsupported PutDataTag: " + tag);
     }
 
-    // APDU Case 3 - always outside secure session
+    // APDU Case 3 (or case 1 when cancelling the Stored Value link)
     setApduRequest(
         new ApduRequestAdapter(
             ApduUtil.build(
@@ -131,7 +142,7 @@ final class CommandPutData extends Command {
                 getCommandRef().getInstructionByte(),
                 tagMsb,
                 tagLsb,
-                dataIn.array(),
+                dataIn != null ? dataIn.array() : null,
                 null)));
   }
 
@@ -142,7 +153,7 @@ final class CommandPutData extends Command {
    */
   @Override
   void finalizeRequest() {
-    // NOP
+    encryptRequestAndUpdateTerminalSessionMacIfNeeded();
   }
 
   /**
@@ -152,7 +163,7 @@ final class CommandPutData extends Command {
    */
   @Override
   boolean isCryptoServiceRequiredToFinalizeRequest() {
-    return false;
+    return getCommandContext().isEncryptionActive();
   }
 
   /**
@@ -162,6 +173,10 @@ final class CommandPutData extends Command {
    */
   @Override
   boolean synchronizeCryptoServiceBeforeCardProcessing() {
+    if (getCommandContext().isEncryptionActive()) {
+      return false;
+    }
+    updateTerminalSessionIfNeeded(APDU_RESPONSE_9000);
     return true;
   }
 
@@ -172,6 +187,7 @@ final class CommandPutData extends Command {
    */
   @Override
   void parseResponse(ApduResponseApi apduResponse) throws CardCommandException {
+    decryptResponseAndUpdateTerminalSessionMacIfNeeded(apduResponse);
     super.setApduResponseAndCheckStatus(apduResponse);
     if (tag == PutDataTag.CARD_KEY_PAIR) {
       getTransactionContext().getCard().setCardPublicKey(Arrays.copyOf(data, CARD_PUBLIC_KEY_SIZE));
@@ -180,6 +196,7 @@ final class CommandPutData extends Command {
     } else if (tag == PutDataTag.CA_CERTIFICATE) {
       getTransactionContext().getCard().addCaCertificateBytes(data, isFirstPart);
     }
+    updateTerminalSessionIfNeeded();
   }
 
   /**
