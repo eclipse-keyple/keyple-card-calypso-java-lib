@@ -16,6 +16,7 @@ import static org.eclipse.keyple.card.calypso.DtoAdapters.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.keyple.core.util.Assert;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.WriteAccessLevel;
 import org.eclipse.keypop.calypso.card.card.CalypsoCard;
 import org.eclipse.keypop.calypso.card.transaction.*;
@@ -632,6 +633,41 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       prepareNewSecureSessionIfNeeded(command);
       commands.add(command);
 
+    } catch (RuntimeException e) {
+      resetTransaction();
+      throw e;
+    }
+    return currentInstance;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>The {@link PutDataTag#APPLICATION_AID} and {@link PutDataTag#STORED_VALUE_LINK} tags are
+   * handled here, as they require a secure session opened in symmetric crypto mode.
+   *
+   * @since 3.3.0
+   */
+  @Override
+  public final T preparePutData(PutDataTag putDataTag, byte[] data) {
+    if (putDataTag != PutDataTag.APPLICATION_AID && putDataTag != PutDataTag.STORED_VALUE_LINK) {
+      return super.preparePutData(putDataTag, data);
+    }
+    try {
+      Assert.getInstance().notNull(data, "data");
+      checkSecureSession();
+      if (putDataTag == PutDataTag.APPLICATION_AID || data.length != 0) {
+        Assert.getInstance()
+            .isInRange(
+                data.length,
+                CalypsoCardConstant.AID_MIN_LENGTH,
+                CalypsoCardConstant.AID_MAX_LENGTH,
+                "data length");
+      }
+      CommandPutData command =
+          new CommandPutData(transactionContext, getCommandContext(), putDataTag, true, data);
+      prepareNewSecureSessionIfNeeded(command);
+      commands.add(command);
     } catch (RuntimeException e) {
       resetTransaction();
       throw e;

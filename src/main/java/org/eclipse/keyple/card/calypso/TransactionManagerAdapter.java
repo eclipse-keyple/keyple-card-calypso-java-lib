@@ -450,57 +450,24 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
    */
   @Override
   public T preparePutData(PutDataTag putDataTag, byte[] data) {
+    if (getCommandContext().isSecureSessionOpen()) {
+      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
+    }
     Assert.getInstance().notNull(putDataTag, "putDataTag").notNull(data, "data");
     switch (putDataTag) {
       case CARD_KEY_PAIR:
-        checkNoSecureSessionForPutData();
         preparePutDataCardKeyPair(putDataTag, data);
         break;
       case CARD_CERTIFICATE:
-        checkNoSecureSessionForPutData();
         preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CARD_CERTIFICATE_SIZE);
         break;
       case CA_CERTIFICATE:
-        checkNoSecureSessionForPutData();
         preparePutDataCertificate(putDataTag, data, CalypsoCardConstant.CA_CERTIFICATE_SIZE);
-        break;
-      case APPLICATION_AID:
-      case STORED_VALUE_LINK:
-        preparePutDataInSession(putDataTag, data);
         break;
       default:
         throw new UnsupportedOperationException("Unsupported PutDataTag: " + putDataTag);
     }
     return currentInstance;
-  }
-
-  private void checkNoSecureSessionForPutData() {
-    if (getCommandContext().isSecureSessionOpen()) {
-      throw new IllegalStateException(MSG_SECURE_SESSION_OPEN);
-    }
-  }
-
-  private void preparePutDataInSession(PutDataTag putDataTag, byte[] data) {
-    if (!getCommandContext().isSecureSessionOpen()) {
-      throw new IllegalStateException("Secure session is not open [putDataTag=" + putDataTag + "]");
-    }
-    if (putDataTag != PutDataTag.STORED_VALUE_LINK || data.length != 0) {
-      Assert.getInstance()
-          .isInRange(
-              data.length,
-              CalypsoCardConstant.AID_MIN_LENGTH,
-              CalypsoCardConstant.AID_MAX_LENGTH,
-              MSG_DATA_LENGTH);
-    }
-    try {
-      CommandPutData command =
-          new CommandPutData(getTransactionContext(), getCommandContext(), putDataTag, true, data);
-      prepareNewSecureSessionIfNeeded(command);
-      commands.add(command);
-    } catch (RuntimeException e) {
-      resetTransaction();
-      throw e;
-    }
   }
 
   private void preparePutDataCardKeyPair(PutDataTag putDataTag, byte[] data) {

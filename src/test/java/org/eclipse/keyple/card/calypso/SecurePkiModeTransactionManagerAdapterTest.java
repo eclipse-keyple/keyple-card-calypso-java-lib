@@ -12,7 +12,6 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -38,7 +37,6 @@ import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ChannelControl;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
-import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -377,23 +375,9 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
     verifyNoGetDataInTerminalSessionHash();
   }
 
-  @Test
-  public void preparePutData_whenAidInPkiSession_shouldLetTheCardDecide() throws Exception {
-    cardResponses.put("00DA004F", "6982");
-    securitySetting.addCaCertificate(caCertificate);
-    cardTransactionManager
-        .prepareOpenSecureSession()
-        .processCommands(org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
-
+  @Test(expected = UnsupportedOperationException.class)
+  public void preparePutData_whenAid_shouldThrowUOE() {
     cardTransactionManager.preparePutData(
         PutDataTag.APPLICATION_AID, HexUtil.toByteArray("A000000291FF9101"));
-    try {
-      cardTransactionManager.processCommands(org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
-      fail("InvalidCardResponseException expected");
-    } catch (InvalidCardResponseException e) {
-      assertThat(e.getCause()).isInstanceOf(CardSecurityContextException.class);
-    }
-    assertThat(getTransmittedApdusStartingWith("00DA004F"))
-        .containsExactly("00DA004F08A000000291FF9101");
   }
 }

@@ -1487,8 +1487,8 @@ public class FreeTransactionManagerAdapterTest extends AbstractTransactionManage
             argThat(new CardRequestMatcher(cardRequest)), any(ChannelControl.class));
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void preparePutData_whenAid_shouldThrowISE() {
+  @Test(expected = UnsupportedOperationException.class)
+  public void preparePutData_whenAid_shouldThrowUOE() {
     cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, new byte[8]);
   }
 }
