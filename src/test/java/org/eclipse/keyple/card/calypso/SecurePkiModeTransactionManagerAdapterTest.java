@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.keyple.core.util.HexUtil;
 import org.eclipse.keypop.calypso.card.GetDataTag;
+import org.eclipse.keypop.calypso.card.PutDataTag;
 import org.eclipse.keypop.calypso.card.transaction.SecurePkiModeTransactionManager;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificate;
 import org.eclipse.keypop.calypso.card.transaction.spi.CaCertificateParser;
@@ -36,6 +38,7 @@ import org.eclipse.keypop.card.ApduResponseApi;
 import org.eclipse.keypop.card.ChannelControl;
 import org.eclipse.keypop.card.spi.ApduRequestSpi;
 import org.eclipse.keypop.card.spi.CardRequestSpi;
+import org.eclipse.keypop.reader.InvalidCardResponseException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -86,6 +89,20 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
   interface CaCertificateParserMock extends CaCertificateParser, CaCertificateParserSpi {}
 
   interface CardCertificateParserMock extends CardCertificateParser, CardCertificateParserSpi {}
+
+  /** Serializable card public key (a mock would break the JSON audit data of the card image). */
+  static final class CardPublicKeyStub implements CardPublicKeySpi {
+    private final byte[] rawValue;
+
+    CardPublicKeyStub(byte[] rawValue) {
+      this.rawValue = rawValue;
+    }
+
+    @Override
+    public byte[] getRawValue() {
+      return rawValue;
+    }
+  }
 
   @Override
   void initTransactionManager() {
@@ -149,7 +166,7 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
     when(cardCertificate.getCardSerialNumber()).thenReturn(HexUtil.toByteArray(CARD_SERIAL_NUMBER));
     when(cardCertificate.getIssuerPublicKeyReference()).thenReturn(CA_PUBLIC_KEY_REFERENCE);
     when(cardCertificate.checkCertificateAndGetPublicKey(caContent))
-        .thenReturn(mock(CardPublicKeySpi.class));
+        .thenReturn(new CardPublicKeyStub(new byte[64]));
     CardCertificateParserMock cardCertificateParser = mock(CardCertificateParserMock.class);
     when(cardCertificateParser.getCertificateType()).thenReturn(CARD_CERTIFICATE_TYPE);
     when(cardCertificateParser.parseCertificate(any(byte[].class))).thenReturn(cardCertificate);
@@ -358,5 +375,25 @@ public class SecurePkiModeTransactionManagerAdapterTest extends AbstractTransact
     assertThat(transmittedRequests.get(1).get(0)).startsWith(OPEN_SECURE_SESSION_PREFIX);
     assertThat(transmittedRequests.get(1).get(1)).isEqualTo(CLOSE_SECURE_SESSION);
     verifyNoGetDataInTerminalSessionHash();
+  }
+
+  @Test
+  public void preparePutData_whenAidInPkiSession_shouldLetTheCardDecide() throws Exception {
+    cardResponses.put("00DA004F", "6982");
+    securitySetting.addCaCertificate(caCertificate);
+    cardTransactionManager
+        .prepareOpenSecureSession()
+        .processCommands(org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
+
+    cardTransactionManager.preparePutData(
+        PutDataTag.APPLICATION_AID, HexUtil.toByteArray("A000000291FF9101"));
+    try {
+      cardTransactionManager.processCommands(org.eclipse.keypop.reader.ChannelControl.KEEP_OPEN);
+      fail("InvalidCardResponseException expected");
+    } catch (InvalidCardResponseException e) {
+      assertThat(e.getCause()).isInstanceOf(CardSecurityContextException.class);
+    }
+    assertThat(getTransmittedApdusStartingWith("00DA004F"))
+        .containsExactly("00DA004F08A000000291FF9101");
   }
 }

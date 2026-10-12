@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support of the "Put Data" command with the AID tag (4Fh) and the Stored Value link tag (D0h) through
   `preparePutData(PutDataTag.APPLICATION_AID, ...)` and `preparePutData(PutDataTag.STORED_VALUE_LINK, ...)`. These
-  commands are allowed only within a secure session opened in symmetric crypto mode with the `PERSONALIZATION` level
-  (issue [#131]).
+  commands are allowed only within a secure session; the card rejects them if the session is not opened in symmetric
+  crypto mode with the `PERSONALIZATION` level (issue [#131]).
 ### Upgraded
 - Keypop Calypso Card API `2.2.0` -> `2.3.0`
 

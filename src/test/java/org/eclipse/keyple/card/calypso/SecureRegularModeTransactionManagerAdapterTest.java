@@ -12,6 +12,7 @@
 package org.eclipse.keyple.card.calypso;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -2554,14 +2555,22 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray(NEW_AID));
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void preparePutData_whenAidAndSessionNotOpenedWithPersonalizationLevel_shouldThrowISE()
-      throws Exception {
+  @Test
+  public void
+      preparePutData_whenAidInSessionNotOpenedWithPersonalizationLevel_shouldLetTheCardDecide()
+          throws Exception {
     mockTransmitCardRequest(CARD_OPEN_SECURE_SESSION_CMD, CARD_OPEN_SECURE_SESSION_RSP);
     cardTransactionManager
         .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
         .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
     cardTransactionManager.preparePutData(PutDataTag.APPLICATION_AID, HexUtil.toByteArray(NEW_AID));
+    mockTransmitCardRequest(CARD_PUT_DATA_AID_CMD, "6982");
+    try {
+      cardTransactionManager.processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+      fail("InvalidCardResponseException expected");
+    } catch (InvalidCardResponseException e) {
+      assertThat(e.getCause()).isInstanceOf(CardSecurityContextException.class);
+    }
   }
 
   @Test(expected = IllegalStateException.class)

@@ -166,17 +166,6 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
   abstract boolean canConfigureReadOnOpenSecureSession();
 
   /**
-   * Indicates whether a secure session is open in symmetric crypto mode with the issuer key (key
-   * #1, {@link org.eclipse.keypop.calypso.card.WriteAccessLevel#PERSONALIZATION} level).
-   *
-   * @return False by default.
-   * @since 3.3.0
-   */
-  boolean isSymmetricSecureSessionOpenWithIssuerKey() {
-    return false;
-  }
-
-  /**
    * Executes the provided commands.
    *
    * @param commands The commands.
@@ -477,7 +466,7 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
         break;
       case APPLICATION_AID:
       case STORED_VALUE_LINK:
-        preparePutDataInIssuerSession(putDataTag, data);
+        preparePutDataInSession(putDataTag, data);
         break;
       default:
         throw new UnsupportedOperationException("Unsupported PutDataTag: " + putDataTag);
@@ -491,13 +480,9 @@ abstract class TransactionManagerAdapter<T extends TransactionManager<T>>
     }
   }
 
-  private void preparePutDataInIssuerSession(PutDataTag putDataTag, byte[] data) {
-    if (!isSymmetricSecureSessionOpenWithIssuerKey()) {
-      throw new IllegalStateException(
-          "Secure session opened in symmetric crypto mode with PERSONALIZATION level is required"
-              + " [putDataTag="
-              + putDataTag
-              + "]");
+  private void preparePutDataInSession(PutDataTag putDataTag, byte[] data) {
+    if (!getCommandContext().isSecureSessionOpen()) {
+      throw new IllegalStateException("Secure session is not open [putDataTag=" + putDataTag + "]");
     }
     if (putDataTag != PutDataTag.STORED_VALUE_LINK || data.length != 0) {
       Assert.getInstance()
