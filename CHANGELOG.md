@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed the invalid card session signature (`InvalidCardSignatureException`) in PKI mode when the CA certificate is
+  not registered and the secure session is opened in a `processCommands` call that does not close it: the CA
+  certificate is now read from the card before the opening of the secure session instead of inside it (issue
+  [#133]).
+- The CA certificate is no longer read twice when its Get Data command is prepared by the application in the same
+  `processCommands` call as the opening of the secure session.
 
 ## [3.2.2] - 2026-02-20
 ### Changed
@@ -371,6 +378,7 @@ It also brings many major API changes.
 [2.0.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/releases/tag/2.0.0
 
+[#133]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/133
 [#129]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/129
 [#119]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/119
 [#115]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/issues/115
