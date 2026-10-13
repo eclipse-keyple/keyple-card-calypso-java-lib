@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.3.0] - 2026-10-13
 ### Fixed
 - Fixed the invalid card session signature (`InvalidCardSignatureException`) in PKI mode when the CA certificate is
   not registered and the secure session is opened in a `processCommands` call that does not close it: the CA
@@ -349,7 +351,8 @@ It follows the extraction of Keyple 1.0 components contained in the `eclipse-key
 repositories.
 It also brings many major API changes.
 
-[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.2...HEAD
+[unreleased]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.3.0...HEAD
+[3.3.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.2...3.3.0
 [3.2.2]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/eclipse-keyple/keyple-card-calypso-java-lib/compare/3.1.9...3.2.0
