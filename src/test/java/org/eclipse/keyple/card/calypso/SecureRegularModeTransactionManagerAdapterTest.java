@@ -2442,6 +2442,122 @@ public class SecureRegularModeTransactionManagerAdapterTest extends AbstractTran
     assertThat(debitLog1.getSvTNum()).isEqualTo(HexUtil.toInt(SV_D_LOG_SV_TNUM));
   }
 
+  private List<CardCommandRef> getPreparedCommandRefs() {
+    List<CardCommandRef> commandRefs = new ArrayList<>();
+    for (Command command :
+        ((SecureSymmetricCryptoTransactionManagerAdapter<?>) cardTransactionManager).commands) {
+      commandRefs.add(command.getCommandRef());
+    }
+    return commandRefs;
+  }
+
+  @Test
+  public void prepareSvDebit_whenSvGetPreviouslyProcessed_shouldPrepareSvDebit() throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    mockTransmitCardRequest(CARD_SV_GET_DEBIT_CMD, CARD_SV_GET_DEBIT_RSP);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    cardTransactionManager.prepareSvDebit(1);
+
+    assertThat(getPreparedCommandRefs()).containsExactly(CardCommandRef.SV_DEBIT);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenAnotherCommandIsPreparedAfterSvGet_shouldThrowISE()
+      throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .prepareSvDebit(1);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvReload_whenAnotherCommandIsProcessedAfterSvGet_shouldThrowISE()
+      throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    mockTransmitCardRequest(CARD_SV_GET_RELOAD_CMD, CARD_SV_GET_RELOAD_RSP);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.RELOAD, SvAction.DO)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+    mockTransmitCardRequest(CARD_READ_REC_SFI7_REC1_L29_CMD, CARD_READ_REC_SFI7_REC1_RSP);
+    cardTransactionManager
+        .prepareReadRecords(FILE7, 1, 1, 29)
+        .processCommands(CHANNEL_CONTROL_KEEP_OPEN);
+
+    cardTransactionManager.prepareSvReload(1);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenSvGetProcessedWithChannelClosed_shouldThrowISE() throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    mockTransmitCardRequest(CARD_SV_GET_DEBIT_CMD, CARD_SV_GET_DEBIT_RSP);
+    cardTransactionManager
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .processCommands(org.eclipse.keypop.reader.ChannelControl.CLOSE_AFTER);
+
+    cardTransactionManager.prepareSvDebit(1);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenSvGetIsForReload_shouldThrowISE() throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    cardTransactionManager.prepareSvGet(SvOperation.RELOAD, SvAction.DO).prepareSvDebit(1);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void prepareSvDebit_whenSvOperationAlreadyInSecureSession_shouldThrowISE()
+      throws Exception {
+    initCalypsoCardAndTransactionManager(
+        SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .prepareSvDebit(1)
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .prepareSvDebit(1);
+  }
+
+  @Test
+  public void
+      prepareSvDebit_whenSessionBufferOverflowsAndMultipleSessionEnabled_shouldMoveSvGetAndSvDebitInNewSession()
+          throws Exception {
+    cardSecuritySetting.enableMultipleSession();
+    initCalypsoCard(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_WITH_STORED_VALUE);
+    when(calypsoCard.isModificationsCounterInBytes()).thenReturn(false);
+    when(calypsoCard.getModificationsCounter()).thenReturn(1);
+    initTransactionManager();
+
+    cardTransactionManager
+        .prepareOpenSecureSession(WriteAccessLevel.DEBIT)
+        .prepareUpdateRecord(FILE7, 1, new byte[] {0x01})
+        .prepareSvGet(SvOperation.DEBIT, SvAction.DO)
+        .prepareSvDebit(1);
+
+    assertThat(getPreparedCommandRefs())
+        .containsExactly(
+            CardCommandRef.OPEN_SECURE_SESSION,
+            CardCommandRef.UPDATE_RECORD,
+            CardCommandRef.CLOSE_SECURE_SESSION,
+            CardCommandRef.OPEN_SECURE_SESSION,
+            CardCommandRef.SV_GET,
+            CardCommandRef.SV_DEBIT);
+
+    // CL-SV-1PCSS.1 must still apply to the new secure session
+    try {
+      cardTransactionManager.prepareSvGet(SvOperation.DEBIT, SvAction.DO).prepareSvDebit(1);
+      fail("IllegalStateException expected");
+    } catch (IllegalStateException ignored) {
+    }
+  }
+
   @Test(expected = IllegalStateException.class)
   public void prepareInvalidate_whenCardIsInvalidated_shouldThrowISE() throws Exception {
     initCalypsoCardAndTransactionManager(SELECT_APPLICATION_RESPONSE_PRIME_REVISION_3_INVALIDATED);
