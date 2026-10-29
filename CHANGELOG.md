@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed the handling of SV modifying commands (`prepareSvReload`, `prepareSvDebit`) when the secure session is
+  automatically split because the card modifications buffer would overflow (multiple session mode): the SV Get
+  command(s) are now replayed in the new secure session just before the SV command, and the SV related session
+  flags now apply to the session in which the SV command is actually executed. Previously, the SV signature could
+  not be checked at session closing and a second SV operation could be accepted in the new session
+  (CL-SV-1PCSS.1).
+### Changed
+- `prepareSvReload` and `prepareSvDebit` now throw an `IllegalStateException` if the last command prepared, or
+  processed with the channel kept open, is not an SV Get command, in accordance with CL-SV-GETDEBIT.1 and
+  CL-SV-GETRLOAD.1. Sequences where another command, including an Open Secure Session, is inserted between
+  `prepareSvGet` and the SV modifying command are no longer allowed.
 
 ## [3.3.0] - 2026-10-13
 ### Fixed

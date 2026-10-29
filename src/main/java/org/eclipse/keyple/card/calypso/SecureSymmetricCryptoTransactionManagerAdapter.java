@@ -62,7 +62,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   private int modificationsCounter;
   private int nbPostponedData;
   private int svPostponedDataIndex = -1;
-  private boolean isSvGet;
+  private boolean isLastProcessedCommandSvGet;
   private SvOperation svOperation;
   private SvAction svAction;
   private boolean isSvOperationInSecureSession;
@@ -161,7 +161,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     modificationsCounter = card.getModificationsCounter();
     nbPostponedData = 0;
     svPostponedDataIndex = -1;
-    isSvGet = false;
+    isLastProcessedCommandSvGet = false;
     svOperation = null;
     isSvOperationInSecureSession = false;
     disablePreOpenMode();
@@ -196,6 +196,12 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
     modificationsCounter -= computeCommandSessionBufferSize(command);
     if (modificationsCounter < 0) {
       checkMultipleSessionEnabled(command);
+      // CL-SV-GETDEBIT.1, CL-SV-GETRLOAD.1: the SV Get command(s) must be sent again in the new
+      // session, just before the SV modifying command.
+      boolean isSvModifyingCommand = isSvModifyingCommand(command);
+      if (isSvModifyingCommand) {
+        removeTrailingSvGetCommands();
+      }
       commands.add(
           new CommandCloseSecureSession(
               transactionContext, getCommandContext(), true, svPostponedDataIndex));
@@ -211,6 +217,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         commands.add(
             new CommandManageSession(transactionContext, getCommandContext())
                 .setEncryptionRequested(true));
+      }
+      if (isSvModifyingCommand) {
+        addSvGetCommands(svOperation);
       }
       modificationsCounter = card.getModificationsCounter();
       modificationsCounter -= computeCommandSessionBufferSize(command);
@@ -328,6 +337,9 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         cardRequestCommands.add(command);
       }
       executeCardCommands(cardRequestCommands, channelControl);
+      isLastProcessedCommandSvGet =
+          channelControl == ChannelControl.KEEP_OPEN
+              && commands.get(commands.size() - 1).getCommandRef() == CardCommandRef.SV_GET;
       processCryptoPreparedCommands();
     } catch (RuntimeException e) {
       resetTransaction();
@@ -584,17 +596,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
         throw new UnsupportedOperationException("Stored Value is not available for this card");
       }
 
-      if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {
-        // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
-        // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
-        // CL-SV-GETNUMBER.1
-        SvOperation operation1 =
-            svOperation == SvOperation.RELOAD ? SvOperation.DEBIT : SvOperation.RELOAD;
-        commands.add(new CommandSvGet(transactionContext, getCommandContext(), operation1, false));
-      }
-      commands.add(
-          new CommandSvGet(transactionContext, getCommandContext(), svOperation, isExtendedMode));
-      isSvGet = true;
+      addSvGetCommands(svOperation);
       this.svOperation = svOperation;
       this.svAction = svAction;
     } catch (RuntimeException e) {
@@ -602,6 +604,60 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
       throw e;
     }
     return currentInstance;
+  }
+
+  /**
+   * Adds the SV Get command(s) required for the provided SV operation.
+   *
+   * <p>If both reload and debit logs are requested for a non rev3.2 card, two SV Get commands are
+   * added, the one corresponding to the provided operation being the last.
+   *
+   * @param svOperation The SV operation.
+   */
+  private void addSvGetCommands(SvOperation svOperation) {
+    if (symmetricCryptoSecuritySetting.isSvLoadAndDebitLogEnabled() && (!isExtendedMode)) {
+      // @see Calypso Layer ID 8.09/8.10 (200108): both reload and debit logs are requested
+      // for a non rev3.2 card add two SvGet commands (for RELOAD then for DEBIT).
+      // CL-SV-GETNUMBER.1
+      SvOperation operation1 =
+          svOperation == SvOperation.RELOAD ? SvOperation.DEBIT : SvOperation.RELOAD;
+      commands.add(new CommandSvGet(transactionContext, getCommandContext(), operation1, false));
+    }
+    commands.add(
+        new CommandSvGet(transactionContext, getCommandContext(), svOperation, isExtendedMode));
+  }
+
+  /** Removes the SV Get commands located at the end of the list of prepared commands. */
+  private void removeTrailingSvGetCommands() {
+    while (!commands.isEmpty()
+        && commands.get(commands.size() - 1).getCommandRef() == CardCommandRef.SV_GET) {
+      commands.remove(commands.size() - 1);
+    }
+  }
+
+  /**
+   * Indicates whether the provided command is an SV modifying command (Reload, Debit or Undebit).
+   *
+   * @param command The command.
+   * @return True if the command is an SV modifying command.
+   */
+  private static boolean isSvModifyingCommand(Command command) {
+    CardCommandRef commandRef = command.getCommandRef();
+    return commandRef == CardCommandRef.SV_RELOAD
+        || commandRef == CardCommandRef.SV_DEBIT
+        || commandRef == CardCommandRef.SV_UNDEBIT;
+  }
+
+  /**
+   * Indicates whether the last command sent or to be sent to the card is an SV Get command.
+   *
+   * @return True if the last command is an SV Get command.
+   */
+  private boolean isLastCommandSvGet() {
+    if (commands.isEmpty()) {
+      return isLastProcessedCommandSvGet;
+    }
+    return commands.get(commands.size() - 1).getCommandRef() == CardCommandRef.SV_GET;
   }
 
   /**
@@ -631,6 +687,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
           new CommandSvReload(
               transactionContext, getCommandContext(), amount, date, time, free, isExtendedMode);
       prepareNewSecureSessionIfNeeded(command);
+      registerSvModifyingCommandInSecureSession();
       commands.add(command);
 
     } catch (RuntimeException e) {
@@ -676,18 +733,17 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
   }
 
   /**
-   * Checks if the preconditions of an SV modifying command are satisfied and updates the
-   * corresponding flags.
+   * Checks if the preconditions of an SV modifying command are satisfied.
    *
    * @throws IllegalStateException If preconditions are not satisfied.
    */
   private void checkSvModifyingCommandPreconditions(SvOperation svOperation) {
     // CL-SV-GETDEBIT.1
     // CL-SV-GETRLOAD.1
-    if (!isSvGet) {
-      throw new IllegalStateException("SV modifying command must follow an SV Get command");
+    if (svOperation == null || !isLastCommandSvGet()) {
+      throw new IllegalStateException(
+          "SV modifying command must immediately follow an SV Get command");
     }
-    isSvGet = false;
     if (svOperation != this.svOperation) {
       throw new IllegalStateException(
           "SV operation is inconsistent with previous SV Get command. Expected: "
@@ -696,11 +752,20 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
               + svOperation);
     }
     // CL-SV-1PCSS.1
+    if (isSecureSessionOpen && isSvOperationInSecureSession) {
+      throw new IllegalStateException(
+          "Only one SV modifying command is allowed per Secure Session");
+    }
+  }
+
+  /**
+   * Registers the SV modifying command about to be added in the current secure session, if any.
+   *
+   * <p>Must be called after {@link #prepareNewSecureSessionIfNeeded(Command)} so that the flags
+   * apply to the secure session in which the command will actually be executed.
+   */
+  private void registerSvModifyingCommandInSecureSession() {
     if (isSecureSessionOpen) {
-      if (isSvOperationInSecureSession) {
-        throw new IllegalStateException(
-            "Only one SV modifying command is allowed per Secure Session");
-      }
       isSvOperationInSecureSession = true;
       svPostponedDataIndex = nbPostponedData;
       nbPostponedData++;
@@ -753,6 +818,7 @@ abstract class SecureSymmetricCryptoTransactionManagerAdapter<
               isExtendedMode,
               symmetricCryptoSecuritySetting.isSvNegativeBalanceAuthorized());
       prepareNewSecureSessionIfNeeded(command);
+      registerSvModifyingCommandInSecureSession();
       commands.add(command);
 
     } catch (RuntimeException e) {
